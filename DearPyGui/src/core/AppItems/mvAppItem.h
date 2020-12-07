@@ -16,7 +16,7 @@
 #include "mvCore.h"
 #include "mvAppItemState.h"
 #include "mvAppItemDescription.h"
-#include "mvAppItemStyleManager.h"
+#include "core/Theming/mvAppItemStyleManager.h"
 
 //-----------------------------------------------------------------------------
 // Helper Macro
@@ -57,6 +57,8 @@ namespace Marvel {
     //-----------------------------------------------------------------------------
     class mvAppItem
     {
+
+        friend class mvAppItemState;
 
     protected:
 
@@ -118,11 +120,14 @@ namespace Marvel {
         [[nodiscard]] const std::string&    getPopup                  () const { return m_popup; }
         [[nodiscard]] const std::string&    getDataSource             () const { return m_dataSource; }
         [[nodiscard]] int                   getWidth                  () const { return m_width; }
+        [[nodiscard]] int                   getActualWidth            () const { return m_actualWidth; }
         [[nodiscard]] int                   getHeight                 () const { return m_height; }
+        [[nodiscard]] int                   getActualHeight           () const { return m_actualHeight; }
         [[nodiscard]] bool                  isShown                   () const { return m_show; }
         [[nodiscard]] bool                  isItemEnabled             () const { return m_enabled; }
         mvAppItemState&                     getState                  ()       { return m_state; }
         const mvAppItemDescription&         getDescription            () const { return m_description; }
+        bool                                isSizeDirty               () const { return m_dirtySize; }
 
         // setters
         void                                setParent                 (mvAppItem* parent);
@@ -135,11 +140,13 @@ namespace Marvel {
         inline void                         setCallbackData           (PyObject* data)          { m_callbackData = data; }
         inline void                         setPopup                  (const std::string& popup){ m_popup = popup; }
         inline void                         setTip                    (const std::string& tip)  { m_tip = tip; }
-        virtual void                        setWidth                  (int width)               { m_width = width; }
-        virtual void                        setHeight                 (int height)              { m_height = height; }
+        virtual void                        setWidthND                (int width)             { m_width = width; } // for group, TODO: FIX THIS
+        virtual void                        setWidth                  (int width)               { m_dirtySize = true; m_width = width; }
+        virtual void                        setHeight                 (int height)              { m_dirtySize = true; m_height = height; }
         virtual void                        setEnabled                (bool value)              { m_enabled = value; }
         virtual void                        setDataSource             (const std::string& value){ m_dataSource = value; }
-        inline void                         setLabel                  (const std::string& value){ m_label = value; }
+        virtual void                        setLabel                  (const std::string& value);
+        void                                setSizeClean              () { m_dirtySize = false; }
 
     protected:
 
@@ -154,10 +161,13 @@ namespace Marvel {
         PyObject*               m_callbackData = nullptr;
         int                     m_width  = 0;
         int                     m_height = 0;
+        int                     m_actualWidth = 0;
+        int                     m_actualHeight = 0;
         bool                    m_show                 = true; // determines whether to attempt rendering
         bool                    m_enabled              = true;
         mvAppItem*              m_parent               = nullptr;
         std::vector<mvAppItem*> m_children;
         mvAppItemDescription    m_description;
+        bool                    m_dirtySize = false;
     };
 }

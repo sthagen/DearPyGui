@@ -1,8 +1,9 @@
 #include "mvAppInterface.h"
 #include "mvInterfaceCore.h"
-#include "core/mvAppItems.h"
+#include "core/AppItems/mvAppItems.h"
 #include "core/AppItems/mvWindowAppItem.h"
 #include "core/mvWindow.h"
+#include "core/mvEvents.h"
 #include <ImGuiFileDialog.h>
 #include "Registries/mvDataStorage.h"
 
@@ -21,6 +22,12 @@ namespace Marvel {
 
 		parsers->insert({ "decrement_texture", mvPythonParser({
 			{mvPythonDataType::String, "name"},
+		}, "Decrements a texture.") });
+
+		parsers->insert({ "enable_docking", mvPythonParser({
+			{mvPythonDataType::KeywordOnly},
+			{mvPythonDataType::Bool, "shift_only", "press shift for docking", "True"},
+			{mvPythonDataType::Bool, "dock_space", "add explicit dockspace over viewport", "False"},
 		}, "Decrements a texture.") });
 
 		parsers->insert({ "set_start_callback", mvPythonParser({
@@ -307,6 +314,20 @@ namespace Marvel {
 				mvApp::GetApp()->addTexture(name, fdata, width, height, tformat);
 			return GetPyNone();
 		}
+	}
+
+	PyObject* enable_docking(PyObject* self, PyObject* args, PyObject* kwargs)
+	{
+		int shift_only = true;
+		int dockspace = false;
+
+		if (!(*mvApp::GetApp()->getParsers())["enable_docking"].parse(args, kwargs, __FUNCTION__,
+			&shift_only, &dockspace))
+			return GetPyNone();
+
+		mvApp::GetApp()->turnOnDocking(shift_only, dockspace);
+
+		return GetPyNone();
 	}
 
 	PyObject* decrement_texture(PyObject* self, PyObject* args, PyObject* kwargs)
@@ -1006,6 +1027,8 @@ namespace Marvel {
 			if(window->getName() != item)
 				static_cast<mvWindowAppitem*>(window)->setWindowAsMainStatus(false);
 		}
+
+		mvAppLog::Focus();
 
 		mvWindowAppitem* window = mvApp::GetApp()->getItemRegistry().getWindow(item);
 

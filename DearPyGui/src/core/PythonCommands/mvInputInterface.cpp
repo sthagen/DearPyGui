@@ -61,7 +61,6 @@ namespace Marvel {
 
 		parsers->insert({ "set_resize_callback", mvPythonParser({
 			{mvPythonDataType::Callable, "callback", "Registers a callback"},
-			{mvPythonDataType::KeywordOnly},
 			{mvPythonDataType::String, "handler", "Callback will be run when event occurs while this window is active (default is main window)", "''"},
 		}, "Sets a callback for a window resize event.", "None", "Input Polling") });
 
@@ -404,7 +403,7 @@ namespace Marvel {
 			if (item->getDescription().root)
 			{
 				auto windowtype = static_cast<mvWindowAppitem*>(item);
-				mvEventHandler* eventhandler = static_cast<mvEventHandler*>(windowtype);
+				mvOldEventHandler* eventhandler = static_cast<mvOldEventHandler*>(windowtype);
 				eventhandler->setResizeCallback(callback);
 			}
 			else

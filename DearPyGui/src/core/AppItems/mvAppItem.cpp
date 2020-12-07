@@ -12,6 +12,7 @@ namespace Marvel{
 	{
 		m_name = name;
 		m_label = name;
+		m_state.setParent(this);
 	}
 
 	mvAppItem* mvAppItem::getNearestAncestorOfType(mvAppItemType type)
@@ -84,8 +85,8 @@ namespace Marvel{
 		PyDict_SetItemString(dict, "source", ToPyString(m_dataSource));
 		PyDict_SetItemString(dict, "popup", ToPyString(m_popup));
 		PyDict_SetItemString(dict, "tip", ToPyString(m_tip));
-		PyDict_SetItemString(dict, "width", ToPyInt(m_width));
-		PyDict_SetItemString(dict, "height", ToPyInt(m_height));
+		PyDict_SetItemString(dict, "width", ToPyInt(m_actualWidth));
+		PyDict_SetItemString(dict, "height", ToPyInt(m_actualHeight));
 		PyDict_SetItemString(dict, "show", ToPyBool(m_show));
 		PyDict_SetItemString(dict, "enabled", ToPyBool(m_enabled));
 	}
@@ -426,6 +427,11 @@ namespace Marvel{
 	void mvAppItem::setParent(mvAppItem* parent)
 	{
 		m_parent = parent;
+	}
+
+	void mvAppItem::setLabel(const std::string& value)
+	{
+		m_label = value + "##" + m_name;
 	}
 
 	mvAppItem* mvAppItem::stealChild(const std::string& name)

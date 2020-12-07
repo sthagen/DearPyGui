@@ -23,9 +23,10 @@
 #include <chrono>
 #include <mutex>
 #include <thread>
-#include "mvAppItem.h"
+#include "mvEvents.h"
+#include "core/AppItems/mvAppItem.h"
 #include "PythonUtilities/mvPythonParser.h"
-#include "mvEventHandler.h"
+#include "mvOldEventHandler.h"
 #include "Registries/mvItemRegistry.h"
 #include "Registries/mvDrawList.h"
 #include "Registries/mvTextureStorage.h"
@@ -58,7 +59,7 @@ namespace Marvel {
     //-----------------------------------------------------------------------------
     // mvApp
     //-----------------------------------------------------------------------------
-    class mvApp : public mvEventHandler
+    class mvApp : public mvOldEventHandler
     {
 
         friend class mvWindow;
@@ -109,6 +110,7 @@ namespace Marvel {
         // Rendering
         //-----------------------------------------------------------------------------
         void                     firstRenderFrame(); // only ran during first frame
+        void                     thirdRenderFrame(); // only ran during third frame
         bool                     prerender       (); // pre rendering (every frame)
         void                     render          (); // actual render loop
         void                     postrender      (); // post rendering (every frame)
@@ -116,6 +118,7 @@ namespace Marvel {
         //-----------------------------------------------------------------------------
         // App Settings
         //-----------------------------------------------------------------------------
+        void                     turnOnDocking     (bool shiftOnly, bool dockSpace);
         void                     addRemapChar      (int dst, int src) { m_charRemaps.push_back({ dst, src }); }
         void                     setVSync          (bool value) { m_vsync = value; }
         void                     setResizable      (bool value) { m_resizable = value; }
@@ -210,7 +213,12 @@ namespace Marvel {
         static mvApp* s_instance;
         static bool   s_started;
 
-        mvItemRegistry m_itemRegistry;
+        mvItemRegistry                         m_itemRegistry;
+
+        // docking
+        bool                                   m_docking          = false;
+        bool                                   m_dockingShiftOnly = true;
+        bool                                   m_dockingViewport  = false;
 
         mvWindow*                              m_viewport = nullptr;
         std::string                            m_activeWindow;
@@ -227,7 +235,6 @@ namespace Marvel {
         std::string m_theme = "Dark";
         float       m_globalFontScale = 1.0f;
         ImGuiStyle  m_newstyle;
-        bool        m_firstRender = true;
         bool        m_styleChange = true;
         bool        m_vsync = true;
         bool        m_resizable = true;
@@ -247,7 +254,6 @@ namespace Marvel {
         // new callback system
         std::queue<NewCallback>          m_callbacks;
 
-
         // concurrency
         std::queue<AsyncronousCallback>  m_asyncReturns;
         std::vector<AsyncronousCallback> m_asyncCallbacks;
@@ -264,7 +270,6 @@ namespace Marvel {
         mvDrawList m_frontDrawList;
         mvDrawList m_backDrawList;
         std::vector<CompileTimeTexture> m_textures;
-
     };
 
 }

@@ -1,11 +1,68 @@
 #include "mvItemRegistry.h"
 #include "PythonUtilities/mvPythonExceptions.h"
-#include "mvAppItem.h"
+#include "core/AppItems/mvAppItem.h"
 #include "core/AppItems/mvWindowAppItem.h"
 #include "mvProfiler.h"
 #include "mvApp.h"
 
 namespace Marvel {
+
+	mvItemRegistry::mvItemRegistry()
+	{
+		mvEventBus::Subscribe(this, 0, SID("APP_ITEM_EVENTS"));
+	}
+
+	bool mvItemRegistry::onEvent(mvEvent& event)
+	{
+		mvEventDispatcher dispatcher(event);
+
+		dispatcher.dispatch(BIND_EVENT_FN(mvItemRegistry::onAddItem),      SID("ADD_ITEM"));
+		dispatcher.dispatch(BIND_EVENT_FN(mvItemRegistry::onDeleteItem),   SID("DELETE_ITEM"));
+		dispatcher.dispatch(BIND_EVENT_FN(mvItemRegistry::onMoveItem),     SID("MOVE_ITEM"));
+		dispatcher.dispatch(BIND_EVENT_FN(mvItemRegistry::onMoveItemUp),   SID("MOVE_ITEM_UP"));
+		dispatcher.dispatch(BIND_EVENT_FN(mvItemRegistry::onMoveItemDown), SID("MOVE_ITEM_DOWN"));
+
+		return event.handled;
+	}
+
+	bool mvItemRegistry::onAddItem(mvEvent& event)
+	{
+
+		mvAppItem* item = GetEPtr<mvAppItem*>(event, "ITEM");
+
+		return addItem(item);
+	}
+
+	bool mvItemRegistry::onDeleteItem(mvEvent& event)
+	{
+		if (GetEBool(event, "CHILDREN_ONLY"))
+			m_deleteChildrenQueue.push(GetEString(event, "ITEM"));
+		else
+			m_deleteQueue.push_back(GetEString(event, "ITEM"));
+
+		return true;
+	}
+
+	bool mvItemRegistry::onMoveItem(mvEvent& event)
+	{
+		m_moveVec.push({ 
+			GetEString(event, "ITEM"), 
+			GetEString(event, "PARENT"), 
+			GetEString(event, "BEFORE") });
+		return true;
+	}
+
+	bool mvItemRegistry::onMoveItemUp(mvEvent& event)
+	{
+		m_upQueue.push(GetEString(event, "ITEM"));
+		return true;
+	}
+
+	bool mvItemRegistry::onMoveItemDown(mvEvent& event)
+	{
+		m_downQueue.push(GetEString(event, "ITEM"));
+		return true;
+	}
 
 	bool mvItemRegistry::addRuntimeItem(const std::string& parent, const std::string& before, mvAppItem* item)
 	{
@@ -13,16 +70,6 @@ namespace Marvel {
 			return false;
 
 		m_newItemVec.push_back({ item, before, parent });
-
-		return true;
-	}
-
-	bool mvItemRegistry::moveItem(const std::string& name, const std::string& parent, const std::string& before)
-	{
-		if (!mvApp::GetApp()->checkIfMainThread())
-			return false;
-
-		m_moveVec.push({ name, parent, before });
 
 		return true;
 	}
@@ -244,7 +291,7 @@ namespace Marvel {
 			// check if attempting to delete a window
 			for (auto window : m_frontWindows)
 			{
-				if (window->getName() == m_deleteQueue.front())
+				if (window->getName() == item)
 				{
 					frontWindowDeleting = true;
 					break;
@@ -253,7 +300,7 @@ namespace Marvel {
 
 			for (auto window : m_backWindows)
 			{
-				if (window->getName() == m_deleteQueue.front())
+				if (window->getName() == item)
 				{
 					backWindowDeleting = true;
 					break;
@@ -489,23 +536,4 @@ namespace Marvel {
 		m_backWindows.clear();
 	}
 
-	void mvItemRegistry::deleteItem(const std::string& name) 
-	{ 
-		m_deleteQueue.push_back(name); 
-	}
-
-	void mvItemRegistry::deleteItemChildren(const std::string& name) 
-	{ 
-		m_deleteChildrenQueue.push(name); 
-	}
-
-	void mvItemRegistry::moveItemUp(const std::string& name) 
-	{ 
-		m_upQueue.push(name); 
-	}
-
-	void mvItemRegistry::moveItemDown(const std::string& name) 
-	{ 
-		m_downQueue.push(name); 
-	}
 }

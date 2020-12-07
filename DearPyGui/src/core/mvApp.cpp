@@ -5,7 +5,7 @@
 #include "Registries/mvDataStorage.h"
 #include "mvInput.h"
 #include "mvTextEditor.h"
-#include "mvThemeScheme.h"
+#include "Theming/mvThemeScheme.h"
 #include <fstream>
 #include <streambuf>
 #include "mvAppLog.h"
@@ -13,7 +13,7 @@
 #include <future>
 #include <chrono>
 #include "core/mvThreadPool.h"
-#include "core/mvAppItems.h"
+#include "core/AppItems/mvAppItems.h"
 #include <frameobject.h>
 #include "PythonUtilities/mvPyObject.h"
 #include "mvProfiler.h"
@@ -72,15 +72,17 @@ namespace Marvel {
 
 	void mvApp::SetAppStarted() 
 	{
-		if (GetApp())
-			GetApp()->runCallback(GetApp()->getOnStartCallback(), "Main Application");
+		//if (GetApp())////GetApp()->runCallback(GetApp()->getOnStartCallback(), "Main Application");
 		s_started = true; 
 	}
 
 	void mvApp::SetAppStopped() 
 	{ 
-		if(GetApp())
+		if (GetApp())
+		{
 			GetApp()->runCallback(GetApp()->getOnCloseCallback(), "Main Application");
+			GetApp()->setOnCloseCallback(nullptr);
+		}
 
 		s_started = false; 
 		auto viewport = s_instance->getViewport();
@@ -88,7 +90,7 @@ namespace Marvel {
 			viewport->stop();
 	}
 
-	mvApp::mvApp() : mvEventHandler()
+	mvApp::mvApp() : mvOldEventHandler()
 	{
 		m_parsers = BuildDearPyGuiInterface();
 
@@ -123,9 +125,15 @@ namespace Marvel {
 		mvDataStorage::DeleteAllData();
 	}
 
+	void mvApp::turnOnDocking(bool shiftOnly, bool dockSpace)
+	{ 
+		m_docking = true; 
+		m_dockingShiftOnly = shiftOnly; 
+		m_dockingViewport = dockSpace;
+	}
+
 	void mvApp::firstRenderFrame()
 	{
-		m_firstRender = false;
 
 		// if any theme color is not specified, use the default colors
 		for (int i = 0; i < ImGuiCol_COUNT; i++)
@@ -143,14 +151,24 @@ namespace Marvel {
 			
 
 		m_textures.clear();
+
+	}
+
+	void mvApp::thirdRenderFrame()
+	{
+
+		GetApp()->runCallback(GetApp()->getOnStartCallback(), "Main Application");
 	}
 
 	bool mvApp::prerender()
 	{
 		MV_PROFILE_FUNCTION();
 
-		if (m_firstRender)
+		// allows for proper sizing
+		if (ImGui::GetFrameCount() == 1)
 			firstRenderFrame();
+		else if (ImGui::GetFrameCount() == 3)
+			thirdRenderFrame();
 
 		// check if threadpool is ready to be cleaned up
 		if (m_threadTime > m_threadPoolTimeout)
@@ -182,6 +200,9 @@ namespace Marvel {
 		m_deltaTime = ImGui::GetIO().DeltaTime;
 		m_time = ImGui::GetTime();
 		ImGui::GetIO().FontGlobalScale = m_globalFontScale;
+
+		if (m_dockingViewport)
+			ImGui::DockSpaceOverViewport();
 
 		// check if any asyncronous functions have returned
 		// and are requesting to send data back to main thread
@@ -317,7 +338,7 @@ namespace Marvel {
 		// Note: Events are only routed to the active window
 
 		// default handler is main window
-		mvEventHandler* eventHandler = static_cast<mvEventHandler*>(this);
+		mvOldEventHandler* eventHandler = static_cast<mvOldEventHandler*>(this);
 
 		// early opt out of keyboard events
 		if (eventHandler->isAcceleratorHandled())
@@ -981,6 +1002,7 @@ namespace Marvel {
 		for (const auto& item : results)
 			buffers[item.first].AddPoint(t, item.second.count());
 
+		//ImGui::SetNextWindowFocus();
 		ImGui::SetNextWindowSize(ImVec2(500, 500), ImGuiCond_FirstUseEver);
 		if (!ImGui::Begin("Profiling", nullptr))
 		{

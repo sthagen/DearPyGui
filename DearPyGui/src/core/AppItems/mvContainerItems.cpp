@@ -5,7 +5,7 @@
 namespace Marvel {
 
 	mvChild::mvChild(const std::string& name)
-		: mvBoolPtrBase(name, false, name), mvEventHandler()
+		: mvBoolPtrBase(name, false, name), mvOldEventHandler()
 	{
 		m_description.container = true;
 	}
@@ -119,7 +119,7 @@ namespace Marvel {
 		for (mvAppItem* item : m_children)
 		{
 			if (m_width != 0)
-				item->setWidth(m_width);
+				item->setWidthND(m_width);
 
 			// skip item if it's not shown
 			if (!item->isShown())
@@ -208,7 +208,6 @@ namespace Marvel {
 					ImGui::SetTooltip("%s", item->getTip().c_str());
 
 				item->getState().update();
-				int a = 5;
 			}
 		}
 

@@ -23,10 +23,120 @@ HOW TO UPDATE?
 - Please report any issue!
 
 -----------------------------------------------------------------------
- VERSION 0.6.10
+ VERSION 0.6.x
 -----------------------------------------------------------------------
 
-Decorated log: https://github.com/hoffstadt/DearPyGui/releases/tag/v0.6.10
+Decorated log: https://github.com/hoffstadt/DearPyGui/releases/tag/v0.6.x
+
+-----------------------------------------------------------------------
+ VERSION 0.6.35
+-----------------------------------------------------------------------
+
+Fixes:
+- plots:           fixed plot scaling issue #364
+- get_item_width:  now works for non-container widgets
+- get_item_height: now works for non-container widgets
+
+-----------------------------------------------------------------------
+ VERSION 0.6.34
+-----------------------------------------------------------------------
+
+Decorated log: https://github.com/hoffstadt/DearPyGui/releases/tag/v0.6.34
+
+Fixes:
+- exit callback: fixed exit callback being called twice
+- tooltips:      fixed tooltips in managed columns issue #360
+
+-----------------------------------------------------------------------
+ VERSION 0.6.32
+-----------------------------------------------------------------------
+
+New Commands:
+- docking:   Added "enable_docking" command
+
+Fixes:
+- tables:          fixed color alignment issue
+- get_item_width:  now works for non-container widgets
+- get_item_height: now works for non-container widgets
+
+-----------------------------------------------------------------------
+ VERSION 0.6.27
+-----------------------------------------------------------------------
+
+Fixes:
+- set_item_label: fixed label always being empty #354
+- modify_draw_command: fixed issue with draw image uv_max #352
+
+-----------------------------------------------------------------------
+ VERSION 0.6.24
+-----------------------------------------------------------------------
+
+Decorated log: https://github.com/hoffstadt/DearPyGui/releases/tag/v0.6.24
+
+Fixes:
+- set_item_label: fixed issue causing resize of window #346
+- set_item_label: fixed issue causing empty labels to not work
+- add_texture: fixed compile time add_texture issue introduced in 0.6.18 #350
+
+-----------------------------------------------------------------------
+ VERSION 0.6.18
+-----------------------------------------------------------------------
+
+Fixes:
+- delete_item: fixed issue with windows not working properly
+- window_size: fixed issue where sizes were a frame late
+- textures:    fixed several issues with texture creation
+
+-----------------------------------------------------------------------
+ VERSION 0.6.16
+-----------------------------------------------------------------------
+
+Fixes:
+- delete_item: fixed issue with windows not working properly
+
+-----------------------------------------------------------------------
+ VERSION 0.6.15
+-----------------------------------------------------------------------
+
+Decorated log: https://github.com/hoffstadt/DearPyGui/releases/tag/v0.6.15
+
+New Keywords:
+- plot:               Added "format" keyword
+- plot:               Added "y2axis_no_gridlines" keyword
+- plot:               Added "y2axis_no_tick_marks" keyword
+- plot:               Added "y2axis_no_tick_labels" keyword
+- plot:               Added "y2axis_log_scale" keyword
+- plot:               Added "y2axis_invert" keyword
+- plot:               Added "y2axis_lock_min" keyword
+- plot:               Added "y2axis_lock_max" keyword
+- plot:               Added "yaxis_no_gridlines" keyword
+- plot:               Added "y3axis_no_tick_marks" keyword
+- plot:               Added "y3axis_no_tick_labels" keyword
+- plot:               Added "y3axis_log_scale" keyword
+- plot:               Added "y3axis_invert" keyword
+- plot:               Added "y3axis_lock_min" keyword
+- plot:               Added "y3axis_lock_max" keyword
+- add_area_series:    Added "axis" keyword #318
+- add_line_series:    Added "axis" keyword #318
+- add_scatter_series: Added "axis" keyword #318
+- add_heat_series:    Added "axis" keyword #318
+- add_error_series:   Added "axis" keyword #318
+- add_pie_series:     Added "axis" keyword #318
+- add_stair_series:   Added "axis" keyword #318
+- add_stem_series:    Added "axis" keyword #318
+- add_shade_series:   Added "axis" keyword #318
+- add_candle_series:  Added "axis" keyword #318
+- add_bar_series:     Added "axis" keyword #318
+
+Fixes:
+- set_resize_callback: handler now required
+- stub file:           added missing tab options
+- primary window:      will no longer hide logger
+- start callback:      is ran on the 3rd frame now
+
+-----------------------------------------------------------------------
+ VERSION 0.6.10
+-----------------------------------------------------------------------
 
 New Commands:
 - Plot API:   Added "get_plot_xlimits" command

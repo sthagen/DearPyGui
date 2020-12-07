@@ -1,4 +1,5 @@
 #include "mvDebugWindow.h"
+#include "core/mvEvents.h"
 #include <misc/cpp/imgui_stdlib.h>
 #include "mvApp.h"
 #include "mvInput.h"
@@ -210,18 +211,33 @@ namespace Marvel {
 
 				std::string width = std::to_string(selectedItem->getWidth());
 				std::string height = std::to_string(selectedItem->getHeight());
+				std::string awidth = std::to_string(selectedItem->getActualWidth());
+				std::string aheight = std::to_string(selectedItem->getActualHeight());
+				
+				std::string sizex = std::to_string(selectedItem->getState().getItemRectSize().x);
+				std::string sizey = std::to_string(selectedItem->getState().getItemRectSize().y);
 
                 ImGui::BeginGroup();
 
                 if (ImGui::ArrowButton("Move Up", ImGuiDir_Up))
-                    app->getItemRegistry().moveItemUp(m_selectedItem);
+					mvEventBus::Publish("APP_ITEM_EVENTS", "MOVE_ITEM_UP",
+						{
+								CreateEventArgument("ITEM", std::string(m_selectedItem))
+						});
                 ImGui::SameLine();
                 if (ImGui::ArrowButton("Move Down", ImGuiDir_Down))
-                    app->getItemRegistry().moveItemDown(m_selectedItem);
+					mvEventBus::Publish("APP_ITEM_EVENTS", "MOVE_ITEM_DOWN",
+						{
+								CreateEventArgument("ITEM", std::string(m_selectedItem))
+						});
                 ImGui::SameLine();
                 if (ImGui::Button("Delete"))
                 {
-                    app->getItemRegistry().deleteItem(m_selectedItem);
+					mvEventBus::Publish("APP_ITEM_EVENTS", "DELETE_ITEM",
+						{
+							{SID("ITEM"), std::string(m_selectedItem)},
+							{SID("CHILDREN_ONLY"), false}
+						});
                     m_selectedItem = "";
                 }
                 ImGui::SameLine();
@@ -238,6 +254,10 @@ namespace Marvel {
                 DebugItem("Item Parent:", parentName.c_str());
                 DebugItem("Item Width:", width.c_str());
                 DebugItem("Item Height:", height.c_str());
+				DebugItem("Item Actual Width:", awidth.c_str());
+				DebugItem("Item Actual Height:", aheight.c_str());
+                DebugItem("Item Size x:", sizex.c_str());
+                DebugItem("Item Size y:", sizey.c_str());
                 DebugItem("Item Tip:", selectedItem->getTip().c_str());
                 DebugItem("Item Popup:", selectedItem->getPopup().c_str());
                 DebugItem("Item Show:", selectedItem->isShown() ? ts : fs);

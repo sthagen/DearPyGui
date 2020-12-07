@@ -11,7 +11,7 @@
 ![Python Version](https://img.shields.io/pypi/pyversions/dearpygui)
 [![PYPI](https://img.shields.io/pypi/v/dearpygui)](https://pypi.org/project/dearpygui/)
 [![Downloads](https://pepy.tech/badge/dearpygui)](https://pepy.tech/project/dearpygui)
-[![Sponsors](https://img.shields.io/badge/sponsors-12-brightgreen)](https://img.shields.io/badge/sponsors-12-brightgreen)
+[![Sponsors](https://img.shields.io/badge/sponsors-12-brightgreen)](https://img.shields.io/badge/sponsors-14-brightgreen)
 
 [![build status](https://github.com/hoffstadt/DearPyGui/workflows/Embedded%20Build/badge.svg)](https://github.com/hoffstadt/DearPyGui/actions?workflow=Embedded%20Build)
 [![Build status](https://ci.appveyor.com/api/projects/status/eypfn2lyuwfv8mel?svg=true)](https://ci.appveyor.com/project/hoffstadt/dearpygui)
@@ -53,7 +53,7 @@ Ensure you have at least Python 3.6 64bit.
 
  ---
   
-- [DearPyGui-Examples repository](https://github.com/Pcothren/DearPyGui-Examples) for example usage.
+- [DearPyGui-Examples](https://hoffstadt.github.io/DearPyGui/examples.html) and source code.
 - [Tutorials](https://hoffstadt.github.io/DearPyGui/tutorial.html) for getting started.
 - [Online Documentation](https://hoffstadt.github.io/DearPyGui/) for official documentation.
 - Internal Documentation: Run the **show_documentation** command from within the library to view an reference guide. 
@@ -144,7 +144,7 @@ If you are having issues or want to help, here are some places you can go:
 
 Some upcoming features:
 - An object oriented interface
-- Support for window docking and multiple viewports.
+- Support for multiple viewports.
 - 3D widget.
 - Custom Widget API.
 
@@ -158,6 +158,7 @@ These include:
 * 🏆 [Dean Keinan](https://github.com/deankeinan) _Partner Sponsor_
 * 🥇 [Caden Bloxham](https://github.com/cubic-unit) _Gold Sponsor_
 * 🥇 [Michael Kadziela](https://github.com/Innominus) _Gold Sponsor_
+* 🥇 [Yan Zaretskiy](https://github.com/mindv0rtex) _Gold Sponsor_
 
 Thank you to all other sponsors for keeping this project moving forward!
 

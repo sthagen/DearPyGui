@@ -14,13 +14,15 @@ set(MARVEL_SOURCES
 	"$<$<PLATFORM_ID:Linux>:src/platform/Linux/mvUtilities.cpp>"
 	"$<$<PLATFORM_ID:Linux>:src/platform/Linux/mvLinuxWindow.cpp>"
 
+	"src/core/mvEvents.cpp"
 	"src/core/mvApp.cpp"
 	"src/core/mvAppLog.cpp"
 	"src/core/mvInput.cpp"
 	"src/core/mvWindow.cpp"
 	"src/core/mvTextEditor.cpp"
 	"src/core/mvProfiler.cpp"
-	"src/core/mvAppItemStyleManager.cpp"
+
+	"src/core/Theming/mvAppItemStyleManager.cpp"
 
 	"src/core/DrawCommands/mvDrawImageCmd.cpp"
 	"src/core/DrawCommands/mvDrawLineCmd.cpp"
@@ -59,6 +61,7 @@ set(MARVEL_SOURCES
 	"src/core/PythonCommands/mvAppItemInterface.cpp"
 	"src/core/PythonCommands/mvAppInterface.cpp"
 
+	"src/core/AppItems/mvAppItemState.cpp"
 	"src/core/AppItems/mvInputText.cpp"
 	"src/core/AppItems/mvTypeBases.cpp"
 	"src/core/AppItems/mvTimePicker.cpp"

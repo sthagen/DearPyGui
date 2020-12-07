@@ -6,7 +6,7 @@
 namespace Marvel {
 
 		mvWindowAppitem::mvWindowAppitem(const std::string& name, bool mainWindow, PyObject* closing_callback)
-			: mvAppItem(name), mvEventHandler(), m_mainWindow(mainWindow), m_closing_callback(SanitizeCallback(closing_callback))
+			: mvAppItem(name), mvOldEventHandler(), m_mainWindow(mainWindow), m_closing_callback(SanitizeCallback(closing_callback))
 		{
 			m_description.root = true;
 			m_description.container = true;
@@ -73,6 +73,13 @@ namespace Marvel {
 		{ 
 			m_height = height; 
 			m_dirty_size = true; 
+		}
+
+		void mvWindowAppitem::setLabel(const std::string& value)
+		{
+			m_label = value;
+			m_dirty_pos = true;
+			m_dirty_size = true;
 		}
 
 		mvVec2 mvWindowAppitem::getWindowPos() const
@@ -168,7 +175,11 @@ namespace Marvel {
 			m_state.setActivated(ImGui::IsWindowCollapsed());
 
 			if (ImGui::GetWindowWidth() != (float)m_width || ImGui::GetWindowHeight() != (float)m_height)
+			{
+				m_width = (int)ImGui::GetWindowWidth();
+				m_height = (int)ImGui::GetWindowHeight();
 				mvApp::GetApp()->runCallback(getResizeCallback(), m_name);
+			}
 
 			m_width = (int)ImGui::GetWindowWidth();
 			m_height = (int)ImGui::GetWindowHeight();
