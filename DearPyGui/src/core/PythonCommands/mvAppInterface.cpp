@@ -1,11 +1,10 @@
 #include "mvAppInterface.h"
-#include "mvInterfaceCore.h"
-#include "core/AppItems/mvAppItems.h"
-#include "core/AppItems/mvWindowAppItem.h"
-#include "core/mvWindow.h"
-#include "core/mvEvents.h"
+#include "mvAppItem.h"
+#include "mvWindow.h"
+#include "mvEvents.h"
+#include "mvThreadPoolManager.h"
 #include <ImGuiFileDialog.h>
-#include "Registries/mvDataStorage.h"
+#include "mvDataStorage.h"
 
 namespace Marvel {
 
@@ -254,10 +253,10 @@ namespace Marvel {
 				fdata.push_back(item / 255.0f);
 
 			if (mvApp::IsAppStarted())
-				mvTextureStorage::AddTexture(name, fdata.data(), width, height, tformat);
+				mvApp::GetApp()->getTextureStorage().addTexture(name, fdata.data(), width, height, tformat);
 
 			else
-				mvApp::GetApp()->addTexture(name, fdata, width, height, tformat);
+				mvApp::GetApp()->getTextureStorage().addDelayedTexture(name, fdata, width, height, tformat);
 			return GetPyNone();
 		}
 
@@ -275,10 +274,10 @@ namespace Marvel {
 			}
 
 			if (mvApp::IsAppStarted())
-				mvTextureStorage::AddTexture(name, fdata.data(), width, height, tformat);
+				mvApp::GetApp()->getTextureStorage().addTexture(name, fdata.data(), width, height, tformat);
 
 			else
-				mvApp::GetApp()->addTexture(name, fdata, width, height, tformat);
+				mvApp::GetApp()->getTextureStorage().addDelayedTexture(name, fdata, width, height, tformat);
 			return GetPyNone();
 		}
 
@@ -287,10 +286,10 @@ namespace Marvel {
 			std::vector<float> mdata = ToFloatVect(data);
 
 			if (mvApp::IsAppStarted())
-				mvTextureStorage::AddTexture(name, mdata.data(), width, height, tformat);
+				mvApp::GetApp()->getTextureStorage().addTexture(name, mdata.data(), width, height, tformat);
 
 			else
-				mvApp::GetApp()->addTexture(name, mdata, width, height, tformat);
+				mvApp::GetApp()->getTextureStorage().addDelayedTexture(name, mdata, width, height, tformat);
 			return GetPyNone();
 		}
 
@@ -308,10 +307,10 @@ namespace Marvel {
 			}
 
 			if (mvApp::IsAppStarted())
-				mvTextureStorage::AddTexture(name, fdata.data(), width, height, tformat);
+				mvApp::GetApp()->getTextureStorage().addTexture(name, fdata.data(), width, height, tformat);
 
 			else
-				mvApp::GetApp()->addTexture(name, fdata, width, height, tformat);
+				mvApp::GetApp()->getTextureStorage().addDelayedTexture(name, fdata, width, height, tformat);
 			return GetPyNone();
 		}
 	}
@@ -338,7 +337,7 @@ namespace Marvel {
 			&name))
 			return GetPyNone();
 
-		mvTextureStorage::DecrementTexture(name);
+		mvEventBus::PublishEndFrame(mvEVT_CATEGORY_TEXTURE, mvEVT_DEC_TEXTURE, { CreateEventArgument("NAME", std::string(name)) });
 
 		return GetPyNone();
 	}
@@ -465,33 +464,8 @@ namespace Marvel {
 			return GetPyNone();
 		}
 
-		mvApp::SetAppStarted();
-
-		// create window
-		auto window = mvWindow::CreatemvWindow(mvApp::GetApp()->getActualWidth(), mvApp::GetApp()->getActualHeight(), false);
-		mvApp::GetApp()->setViewport(window);
-		window->show();
-
-		if (!std::string(primary_window).empty())
-		{
-			// reset other windows
-			for (auto window : mvApp::GetApp()->getItemRegistry().getFrontWindows())
-			{
-				if(window->getName() != primary_window)
-					static_cast<mvWindowAppitem*>(window)->setWindowAsMainStatus(false);
-			}
-
-			mvWindowAppitem* window = mvApp::GetApp()->getItemRegistry().getWindow(primary_window);
-
-			if (window)
-				window->setWindowAsMainStatus(true);
-			else
-				ThrowPythonException("Window does not exists.");
-		}
-
-		window->run();
-		delete window;
-		mvApp::SetAppStopped();
+		mvApp::GetApp()->start(primary_window);
+		
 		mvApp::DeleteApp();
 
 		return GetPyNone();
@@ -504,7 +478,7 @@ namespace Marvel {
 		if (!(*mvApp::GetApp()->getParsers())["set_start_callback"].parse(args, kwargs, __FUNCTION__, &callback))
 			return GetPyNone();
 
-		mvApp::GetApp()->setOnStartCallback(callback);
+		mvCallbackRegistry::GetCallbackRegistry()->setOnStartCallback(callback);
 		return GetPyNone();
 	}
 
@@ -515,7 +489,7 @@ namespace Marvel {
 		if (!(*mvApp::GetApp()->getParsers())["set_exit_callback"].parse(args, kwargs, __FUNCTION__, &callback))
 			return GetPyNone();
 
-		mvApp::GetApp()->setOnCloseCallback(callback);
+		mvCallbackRegistry::GetCallbackRegistry()->setOnCloseCallback(callback);
 		return GetPyNone();
 	}
 
@@ -526,7 +500,7 @@ namespace Marvel {
 		if (!(*mvApp::GetApp()->getParsers())["set_accelerator_callback"].parse(args, kwargs, __FUNCTION__, &callback))
 			return GetPyNone();
 
-		mvApp::GetApp()->setAcceleratorCallback(callback);
+		mvCallbackRegistry::GetCallbackRegistry()->setAcceleratorCallback(callback);
 		return GetPyNone();
 	}
 
@@ -551,7 +525,9 @@ namespace Marvel {
 		if (return_handler)
 			Py_XINCREF(return_handler);
 
-		mvApp::GetApp()->addMTCallback(callback, data, return_handler);
+		auto tpool = mvThreadPoolManager::GetThreadPoolManager();
+
+		mvCallbackRegistry::GetCallbackRegistry()->addMTCallback(callback, data, return_handler);
 
 		return GetPyNone();
 
@@ -612,22 +588,22 @@ namespace Marvel {
 
 	PyObject* get_thread_count(PyObject* self, PyObject* args, PyObject* kwargs)
 	{
-		return ToPyInt(mvApp::GetApp()->getThreadCount());
+		return ToPyInt(mvThreadPoolManager::GetThreadPoolManager()->getThreadCount());
 	}
 
 	PyObject* is_threadpool_high_performance(PyObject* self, PyObject* args, PyObject* kwargs)
 	{
-		return ToPyBool(mvApp::GetApp()->usingThreadPoolHighPerformance());
+		return ToPyBool(mvThreadPoolManager::GetThreadPoolManager()->usingThreadPoolHighPerformance());
 	}
 
 	PyObject* get_threadpool_timeout(PyObject* self, PyObject* args, PyObject* kwargs)
 	{
-		return ToPyFloat((float)mvApp::GetApp()->getThreadPoolTimeout());
+		return ToPyFloat((float)mvThreadPoolManager::GetThreadPoolManager()->getThreadPoolTimeout());
 	}
 
 	PyObject* get_active_window(PyObject* self, PyObject* args, PyObject* kwargs)
 	{
-		return ToPyString(mvApp::GetApp()->getActiveWindow());
+		return ToPyString(mvApp::GetApp()->getItemRegistry().getActiveWindow());
 	}
 
 	PyObject* get_dearpygui_version(PyObject* self, PyObject* args, PyObject* kwargs)
@@ -642,7 +618,7 @@ namespace Marvel {
 		if (!(*mvApp::GetApp()->getParsers())["set_threadpool_timeout"].parse(args, kwargs, __FUNCTION__, &time))
 			return GetPyNone();
 
-		mvApp::GetApp()->setThreadPoolTimeout(time);
+		mvThreadPoolManager::GetThreadPoolManager()->setThreadPoolTimeout(time);
 
 		return GetPyNone();
 	}
@@ -654,7 +630,7 @@ namespace Marvel {
 		if (!(*mvApp::GetApp()->getParsers())["set_thread_count"].parse(args, kwargs, __FUNCTION__, &threads))
 			return GetPyNone();
 
-		mvApp::GetApp()->setThreadCount(threads);
+		mvThreadPoolManager::GetThreadPoolManager()->setThreadCount(threads);
 
 		return GetPyNone();
 	}
@@ -705,7 +681,7 @@ namespace Marvel {
 
 	PyObject* set_threadpool_high_performance(PyObject* self, PyObject* args, PyObject* kwargs)
 	{
-		mvApp::GetApp()->setThreadPoolHighPerformance();
+		mvThreadPoolManager::GetThreadPoolManager()->setThreadPoolHighPerformance();
 		return GetPyNone();
 	}
 
@@ -717,7 +693,12 @@ namespace Marvel {
 		if (!(*mvApp::GetApp()->getParsers())["set_main_window_size"].parse(args, kwargs, __FUNCTION__, &width, &height))
 			return GetPyNone();
 
-		mvApp::GetApp()->setActualSize(width, height);
+		mvEventBus::Publish(mvEVT_CATEGORY_VIEWPORT, mvEVT_VIEWPORT_RESIZE, {
+			CreateEventArgument("actual_width", width),
+			CreateEventArgument("actual_height", height),
+			CreateEventArgument("client_width", width),
+			CreateEventArgument("client_height", height)
+			});
 
 		return GetPyNone();
 	}
@@ -1021,21 +1002,8 @@ namespace Marvel {
 		if (!(*mvApp::GetApp()->getParsers())["set_primary_window"].parse(args, kwargs, __FUNCTION__, &item, &value))
 			return GetPyNone();
 
-		// reset other windows
-		for (auto window : mvApp::GetApp()->getItemRegistry().getFrontWindows())
-		{
-			if(window->getName() != item)
-				static_cast<mvWindowAppitem*>(window)->setWindowAsMainStatus(false);
-		}
 
-		mvAppLog::Focus();
-
-		mvWindowAppitem* window = mvApp::GetApp()->getItemRegistry().getWindow(item);
-
-		if (window)
-			window->setWindowAsMainStatus(value);
-		else
-			ThrowPythonException("Window does not exists.");
+		mvApp::GetApp()->getItemRegistry().setPrimaryWindow(item, value);
 
 		return GetPyNone();
 	}

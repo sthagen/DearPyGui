@@ -1,8 +1,8 @@
 #include "mvDrawingInterface.h"
-#include "mvInterfaceCore.h"
-#include "DrawCommands/mvDrawCmdCommon.h"
-#include "Registries/mvDrawList.h"
-#include "core/mvEvents.h"
+#include "mvDrawCmdCommon.h"
+#include "mvDrawList.h"
+#include "mvEvents.h"
+#include "mvWindow.h"
 
 static const std::string DrawForeground = "##FOREGROUND";
 static const std::string DrawBackground = "##BACKGROUND";
@@ -195,10 +195,10 @@ namespace Marvel {
 	static mvDrawList* GetDrawListFromTarget(const char* name)
 	{
 		if (name == DrawForeground)
-			return &mvApp::GetApp()->getFrontDrawList();
+			return &mvApp::GetApp()->getViewport()->getFrontDrawList();
 
 		if (name == DrawBackground)
-			return &mvApp::GetApp()->getBackDrawList();
+			return &mvApp::GetApp()->getViewport()->getBackDrawList();
 
 		auto item = mvApp::GetApp()->getItemRegistry().getItem(name);
 
@@ -208,7 +208,7 @@ namespace Marvel {
 		if (item->getType() == mvAppItemType::Drawing)
 			return &static_cast<mvDrawing*>(item)->getDrawList();
 		if(item->getType() == mvAppItemType::Window)
-			return &static_cast<mvWindowAppitem*>(item)->getDrawList();
+			return &static_cast<mvWindowAppItem*>(item)->getDrawList();
 
 		ThrowPythonException(std::string(name) + " draw target does not exist or is not a valid target.");
 		return nullptr;
@@ -242,7 +242,7 @@ namespace Marvel {
 		if (!item)
 			return ToPyBool(false);
 
-		return ToPyBool(AddItemWithRuntimeChecks(item, parent, before));
+		return ToPyBool(mvApp::GetApp()->getItemRegistry().addItemWithRuntimeChecks(item, parent, before));
 	}
 
 	PyObject* modify_draw_command(PyObject* self, PyObject* args, PyObject* kwargs)

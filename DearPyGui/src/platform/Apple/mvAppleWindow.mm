@@ -30,8 +30,12 @@ namespace Marvel {
     static void window_size_callback(GLFWwindow* window, int width, int height)
     {
 
-        mvApp::GetApp()->setActualSize(width, height);
-        mvApp::GetApp()->runCallback(mvApp::GetApp()->getResizeCallback(), "Main Application");
+        mvEventBus::Publish(mvEVT_CATEGORY_VIEWPORT, mvEVT_VIEWPORT_RESIZE, {
+            CreateEventArgument("actual_width", width),
+            CreateEventArgument("actual_height", height),
+            CreateEventArgument("client_width", width),
+            CreateEventArgument("client_height", height)
+                    });
     }
 
     static void glfw_error_callback(int error, const char *description)
@@ -74,7 +78,13 @@ namespace Marvel {
         glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
         m_window = glfwCreateWindow(width, height, mvApp::GetApp()->m_title.c_str(), nullptr, nullptr);
         glfwSetWindowPos(m_window, mvApp::GetApp()->m_mainXPos, mvApp::GetApp()->m_mainYPos);
-	    mvApp::GetApp()->setActualSize(width, height);
+
+        mvEventBus::Publish(mvEVT_CATEGORY_VIEWPORT, mvEVT_VIEWPORT_RESIZE, {
+            CreateEventArgument("actual_width", (int)width),
+            CreateEventArgument("actual_height", (int)height),
+            CreateEventArgument("client_width", (int)width),
+            CreateEventArgument("client_height", (int)height)
+                    });
 
         device = MTLCreateSystemDefaultDevice();;
         m_commandQueue = [device newCommandQueue];
@@ -141,7 +151,13 @@ namespace Marvel {
             m_layer.drawableSize = CGSizeMake(width, height);
             id <CAMetalDrawable> drawable = [m_layer nextDrawable];
 
-            mvApp::GetApp()->setClientSize(width, height);
+
+            mvEventBus::Publish(mvEVT_CATEGORY_VIEWPORT, mvEVT_VIEWPORT_RESIZE, {
+            CreateEventArgument("actual_width", (int)m_width),
+            CreateEventArgument("actual_height", (int)m_height),
+            CreateEventArgument("client_width", width),
+            CreateEventArgument("client_height", height)
+                    });
 
             id <MTLCommandBuffer> commandBuffer = [m_commandQueue commandBuffer];
             m_renderPassDescriptor.colorAttachments[0].clearColor = MTLClearColorMake(m_clear_color[0],
@@ -165,11 +181,7 @@ namespace Marvel {
                 mvAppLog::render();
             } 
             else
-            {
-                m_app->prerender();
                 m_app->render();
-                m_app->postrender();
-            }
 
             // Rendering
             ImGui::Render();

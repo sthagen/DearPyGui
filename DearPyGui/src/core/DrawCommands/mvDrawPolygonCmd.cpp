@@ -1,5 +1,6 @@
 #include "mvDrawPolygonCmd.h"
-#include "PythonUtilities/mvPythonTranslator.h"
+#include "mvPythonTranslator.h"
+#include "mvGlobalIntepreterLock.h"
 
 namespace Marvel {
 
@@ -18,7 +19,6 @@ namespace Marvel {
 		std::vector<mvVec2> points = m_points;
 		for (auto& point : points)
 			point = point + start;
-		drawlist->AddPolyline((const ImVec2*)const_cast<const mvVec2*>(points.data()), (int)m_points.size(), m_color, false, m_thickness);
 
 		if (m_fill.specified)
 		{
@@ -92,6 +92,8 @@ namespace Marvel {
 			}
 			delete[] polyints;
 		}
+
+		drawlist->AddPolyline((const ImVec2*)const_cast<const mvVec2*>(points.data()), (int)m_points.size(), m_color, false, m_thickness);
 	}
 
 	void mvDrawPolygonCmd::setConfigDict(PyObject* dict)

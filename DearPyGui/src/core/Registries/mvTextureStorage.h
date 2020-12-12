@@ -17,6 +17,7 @@
 #include <string>
 #include <vector>
 #include <unordered_map>
+#include "mvEvents.h"
 
 namespace Marvel {
 
@@ -42,24 +43,41 @@ namespace Marvel {
 	//-----------------------------------------------------------------------------
 	// mvTextureStorage
 	//-----------------------------------------------------------------------------
-	class mvTextureStorage
+	class mvTextureStorage : public mvEventHandler
 	{
+
+		struct CompileTimeTexture
+		{
+			std::string name;
+			std::vector<float> data;
+			unsigned width;
+			unsigned height;
+			mvTextureFormat format;
+		};
 
 	public:
 
-		static void       AddTexture       (const std::string& name);
-		static void       AddTexture       (const std::string& name, float* data, unsigned width, unsigned height, mvTextureFormat format);
-		static void       IncrementTexture (const std::string& name);
-		static void       DecrementTexture (const std::string& name);
-		static mvTexture* GetTexture       (const std::string& name);
-		static unsigned   GetTextureCount  ();
-		static void       DeleteAllTextures();
+		mvTextureStorage();
+		~mvTextureStorage();
+
+		bool onEvent     (mvEvent& event) override;
+		bool onFirstFrame(mvEvent& event);
+		bool onDecrement (mvEvent& event);
+
+		void       addTexture       (const std::string& name);
+		void       addTexture       (const std::string& name, float* data, unsigned width, unsigned height, mvTextureFormat format);
+		void       addDelayedTexture(const std::string& name);
+		void       addDelayedTexture(const std::string& name, std::vector<float> data, unsigned width, unsigned height, mvTextureFormat format);
+		void       incrementTexture (const std::string& name);
+		void       decrementTexture (const std::string& name);
+		mvTexture* getTexture       (const std::string& name);
+		unsigned   getTextureCount  ();
+		void       deleteAllTextures();
 
 	private:
-
-		mvTextureStorage() = default;
 		
-		static std::unordered_map<std::string, mvTexture> s_textures;
+		std::unordered_map<std::string, mvTexture> m_textures;
+		std::vector<CompileTimeTexture>            m_delayedTextures;
 
 	};
 

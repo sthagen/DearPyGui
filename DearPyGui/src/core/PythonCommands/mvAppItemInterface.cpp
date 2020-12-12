@@ -1,8 +1,7 @@
 #include "mvAppItemInterface.h"
-#include "core/mvEvents.h"
-#include "mvInterfaceCore.h"
+#include "mvEvents.h"
 #include <ImGuiFileDialog.h>
-#include "Registries/mvValueStorage.h"
+#include "mvValueStorage.h"
 
 namespace Marvel {
 
@@ -288,7 +287,7 @@ namespace Marvel {
 			&item, &parent, &before))
 			return GetPyNone();
 
-		mvEventBus::Publish("APP_ITEM_EVENTS", "MOVE_ITEM",
+		mvEventBus::Publish(mvEVT_CATEGORY_ITEM, mvEVT_MOVE_ITEM,
 		{
 				CreateEventArgument("ITEM", std::string(item)),
 				CreateEventArgument("PARENT", std::string(parent)),
@@ -364,7 +363,7 @@ namespace Marvel {
 		if (!(*mvApp::GetApp()->getParsers())["delete_item"].parse(args, kwargs, __FUNCTION__, &item, &childrenOnly))
 			return GetPyNone();
 
-		mvEventBus::Publish("APP_ITEM_EVENTS", "DELETE_ITEM",
+		mvEventBus::Publish(mvEVT_CATEGORY_ITEM, mvEVT_DELETE_ITEM,
 			{
 				CreateEventArgument("ITEM", std::string(item)),
 				CreateEventArgument("CHILDREN_ONLY", (bool)childrenOnly),
@@ -404,7 +403,7 @@ namespace Marvel {
 		if (!(*mvApp::GetApp()->getParsers())["move_item_up"].parse(args, kwargs, __FUNCTION__, &item))
 			return GetPyNone();
 
-		mvEventBus::Publish("APP_ITEM_EVENTS", "MOVE_ITEM_UP",
+		mvEventBus::Publish(mvEVT_CATEGORY_ITEM, mvEVT_MOVE_ITEM_UP,
 			{
 					CreateEventArgument("ITEM", std::string(item))
 			});
@@ -423,7 +422,7 @@ namespace Marvel {
 		if (!(*mvApp::GetApp()->getParsers())["move_item_down"].parse(args, kwargs, __FUNCTION__, &item))
 			return GetPyNone();
 
-		mvEventBus::Publish("APP_ITEM_EVENTS", "MOVE_ITEM_DOWN",
+		mvEventBus::Publish(mvEVT_CATEGORY_ITEM, mvEVT_MOVE_ITEM_DOWN,
 			{
 					CreateEventArgument("ITEM", std::string(item))
 			});
@@ -462,17 +461,10 @@ namespace Marvel {
 		if (!(*mvApp::GetApp()->getParsers())["get_item_children"].parse(args, kwargs, __FUNCTION__, &item))
 			return GetPyNone();
 
-		auto appitem = mvApp::GetApp()->getItemRegistry().getItem(item);
+		auto childlist = mvApp::GetApp()->getItemRegistry().getItemChildren(item);
 
-		if (appitem)
-		{
-			auto children = appitem->getChildren();
-			std::vector<std::string> childList;
-			for (auto child : children)
-				childList.emplace_back(child->getName());
-
-			return ToPyList(childList);
-		}
+		if (!childlist.empty())
+			return ToPyList(childlist);
 
 		return GetPyNone();
 	}
@@ -480,43 +472,16 @@ namespace Marvel {
 	PyObject* get_all_items(PyObject * self, PyObject * args, PyObject * kwargs)
 	{
 
-		std::vector<mvAppItem*>& frontwindows = mvApp::GetApp()->getItemRegistry().getFrontWindows();
-		std::vector<mvAppItem*>& backwindows = mvApp::GetApp()->getItemRegistry().getBackWindows();
+		auto childlist = mvApp::GetApp()->getItemRegistry().getAllItems();
 
-		std::vector<std::string> childList;
-
-		// to help recursively retrieve children
-		std::function<void(mvAppItem*)> ChildRetriever;
-		ChildRetriever = [&childList, &ChildRetriever](mvAppItem* item) {
-			auto children = item->getChildren();
-			for (mvAppItem* child : children)
-			{
-				childList.emplace_back(child->getName());
-				if (child->getDescription().container)
-					ChildRetriever(child);
-			}
-
-		};
-
-		for (auto window : frontwindows)
-			ChildRetriever(window);
-		for (auto window : backwindows)
-			ChildRetriever(window);
-
-		return ToPyList(childList);
+		return ToPyList(childlist);
 	}
 
 	PyObject* get_windows(PyObject * self, PyObject * args, PyObject * kwargs)
 	{
-		auto frontwindows = mvApp::GetApp()->getItemRegistry().getFrontWindows();
-		std::vector<std::string> childList;
-		for (auto window : frontwindows)
-			childList.emplace_back(window->getName());
+		auto windowlist = mvApp::GetApp()->getItemRegistry().getWindows();
 
-		auto backwindows = mvApp::GetApp()->getItemRegistry().getBackWindows();
-		for (auto window : backwindows)
-			childList.emplace_back(window->getName());
-		return ToPyList(childList);
+		return ToPyList(windowlist);
 	}
 
 	PyObject* get_item_parent(PyObject* self, PyObject* args, PyObject* kwargs)
@@ -526,10 +491,10 @@ namespace Marvel {
 		if (!(*mvApp::GetApp()->getParsers())["get_item_parent"].parse(args, kwargs, __FUNCTION__, &item))
 			return GetPyNone();
 
-		auto appitem = mvApp::GetApp()->getItemRegistry().getItem(item);
+		auto parent = mvApp::GetApp()->getItemRegistry().getItemParentName(item);
 
-		if (appitem)
-			return ToPyString(appitem->getParent()->getName());
+		if (!parent.empty())
+			return ToPyString(parent);
 
 		return GetPyNone();
 	}
@@ -775,7 +740,7 @@ namespace Marvel {
 		if (!(*mvApp::GetApp()->getParsers())["get_value"].parse(args, kwargs, __FUNCTION__, &name))
 			return GetPyNone();
 
-		return mvValueStorage::GetPyValue(name);
+		return mvApp::GetApp()->getValueStorage().GetPyValue(name);
 	}
 
 	PyObject* set_value(PyObject* self, PyObject* args, PyObject* kwargs)
@@ -786,7 +751,16 @@ namespace Marvel {
 		if (!(*mvApp::GetApp()->getParsers())["set_value"].parse(args, kwargs, __FUNCTION__, &name, &value))
 			return GetPyNone();
 
-		return ToPyBool(mvValueStorage::SetPyValue(name, value));
+		if (value)
+			Py_XINCREF(value);
+		
+		mvEventBus::PublishEndFrame(mvEVT_CATEGORY_VALUES, mvEVT_PY_SET_VALUE, {
+			CreateEventArgument("NAME", std::string(name)),
+			CreateEventPtrArgument("VALUE", value)
+			});
+
+		return GetPyNone();
+		//return ToPyBool(mvApp::GetApp()->getValueStorage().SetPyValue(name, value));
 	}
 
 	PyObject* add_value(PyObject* self, PyObject* args, PyObject* kwargs)
@@ -797,7 +771,7 @@ namespace Marvel {
 		if (!(*mvApp::GetApp()->getParsers())["add_value"].parse(args, kwargs, __FUNCTION__, &name, &value))
 			return GetPyNone();
 
-		mvValueStorage::AddPyValue(name, value);
+		mvApp::GetApp()->getValueStorage().AddPyValue(name, value);
 		return GetPyNone();
 	}
 
@@ -808,7 +782,7 @@ namespace Marvel {
 		if (!(*mvApp::GetApp()->getParsers())["incref_value"].parse(args, kwargs, __FUNCTION__, &name))
 			return GetPyNone();
 
-		mvValueStorage::IncrementRef(name);
+		mvApp::GetApp()->getValueStorage().IncrementRef(name);
 		return GetPyNone();
 	}
 
@@ -819,7 +793,7 @@ namespace Marvel {
 		if (!(*mvApp::GetApp()->getParsers())["decref_value"].parse(args, kwargs, __FUNCTION__, &name))
 			return GetPyNone();
 
-		mvValueStorage::DecrementRef(name);
+		mvApp::GetApp()->getValueStorage().DecrementRef(name);
 		return GetPyNone();
 	}
 

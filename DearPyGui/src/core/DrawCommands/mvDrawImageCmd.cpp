@@ -1,6 +1,8 @@
 #include "mvDrawImageCmd.h"
-#include "Registries/mvTextureStorage.h"
-#include "PythonUtilities/mvPythonTranslator.h"
+#include "mvTextureStorage.h"
+#include "mvPythonTranslator.h"
+#include "mvGlobalIntepreterLock.h"
+#include "mvApp.h"
 
 namespace Marvel {
 
@@ -14,29 +16,44 @@ namespace Marvel {
 		m_uv_max(uv_max),
 		m_color(color)
 	{
+		mvEventBus::Subscribe(this, mvEVT_DELETE_TEXTURE);
 	}
 
 	mvDrawImageCmd::~mvDrawImageCmd()
 	{
-		mvTextureStorage::DecrementTexture(m_file);
+		mvEventBus::Publish(mvEVT_CATEGORY_TEXTURE, mvEVT_DEC_TEXTURE, { CreateEventArgument("NAME", m_file) });
+		mvEventBus::UnSubscribe(this);
+	}
+
+	bool mvDrawImageCmd::onEvent(mvEvent& event)
+	{
+		mvEventDispatcher dispatcher(event);
+		dispatcher.dispatch(BIND_EVENT_METH(mvDrawImageCmd::onTextureDeleted), mvEVT_DELETE_TEXTURE);
+
+		return event.handled;
+	}
+
+	bool mvDrawImageCmd::onTextureDeleted(mvEvent& event)
+	{
+		std::string name = GetEString(event, "NAME");
+
+		if (name == m_file)
+		{
+			m_texture = nullptr;
+			return true;
+		}
+
+		return false;
 	}
 
 	void mvDrawImageCmd::draw(ImDrawList* drawlist, float x, float y)
 	{
 
-		if (mvTextureStorage::GetTexture(m_file))
-		{
-			if (mvTextureStorage::GetTexture(m_file)->texture != m_texture)
-				m_texture = nullptr;
-		}
-		else
-			m_texture = nullptr;
-
 		if (m_texture == nullptr && !m_file.empty())
 		{
 
-			mvTextureStorage::AddTexture(m_file);
-			mvTexture* texture = mvTextureStorage::GetTexture(m_file);
+			mvApp::GetApp()->getTextureStorage().addTexture(m_file);
+			mvTexture* texture = mvApp::GetApp()->getTextureStorage().getTexture(m_file);
 			if (texture == nullptr)
 			{
 				PyErr_Format(PyExc_Exception,
@@ -76,7 +93,7 @@ namespace Marvel {
 		{
 			if (m_file != ToString(item))
 			{
-				mvTextureStorage::DecrementTexture(m_file);
+				mvApp::GetApp()->getTextureStorage().decrementTexture(m_file);
 				m_texture = nullptr;
 			}
 			m_file = ToString(item);

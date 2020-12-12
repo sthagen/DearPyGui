@@ -1,5 +1,4 @@
 #include "mvInputInterface.h"
-#include "mvInterfaceCore.h"
 
 namespace Marvel {
 
@@ -238,7 +237,8 @@ namespace Marvel {
 
 		if (callback)
 			Py_XINCREF(callback);
-		mvApp::GetApp()->setMouseDownCallback(callback);
+
+		mvCallbackRegistry::GetCallbackRegistry()->setMouseDownCallback(callback);
 
 		return GetPyNone();
 	}
@@ -256,7 +256,7 @@ namespace Marvel {
 
 		if (callback)
 			Py_XINCREF(callback);
-		mvApp::GetApp()->setMouseDragCallback(callback);
+		mvCallbackRegistry::GetCallbackRegistry()->setMouseDragCallback(callback);
 
 		return GetPyNone();
 	}
@@ -271,7 +271,7 @@ namespace Marvel {
 
 		if (callback)
 			Py_XINCREF(callback);
-		mvApp::GetApp()->setMouseDoubleClickCallback(callback);
+		mvCallbackRegistry::GetCallbackRegistry()->setMouseDoubleClickCallback(callback);
 
 		return GetPyNone();
 	}
@@ -285,7 +285,7 @@ namespace Marvel {
 			return GetPyNone();
 		if (callback)
 			Py_XINCREF(callback);
-		mvApp::GetApp()->setMouseClickCallback(callback);
+		mvCallbackRegistry::GetCallbackRegistry()->setMouseClickCallback(callback);
 		return GetPyNone();
 	}
 
@@ -298,7 +298,7 @@ namespace Marvel {
 			return GetPyNone();
 		if (callback)
 			Py_XINCREF(callback);
-		mvApp::GetApp()->setMouseReleaseCallback(callback);
+		mvCallbackRegistry::GetCallbackRegistry()->setMouseReleaseCallback(callback);
 
 		return GetPyNone();
 	}
@@ -312,7 +312,7 @@ namespace Marvel {
 			return GetPyNone();
 		if (callback)
 			Py_XINCREF(callback);
-		mvApp::GetApp()->setKeyDownCallback(callback);
+		mvCallbackRegistry::GetCallbackRegistry()->setKeyDownCallback(callback);
 
 		return GetPyNone();
 	}
@@ -326,7 +326,7 @@ namespace Marvel {
 			return GetPyNone();
 		if (callback)
 			Py_XINCREF(callback);
-		mvApp::GetApp()->setKeyPressCallback(callback);
+		mvCallbackRegistry::GetCallbackRegistry()->setKeyPressCallback(callback);
 
 		return GetPyNone();
 	}
@@ -340,7 +340,7 @@ namespace Marvel {
 			return GetPyNone();
 		if (callback)
 			Py_XINCREF(callback);
-		mvApp::GetApp()->setKeyReleaseCallback(callback);
+		mvCallbackRegistry::GetCallbackRegistry()->setKeyReleaseCallback(callback);
 		return GetPyNone();
 	}
 
@@ -353,7 +353,7 @@ namespace Marvel {
 			return GetPyNone();
 		if (callback)
 			Py_XINCREF(callback);
-		mvApp::GetApp()->setMouseWheelCallback(callback);
+		mvCallbackRegistry::GetCallbackRegistry()->setMouseWheelCallback(callback);
 
 		return GetPyNone();
 	}
@@ -367,7 +367,7 @@ namespace Marvel {
 			return GetPyNone();
 		if (callback)
 			Py_XINCREF(callback);
-		mvApp::GetApp()->setMouseMoveCallback(callback);
+		mvCallbackRegistry::GetCallbackRegistry()->setMouseMoveCallback(callback);
 
 		return GetPyNone();
 	}
@@ -380,7 +380,7 @@ namespace Marvel {
 			return GetPyNone();
 		if (callback)
 			Py_XINCREF(callback);
-		mvApp::GetApp()->setRenderCallback(callback);
+		mvCallbackRegistry::GetCallbackRegistry()->setRenderCallback(callback);
 		return GetPyNone();
 	}
 
@@ -395,20 +395,20 @@ namespace Marvel {
 		if (callback)
 			Py_XINCREF(callback);
 
-		mvAppItem* item;
-		item = mvApp::GetApp()->getItemRegistry().getItem(handler);
+		//mvAppItem* item;
+		//item = mvApp::GetApp()->getItemRegistry().getItem(handler);
 
-		if (item)
-		{
-			if (item->getDescription().root)
-			{
-				auto windowtype = static_cast<mvWindowAppitem*>(item);
-				mvOldEventHandler* eventhandler = static_cast<mvOldEventHandler*>(windowtype);
-				eventhandler->setResizeCallback(callback);
-			}
-			else
-				ThrowPythonException("Resize callback can only be set for window items");
-		}
+		//if (item)
+		//{
+		//	if (item->getDescription().root)
+		//	{
+		//		auto windowtype = static_cast<mvWindowAppItem*>(item);
+		//		mvOldEventHandler* eventhandler = static_cast<mvOldEventHandler*>(windowtype);
+		//		eventhandler->setResizeCallback(callback);
+		//	}
+		//	else
+		//		ThrowPythonException("Resize callback can only be set for window items");
+		//}
 
 
 		return GetPyNone();

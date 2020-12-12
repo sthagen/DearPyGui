@@ -9,7 +9,7 @@ import time
 # Settings and Data Storage
 ########################################################################################################################
 set_log_level(0)
-enable_docking(shift_only=False, dock_space=True)
+#enable_docking(shift_only=False, dock_space=True)
 
 set_main_window_title("DearPyGui Demo")
 set_main_window_size(1000, 800)
@@ -25,7 +25,7 @@ add_additional_font("../../Resources/NotoSerifCJKjp-Medium.otf", 20)
 
 show_demo()
 show_logger()
-set_threadpool_high_performance()
+#set_threadpool_high_performance()
 
 def window_close_all(sender, data):
     log_info(f'Close Open Windows {sender}, {data}')
@@ -66,7 +66,8 @@ with window("Asyncronous##dialog", show=True):
         log_debug("Starting Long Process")
         log_debug("Starting Long Process", logger="LoggerWidget##demo")
         for i in range(0, 10000):
-            set_value("Async Label", str(i))
+            a = i *100
+            #set_value("Async Label", str(i))
         time.sleep(5)
         log_info("Done with long process")
 

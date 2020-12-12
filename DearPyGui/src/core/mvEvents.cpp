@@ -1,11 +1,7 @@
 #include "mvEvents.h"
+#include "mvProfiler.h"
 
 namespace Marvel {
-
-	mvID SID(const std::string& value)
-	{
-		return std::hash<std::string>{}(value);
-	}
 
 	const std::string& GetEString(mvEvent& event, const char* name)
 	{
@@ -22,13 +18,49 @@ namespace Marvel {
 		return std::get<int>(event.arguments.at(SID(name)));
 	}
 
-	void mvEventBus::Publish(const char* category, const char* type, std::unordered_map<mvID, mvVariant> arguments)
+	float GetEFloat(mvEvent& event, const char* name)
 	{
-		Publish({ SID(type), arguments, SID(category) });
+		return std::get<float>(event.arguments.at(SID(name)));
+	}
+
+	bool mvEventBus::OnEvent(mvEvent& event)
+	{
+		mvEventDispatcher dispatcher(event);
+		dispatcher.dispatch(mvEventBus::OnFrame, SID("END_FRAME"));
+
+		return false;
+	}
+
+	bool mvEventBus::OnFrame(mvEvent& event)
+	{
+		while (!GetEndFrameEvents().empty())
+		{
+			Publish(GetEndFrameEvents().top());
+			GetEndFrameEvents().pop();
+		}
+		
+		return false;
+	}
+
+	void mvEventBus::PublishEndFrame(mvID category, mvID type, std::unordered_map<mvID, mvVariant> arguments)
+	{
+		GetEndFrameEvents().push({ type, arguments, category });
+	}
+
+	void mvEventBus::Publish(mvID category, mvID type, std::unordered_map<mvID, mvVariant> arguments)
+	{
+		Publish({ type, arguments, category });
 	}
 
 	void mvEventBus::Publish(mvEvent event)
 	{
+
+		for (mvEventHandler* handler : GetEventHandlers()[0])
+			handler->onEvent(event);
+
+		if (event.category == SID("GLOBAL"))
+			OnEvent(event);
+
 		if (event.type == 0)
 			return;
 
@@ -57,6 +89,20 @@ namespace Marvel {
 
 	void mvEventBus::Subscribe(mvEventHandler* handler, mvID type, mvID category)
 	{
+		if (type == 0 && category == 0)
+		{
+			if (GetEventHandlers().find(0) == GetEventHandlers().end())
+				GetEventHandlers()[0] = { handler };
+			else
+				GetEventHandlers()[0].push_back(handler);
+
+			if (GetEventCategoryHandlers().find(0) == GetEventCategoryHandlers().end())
+				GetEventCategoryHandlers()[0] = { handler };
+			else
+				GetEventCategoryHandlers()[0].push_back(handler);
+			return;
+		}
+
 		if (type != 0)
 		{
 			if (GetEventHandlers().find(type) == GetEventHandlers().end())
@@ -74,6 +120,41 @@ namespace Marvel {
 			GetEventCategoryHandlers()[category].push_back(handler);
 	}
 
+	void mvEventBus::UnSubscribe(mvEventHandler* handler)
+	{
+
+		for (auto& eventHandlerBucket : GetEventHandlers())
+		{
+			std::vector<mvEventHandler*> old = eventHandlerBucket.second;
+			eventHandlerBucket.second.clear();
+
+			for (mvEventHandler* eventHandler : old)
+			{
+				if (eventHandler != handler)
+					eventHandlerBucket.second.push_back(eventHandler);
+			}
+		}
+
+		for (auto& eventHandlerBucket : GetEventCategoryHandlers())
+		{
+			std::vector<mvEventHandler*> old = eventHandlerBucket.second;
+			eventHandlerBucket.second.clear();
+
+			for (mvEventHandler* eventHandler : old)
+			{
+				if (eventHandler != handler)
+					eventHandlerBucket.second.push_back(eventHandler);
+			}
+		}
+
+	}
+
+	std::stack<mvEvent>& mvEventBus::GetEndFrameEvents()
+	{
+		static std::stack<mvEvent> events;
+		return events;
+	}
+
 	std::unordered_map<mvID, std::vector<mvEventHandler*>>& mvEventBus::GetEventHandlers()
 	{
 		static std::unordered_map<mvID, std::vector<mvEventHandler*>> eventHandlers;
@@ -86,4 +167,9 @@ namespace Marvel {
 		return eventCategoryHandlers;
 	}
 
+	std::deque<std::string> mvEventBus::GetMessages()
+	{
+		static std::deque<std::string> messages;
+		return messages;
+	}
 }

@@ -18,40 +18,28 @@
 #include <map>
 #include <stack>
 #include <string>
-#include <atomic>
 #include <queue>
-#include <chrono>
-#include <mutex>
 #include <thread>
 #include "mvEvents.h"
-#include "core/AppItems/mvAppItem.h"
-#include "PythonUtilities/mvPythonParser.h"
-#include "mvOldEventHandler.h"
-#include "Registries/mvItemRegistry.h"
-#include "Registries/mvDrawList.h"
-#include "Registries/mvTextureStorage.h"
+#include "mvAppItem.h"
+#include "mvPythonParser.h"
+#include "mvItemRegistry.h"
+#include "mvDrawList.h"
+#include "mvTextureStorage.h"
+#include "mvValueStorage.h"
+#include <memory>
 
 //-----------------------------------------------------------------------------
-// Typedefs for chrono's ridiculously long names
+// Typedefs
 //-----------------------------------------------------------------------------
-typedef std::chrono::high_resolution_clock clock_;
-typedef std::chrono::duration<double, std::ratio<1> > second_;
 typedef std::map<ImGuiStyleVar, ImVec2> mvStyle;
-#if defined (_WIN32)
-typedef std::chrono::steady_clock::time_point time_point_;
-#elif defined(__APPLE__)
-typedef std::chrono::steady_clock::time_point time_point_;
-#else
-typedef std::chrono::system_clock::time_point time_point_;
-#endif
 
 namespace Marvel {
 
     //-----------------------------------------------------------------------------
     // Forward Declarations
     //-----------------------------------------------------------------------------
-    class mvWindowAppitem;
-    class mvThreadPool;
+    class mvWindowAppItem;
     class mvTextEditor;
     class mvWindow;
     struct mvColor;
@@ -59,36 +47,13 @@ namespace Marvel {
     //-----------------------------------------------------------------------------
     // mvApp
     //-----------------------------------------------------------------------------
-    class mvApp : public mvOldEventHandler
+    class mvApp : public mvEventHandler
     {
 
         friend class mvWindow;
         friend class mvWindowsWindow;
         friend class mvLinuxWindow;
         friend class mvAppleWindow;
-
-        struct NewCallback
-        {
-            std::string sender;
-            PyObject*   callback;   // name of function to run
-            PyObject*   data;       // any data need by the function
-        };
-
-        struct AsyncronousCallback
-        {
-            PyObject* name;       // name of function to run
-            PyObject* data;       // any data need by the function
-            PyObject* returnname; // optional return function
-        };
-
-        struct CompileTimeTexture
-        {
-            std::string name;
-            std::vector<float> data;
-            unsigned width;
-            unsigned height;
-            mvTextureFormat format;
-        };
 
     public:
 
@@ -104,16 +69,27 @@ namespace Marvel {
         static void              SetAppStarted       ();
         static void              SetAppStopped       ();
 
+        void start(const std::string& primaryWindow);
+
         ~mvApp();
+
+        //-----------------------------------------------------------------------------
+        // New event handling system
+        //-----------------------------------------------------------------------------
+        bool onEvent         (mvEvent& event) override;
+        bool onViewPortResize(mvEvent& event);
 
         //-----------------------------------------------------------------------------
         // Rendering
         //-----------------------------------------------------------------------------
-        void                     firstRenderFrame(); // only ran during first frame
-        void                     thirdRenderFrame(); // only ran during third frame
-        bool                     prerender       (); // pre rendering (every frame)
         void                     render          (); // actual render loop
-        void                     postrender      (); // post rendering (every frame)
+
+        //-----------------------------------------------------------------------------
+        // Managers
+        //-----------------------------------------------------------------------------
+        mvItemRegistry&          getItemRegistry  () { return m_itemRegistry; }
+        mvTextureStorage&        getTextureStorage() { return m_textureStorage; }
+        mvValueStorage&          getValueStorage() { return *(m_valueStorage.get()); }
         
         //-----------------------------------------------------------------------------
         // App Settings
@@ -121,11 +97,8 @@ namespace Marvel {
         void                     turnOnDocking     (bool shiftOnly, bool dockSpace);
         void                     addRemapChar      (int dst, int src) { m_charRemaps.push_back({ dst, src }); }
         void                     setVSync          (bool value) { m_vsync = value; }
-        void                     setResizable      (bool value) { m_resizable = value; }
-        void                     setClientSize     (unsigned width, unsigned height);
-        void                     setActualSize     (unsigned width, unsigned height);			
+        void                     setResizable      (bool value) { m_resizable = value; }			
         void                     setMainPos        (int x, int y);			
-        void                     setActiveWindow   (const std::string& window) { m_activeWindow = window; }
         void                     setGlobalFontScale(float scale);
         void                     setViewport       (mvWindow* viewport) { m_viewport = viewport; }
         void                     setTitle          (const std::string& title) { m_title = title; }
@@ -133,7 +106,7 @@ namespace Marvel {
                                     std::vector<std::array<ImWchar, 3>> customRanges = {},
                                     std::vector<ImWchar> chars= {});
         
-        const std::string&       getActiveWindow   () const { return m_activeWindow; }
+        
         float&                   getGlobalFontScale()       { return m_globalFontScale; }
         int                      getActualWidth    () const { return m_actualWidth; }
         int                      getActualHeight   () const { return m_actualHeight; }
@@ -156,26 +129,8 @@ namespace Marvel {
 
         //-----------------------------------------------------------------------------
         // Concurrency
-        //-----------------------------------------------------------------------------
-        void                     setThreadPoolTimeout          (double time)   { m_threadPoolTimeout = time; }
-        void                     setThreadCount                (unsigned count){ m_threads = count; }
-        void                     activateThreadPool            ()              { m_threadPool = true; }
-        void                     setThreadPoolHighPerformance  ()              { m_threadPoolHighPerformance = true; }
-                                 
+        //-----------------------------------------------------------------------------      
         bool                     checkIfMainThread             () const;
-        double                   getThreadPoolTimeout          () const { return m_threadPoolTimeout; }
-        unsigned                 getThreadCount                () const { return m_threads; }
-        bool                     usingThreadPool               () const { return m_threadPool; }
-        bool                     usingThreadPoolHighPerformance() const { return m_threadPoolHighPerformance; }
-        
-        //-----------------------------------------------------------------------------
-        // Callbacks
-        //-----------------------------------------------------------------------------
-        void                     runReturnCallback(PyObject* callback, const std::string& sender, PyObject* data);
-        void                     runCallback      (PyObject* callback, const std::string& sender, PyObject* data = nullptr);
-        void                     runAsyncCallback (PyObject* callback, PyObject* data, PyObject* returnname);
-        void                     addMTCallback    (PyObject* name, PyObject* data, PyObject* returnname = nullptr);
-        void                     addCallback      (PyObject* callback, const std::string& sender, PyObject* data);
 
         //-----------------------------------------------------------------------------
         // Timing
@@ -187,11 +142,6 @@ namespace Marvel {
         // Other
         //-----------------------------------------------------------------------------
         std::map<std::string, mvPythonParser>* getParsers      () { return m_parsers; }
-        mvItemRegistry&                        getItemRegistry () { return m_itemRegistry; }
-        mvDrawList&                            getFrontDrawList() { return m_frontDrawList; }
-        mvDrawList&                            getBackDrawList () { return m_backDrawList; }
-        void                                   addTexture(const std::string& name);
-        void                                   addTexture(const std::string& name, std::vector<float> data, unsigned width, unsigned height, mvTextureFormat format);
             
     private:
 
@@ -199,13 +149,10 @@ namespace Marvel {
         // Post Rendering Methods
         //     - actually performs queued operations
         //-----------------------------------------------------------------------------
-        void postCallbacks  ();
-        void postAsync      ();
         void postProfile    ();
 
         mvApp();
 
-        void routeInputCallbacks();
         void updateStyle();
         
     private:
@@ -213,7 +160,10 @@ namespace Marvel {
         static mvApp* s_instance;
         static bool   s_started;
 
+        // managers
         mvItemRegistry                         m_itemRegistry;
+        mvTextureStorage                       m_textureStorage;
+        std::unique_ptr<mvValueStorage>        m_valueStorage;
 
         // docking
         bool                                   m_docking          = false;
@@ -221,7 +171,6 @@ namespace Marvel {
         bool                                   m_dockingViewport  = false;
 
         mvWindow*                              m_viewport = nullptr;
-        std::string                            m_activeWindow;
         int                                    m_actualWidth = 1280;
         int                                    m_actualHeight = 800;
         int                                    m_clientWidth = 1280;
@@ -251,25 +200,8 @@ namespace Marvel {
         float                        m_deltaTime; // time since last frame
         double                       m_time;      // total time since starting
         
-        // new callback system
-        std::queue<NewCallback>          m_callbacks;
-
-        // concurrency
-        std::queue<AsyncronousCallback>  m_asyncReturns;
-        std::vector<AsyncronousCallback> m_asyncCallbacks;
-        mvThreadPool*                    m_tpool = nullptr;
-        mutable std::mutex               m_mutex;
         std::thread::id                  m_mainThreadID;
-        bool                             m_threadPool = false;                // is threadpool activated
-        double                           m_threadPoolTimeout = 30.0;          // how long til trying to delete pool
-        unsigned                         m_threads = 2;                       // how many threads to use
-        bool                             m_threadPoolHighPerformance = false; // when true, use max number of threads
-        double                           m_threadTime = 0.0;                  // how long threadpool has been active
-        time_point_                      m_poolStart;                         // threadpool start time
 
-        mvDrawList m_frontDrawList;
-        mvDrawList m_backDrawList;
-        std::vector<CompileTimeTexture> m_textures;
     };
 
 }

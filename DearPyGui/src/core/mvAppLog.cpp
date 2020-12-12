@@ -2,7 +2,8 @@
 #include <string>
 #include <mutex>
 #include "mvApp.h"
-#include "core/mvInput.h"
+#include "mvInput.h"
+#include "mvGlobalIntepreterLock.h"
 
 typedef std::chrono::high_resolution_clock clock_;
 typedef std::chrono::duration<double, std::ratio<1> > second_;
@@ -284,7 +285,8 @@ namespace Marvel {
 			float x = mousePos.x - ImGui::GetWindowPos().x;
 			float y = mousePos.y - ImGui::GetWindowPos().y - titleBarHeight;
 			mvInput::setMousePosition(x, y);
-			mvApp::GetApp()->setActiveWindow("logger##standard");
+			if (mvApp::GetApp()->getItemRegistry().getActiveWindow() != "logger##standard")
+				mvEventBus::Publish(mvEVT_CATEGORY_ITEM, mvEVT_ACTIVE_WINDOW, { CreateEventArgument("WINDOW", std::string("logger##standard")) });
 
 		}
 
@@ -301,7 +303,8 @@ namespace Marvel {
 			float x = mousePos.x - ImGui::GetWindowPos().x;
 			float y = mousePos.y - ImGui::GetWindowPos().y - titleBarHeight;
 			mvInput::setMousePosition(x, y);
-			mvApp::GetApp()->setActiveWindow("logger##standard");
+			if (mvApp::GetApp()->getItemRegistry().getActiveWindow() != "logger##standard")
+				mvEventBus::Publish(mvEVT_CATEGORY_ITEM, mvEVT_ACTIVE_WINDOW, { CreateEventArgument("WINDOW", std::string("logger##standard")) });
 
 		}
 

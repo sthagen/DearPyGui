@@ -1,11 +1,15 @@
 #pragma once
 #include <string>
 #include <vector>
+#include <stack>
+#include <deque>
 #include <unordered_map>
 #include <functional>
 #include <variant>
+#include "mvCompileTimeCRC32.h"
+#include "mvEventMacros.h"
 
-#define BIND_EVENT_FN(x) std::bind(&x, this, std::placeholders::_1)
+#define BIND_EVENT_METH(x) std::bind(&x, this, std::placeholders::_1)
 
 namespace Marvel {
 
@@ -18,11 +22,16 @@ namespace Marvel {
 		int, 
 		std::string, 
 		bool, 
+		float, 
 		void*
 	>; // more types can be added
 	
 	// hashing function
-	mvID SID(const std::string& value);
+	constexpr const mvID SID(const char* value)
+	{
+		return crc32_rec(0, value);
+	}
+
 
 	//-----------------------------------------------------------------------------
 	// variant helpers
@@ -30,7 +39,21 @@ namespace Marvel {
 	const std::string& GetEString(mvEvent& event, const char* name);
 	bool               GetEBool  (mvEvent& event, const char* name);
 	int                GetEInt   (mvEvent& event, const char* name);
+	float              GetEFloat (mvEvent& event, const char* name);
 
+	//-----------------------------------------------------------------------------
+	// mvEvent
+	//-----------------------------------------------------------------------------
+	struct mvEvent
+	{
+
+		mvID type;
+		std::unordered_map<mvID, mvVariant> arguments;
+		mvID category = 0;
+		bool handled = false;
+	};
+
+	// variant helpers
 	template<typename T>
 	T GetEPtr(mvEvent& event, const char* name)
 	{
@@ -53,18 +76,6 @@ namespace Marvel {
 	}
 
 	//-----------------------------------------------------------------------------
-	// mvEvent
-	//-----------------------------------------------------------------------------
-	struct mvEvent
-	{
-
-		mvID type;
-		std::unordered_map<mvID, mvVariant> arguments;
-		mvID category = 0;
-		bool handled = false;
-	};
-
-	//-----------------------------------------------------------------------------
 	// mvEventHandler
 	//-----------------------------------------------------------------------------
 	class mvEventHandler
@@ -73,6 +84,7 @@ namespace Marvel {
 	public:
 
 		virtual bool onEvent(mvEvent& event) = 0;
+		virtual ~mvEventHandler() {}
 
 	};
 
@@ -84,14 +96,23 @@ namespace Marvel {
 
 	public:
 
-		static void Publish  (mvEvent event);
-		static void Publish  (const char* category, const char* type, std::unordered_map<mvID, mvVariant> arguments);
-		static void Subscribe(mvEventHandler* handler, mvID type, mvID category = 0);
+		static void PublishEndFrame(mvID category, mvID type, std::unordered_map<mvID, mvVariant> arguments = {});
+		static void Publish        (mvID category, mvID type, std::unordered_map<mvID, mvVariant> arguments = {});
+		static void Subscribe      (mvEventHandler* handler, mvID type = 0, mvID category = 0);
+		static void UnSubscribe    (mvEventHandler* handler);
+
+		// event bus events
+		static bool OnEvent(mvEvent& event);
+		static bool OnFrame(mvEvent& event);
 
 	private:
 
+		static void                                                    Publish(mvEvent event);
+		static std::stack<mvEvent>&                                    GetEndFrameEvents();
 		static std::unordered_map<mvID, std::vector<mvEventHandler*>>& GetEventHandlers();
 		static std::unordered_map<mvID, std::vector<mvEventHandler*>>& GetEventCategoryHandlers();
+
+		static std::deque<std::string> GetMessages();
 	};
 
 	//-----------------------------------------------------------------------------
@@ -131,5 +152,7 @@ namespace Marvel {
 	private:
 
 		mvEvent& m_event;
+
 	};
 }
+
