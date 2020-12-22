@@ -42,6 +42,7 @@ namespace Marvel {
     class mvWindowAppItem;
     class mvTextEditor;
     class mvWindow;
+    class mvTheme;
     struct mvColor;
     
     //-----------------------------------------------------------------------------
@@ -71,7 +72,7 @@ namespace Marvel {
 
         void start(const std::string& primaryWindow);
 
-        ~mvApp();
+        ~mvApp() override;
 
         //-----------------------------------------------------------------------------
         // New event handling system
@@ -87,15 +88,16 @@ namespace Marvel {
         //-----------------------------------------------------------------------------
         // Managers
         //-----------------------------------------------------------------------------
-        mvItemRegistry&          getItemRegistry  () { return m_itemRegistry; }
-        mvTextureStorage&        getTextureStorage() { return m_textureStorage; }
-        mvValueStorage&          getValueStorage() { return *(m_valueStorage.get()); }
+        mvItemRegistry&          getItemRegistry    () { return *m_itemRegistry; }
+        mvTextureStorage&        getTextureStorage  () { return *m_textureStorage; }
+        mvValueStorage&          getValueStorage    () { return *(m_valueStorage.get()); }
+        mvCallbackRegistry&      getCallbackRegistry() { return *m_callbackRegistry; }
         
         //-----------------------------------------------------------------------------
         // App Settings
         //-----------------------------------------------------------------------------
         void                     turnOnDocking     (bool shiftOnly, bool dockSpace);
-        void                     addRemapChar      (int dst, int src) { m_charRemaps.push_back({ dst, src }); }
+        void                     addRemapChar      (int dst, int src) { m_charRemaps.emplace_back( dst, src ); }
         void                     setVSync          (bool value) { m_vsync = value; }
         void                     setResizable      (bool value) { m_resizable = value; }			
         void                     setMainPos        (int x, int y);			
@@ -112,7 +114,7 @@ namespace Marvel {
         int                      getActualHeight   () const { return m_actualHeight; }
         int                      getClientWidth    () const { return m_clientWidth; }
         int                      getClientHeight   () const { return m_clientHeight; }
-        ImGuiStyle&              getStyle          ()       { return m_newstyle; }
+        ImGuiStyle&              getStyle          ()       { return m_newStyle; }
         mvWindow*                getViewport       ()       { return m_viewport; }
         bool                     getVSync          () const { return m_vsync; }
         bool                     getResizable      () const { return m_resizable; }
@@ -121,7 +123,7 @@ namespace Marvel {
         // Styles/Themes
         //-----------------------------------------------------------------------------
         void                     setAppTheme      (const std::string& theme);
-        void                     setThemeItem     (long item, mvColor color);
+        void                     setThemeItem     (long item, mvColor& color);
         void                     setStyleChanged  () { m_styleChange = true; }
                                  
         const std::string&       getAppTheme () const { return m_theme; }
@@ -141,7 +143,7 @@ namespace Marvel {
         //-----------------------------------------------------------------------------
         // Other
         //-----------------------------------------------------------------------------
-        std::map<std::string, mvPythonParser>* getParsers      () { return m_parsers; }
+        std::map<std::string, mvPythonParser>* getParsers      () { return m_parsers.get(); }
             
     private:
 
@@ -161,29 +163,31 @@ namespace Marvel {
         static bool   s_started;
 
         // managers
-        mvItemRegistry                         m_itemRegistry;
-        mvTextureStorage                       m_textureStorage;
-        std::unique_ptr<mvValueStorage>        m_valueStorage;
-
-        // docking
-        bool                                   m_docking          = false;
-        bool                                   m_dockingShiftOnly = true;
-        bool                                   m_dockingViewport  = false;
-
-        mvWindow*                              m_viewport = nullptr;
-        int                                    m_actualWidth = 1280;
-        int                                    m_actualHeight = 800;
-        int                                    m_clientWidth = 1280;
-        int                                    m_clientHeight = 800;
-        int                                    m_mainXPos = 100;
-        int                                    m_mainYPos = 100;
-        std::string                            m_title = "DearPyGui";
-        std::map<std::string, mvPythonParser>* m_parsers;
+        mvOwnedPtr<mvItemRegistry>                   m_itemRegistry;
+        mvOwnedPtr<mvTextureStorage>                 m_textureStorage;
+        mvOwnedPtr<mvValueStorage>                   m_valueStorage;
+        mvOwnedPtr<mvTheme>                          m_themeManager;
+        mvOwnedPtr<mvCallbackRegistry>               m_callbackRegistry;
+                                                     
+        // docking                                   
+        bool                                         m_docking          = false;
+        bool                                         m_dockingShiftOnly = true;
+        bool                                         m_dockingViewport  = false;
+                                                     
+        mvWindow*                                    m_viewport = nullptr;
+        int                                          m_actualWidth = 1280;
+        int                                          m_actualHeight = 800;
+        int                                          m_clientWidth = 1280;
+        int                                          m_clientHeight = 800;
+        int                                          m_mainXPos = 100;
+        int                                          m_mainYPos = 100;
+        std::string                                  m_title = "DearPyGui";
+        mvRef<std::map<std::string, mvPythonParser>> m_parsers;
         
         // appearance
         std::string m_theme = "Dark";
         float       m_globalFontScale = 1.0f;
-        ImGuiStyle  m_newstyle;
+        ImGuiStyle  m_newStyle;
         bool        m_styleChange = true;
         bool        m_vsync = true;
         bool        m_resizable = true;
@@ -197,8 +201,8 @@ namespace Marvel {
         std::vector<std::pair<int, int>>    m_charRemaps;
 
         // timing
-        float                        m_deltaTime; // time since last frame
-        double                       m_time;      // total time since starting
+        float                        m_deltaTime = 0.0f; // time since last frame
+        double                       m_time      = 0.0;  // total time since starting
         
         std::thread::id                  m_mainThreadID;
 

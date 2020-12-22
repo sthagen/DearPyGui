@@ -4,80 +4,6 @@ namespace Marvel {
 
 	void AddPlotCommands(std::map<std::string, mvPythonParser>* parsers)
 	{
-		parsers->insert({ "add_plot", mvPythonParser({
-			{mvPythonDataType::String, "name"},
-			{mvPythonDataType::KeywordOnly},
-			{mvPythonDataType::String, "x_axis_name", "", "''"},
-			{mvPythonDataType::String, "y_axis_name", "", "''"},
-			
-			// plot flags
-			{mvPythonDataType::Bool, "no_legend", "", "False"},
-			{mvPythonDataType::Bool, "no_menus", "", "False"},
-			{mvPythonDataType::Bool, "no_box_select", "", "False"},
-			{mvPythonDataType::Bool, "no_mouse_pos", "", "False"},
-			{mvPythonDataType::Bool, "no_highlight", "", "False"},
-			{mvPythonDataType::Bool, "no_child", "", "False"},
-			{mvPythonDataType::Bool, "query", "", "False"},
-			{mvPythonDataType::Bool, "crosshairs", "", "False"},
-			{mvPythonDataType::Bool, "anti_aliased", "", "False"},
-			{mvPythonDataType::Bool, "yaxis2", "", "False"},
-			{mvPythonDataType::Bool, "yaxis3", "", "False"},
-
-			// x axis flags
-			{mvPythonDataType::Bool, "xaxis_no_gridlines", "", "False"},
-			{mvPythonDataType::Bool, "xaxis_no_tick_marks", "", "False"},
-			{mvPythonDataType::Bool, "xaxis_no_tick_labels", "", "False"},
-			{mvPythonDataType::Bool, "xaxis_log_scale", "", "False"},
-			{mvPythonDataType::Bool, "xaxis_time", "", "False"},
-			{mvPythonDataType::Bool, "xaxis_invert", "", "False"},
-			{mvPythonDataType::Bool, "xaxis_lock_min", "", "False"},
-			{mvPythonDataType::Bool, "xaxis_lock_max", "", "False"},
-
-			// y axis flags
-			{mvPythonDataType::Bool, "yaxis_no_gridlines", "", "False"},
-			{mvPythonDataType::Bool, "yaxis_no_tick_marks", "", "False"},
-			{mvPythonDataType::Bool, "yaxis_no_tick_labels", "", "False"},
-			{mvPythonDataType::Bool, "yaxis_log_scale", "", "False"},
-			{mvPythonDataType::Bool, "yaxis_invert", "", "False"},
-			{mvPythonDataType::Bool, "yaxis_lock_min", "", "False"},
-			{mvPythonDataType::Bool, "yaxis_lock_max", "", "False"},
-
-			// y2 axis flags
-			{mvPythonDataType::Bool, "y2axis_no_gridlines", "", "False"},
-			{mvPythonDataType::Bool, "y2axis_no_tick_marks", "", "False"},
-			{mvPythonDataType::Bool, "y2axis_no_tick_labels", "", "False"},
-			{mvPythonDataType::Bool, "y2axis_log_scale", "", "False"},
-			{mvPythonDataType::Bool, "y2axis_invert", "", "False"},
-			{mvPythonDataType::Bool, "y2axis_lock_min", "", "False"},
-			{mvPythonDataType::Bool, "y2axis_lock_max", "", "False"},
-
-			// y3 axis flags
-			{mvPythonDataType::Bool, "y3axis_no_gridlines", "", "False"},
-			{mvPythonDataType::Bool, "y3axis_no_tick_marks", "", "False"},
-			{mvPythonDataType::Bool, "y3axis_no_tick_labels", "", "False"},
-			{mvPythonDataType::Bool, "y3axis_log_scale", "", "False"},
-			{mvPythonDataType::Bool, "y3axis_invert", "", "False"},
-			{mvPythonDataType::Bool, "y3axis_lock_min", "", "False"},
-			{mvPythonDataType::Bool, "y3axis_lock_max", "", "False"},
-
-			{mvPythonDataType::String, "parent", "Parent to add this item to. (runtime adding)", "''"},
-			{mvPythonDataType::String, "before", "This item will be displayed before the specified item in the parent. (runtime adding)", "''"},
-			{mvPythonDataType::Integer, "width", "", "-1"},
-			{mvPythonDataType::Integer, "height", "", "-1"},
-			{mvPythonDataType::Callable , "query_callback", "Callback ran when plot is queried. Should be of the form 'def Callback(sender, data)'\n Data is (x_min, x_max, y_min, y_max).", "None"},
-			
-			{mvPythonDataType::Bool, "show_color_scale", "", "False"},
-			{mvPythonDataType::Float, "scale_min", "", "0.0"},
-			{mvPythonDataType::Float, "scale_max", "", "1.0"},
-			{mvPythonDataType::Integer, "scale_height", "", "100"},
-			{mvPythonDataType::String, "label", "", "''"},
-			{mvPythonDataType::Bool, "show", "Attempt to render", "True"},
-			{mvPythonDataType::Bool, "show_annotations", "", "True"},
-			{mvPythonDataType::Bool, "show_drag_lines", "", "True"},
-			{mvPythonDataType::Bool, "show_drag_points", "", "True"}
-
-		}, "Adds a plot widget.", "None", "Plotting") });
-
 		parsers->insert({ "clear_plot", mvPythonParser({
 			{mvPythonDataType::String, "plot"},
 		}, "Clears a plot.", "None", "Plotting") });
@@ -94,16 +20,6 @@ namespace Marvel {
 			{mvPythonDataType::String, "plot"},
 			{mvPythonDataType::Integer, "map"}
 		}, "Sets the color map of the plot's series.", "None", "Plotting") });
-
-		parsers->insert({ "delete_drag_line", mvPythonParser({
-			{mvPythonDataType::String, "plot"},
-			{mvPythonDataType::String, "name"}
-		}, "Deletes a drag line if it exists.", "None", "Plotting") });
-
-		parsers->insert({ "delete_drag_point", mvPythonParser({
-			{mvPythonDataType::String, "plot"},
-			{mvPythonDataType::String, "name"}
-		}, "Deletes a drag point if it exists.", "None", "Plotting") });
 
 		parsers->insert({ "delete_series", mvPythonParser({
 			{mvPythonDataType::String, "plot"},
@@ -137,50 +53,6 @@ namespace Marvel {
 		parsers->insert({ "set_plot_ylimits_auto", mvPythonParser({
 			{mvPythonDataType::String, "plot"},
 		}, "Sets plots y limits to be automatic.", "None", "Plotting") });
-
-		parsers->insert({ "delete_annotation", mvPythonParser({
-			{mvPythonDataType::String, "plot"},
-			{mvPythonDataType::String, "name"},
-		}, "Deletes an annotation", "None", "Plotting") });
-
-		parsers->insert({ "add_drag_line", mvPythonParser({
-			{mvPythonDataType::String, "plot"},
-			{mvPythonDataType::String, "name"},
-			{mvPythonDataType::KeywordOnly},
-			{mvPythonDataType::String, "source", "", "''"},
-			{mvPythonDataType::FloatList, "color", "", "(0, 0, 0, -1)"},
-			{mvPythonDataType::Float, "thickness", "", "-1"},
-			{mvPythonDataType::Bool, "y_line", "", "False"},
-			{mvPythonDataType::Bool, "show_label", "", "True"},
-			{mvPythonDataType::Callable, "callback", "function to run when line is dragged", "None"},
-			{mvPythonDataType::Float, "default_value", "", "0.0"},
-		}, "Adds a drag line to a plot.", "None", "Plotting") });
-
-		parsers->insert({ "add_drag_point", mvPythonParser({
-			{mvPythonDataType::String, "plot"},
-			{mvPythonDataType::String, "name"},
-			{mvPythonDataType::KeywordOnly},
-			{mvPythonDataType::String, "source", "", "''"},
-			{mvPythonDataType::FloatList, "color", "", "(0, 0, 0, -1)"},
-			{mvPythonDataType::Float, "radius", "", "4.0"},
-			{mvPythonDataType::Bool, "show_label", "", "True"},
-			{mvPythonDataType::Callable, "callback", "function to run when point is moved", "None"},
-			{mvPythonDataType::Float, "default_x", "", "0.0"},
-			{mvPythonDataType::Float, "default_y", "", "0.0"},
-		}, "Adds a drag point to a plot.", "None", "Plotting") });
-
-		parsers->insert({ "add_annotation", mvPythonParser({
-			{mvPythonDataType::String, "plot"},
-			{mvPythonDataType::String, "text"},
-			{mvPythonDataType::Double, "x"},
-			{mvPythonDataType::Double, "y"},
-			{mvPythonDataType::Float, "xoffset"},
-			{mvPythonDataType::Float, "yoffset"},
-			{mvPythonDataType::KeywordOnly},
-			{mvPythonDataType::FloatList, "color", "", "(0, 0, 0, -1)"},
-			{mvPythonDataType::Bool, "clamped", "", "True"},
-			{mvPythonDataType::String, "tag", "", "''"},
-		}, "Adds an annotation to a plot.", "None", "Plotting") });
 
 		parsers->insert({ "add_image_series", mvPythonParser({
 			{mvPythonDataType::String, "plot"},
@@ -419,7 +291,7 @@ namespace Marvel {
 		return first->size() == second->size();
 	}
 
-	static bool CheckArraySizes(const char* name, std::vector<const std::vector<float>*> arrays)
+	static bool CheckArraySizes(const char* name, const std::vector<const std::vector<float>*>& arrays)
 	{
 		for (size_t i = 0; i < arrays.size() - 1; i++)
 		{
@@ -432,136 +304,6 @@ namespace Marvel {
 		return true;
 	}
 
-	PyObject* add_annotation(PyObject* self, PyObject* args, PyObject* kwargs)
-	{
-		const char* plot;
-		const char* text;
-		double x;
-		double y;
-		float xoffset;
-		float yoffset;
-		PyObject* color = PyTuple_New(4);
-		PyTuple_SetItem(color, 0, PyLong_FromLong(0));
-		PyTuple_SetItem(color, 1, PyLong_FromLong(0));
-		PyTuple_SetItem(color, 2, PyLong_FromLong(0));
-		PyTuple_SetItem(color, 3, PyLong_FromLong(0));
-		int clamped = true;
-		const char* tag = "";
-
-		if (!(*mvApp::GetApp()->getParsers())["add_annotation"].parse(args, kwargs, __FUNCTION__,
-			&plot, &text, &x, &y, &xoffset, &yoffset, &color, &clamped, &tag))
-			return GetPyNone();
-
-		mvAppItem* aplot = mvApp::GetApp()->getItemRegistry().getItem(plot);
-
-		if (aplot == nullptr)
-		{
-			std::string message = plot;
-			ThrowPythonException(message + " plot does not exist.");
-			return GetPyNone();
-		}
-
-		if (aplot->getType() != mvAppItemType::Plot)
-		{
-			std::string message = plot;
-			ThrowPythonException(message + " is not a plot.");
-			return GetPyNone();
-		}
-
-		mvPlot* graph = static_cast<mvPlot*>(aplot);
-		graph->updateAnnotation(tag, x, y, xoffset, yoffset, ToColor(color), text, clamped);
-		return GetPyNone();
-	}
-
-	PyObject* add_drag_line(PyObject* self, PyObject* args, PyObject* kwargs)
-	{
-		const char* plot;
-		const char* name;
-		const char* source = "";
-		PyObject* color = PyTuple_New(4);
-		PyTuple_SetItem(color, 0, PyLong_FromLong(0));
-		PyTuple_SetItem(color, 1, PyLong_FromLong(0));
-		PyTuple_SetItem(color, 2, PyLong_FromLong(0));
-		PyTuple_SetItem(color, 3, PyLong_FromLong(-1));
-		float thickness = 1.0f;
-		int y_line = false;
-		int show_label = true;
-		PyObject* callback = nullptr;
-		float default_value = 0.0f;
-
-		if (!(*mvApp::GetApp()->getParsers())["add_drag_line"].parse(args, kwargs, __FUNCTION__,
-			&plot, &name, &source, &color, &thickness, &y_line, &show_label, &callback, &default_value))
-			return GetPyNone();
-
-		mvAppItem* aplot = mvApp::GetApp()->getItemRegistry().getItem(plot);
-
-		if (aplot == nullptr)
-		{
-			std::string message = plot;
-			ThrowPythonException(message + " plot does not exist.");
-			return GetPyNone();
-		}
-
-		if (aplot->getType() != mvAppItemType::Plot)
-		{
-			std::string message = plot;
-			ThrowPythonException(message + " is not a plot.");
-			return GetPyNone();
-		}
-
-		if (callback)
-			Py_XINCREF(callback);
-
-		mvPlot* graph = static_cast<mvPlot*>(aplot);
-		graph->updateDragLine(name, show_label, ToColor(color), thickness, y_line, callback, default_value, source);
-		return GetPyNone();
-	}
-
-	PyObject* add_drag_point(PyObject* self, PyObject* args, PyObject* kwargs)
-	{
-		const char* plot;
-		const char* name;
-		const char* source = "";
-		PyObject* color = PyTuple_New(4);
-		PyTuple_SetItem(color, 0, PyLong_FromLong(0));
-		PyTuple_SetItem(color, 1, PyLong_FromLong(0));
-		PyTuple_SetItem(color, 2, PyLong_FromLong(0));
-		PyTuple_SetItem(color, 3, PyLong_FromLong(-1));
-		float radius = 4.0f;
-		int show_label = true;
-		PyObject* callback = nullptr;
-		float default_x = 0.0f;
-		float default_y = 0.0f;
-
-		if (!(*mvApp::GetApp()->getParsers())["add_drag_point"].parse(args, kwargs, __FUNCTION__,
-			&plot, &name, &source, &color, &radius, &show_label, &callback, &default_x, &default_y))
-			return GetPyNone();
-
-		mvAppItem* aplot = mvApp::GetApp()->getItemRegistry().getItem(plot);
-
-		if (aplot == nullptr)
-		{
-			std::string message = plot;
-			ThrowPythonException(message + " plot does not exist.");
-			return GetPyNone();
-		}
-
-		if (aplot->getType() != mvAppItemType::Plot)
-		{
-			std::string message = plot;
-			ThrowPythonException(message + " is not a plot.");
-			return GetPyNone();
-		}
-
-		if (callback)
-			Py_XINCREF(callback);
-
-		mvPlot* graph = static_cast<mvPlot*>(aplot);
-		double defaults[2] = { (double)default_x, (double)default_y };
-		graph->updateDragPoint(name, show_label, ToColor(color), radius, callback, defaults, source);
-		return GetPyNone();
-	}
-
 	PyObject* clear_plot(PyObject* self, PyObject* args, PyObject* kwargs)
 	{
 		const char* plot;
@@ -569,7 +311,7 @@ namespace Marvel {
 		if (!(*mvApp::GetApp()->getParsers())["clear_plot"].parse(args, kwargs, __FUNCTION__, &plot))
 			return GetPyNone();
 
-		mvAppItem* aplot = mvApp::GetApp()->getItemRegistry().getItem(plot);
+		auto aplot = mvApp::GetApp()->getItemRegistry().getItem(plot);
 		if (aplot == nullptr)
 		{
 			std::string message = plot;
@@ -584,7 +326,7 @@ namespace Marvel {
 			return GetPyNone();
 		}
 
-		mvPlot* graph = static_cast<mvPlot*>(aplot);
+		mvPlot* graph = static_cast<mvPlot*>(aplot.get());
 
 		graph->clear();
 
@@ -598,7 +340,7 @@ namespace Marvel {
 		if (!(*mvApp::GetApp()->getParsers())["reset_xticks"].parse(args, kwargs, __FUNCTION__, &plot))
 			return GetPyNone();
 
-		mvAppItem* aplot = mvApp::GetApp()->getItemRegistry().getItem(plot);
+		auto aplot = mvApp::GetApp()->getItemRegistry().getItem(plot);
 		if (aplot == nullptr)
 		{
 			std::string message = plot;
@@ -613,7 +355,7 @@ namespace Marvel {
 			return GetPyNone();
 		}
 
-		mvPlot* graph = static_cast<mvPlot*>(aplot);
+		mvPlot* graph = static_cast<mvPlot*>(aplot.get());
 
 		graph->resetXTicks();
 
@@ -627,7 +369,7 @@ namespace Marvel {
 		if (!(*mvApp::GetApp()->getParsers())["reset_yticks"].parse(args, kwargs, __FUNCTION__, &plot))
 			return GetPyNone();
 
-		mvAppItem* aplot = mvApp::GetApp()->getItemRegistry().getItem(plot);
+		auto aplot = mvApp::GetApp()->getItemRegistry().getItem(plot);
 		if (aplot == nullptr)
 		{
 			std::string message = plot;
@@ -642,7 +384,7 @@ namespace Marvel {
 			return GetPyNone();
 		}
 
-		mvPlot* graph = static_cast<mvPlot*>(aplot);
+		mvPlot* graph = static_cast<mvPlot*>(aplot.get());
 
 		graph->resetYTicks();
 
@@ -657,7 +399,7 @@ namespace Marvel {
 		if (!(*mvApp::GetApp()->getParsers())["set_xticks"].parse(args, kwargs, __FUNCTION__, &plot, &label_pairs))
 			return GetPyNone();
 
-		mvAppItem* aplot = mvApp::GetApp()->getItemRegistry().getItem(plot);
+		auto aplot = mvApp::GetApp()->getItemRegistry().getItem(plot);
 		if (aplot == nullptr)
 		{
 			std::string message = plot;
@@ -672,7 +414,7 @@ namespace Marvel {
 			return GetPyNone();
 		}
 
-		mvPlot* graph = static_cast<mvPlot*>(aplot);
+		mvPlot* graph = static_cast<mvPlot*>(aplot.get());
 
 		auto mlabel_pairs = ToVectPairStringFloat(label_pairs);
 
@@ -698,7 +440,7 @@ namespace Marvel {
 		if (!(*mvApp::GetApp()->getParsers())["set_yticks"].parse(args, kwargs, __FUNCTION__, &plot, &label_pairs))
 			return GetPyNone();
 
-		mvAppItem* aplot = mvApp::GetApp()->getItemRegistry().getItem(plot);
+		auto aplot = mvApp::GetApp()->getItemRegistry().getItem(plot);
 		if (aplot == nullptr)
 		{
 			std::string message = plot;
@@ -713,7 +455,7 @@ namespace Marvel {
 			return GetPyNone();
 		}
 
-		mvPlot* graph = static_cast<mvPlot*>(aplot);
+		mvPlot* graph = static_cast<mvPlot*>(aplot.get());
 
 		auto mlabel_pairs = ToVectPairStringFloat(label_pairs);
 
@@ -738,7 +480,7 @@ namespace Marvel {
 		if (!(*mvApp::GetApp()->getParsers())["set_plot_xlimits_auto"].parse(args, kwargs, __FUNCTION__, &plot))
 			return GetPyNone();
 
-		mvAppItem* aplot = mvApp::GetApp()->getItemRegistry().getItem(plot);
+		auto aplot = mvApp::GetApp()->getItemRegistry().getItem(plot);
 		if (aplot == nullptr)
 		{
 			std::string message = plot;
@@ -752,7 +494,7 @@ namespace Marvel {
 			ThrowPythonException(message + " is not a plot.");
 			return GetPyNone();
 		}
-		mvPlot* graph = static_cast<mvPlot*>(aplot);
+		mvPlot* graph = static_cast<mvPlot*>(aplot.get());
 
 		graph->setXLimitsAuto();
 
@@ -766,7 +508,7 @@ namespace Marvel {
 		if (!(*mvApp::GetApp()->getParsers())["set_plot_ylimits_auto"].parse(args, kwargs, __FUNCTION__, &plot))
 			return GetPyNone();
 
-		mvAppItem* aplot = mvApp::GetApp()->getItemRegistry().getItem(plot);
+		auto aplot = mvApp::GetApp()->getItemRegistry().getItem(plot);
 		if (aplot == nullptr)
 		{
 			std::string message = plot;
@@ -781,7 +523,7 @@ namespace Marvel {
 			return GetPyNone();
 		}
 
-		mvPlot* graph = static_cast<mvPlot*>(aplot);
+		mvPlot* graph = static_cast<mvPlot*>(aplot.get());
 
 		graph->setYLimitsAuto();
 
@@ -797,7 +539,7 @@ namespace Marvel {
 		if (!(*mvApp::GetApp()->getParsers())["set_plot_xlimits"].parse(args, kwargs, __FUNCTION__, &plot, &xmin, &xmax))
 			return GetPyNone();
 
-		mvAppItem* aplot = mvApp::GetApp()->getItemRegistry().getItem(plot);
+		auto aplot = mvApp::GetApp()->getItemRegistry().getItem(plot);
 		if (aplot == nullptr)
 		{
 			std::string message = plot;
@@ -812,7 +554,7 @@ namespace Marvel {
 			return GetPyNone();
 		}
 
-		mvPlot* graph = static_cast<mvPlot*>(aplot);
+		mvPlot* graph = static_cast<mvPlot*>(aplot.get());
 
 		graph->setXLimits(xmin, xmax);
 
@@ -828,7 +570,7 @@ namespace Marvel {
 		if (!(*mvApp::GetApp()->getParsers())["set_plot_ylimits"].parse(args, kwargs, __FUNCTION__, &plot, &ymin, &ymax))
 			return GetPyNone();
 
-		mvAppItem* aplot = mvApp::GetApp()->getItemRegistry().getItem(plot);
+		auto aplot = mvApp::GetApp()->getItemRegistry().getItem(plot);
 		if (aplot == nullptr)
 		{
 			std::string message = plot;
@@ -842,7 +584,7 @@ namespace Marvel {
 			ThrowPythonException(message + " is not a plot.");
 			return GetPyNone();
 		}
-		mvPlot* graph = static_cast<mvPlot*>(aplot);
+		mvPlot* graph = static_cast<mvPlot*>(aplot.get());
 
 		graph->setYLimits(ymin, ymax);
 
@@ -856,7 +598,7 @@ namespace Marvel {
 		if (!(*mvApp::GetApp()->getParsers())["is_plot_queried"].parse(args, kwargs, __FUNCTION__, &plot))
 			return GetPyNone();
 
-		mvAppItem* aplot = mvApp::GetApp()->getItemRegistry().getItem(plot);
+		auto aplot = mvApp::GetApp()->getItemRegistry().getItem(plot);
 		if (aplot == nullptr)
 		{
 			std::string message = plot;
@@ -870,7 +612,7 @@ namespace Marvel {
 			ThrowPythonException(message + " is not a plot.");
 			return GetPyNone();
 		}
-		mvPlot* graph = static_cast<mvPlot*>(aplot);
+		mvPlot* graph = static_cast<mvPlot*>(aplot.get());
 
 		return Py_BuildValue("b", graph->isPlotQueried());
 	}
@@ -882,7 +624,7 @@ namespace Marvel {
 		if (!(*mvApp::GetApp()->getParsers())["get_plot_xlimits"].parse(args, kwargs, __FUNCTION__, &plot))
 			return GetPyNone();
 
-		mvAppItem* aplot = mvApp::GetApp()->getItemRegistry().getItem(plot);
+		auto aplot = mvApp::GetApp()->getItemRegistry().getItem(plot);
 		if (aplot == nullptr)
 		{
 			std::string message = plot;
@@ -896,7 +638,7 @@ namespace Marvel {
 			ThrowPythonException(message + " is not a plot.");
 			return GetPyNone();
 		}
-		mvPlot* graph = static_cast<mvPlot*>(aplot);
+		mvPlot* graph = static_cast<mvPlot*>(aplot.get());
 
 		const ImVec2& limits = graph->getXLimits();
 
@@ -910,7 +652,7 @@ namespace Marvel {
 		if (!(*mvApp::GetApp()->getParsers())["get_plot_ylimits"].parse(args, kwargs, __FUNCTION__, &plot))
 			return GetPyNone();
 
-		mvAppItem* aplot = mvApp::GetApp()->getItemRegistry().getItem(plot);
+		auto aplot = mvApp::GetApp()->getItemRegistry().getItem(plot);
 		if (aplot == nullptr)
 		{
 			std::string message = plot;
@@ -924,7 +666,7 @@ namespace Marvel {
 			ThrowPythonException(message + " is not a plot.");
 			return GetPyNone();
 		}
-		mvPlot* graph = static_cast<mvPlot*>(aplot);
+		mvPlot* graph = static_cast<mvPlot*>(aplot.get());
 
 		const ImVec2& limits = graph->getYLimits();
 
@@ -938,7 +680,7 @@ namespace Marvel {
 		if (!(*mvApp::GetApp()->getParsers())["get_plot_query_area"].parse(args, kwargs, __FUNCTION__, &plot))
 			return GetPyNone();
 
-		mvAppItem* aplot = mvApp::GetApp()->getItemRegistry().getItem(plot);
+		auto aplot = mvApp::GetApp()->getItemRegistry().getItem(plot);
 		if (aplot == nullptr)
 		{
 			std::string message = plot;
@@ -952,7 +694,7 @@ namespace Marvel {
 			ThrowPythonException(message + " is not a plot.");
 			return GetPyNone();
 		}
-		mvPlot* graph = static_cast<mvPlot*>(aplot);
+		mvPlot* graph = static_cast<mvPlot*>(aplot.get());
 
 		auto area = graph->getPlotQueryArea();
 
@@ -967,7 +709,7 @@ namespace Marvel {
 		if (!(*mvApp::GetApp()->getParsers())["set_color_map"].parse(args, kwargs, __FUNCTION__, &plot, &map))
 			return GetPyNone();
 
-		mvAppItem* aplot = mvApp::GetApp()->getItemRegistry().getItem(plot);
+		auto aplot = mvApp::GetApp()->getItemRegistry().getItem(plot);
 		if (aplot == nullptr)
 		{
 			std::string message = plot;
@@ -982,132 +724,11 @@ namespace Marvel {
 			return GetPyNone();
 		}
 
-		mvPlot* graph = static_cast<mvPlot*>(aplot);
+		mvPlot* graph = static_cast<mvPlot*>(aplot.get());
 
 		graph->SetColorMap(map);
 
 		return GetPyNone();
-	}
-
-	PyObject* add_plot(PyObject* self, PyObject* args, PyObject* kwargs)
-	{
-		const char* name;
-		const char* xAxisName = "";
-		const char* yAxisName = "";
-
-		// plot flags
-		int no_legend = false;
-		int no_menus = false;
-		int no_box_select = false;
-		int no_mouse_pos = false;
-		int no_highlight = false;
-		int no_child = false;
-		int query = false;
-		int crosshairs = false;
-		int antialiased = false;
-		int yaxis2 = false;
-		int yaxis3 = false;
-
-		// x axis flags
-		int xaxis_no_gridlines = false;
-		int xaxis_no_tick_marks = false;
-		int xaxis_no_tick_labels = false;
-		int xaxis_log_scale = false;
-		int xaxis_time = false;
-		int xaxis_invert = false;
-		int xaxis_lock_min = false;
-		int xaxis_lock_max = false;
-
-		// y axis flags
-		int yaxis_no_gridlines = false;
-		int yaxis_no_tick_marks = false;
-		int yaxis_no_tick_labels = false;
-		int yaxis_log_scale = false;
-		int yaxis_invert = false;
-		int yaxis_lock_min = false;
-		int yaxis_lock_max = false;
-
-		// y2 axis flags
-		int y2axis_no_gridlines = false;
-		int y2axis_no_tick_marks = false;
-		int y2axis_no_tick_labels = false;
-		int y2axis_log_scale = false;
-		int y2axis_invert = false;
-		int y2axis_lock_min = false;
-		int y2axis_lock_max = false;
-
-		// y3 axis flags
-		int y3axis_no_gridlines = false;
-		int y3axis_no_tick_marks = false;
-		int y3axis_no_tick_labels = false;
-		int y3axis_log_scale = false;
-		int y3axis_invert = false;
-		int y3axis_lock_min = false;
-		int y3axis_lock_max = false;
-
-		const char* parent = "";
-		const char* before = "";
-		int width = -1;
-		int height = -1;
-		PyObject* query_callback = nullptr;
-
-		int show_color_scale = false;
-		float scale_min = 0.0f;
-		float scale_max = 1.0f;
-		int scale_height = 100;
-
-		const char* label = "";
-		int show = true;
-		int show_annotations = true;
-		int show_drag_lines = true;
-		int show_drag_points = true;
-
-		if (!(*mvApp::GetApp()->getParsers())["add_plot"].parse(args, kwargs, __FUNCTION__, &name, &xAxisName, &yAxisName,
-			&no_legend, &no_menus, &no_box_select, &no_mouse_pos, &no_highlight, &no_child, &query, &crosshairs, &antialiased,
-			&yaxis2, &yaxis3,
-			&xaxis_no_gridlines,
-			&xaxis_no_tick_marks,
-			&xaxis_no_tick_labels,
-			&xaxis_log_scale,
-			&xaxis_time,
-			&xaxis_invert,
-			&xaxis_lock_min,
-			&xaxis_lock_max,
-			&yaxis_no_gridlines,
-			&yaxis_no_tick_marks,
-			&yaxis_no_tick_labels,
-			&yaxis_log_scale,
-			&yaxis_invert,
-			&yaxis_lock_min,
-			&yaxis_lock_max,
-			&y2axis_no_gridlines,
-			&y2axis_no_tick_marks,
-			&y2axis_no_tick_labels,
-			&y2axis_log_scale,
-			&y2axis_invert,
-			&y2axis_lock_min,
-			&y2axis_lock_max,
-			&yaxis_no_gridlines,
-			&y3axis_no_tick_marks,
-			&y3axis_no_tick_labels,
-			&y3axis_log_scale,
-			&y3axis_invert,
-			&y3axis_lock_min,
-			&y3axis_lock_max,
-			&parent, &before, &width, &height, &query_callback, &show_color_scale, &scale_min, &scale_max,
-			&scale_height, &label, &show, &show_annotations, &show_drag_lines, &show_drag_points))
-			return ToPyBool(false);
-
-		if (query_callback)
-			Py_XINCREF(query_callback);
-
-		mvAppItem* item = new mvPlot(name, query_callback);
-
-		item->checkConfigDict(kwargs);
-		item->setConfigDict(kwargs);
-		item->setExtraConfigDict(kwargs);
-
-		return ToPyBool(mvApp::GetApp()->getItemRegistry().addItemWithRuntimeChecks(item, parent, before));
 	}
 
 	PyObject* delete_series(PyObject* self, PyObject* args, PyObject* kwargs)
@@ -1118,7 +739,7 @@ namespace Marvel {
 		if (!(*mvApp::GetApp()->getParsers())["delete_series"].parse(args, kwargs, __FUNCTION__, &plot, &series))
 			return GetPyNone();
 
-		mvAppItem* aplot = mvApp::GetApp()->getItemRegistry().getItem(plot);
+		auto aplot = mvApp::GetApp()->getItemRegistry().getItem(plot);
 
 		if (aplot == nullptr)
 		{
@@ -1134,98 +755,8 @@ namespace Marvel {
 			return GetPyNone();
 		}
 
-		mvPlot* graph = static_cast<mvPlot*>(aplot);
+		mvPlot* graph = static_cast<mvPlot*>(aplot.get());
 		graph->deleteSeries(series);
-		return GetPyNone();
-	}
-
-	PyObject* delete_annotation(PyObject* self, PyObject* args, PyObject* kwargs)
-	{
-		const char* plot;
-		const char* name;
-
-		if (!(*mvApp::GetApp()->getParsers())["delete_annotation"].parse(args, kwargs, __FUNCTION__, 
-			&plot, &name))
-			return GetPyNone();
-
-		mvAppItem* aplot = mvApp::GetApp()->getItemRegistry().getItem(plot);
-
-		if (aplot == nullptr)
-		{
-			std::string message = plot;
-			ThrowPythonException(message + " plot does not exist.");
-			return GetPyNone();
-		}
-
-		if (aplot->getType() != mvAppItemType::Plot)
-		{
-			std::string message = plot;
-			ThrowPythonException(message + " is not a plot.");
-			return GetPyNone();
-		}
-
-		mvPlot* graph = static_cast<mvPlot*>(aplot);
-		graph->deleteAnnotation(name);
-		return GetPyNone();
-	}
-
-	PyObject* delete_drag_line(PyObject* self, PyObject* args, PyObject* kwargs)
-	{
-		const char* plot;
-		const char* name;
-
-		if (!(*mvApp::GetApp()->getParsers())["delete_drag_line"].parse(args, kwargs, __FUNCTION__,
-			&plot, &name))
-			return GetPyNone();
-
-		mvAppItem* aplot = mvApp::GetApp()->getItemRegistry().getItem(plot);
-
-		if (aplot == nullptr)
-		{
-			std::string message = plot;
-			ThrowPythonException(message + " plot does not exist.");
-			return GetPyNone();
-		}
-
-		if (aplot->getType() != mvAppItemType::Plot)
-		{
-			std::string message = plot;
-			ThrowPythonException(message + " is not a plot.");
-			return GetPyNone();
-		}
-
-		mvPlot* graph = static_cast<mvPlot*>(aplot);
-		graph->deleteDragLine(name);
-		return GetPyNone();
-	}
-
-	PyObject* delete_drag_point(PyObject* self, PyObject* args, PyObject* kwargs)
-	{
-		const char* plot;
-		const char* name;
-
-		if (!(*mvApp::GetApp()->getParsers())["delete_drag_point"].parse(args, kwargs, __FUNCTION__,
-			&plot, &name))
-			return GetPyNone();
-
-		mvAppItem* aplot = mvApp::GetApp()->getItemRegistry().getItem(plot);
-
-		if (aplot == nullptr)
-		{
-			std::string message = plot;
-			ThrowPythonException(message + " plot does not exist.");
-			return GetPyNone();
-		}
-
-		if (aplot->getType() != mvAppItemType::Plot)
-		{
-			std::string message = plot;
-			ThrowPythonException(message + " is not a plot.");
-			return GetPyNone();
-		}
-
-		mvPlot* graph = static_cast<mvPlot*>(aplot);
-		graph->deleteDragPoint(name);
 		return GetPyNone();
 	}
 
@@ -1261,7 +792,7 @@ namespace Marvel {
 		if (!CheckList(plot, bounds_max)) return GetPyNone();
 
 
-		mvAppItem* aplot = mvApp::GetApp()->getItemRegistry().getItem(plot);
+		auto aplot = mvApp::GetApp()->getItemRegistry().getItem(plot);
 
 		if (aplot == nullptr)
 		{
@@ -1277,7 +808,7 @@ namespace Marvel {
 			return GetPyNone();
 		}
 
-		mvPlot* graph = static_cast<mvPlot*>(aplot);
+		mvPlot* graph = static_cast<mvPlot*>(aplot.get());
 
 		auto mbounds_min = ToFloatVect(bounds_min);
 		auto mbounds_max = ToFloatVect(bounds_max);
@@ -1285,7 +816,7 @@ namespace Marvel {
 		auto muv_max = ToVec2(uv_max);
 		auto mcolor = ToColor(tintcolor);
 
-		auto series = new mvImageSeries(name, value, ImPlotPoint(mbounds_min[0], mbounds_min[1]), ImPlotPoint(mbounds_max[0], mbounds_max[1]),
+		auto series = CreateRef<mvImageSeries>(name, value, ImPlotPoint(mbounds_min[0], mbounds_min[1]), ImPlotPoint(mbounds_max[0], mbounds_max[1]),
 			muv_min, muv_max, mcolor,(ImPlotYAxis_)axis);
 
 		graph->updateSeries(series, update_bounds);
@@ -1317,11 +848,11 @@ namespace Marvel {
 		if (!CheckList(plot, values)) return GetPyNone();
 		if (!CheckList(plot, labels)) return GetPyNone();
 
-		mvAppItem* aplot = mvApp::GetApp()->getItemRegistry().getItem(plot);
+		auto aplot = mvApp::GetApp()->getItemRegistry().getItem(plot);
 
-		if (!CheckIfPlotOk(plot, aplot)) return GetPyNone();
+		if (!CheckIfPlotOk(plot, aplot.get())) return GetPyNone();
 
-		mvPlot* graph = static_cast<mvPlot*>(aplot);
+		mvPlot* graph = static_cast<mvPlot*>(aplot.get());
 
 		auto avalues = ToFloatVect(values);
 		auto alabels = ToStringVect(labels);
@@ -1332,7 +863,7 @@ namespace Marvel {
 			return GetPyNone();
 		}
 
-		auto series = new mvPieSeries(name, &avalues, x, y, radius, normalize, angle, format, alabels, (ImPlotYAxis_)axis);
+		auto series = CreateRef<mvPieSeries>(name, &avalues, x, y, radius, normalize, angle, format, alabels, (ImPlotYAxis_)axis);
 
 		graph->updateSeries(series, update_bounds);
 
@@ -1362,11 +893,11 @@ namespace Marvel {
 		if (!CheckList(plot, x)) return GetPyNone();
 		if (!CheckList(plot, y)) return GetPyNone();
 
-		mvAppItem* aplot = mvApp::GetApp()->getItemRegistry().getItem(plot);
+		auto aplot = mvApp::GetApp()->getItemRegistry().getItem(plot);
 
-		if (!CheckIfPlotOk(plot, aplot)) return GetPyNone();
+		if (!CheckIfPlotOk(plot, aplot.get())) return GetPyNone();
 
-		mvPlot* graph = static_cast<mvPlot*>(aplot);
+		mvPlot* graph = static_cast<mvPlot*>(aplot.get());
 
 		auto mcolor = ToColor(color);
 		auto xs = ToFloatVect(x);
@@ -1374,7 +905,7 @@ namespace Marvel {
 
 		if (!CheckArraySizes(plot, { &xs, &ys })) return GetPyNone();
 
-		auto* series = new mvLineSeries(name, &xs, &ys, mcolor, (ImPlotYAxis_)axis);
+		auto series = CreateRef<mvLineSeries>(name, &xs, &ys, mcolor, (ImPlotYAxis_)axis);
 
 		series->setWeight(weight);
 		graph->updateSeries(series, update_bounds);
@@ -1404,11 +935,11 @@ namespace Marvel {
 		if (!CheckList(plot, x)) return GetPyNone();
 		if (!CheckList(plot, y)) return GetPyNone();
 
-		mvAppItem* aplot = mvApp::GetApp()->getItemRegistry().getItem(plot);
+		auto aplot = mvApp::GetApp()->getItemRegistry().getItem(plot);
 
-		if (!CheckIfPlotOk(plot, aplot)) return GetPyNone();
+		if (!CheckIfPlotOk(plot, aplot.get())) return GetPyNone();
 
-		mvPlot* graph = static_cast<mvPlot*>(aplot);
+		mvPlot* graph = static_cast<mvPlot*>(aplot.get());
 
 		auto mcolor = ToColor(color);
 		auto xs = ToFloatVect(x);
@@ -1416,7 +947,7 @@ namespace Marvel {
 
 		if (!CheckArraySizes(plot, { &xs, &ys })) return GetPyNone();
 
-		auto* series = new mvStairSeries(name, &xs, &ys, mcolor, (ImPlotYAxis_)axis);
+		auto series = CreateRef<mvStairSeries>(name, &xs, &ys, mcolor, (ImPlotYAxis_)axis);
 
 		series->setWeight(weight);
 		graph->updateSeries(series, update_bounds);
@@ -1442,21 +973,21 @@ namespace Marvel {
 		if (!CheckList(plot, x)) return GetPyNone();
 		if (!CheckList(plot, y)) return GetPyNone();
 
-		mvAppItem* aplot = mvApp::GetApp()->getItemRegistry().getItem(plot);
+		auto aplot = mvApp::GetApp()->getItemRegistry().getItem(plot);
 
-		if (!CheckIfPlotOk(plot, aplot)) return GetPyNone();
+		if (!CheckIfPlotOk(plot, aplot.get())) return GetPyNone();
 
 		auto xs = ToFloatVect(x);
 		auto ys = ToFloatVect(y);
 
 		if (!CheckArraySizes(plot, { &xs, &ys })) return GetPyNone();
 
-		mvPlot* graph = static_cast<mvPlot*>(aplot);
+		mvPlot* graph = static_cast<mvPlot*>(aplot.get());
 
 		if (xs.size() == 0)
 			return GetPyNone();
 
-		auto series = new mvBarSeries(name, &xs, &ys, horizontal, (ImPlotYAxis_)axis);
+		auto series = CreateRef<mvBarSeries>(name, &xs, &ys, horizontal, (ImPlotYAxis_)axis);
 		series->setWeight(weight);
 		graph->updateSeries(series, update_bounds);
 
@@ -1492,11 +1023,11 @@ namespace Marvel {
 		if (!CheckList(plot, x)) return GetPyNone();
 		if (!CheckList(plot, y1)) return GetPyNone();
 
-		mvAppItem* aplot = mvApp::GetApp()->getItemRegistry().getItem(plot);
+		auto aplot = mvApp::GetApp()->getItemRegistry().getItem(plot);
 
-		if (!CheckIfPlotOk(plot, aplot)) return GetPyNone();
+		if (!CheckIfPlotOk(plot, aplot.get())) return GetPyNone();
 
-		mvPlot* graph = static_cast<mvPlot*>(aplot);
+		mvPlot* graph = static_cast<mvPlot*>(aplot.get());
 
 		auto mcolor = ToColor(color);
 		auto mfill = ToColor(fill);
@@ -1517,7 +1048,7 @@ namespace Marvel {
 		if(xs.size() == 0)
 			return GetPyNone();
 
-		auto series = new mvShadeSeries(name, mcolor, mfill , &xs, &y1s, &y2s, (ImPlotYAxis_)axis);
+		auto series = CreateRef<mvShadeSeries>(name, mcolor, mfill , &xs, &y1s, &y2s, (ImPlotYAxis_)axis);
 		series->setWeight(weight);
 		graph->updateSeries(series, update_bounds);
 
@@ -1561,11 +1092,11 @@ namespace Marvel {
 		if (!CheckList(plot, closes)) return GetPyNone();
 		if (!CheckList(plot, lows)) return GetPyNone();
 
-		mvAppItem* aplot = mvApp::GetApp()->getItemRegistry().getItem(plot);
+		auto aplot = mvApp::GetApp()->getItemRegistry().getItem(plot);
 
-		if (!CheckIfPlotOk(plot, aplot)) return GetPyNone();
+		if (!CheckIfPlotOk(plot, aplot.get())) return GetPyNone();
 
-		mvPlot* graph = static_cast<mvPlot*>(aplot);
+		mvPlot* graph = static_cast<mvPlot*>(aplot.get());
 
 		auto mdates = ToFloatVect(dates);
 		auto mopens = ToFloatVect(opens);
@@ -1580,7 +1111,7 @@ namespace Marvel {
 		if (mdates.size() == 0)
 			return GetPyNone();
 
-		auto series = new mvCandleSeries(name, &mdates, &mopens, &mhighs, &mlows, &mcloses,
+		auto series = CreateRef<mvCandleSeries>(name, &mdates, &mopens, &mhighs, &mlows, &mcloses,
 			weight, mbull, mbear, (ImPlotYAxis_)axis);
 		series->setWeight(weight);
 		graph->updateSeries(series, update_bounds);
@@ -1619,11 +1150,11 @@ namespace Marvel {
 		if (!CheckList(plot, x)) return GetPyNone();
 		if (!CheckList(plot, y)) return GetPyNone();
 
-		mvAppItem* aplot = mvApp::GetApp()->getItemRegistry().getItem(plot);
+		auto aplot = mvApp::GetApp()->getItemRegistry().getItem(plot);
 
-		if (!CheckIfPlotOk(plot, aplot)) return GetPyNone();
+		if (!CheckIfPlotOk(plot, aplot.get())) return GetPyNone();
 
-		mvPlot* graph = static_cast<mvPlot*>(aplot);
+		mvPlot* graph = static_cast<mvPlot*>(aplot.get());
 
 		auto xs = ToFloatVect(x);
 		auto ys = ToFloatVect(y);
@@ -1632,7 +1163,7 @@ namespace Marvel {
 
 		if (!CheckArraySizes(plot, { &xs, &ys })) return GetPyNone();
 
-		auto series = new mvScatterSeries(name, &xs, &ys, marker, size, weight, mmarkerOutlineColor, mmarkerFillColor, (ImPlotYAxis_)axis);
+		auto series = CreateRef<mvScatterSeries>(name, &xs, &ys, marker, size, weight, mmarkerOutlineColor, mmarkerFillColor, (ImPlotYAxis_)axis);
 		
 		graph->updateSeries(series, update_bounds);
 
@@ -1669,11 +1200,11 @@ namespace Marvel {
 		if (!CheckList(plot, x)) return GetPyNone();
 		if (!CheckList(plot, y)) return GetPyNone();
 
-		mvAppItem* aplot = mvApp::GetApp()->getItemRegistry().getItem(plot);
+		auto aplot = mvApp::GetApp()->getItemRegistry().getItem(plot);
 
-		if (!CheckIfPlotOk(plot, aplot)) return GetPyNone();
+		if (!CheckIfPlotOk(plot, aplot.get())) return GetPyNone();
 
-		mvPlot* graph = static_cast<mvPlot*>(aplot);
+		mvPlot* graph = static_cast<mvPlot*>(aplot.get());
 
 		auto xs = ToFloatVect(x);
 		auto ys = ToFloatVect(y);
@@ -1685,7 +1216,7 @@ namespace Marvel {
 		if (xs.size() == 0)
 			return GetPyNone();
 
-		graph->updateSeries(new mvStemSeries(name, &xs, &ys, marker, size, weight, mmarkerOutlineColor,
+		graph->updateSeries(CreateRef<mvStemSeries>(name, &xs, &ys, marker, size, weight, mmarkerOutlineColor,
 			mmarkerFillColor, (ImPlotYAxis_)axis), update_bounds);
 
 		return GetPyNone();
@@ -1707,7 +1238,7 @@ namespace Marvel {
 			&plot, &name, &x, &y, &vertical, &xoffset, &yoffset, &update_bounds, &axis))
 			return GetPyNone();
 
-		mvAppItem* aplot = mvApp::GetApp()->getItemRegistry().getItem(plot);
+		auto aplot = mvApp::GetApp()->getItemRegistry().getItem(plot);
 		if (aplot == nullptr)
 		{
 			std::string message = plot;
@@ -1722,12 +1253,12 @@ namespace Marvel {
 			return GetPyNone();
 		}
 
-		mvPlot* graph = static_cast<mvPlot*>(aplot);
+		mvPlot* graph = static_cast<mvPlot*>(aplot.get());
 
 		std::vector<float> ax = { x };
 		std::vector<float> ay = { y };
 
-		graph->updateSeries(new mvLabelSeries(name, &ax, &ay, xoffset, yoffset, vertical, (ImPlotYAxis_)axis), update_bounds);
+		graph->updateSeries(CreateRef<mvLabelSeries>(name, &ax, &ay, xoffset, yoffset, vertical, (ImPlotYAxis_)axis), update_bounds);
 
 		return GetPyNone();
 	}
@@ -1751,11 +1282,11 @@ namespace Marvel {
 		if (!CheckList(plot, x)) return GetPyNone();
 		if (!CheckList(plot, y)) return GetPyNone();
 
-		mvAppItem* aplot = mvApp::GetApp()->getItemRegistry().getItem(plot);
+		auto aplot = mvApp::GetApp()->getItemRegistry().getItem(plot);
 
-		if (!CheckIfPlotOk(plot, aplot)) return GetPyNone();
+		if (!CheckIfPlotOk(plot, aplot.get())) return GetPyNone();
 
-		mvPlot* graph = static_cast<mvPlot*>(aplot);
+		mvPlot* graph = static_cast<mvPlot*>(aplot.get());
 
 		auto xs = ToFloatVect(x);
 		auto ys = ToFloatVect(y);
@@ -1769,8 +1300,8 @@ namespace Marvel {
 		auto mfill = ToColor(fill);
 
 		graph->deleteSeries(name);
-		auto aseries = new mvAreaSeries(name, &xs, &ys, mcolor, mfill, (ImPlotYAxis_)axis);
-		auto lseries = new mvLineSeries(name, &xs, &ys, mcolor, (ImPlotYAxis_)axis);
+		auto aseries = CreateRef<mvAreaSeries>(name, &xs, &ys, mcolor, mfill, (ImPlotYAxis_)axis);
+		auto lseries = CreateRef<mvLineSeries>(name, &xs, &ys, mcolor, (ImPlotYAxis_)axis);
 		aseries->setWeight(weight);
 		lseries->setWeight(weight);
 		graph->addSeries(aseries, update_bounds);
@@ -1806,11 +1337,11 @@ namespace Marvel {
 		if (!CheckList(plot, negative)) return GetPyNone();
 		if (!CheckList(plot, positive)) return GetPyNone();
 
-		mvAppItem* aplot = mvApp::GetApp()->getItemRegistry().getItem(plot);
+		auto aplot = mvApp::GetApp()->getItemRegistry().getItem(plot);
 
-		if (!CheckIfPlotOk(plot, aplot)) return GetPyNone();
+		if (!CheckIfPlotOk(plot, aplot.get())) return GetPyNone();
 
-		mvPlot* graph = static_cast<mvPlot*>(aplot);
+		mvPlot* graph = static_cast<mvPlot*>(aplot.get());
 
 		auto xs = ToFloatVect(x);
 		auto ys = ToFloatVect(y);
@@ -1823,7 +1354,7 @@ namespace Marvel {
 			return GetPyNone();
 
 		auto mcolor = ToColor(color);
-		auto series = new mvErrorSeries(name, &xs, &ys, &negatives, &positives, horizontal, mcolor, (ImPlotYAxis_)axis);
+		auto series = CreateRef<mvErrorSeries>(name, &xs, &ys, &negatives, &positives, horizontal, mcolor, (ImPlotYAxis_)axis);
 		graph->updateSeries(series, update_bounds);
 
 		return GetPyNone();
@@ -1855,11 +1386,11 @@ namespace Marvel {
 
 		if (!CheckList(plot, values)) return GetPyNone();
 
-		mvAppItem* aplot = mvApp::GetApp()->getItemRegistry().getItem(plot);
+		auto aplot = mvApp::GetApp()->getItemRegistry().getItem(plot);
 
-		if (!CheckIfPlotOk(plot, aplot)) return GetPyNone();
+		if (!CheckIfPlotOk(plot, aplot.get())) return GetPyNone();
 
-		mvPlot* graph = static_cast<mvPlot*>(aplot);
+		mvPlot* graph = static_cast<mvPlot*>(aplot.get());
 
 		auto mvalues = ToFloatVect(values);
 		auto mbounds_min = ToVec2(bounds_min);
@@ -1868,7 +1399,7 @@ namespace Marvel {
 		if (mvalues.size() == 0)
 			return GetPyNone();
 
-		auto series = new mvHeatSeries(name, &mvalues, rows, columns, scale_min,
+		auto series = CreateRef<mvHeatSeries>(name, &mvalues, rows, columns, scale_min,
 			scale_max, format, mbounds_min, mbounds_max, (ImPlotYAxis_)axis);
 		graph->updateSeries(series, update_bounds);
 

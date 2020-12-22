@@ -23,6 +23,8 @@ set(MARVEL_SOURCES
 	"src/core/mvThreadPoolManager.cpp"
 
 	"src/core/Theming/mvAppItemStyleManager.cpp"
+	"src/core/Theming/mvAppItemTheme.cpp"
+	"src/core/Theming/mvTheme.cpp"
 
 	"src/core/DrawCommands/mvDrawList.cpp"
 	"src/core/DrawCommands/mvDrawImageCmd.cpp"
@@ -69,6 +71,7 @@ set(MARVEL_SOURCES
 	"src/core/AppItems/basic/mvMenuItem.cpp"
 	"src/core/AppItems/basic/mvInputText.cpp"
 	"src/core/AppItems/basic/mvText.cpp"
+	"src/core/AppItems/basic/mvSliderItems.cpp"
 	"src/core/AppItems/basic/mvImage.cpp"
 	"src/core/AppItems/basic/mvImageButton.cpp"
 	"src/core/AppItems/basic/mvColorItems.cpp"
@@ -100,6 +103,7 @@ set(MARVEL_SOURCES
 	"src/core/AppItems/custom/mvTextEditor.cpp"
 	
 	"src/core/AppItems/composite/mvFileDialog.cpp"
+	"src/core/AppItems/composite/mvAboutWindow.cpp"
 	"src/core/AppItems/composite/mvDebugWindow.cpp"
 	"src/core/AppItems/composite/mvDocWindow.cpp"
 	"src/core/AppItems/composite/mvTable.cpp"
@@ -134,6 +138,8 @@ set(MARVEL_SOURCES
 
 set(MARVEL_INCLUDE_DIR
 
+	"vendor/implot"
+	"vendor/stb"
 	"src/"
 	"src/core"
 	"src/core/AppItems"
@@ -142,7 +148,7 @@ set(MARVEL_INCLUDE_DIR
 	"src/core/PythonUtilities"
 	"src/core/Registries"
 	"src/core/Theming"
-	"$<$<PLATFORM_ID:Windows>:${CMAKE_SOURCE_DIR}/DearPyGui/Vendor/dirent/>"
+	"$<$<PLATFORM_ID:Windows>:${CMAKE_SOURCE_DIR}/DearPyGui/vendor/dirent/>"
 	"../Dependencies/ImGuiFileDialog/ImGuiFileDialog/"
 	"../Dependencies/glfw/include/"
 	"../Dependencies/glfw/deps/"
@@ -151,8 +157,6 @@ set(MARVEL_INCLUDE_DIR
 	"../Dependencies/imgui/examples/libs/gl3w"
 	"../Dependencies/cpython/"
 	"../Dependencies/cpython/Include/"
-	"vendor/implot/"
-	"vendor/stb/"
 	"$<$<PLATFORM_ID:Windows>:${CMAKE_SOURCE_DIR}/Dependencies/cpython/PC/>"
 	# may can delete this
 	"../Dependencies/cpython/debug/"

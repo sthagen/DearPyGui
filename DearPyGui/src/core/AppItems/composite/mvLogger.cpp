@@ -8,6 +8,28 @@ typedef std::chrono::duration<double, std::ratio<1> > second_;
 
 namespace Marvel {
 
+	void mvLoggerItem::InsertParser(std::map<std::string, mvPythonParser>* parsers)
+	{
+		parsers->insert({ "add_logger", mvPythonParser({
+			{mvPythonDataType::String, "name"},
+			{mvPythonDataType::KeywordOnly},
+			{mvPythonDataType::Integer, "log_level", "", "1"},
+			{mvPythonDataType::Bool, "auto_scroll", "auto scroll", "True"},
+			{mvPythonDataType::Bool, "auto_scroll_button", "show auto scroll button", "True"},
+			{mvPythonDataType::Bool, "clear_button", "show clear button", "True"},
+			{mvPythonDataType::Bool, "copy_button", "show copy button", "True"},
+			{mvPythonDataType::Bool, "filter", "show filter", "True"},
+			{mvPythonDataType::Integer, "width","", "0"},
+			{mvPythonDataType::Integer, "height","", "0"},
+			{mvPythonDataType::String, "parent", "Parent this item will be added to. (runtime adding)", "''"},
+			{mvPythonDataType::String, "before","This item will be displayed before the specified item in the parent. (runtime adding)", "''"},
+			{mvPythonDataType::Bool, "show", "Attempt to render", "True"},
+			{mvPythonDataType::Bool, "autosize_x", "", "False"},
+			{mvPythonDataType::Bool, "autosize_y", "", "False"},
+
+		}, "Adds a logging widget.", "None", "Adding Widgets") });
+	}
+
 #if defined (_WIN32)
 	std::chrono::steady_clock::time_point mvLoggerItem::s_start = clock_::now();
 #elif defined(__APPLE__)
@@ -49,11 +71,6 @@ namespace Marvel {
 			ImGui::NewLine();
 			Filter.Draw("Filter", m_width-100.0f);
 		}
-
-
-		//ImGui::NewLine();
-		//ImGui::Separator();
-
 
 		ImGui::BeginChild(m_name.c_str(), ImVec2(m_autosize_x ? 0 : (float)m_width, m_autosize_y ? 0 : (float)m_height), true, ImGuiWindowFlags_AlwaysHorizontalScrollbar);
 
@@ -156,24 +173,6 @@ namespace Marvel {
 		ImGui::PopID();
 		ImGui::EndGroup();
 
-		if (ImGui::IsWindowFocused())
-		{
-
-			float titleBarHeight = ImGui::GetStyle().FramePadding.y * 2 + ImGui::GetFontSize();
-
-			// update mouse
-			ImVec2 mousePos = ImGui::GetMousePos();
-			mvInput::setGlobalMousePosition(mousePos.x, mousePos.y);
-			float x = mousePos.x - ImGui::GetWindowPos().x;
-			float y = mousePos.y - ImGui::GetWindowPos().y - titleBarHeight;
-			mvInput::setMousePosition(x, y);
-
-			if (mvApp::GetApp()->getItemRegistry().getActiveWindow() != "logger##standard")
-				mvEventBus::Publish(mvEVT_CATEGORY_ITEM, mvEVT_ACTIVE_WINDOW, { CreateEventArgument("WINDOW", std::string("logger##standard")) });
-
-
-		}
-
 	}
 
 	void mvLoggerItem::AddLog(const char* fmt, ...)
@@ -242,7 +241,7 @@ namespace Marvel {
 			return;
 		mvGlobalIntepreterLock gil;
 		if (PyObject* item = PyDict_GetItemString(dict, "log_level")) m_loglevel = ToInt(item);
-		if (PyObject* item = PyDict_GetItemString(dict, "auto_scroll")) m_autoScroll = ToBool(item);
+		if (PyObject* item = PyDict_GetItemString(dict, "auto_scroll")) AutoScroll = ToBool(item);
 		if (PyObject* item = PyDict_GetItemString(dict, "auto_scroll_button")) m_autoScrollButton = ToBool(item);
 		if (PyObject* item = PyDict_GetItemString(dict, "clear_button")) m_clearButton = ToBool(item);
 		if (PyObject* item = PyDict_GetItemString(dict, "copy_button")) m_copyButton = ToBool(item);
@@ -259,7 +258,7 @@ namespace Marvel {
 		mvGlobalIntepreterLock gil;
 
 		PyDict_SetItemString(dict, "log_level", ToPyInt(m_loglevel));
-		PyDict_SetItemString(dict, "auto_scroll", ToPyBool(m_autoScroll));
+		PyDict_SetItemString(dict, "auto_scroll", ToPyBool(AutoScroll));
 		PyDict_SetItemString(dict, "auto_scroll_button", ToPyBool(m_autoScrollButton));
 		PyDict_SetItemString(dict, "clear_button", ToPyBool(m_clearButton));
 		PyDict_SetItemString(dict, "copy_button", ToPyBool(m_copyButton));
@@ -267,4 +266,36 @@ namespace Marvel {
 		PyDict_SetItemString(dict, "autosize_x", ToPyBool(m_autosize_x));
 		PyDict_SetItemString(dict, "autosize_y", ToPyBool(m_autosize_y));
 	}
+
+	PyObject* add_logger(PyObject* self, PyObject* args, PyObject* kwargs)
+	{
+		const char* name;
+		int logLevel = 1;
+		int autoScroll = true;
+		int autoScrollButton = true;
+		int copyButton = true;
+		int clearButton = true;
+		int filter = true;
+		int width = 0;
+		int height = 0;
+		const char* parent = "";
+		const char* before = "";
+		int show = true;
+		int autosize_x = false;
+		int autosize_y = false;
+
+		if (!(*mvApp::GetApp()->getParsers())["add_logger"].parse(args, kwargs, __FUNCTION__,
+			&name, &logLevel, &autoScroll, &autoScrollButton, &clearButton, &copyButton,
+			&filter, &width, &height, &parent, &before, &show, &autosize_x, &autosize_y))
+			return ToPyBool(false);
+
+		auto item = CreateRef<mvLoggerItem>(name);
+
+		item->checkConfigDict(kwargs);
+		item->setConfigDict(kwargs);
+		item->setExtraConfigDict(kwargs);
+
+		return ToPyBool(mvApp::GetApp()->getItemRegistry().addItemWithRuntimeChecks(item, parent, before));
+	}
+
 }

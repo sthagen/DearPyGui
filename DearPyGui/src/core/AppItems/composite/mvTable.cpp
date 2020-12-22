@@ -7,6 +7,22 @@
 
 namespace Marvel {
 
+	void mvTable::InsertParser(std::map<std::string, mvPythonParser>* parsers)
+	{
+		parsers->insert({ "add_table", mvPythonParser({
+			{mvPythonDataType::String, "name"},
+			{mvPythonDataType::StringList, "headers"},
+			{mvPythonDataType::KeywordOnly},
+			{mvPythonDataType::Callable, "callback", "Registers a callback", "None"},
+			{mvPythonDataType::Object, "callback_data", "Callback data", "None"},
+			{mvPythonDataType::String, "parent", "Parent this item will be added to. (runtime adding)", "''"},
+			{mvPythonDataType::String, "before","This item will be displayed before the specified item in the parent. (runtime adding)", "''"},
+			{mvPythonDataType::Integer, "width","", "0"},
+			{mvPythonDataType::Integer, "height","", "200"},
+			{mvPythonDataType::Bool, "show","Attempt to render", "True"}
+		}, "Adds table.", "None", "Tables") });
+	}
+
 	mvTable::mvTable(const std::string& name, const std::vector<std::string>& headers)
 		: mvAppItem(name)
 	{
@@ -48,6 +64,38 @@ namespace Marvel {
 		}
 	}
 
+	PyObject* add_table(PyObject* self, PyObject* args, PyObject* kwargs)
+	{
+		const char* name;
+		PyObject* headers;
+		PyObject* callback = nullptr;
+		PyObject* callback_data = nullptr;
+		const char* parent = "";
+		const char* before = "";
+		int width = 0;
+		int height = 0;
+		int show = true;
+
+		if (!(*mvApp::GetApp()->getParsers())["add_table"].parse(args, kwargs, __FUNCTION__,
+			&name, &headers, &callback, &callback_data, &parent,
+			&before, &width, &height, &show))
+			return ToPyBool(false);
+
+		auto item = CreateRef<mvTable>(name, ToStringVect(headers));
+		if (callback)
+			Py_XINCREF(callback);
+		item->setCallback(callback);
+		if (callback_data)
+			Py_XINCREF(callback_data);
+		item->setCallbackData(callback_data);
+
+		item->checkConfigDict(kwargs);
+		item->setConfigDict(kwargs);
+		item->setExtraConfigDict(kwargs);
+
+		return ToPyBool(mvApp::GetApp()->getItemRegistry().addItemWithRuntimeChecks(item, parent, before));
+	}
+
 	void mvTable::setTableItem(int row, int column, const std::string& value)
 	{
 		if (!isIndexValid(row, column))
@@ -78,7 +126,7 @@ namespace Marvel {
 	{
 		auto values = ToVectVectString(value, m_name + " requires a list/tuple or list/tuple of strings.");
 
-		m_values = values;
+		m_values = std::move(values);
 
 		if (!m_values.empty()) // just in case value is set to an empty list
 		{
@@ -517,7 +565,7 @@ namespace Marvel {
 				if (ImGui::Selectable(m_hashValues[i][j].c_str(), m_selections[{i, j}]))
 				{
 					m_selections[{i, j}] = !m_selections[{i, j}];
-					mvCallbackRegistry::GetCallbackRegistry()->runCallback(m_callback, m_name);
+					mvApp::GetApp()->getCallbackRegistry().runCallback(m_callback, m_name);
 				}
 				ImGui::NextColumn();
 				index++;

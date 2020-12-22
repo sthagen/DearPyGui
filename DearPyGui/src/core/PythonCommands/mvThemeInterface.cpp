@@ -14,6 +14,17 @@ namespace Marvel {
 			{mvPythonDataType::Object, "custom_glyph_ranges", "list of ranges", "List[List[int]]"},
 		}, "Adds additional font.", "None", "Themes and Styles") });
 
+		parsers->insert({ "set_global_color", mvPythonParser({
+			{mvPythonDataType::Integer, "id", "mvGuiCol_* constants"},
+			{mvPythonDataType::FloatList, "color"}
+		}, "Sets an color of a theme item.", "None", "Themes and Styles") });
+
+		parsers->insert({ "set_individual_color", mvPythonParser({
+			{mvPythonDataType::String, "item", ""},
+			{mvPythonDataType::Integer, "id", "mvGuiCol_* constants"},
+			{mvPythonDataType::FloatList, "color"}
+		}, "Sets an color of a theme item.", "None", "Themes and Styles") });
+
 		parsers->insert({ "set_theme", mvPythonParser({
 			{mvPythonDataType::String, "theme"}
 		}, "Set the application's theme to a built-in theme.", "None", "Themes and Styles") });
@@ -280,6 +291,53 @@ namespace Marvel {
 		}, "Gets maximum error (in pixels) allowed when using draw_circle()or drawing rounded corner rectangles with no explicit segment count specified.", "float", "Themes and Styles") });
 	}
 
+	PyObject* set_individual_color(PyObject* self, PyObject* args, PyObject* kwargs)
+	{
+		const char* item;
+		int id;
+		PyObject* color;
+
+		if (!(*mvApp::GetApp()->getParsers())["set_individual_color"].parse(args, kwargs, __FUNCTION__, &item, &id, &color))
+			return GetPyNone();
+
+
+		mvEventBus::Publish
+		(
+			mvEVT_CATEGORY_THEMES,
+			SID(std::string(std::to_string(id / 100) + "_color").c_str()),
+			{
+				CreateEventArgument("WIDGET", std::string(item)),
+				CreateEventArgument("ID", id),
+				CreateEventArgument("COLOR", ToColor(color))
+			}
+		);
+
+		return GetPyNone();
+	}
+
+	PyObject* set_global_color(PyObject* self, PyObject* args, PyObject* kwargs)
+	{
+		int id;
+		PyObject* color;
+
+		if (!(*mvApp::GetApp()->getParsers())["set_global_color"].parse(args, kwargs, __FUNCTION__, &id, &color))
+			return GetPyNone();
+
+
+		mvEventBus::Publish
+		(
+			mvEVT_CATEGORY_THEMES,
+			SID(std::string(std::to_string(id / 100) + "_color").c_str()),
+			{
+				CreateEventArgument("WIDGET", std::string("")),
+				CreateEventArgument("ID", id),
+				CreateEventArgument("COLOR", ToColor(color))
+			}
+		);
+
+		return GetPyNone();
+	}
+
 	PyObject* set_global_font_scale(PyObject* self, PyObject* args, PyObject* kwargs)
 	{
 		float scale;
@@ -351,7 +409,8 @@ namespace Marvel {
 		if (!(*mvApp::GetApp()->getParsers())["set_theme_item"].parse(args, kwargs, __FUNCTION__, &item, &r, &g, &b, &a))
 			return GetPyNone();
 
-		mvApp::GetApp()->setThemeItem(item, { r, g, b, a });
+		mvColor color = { r, g, b, a };
+		mvApp::GetApp()->setThemeItem(item, color);
 
 		return GetPyNone();
 	}
@@ -367,7 +426,7 @@ namespace Marvel {
 
 		auto mcolor = ToColor(color);
 
-		mvAppItem* appitem = mvApp::GetApp()->getItemRegistry().getItem(item);
+		auto appitem = mvApp::GetApp()->getItemRegistry().getItem(item);
 
 		if (appitem)
 			appitem->getStyleManager().addColorStyle(style, mcolor);
@@ -382,7 +441,7 @@ namespace Marvel {
 		if (!(*mvApp::GetApp()->getParsers())["clear_item_color"].parse(args, kwargs, __FUNCTION__, &item))
 			return GetPyNone();
 
-		mvAppItem* appitem = mvApp::GetApp()->getItemRegistry().getItem(item);
+		auto appitem = mvApp::GetApp()->getItemRegistry().getItem(item);
 
 		if (appitem)
 			appitem->getStyleManager().clearColors();
@@ -399,7 +458,7 @@ namespace Marvel {
 		if (!(*mvApp::GetApp()->getParsers())["set_item_style_var"].parse(args, kwargs, __FUNCTION__, &item, &style, &value))
 			return GetPyNone();
 
-		mvAppItem* appitem = mvApp::GetApp()->getItemRegistry().getItem(item);
+		auto appitem = mvApp::GetApp()->getItemRegistry().getItem(item);
 
 		if (appitem)
 			appitem->getStyleManager().addStyleVar(style, ToFloatVect(value));
@@ -414,7 +473,7 @@ namespace Marvel {
 		if (!(*mvApp::GetApp()->getParsers())["clear_item_style_vars"].parse(args, kwargs, __FUNCTION__, &item))
 			return GetPyNone();
 
-		mvAppItem* appitem = mvApp::GetApp()->getItemRegistry().getItem(item);
+		auto appitem = mvApp::GetApp()->getItemRegistry().getItem(item);
 
 		if (appitem)
 			appitem->getStyleManager().clearStyleVars();

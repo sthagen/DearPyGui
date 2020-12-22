@@ -7,16 +7,20 @@
 
 namespace Marvel {
 
+	PyObject* add_doc_window(PyObject* self, PyObject* args, PyObject* kwargs);
+
 	class mvDocWindow : public mvBaseWindowAppitem
 	{
+
+	public:
+
+		static void InsertParser(std::map<std::string, mvPythonParser>* parsers);
 
 		MV_APPITEM_TYPE(mvAppItemType::DocWindow, "add_doc_window")
 
 	public:
 
 		mvDocWindow(const std::string& name);
-
-		~mvDocWindow();
 
 		void draw() override;
 		void setup();
@@ -69,7 +73,7 @@ namespace Marvel {
 		std::vector<std::pair<std::string, std::string>> m_commands;
 		std::vector<std::pair<std::string, long>> m_constants;
 		std::vector<std::string> m_constantsValues;
-		std::map<std::string, mvPythonParser>* m_docmap = nullptr;
+		mvRef<std::map<std::string, mvPythonParser>> m_docmap = nullptr;
 
 	};
 

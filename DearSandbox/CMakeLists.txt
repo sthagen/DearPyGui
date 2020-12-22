@@ -24,6 +24,7 @@ target_include_directories(DearSandbox
 		"$<$<PLATFORM_ID:Linux>:${CMAKE_SOURCE_DIR}/Dependencies/cpython/debug/include/python3.8d/>"
 		"$<$<PLATFORM_ID:Windows>:${CMAKE_SOURCE_DIR}/Dependencies/cpython/PC/>"
 		"../Dependencies/imgui/"
+		"../DearPyGui/vendor/implot/"
 		"../DearPyGui/src/"
 		"../DearPyGui/src/core/"
 		"../DearPyGui/src/core/AppItems"
@@ -46,6 +47,14 @@ target_compile_definitions(DearSandbox
 )
 
 if (WIN32)
+
+
+	set_target_properties(DearSandbox
+		PROPERTIES
+		ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}$<$<CONFIG:Release>:/DearSandbox/>$<$<CONFIG:Debug>:/DearSandbox/>"
+		LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}$<$<CONFIG:Release>:/DearSandbox/>$<$<CONFIG:Debug>:/DearSandbox/>"
+		RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}$<$<CONFIG:Release>:/DearSandbox/>$<$<CONFIG:Debug>:/DearSandbox/>"
+	)
 
 	target_link_directories(DearSandbox PRIVATE "../Dependencies/cpython/PCbuild/amd64/")
 	target_link_libraries(DearSandbox PUBLIC coreemb $<$<CONFIG:Debug>:python38_d> $<$<CONFIG:Release>:python38>)

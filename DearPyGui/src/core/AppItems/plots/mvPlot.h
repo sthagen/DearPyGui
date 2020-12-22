@@ -8,6 +8,7 @@
 #include "mvCore.h"
 #define PY_SSIZE_T_CLEAN
 #include <Python.h>
+#include "mvPythonParser.h"
 
 //-----------------------------------------------------------------------------
 // Widget Index
@@ -21,6 +22,14 @@
 //-----------------------------------------------------------------------------
 
 namespace Marvel {
+	
+	PyObject* add_plot         (PyObject* self, PyObject* args, PyObject* kwargs);
+	PyObject* add_drag_point   (PyObject* self, PyObject* args, PyObject* kwargs);
+	PyObject* delete_drag_point(PyObject* self, PyObject* args, PyObject* kwargs);
+	PyObject* add_annotation   (PyObject* self, PyObject* args, PyObject* kwargs);
+	PyObject* delete_annotation(PyObject* self, PyObject* args, PyObject* kwargs);
+	PyObject* add_drag_line    (PyObject* self, PyObject* args, PyObject* kwargs);
+	PyObject* delete_drag_line (PyObject* self, PyObject* args, PyObject* kwargs);
 
 	// forward declarations
 	class mvSeries;
@@ -33,6 +42,10 @@ namespace Marvel {
 	//-----------------------------------------------------------------------------
 	class mvPlot : public mvAppItem
 	{
+
+	public:
+
+		static void InsertParser(std::map<std::string, mvPythonParser>* parsers);
 
 	public:
 
@@ -57,8 +70,8 @@ namespace Marvel {
 		void deleteAnnotation(const std::string& name);
 
 		// series
-		void addSeries      (mvSeries* series, bool updateBounds);
-		void updateSeries   (mvSeries* series, bool updateBounds);
+		void addSeries      (mvRef<mvSeries> series, bool updateBounds);
+		void updateSeries   (mvRef<mvSeries> series, bool updateBounds);
 		void deleteSeries   (const std::string& name);
 
 		// settings
@@ -140,7 +153,7 @@ namespace Marvel {
 		std::vector<double>           m_xlabelLocations;
 		std::vector<double>           m_ylabelLocations;
 
-		std::vector<mvSeries*>        m_series;
+		std::vector<mvRef<mvSeries>>  m_series;
 		std::vector<mvPlotAnnotation> m_annotations;
 		std::vector<mvDragLine>       m_dragLines;
 		std::vector<mvDragPoint>      m_dragPoints;
@@ -219,7 +232,7 @@ namespace Marvel {
 			Stair, Candle
 		};
 
-		mvSeries(std::string name, const std::vector<const std::vector<float>*> data, ImPlotYAxis_ axis = ImPlotYAxis_1);
+		mvSeries(std::string name, const std::vector<const std::vector<float>*>& data, ImPlotYAxis_ axis = ImPlotYAxis_1);
 
 		mvSeries(std::string name, const ImPlotPoint& boundsMin, const ImPlotPoint& boundsMax, ImPlotYAxis_ axis = ImPlotYAxis_1);
 
@@ -242,7 +255,7 @@ namespace Marvel {
 		float                           m_maxY;
 		float                           m_minX;
 		float                           m_minY;
-		float                           m_weight;
+		float                           m_weight = 1.0f;
 		
 	};
 }

@@ -11,6 +11,32 @@
 
 namespace Marvel {
 
+	void mvDebugWindow::InsertParser(std::map<std::string, mvPythonParser>* parsers)
+	{
+		parsers->insert({ "add_debug_window", mvPythonParser({
+			{mvPythonDataType::String, "name"},
+			{mvPythonDataType::KeywordOnly},
+			{mvPythonDataType::Integer, "width", "", "700"},
+			{mvPythonDataType::Integer, "height", "", "500"},
+			{mvPythonDataType::Integer, "x_pos", "x position the window will start at", "200"},
+			{mvPythonDataType::Integer, "y_pos", "y position the window will start at", "200"},
+			{mvPythonDataType::Bool, "autosize", "Autosized the window to fit it's items.", "False"},
+			{mvPythonDataType::Bool, "no_resize", "Allows for the window size to be changed or fixed", "False"},
+			{mvPythonDataType::Bool, "no_title_bar", "Title name for the title bar of the window", "False"},
+			{mvPythonDataType::Bool, "no_move", "Allows for the window's position to be changed or fixed", "False"},
+			{mvPythonDataType::Bool, "no_scrollbar" ," Disable scrollbars (window can still scroll with mouse or programmatically)", "False"},
+			{mvPythonDataType::Bool, "no_collapse" ,"Disable user collapsing window by double-clicking on it", "False"},
+			{mvPythonDataType::Bool, "horizontal_scrollbar" ,"Allow horizontal scrollbar to appear (off by default).", "False"},
+			{mvPythonDataType::Bool, "no_focus_on_appearing" ,"Disable taking focus when transitioning from hidden to visible state", "False"},
+			{mvPythonDataType::Bool, "no_bring_to_front_on_focus" ,"Disable bringing window to front when taking focus (e.g. clicking on it or programmatically giving it focus)", "False"},
+			{mvPythonDataType::Bool, "no_close", "", "False"},
+			{mvPythonDataType::Bool, "no_background", "", "False"},
+			{mvPythonDataType::String, "label", "", "''"},
+			{mvPythonDataType::Bool, "show", "Attempt to render", "True"},
+		}, "Creates a debug window.",
+			"None", "Containers") });
+	}
+
 	static void DebugItem(const char* label, const char* item)
 	{
 		ImGui::Text("%s", label);
@@ -44,7 +70,7 @@ namespace Marvel {
 			if (ImGui::TreeNodeEx(container.c_str()))
 			{
 				
-				auto stringPos = item->m_name.find_first_not_of("##");
+				auto stringPos = item->m_name.find_first_not_of("###");
 				if (stringPos != std::string::npos && stringPos > 0)
 				{
 					ImGui::PushID(item);
@@ -68,8 +94,8 @@ namespace Marvel {
 					ImGui::PopID();
 				}			
 
-				for (mvAppItem* child : item->m_children)
-					renderItem(child);
+				for (auto child : item->m_children)
+					renderItem(child.get());
 
 				ImGui::TreePop();
 			}
@@ -77,7 +103,7 @@ namespace Marvel {
 		}
 		else
 		{
-			auto stringPos = item->m_name.find_first_not_of("##");
+			auto stringPos = item->m_name.find_first_not_of("###");
 			if (stringPos != std::string::npos && stringPos > 0)
 			{
 				ImGui::PushID(item);
@@ -259,7 +285,6 @@ namespace Marvel {
                 DebugItem("Item Size x:", sizex.c_str());
                 DebugItem("Item Size y:", sizey.c_str());
                 DebugItem("Item Tip:", selectedItem->m_tip.c_str());
-                DebugItem("Item Popup:", selectedItem->m_popup.c_str());
                 DebugItem("Item Show:", selectedItem->m_show ? ts : fs);
                 DebugItem("Item Visible:", selectedItem->getState().isItemVisible() ? ts : fs);
                 DebugItem("Item Hovered:", selectedItem->getState().isItemHovered() ? ts : fs);
@@ -277,9 +302,9 @@ namespace Marvel {
 
 				ImGui::BeginChild("TreeChild", ImVec2(-1.0f, -1.0f), true);
 				for (auto window : mvApp::GetApp()->getItemRegistry().getFrontWindows())
-					renderItem(window);
+					renderItem(window.get());
 				for (auto window : mvApp::GetApp()->getItemRegistry().getBackWindows())
-					renderItem(window);
+					renderItem(window.get());
 				ImGui::EndChild();
 
 				ImGui::EndTabItem();
@@ -337,9 +362,7 @@ namespace Marvel {
 			float titleBarHeight = ImGui::GetStyle().FramePadding.y * 2 + ImGui::GetFontSize();
 
 			// update mouse
-			mvVec2 oldMousePos = mvInput::getGlobalMousePosition();
 			ImVec2 mousePos = ImGui::GetMousePos();
-			mvInput::setGlobalMousePosition(mousePos.x, mousePos.y);
 			float x = mousePos.x - ImGui::GetWindowPos().x;
 			float y = mousePos.y - ImGui::GetWindowPos().y - titleBarHeight;
 			mvInput::setMousePosition(x, y);
@@ -347,20 +370,57 @@ namespace Marvel {
 			if (mvApp::GetApp()->getItemRegistry().getActiveWindow() != "debug##standard")
 				mvEventBus::Publish(mvEVT_CATEGORY_ITEM, mvEVT_ACTIVE_WINDOW, { CreateEventArgument("WINDOW", std::string("debug##standard")) });
 
-			// mouse move callback
-			//if (getMouseMoveCallback() != nullptr)
-			//{
-			//	if (oldMousePos.x != mousePos.x || oldMousePos.y != mousePos.y)
-			//	{
-			//		mvCallbackRegistry::GetCallbackRegistry()->runCallback(getMouseMoveCallback(), m_name,
-			//			ToPyPair(x, y));
-			//	}
-			//}
-
 		}
 		
 		ImGui::End();
 
+	}
+
+	PyObject* add_debug_window(PyObject* self, PyObject* args, PyObject* kwargs)
+	{
+		const char* name;
+		int width = 700;
+		int height = 500;
+		int x_pos = 200;
+		int y_pos = 200;
+		int autosize = false;
+		int no_resize = false;
+		int no_title_bar = false;
+		int no_move = false;
+		int no_scrollbar = false;
+		int no_collapse = false;
+		int horizontal_scrollbar = false;
+		int no_focus_on_appearing = false;
+		int no_bring_to_front_on_focus = false;
+		int noclose = false;
+		int no_background = false;
+
+		const char* label = "";
+		int show = true;
+
+		if (!(*mvApp::GetApp()->getParsers())["add_debug_window"].parse(args, kwargs, __FUNCTION__, &name, &width,
+			&height, &x_pos, &y_pos, &autosize, &no_resize, &no_title_bar, &no_move, &no_scrollbar,
+			&no_collapse, &horizontal_scrollbar, &no_focus_on_appearing, &no_bring_to_front_on_focus,
+			&noclose, &no_background, &label, &show))
+			return ToPyBool(false);
+
+		auto item = CreateRef<mvDebugWindow>(name);
+
+		item->checkConfigDict(kwargs);
+		item->setConfigDict(kwargs);
+		item->setExtraConfigDict(kwargs);
+
+		if (mvApp::GetApp()->getItemRegistry().addItemWithRuntimeChecks(item, "", ""))
+		{
+			mvApp::GetApp()->getItemRegistry().pushParent(item);
+
+			if (!show)
+				item->hide();
+
+			return ToPyBool(true);
+		}
+
+		return ToPyBool(false);
 	}
 
 }

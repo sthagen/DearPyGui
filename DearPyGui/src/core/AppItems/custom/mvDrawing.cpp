@@ -1,6 +1,22 @@
 #include "mvDrawing.h"
+#include "mvApp.h"
+#include "mvPythonTranslator.h"
 
 namespace Marvel {
+
+	void mvDrawing::InsertParser(std::map<std::string, mvPythonParser>* parsers)
+	{
+		parsers->insert({ "add_drawing", mvPythonParser({
+			{mvPythonDataType::String, "name"},
+			{mvPythonDataType::KeywordOnly},
+			{mvPythonDataType::String, "tip", "Adds a simple tooltip", "''"},
+			{mvPythonDataType::String, "parent", "Parent this item will be added to. (runtime adding)", "''"},
+			{mvPythonDataType::String, "before", "This item will be displayed before the specified item in the parent. (runtime adding)", "''"},
+			{mvPythonDataType::Integer, "width","", "0"},
+			{mvPythonDataType::Integer, "height","", "0"},
+			{mvPythonDataType::Bool, "show","Attempt to render", "True"},
+		}, "Adds a drawing widget.", "None", "Drawing") });
+	}
 
 
 	mvDrawing::mvDrawing(const std::string& name)
@@ -24,5 +40,36 @@ namespace Marvel {
 	mvDrawList& mvDrawing::getDrawList()
 	{
 		return m_drawList;
+	}
+
+
+	PyObject* add_drawing(PyObject* self, PyObject* args, PyObject* kwargs)
+	{
+		const char* name;
+		const char* tip = "";
+		const char* parent = "";
+		const char* before = "";
+		int width = 0;
+		int height = 0;
+		int show = true;
+		float originx = 0.0f;
+		float originy = 0.0f;
+		float scalex = 1.0f;
+		float scaley = 1.0f;
+
+		if (!(*mvApp::GetApp()->getParsers())["add_drawing"].parse(args, kwargs, __FUNCTION__,
+			&name, &tip, &parent, &before, &width, &height, &show, &originx, &originy, &scalex, &scaley))
+			return ToPyBool(false);
+
+		auto item = CreateRef<mvDrawing>(name);
+
+		item->checkConfigDict(kwargs);
+		item->setConfigDict(kwargs);
+		item->setExtraConfigDict(kwargs);
+
+		if (!item)
+			return ToPyBool(false);
+
+		return ToPyBool(mvApp::GetApp()->getItemRegistry().addItemWithRuntimeChecks(item, parent, before));
 	}
 }

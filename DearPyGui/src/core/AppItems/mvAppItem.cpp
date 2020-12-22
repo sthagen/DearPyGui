@@ -1,10 +1,8 @@
 #include "mvAppItem.h"
 #include "mvApp.h"
 #include "mvInput.h"
-#include "mvDataStorage.h"
 #include "mvPythonTranslator.h"
 #include "mvPythonExceptions.h"
-#include "mvMarvel.h"
 #include "mvGlobalIntepreterLock.h"
 
 namespace Marvel{
@@ -12,7 +10,7 @@ namespace Marvel{
 	mvAppItem::mvAppItem(const std::string& name)
 	{
 		m_name = name;
-		m_label = name;
+		m_label = name + "###" + name;
 		m_state.setParent(this);
 	}
 
@@ -28,7 +26,7 @@ namespace Marvel{
 			ThrowPythonException("\"" + m_name + "\" could not find a parser that matched \"" + getParserCommand() + "\".");
 			return;
 		}
-		for (auto key : configKeys)
+		for (const auto& key : configKeys)
 		{
 			size_t i = 0;
 			while (i < parserKeywords.size() - 1)
@@ -53,7 +51,6 @@ namespace Marvel{
 		mvGlobalIntepreterLock gil;
 		if (PyObject* item = PyDict_GetItemString(dict, "name")) m_name = ToString(item);
 		if (PyObject* item = PyDict_GetItemString(dict, "label")) setLabel(ToString(item));
-		if (PyObject* item = PyDict_GetItemString(dict, "popup")) m_popup = ToString(item);
 		if (PyObject* item = PyDict_GetItemString(dict, "tip")) m_tip =ToString(item);
 		if (PyObject* item = PyDict_GetItemString(dict, "width")) setWidth(ToInt(item));
 		if (PyObject* item = PyDict_GetItemString(dict, "height")) setHeight(ToInt(item));
@@ -70,7 +67,6 @@ namespace Marvel{
 		PyDict_SetItemString(dict, "name",    ToPyString(m_name));
 		PyDict_SetItemString(dict, "label",   ToPyString(m_label));
 		PyDict_SetItemString(dict, "source",  ToPyString(m_dataSource));
-		PyDict_SetItemString(dict, "popup",   ToPyString(m_popup));
 		PyDict_SetItemString(dict, "tip",     ToPyString(m_tip));
 		PyDict_SetItemString(dict, "show",    ToPyBool  (m_show));
 		PyDict_SetItemString(dict, "enabled", ToPyBool  (m_enabled));
@@ -84,23 +80,13 @@ namespace Marvel{
 		{
 
 			// update mouse
-			mvVec2 oldMousePos = mvInput::getGlobalMousePosition();
 			ImVec2 mousePos = ImGui::GetMousePos();
-			mvInput::setGlobalMousePosition(mousePos.x, mousePos.y);
 			float x = mousePos.x - ImGui::GetWindowPos().x;
 			float y = mousePos.y - ImGui::GetWindowPos().y;
 			mvInput::setMousePosition(x, y);
 
 			if (mvApp::GetApp()->getItemRegistry().getActiveWindow() != m_name)
 				mvEventBus::Publish(mvEVT_CATEGORY_ITEM, mvEVT_ACTIVE_WINDOW, { CreateEventArgument("WINDOW", m_name) });
-
-
-			// mouse move callback
-			//if (oldMousePos.x != mousePos.x || oldMousePos.y != mousePos.y)
-			//{
-			//	mvCallbackRegistry::GetCallbackRegistry()->runCallback(mvApp::GetApp()->getMouseMoveCallback(), m_name,
-			//		ToPyPair(x, y));
-			//}
 
 		}
 	}
@@ -118,7 +104,7 @@ namespace Marvel{
 	void mvAppItem::resetState()
 	{
 		m_state.reset();
-		for (mvAppItem* item : m_children)
+		for (auto& item : m_children)
 			item->resetState();
 
 	}
@@ -208,7 +194,7 @@ namespace Marvel{
 		return false;
 	}
 
-	bool mvAppItem::addRuntimeChild(const std::string& parent, const std::string& before, mvAppItem* item)
+	bool mvAppItem::addRuntimeChild(const std::string& parent, const std::string& before, mvRef<mvAppItem> item)
 	{
 		if (before.empty() && parent.empty())
 			return false;
@@ -226,7 +212,7 @@ namespace Marvel{
 			else
 			{
 				// check children
-				for (mvAppItem* child : m_children)
+				for (auto& child : m_children)
 				{
 					if (child->getDescription().container)
 					{
@@ -243,7 +229,7 @@ namespace Marvel{
 			bool beforeFound = false;
 
 			// check children
-			for (mvAppItem* child : m_children)
+			for (auto& child : m_children)
 			{
 
 				if (child->m_name == before)
@@ -259,7 +245,7 @@ namespace Marvel{
 			{
 				item->m_parent = this;
 
-				std::vector<mvAppItem*> oldchildren = m_children;
+				std::vector<mvRef<mvAppItem>> oldchildren = m_children;
 				m_children.clear();
 
 				for (auto child : oldchildren)
@@ -275,7 +261,7 @@ namespace Marvel{
 		}
 
 		// check children
-		for (mvAppItem* child : m_children)
+		for (auto& child : m_children)
 		{
 			if (child->getDescription().container)
 			{
@@ -288,7 +274,7 @@ namespace Marvel{
 		return false;
 	}
 
-	bool mvAppItem::addChildAfter(const std::string& prev, mvAppItem* item)
+	bool mvAppItem::addChildAfter(const std::string& prev, mvRef<mvAppItem> item)
 	{
 		if (prev.empty())
 			return false;
@@ -297,7 +283,7 @@ namespace Marvel{
 		bool prevFound = false;
 
 		// check children
-		for (mvAppItem* child : m_children)
+		for (auto& child : m_children)
 		{
 
 			if (child->m_name == prev)
@@ -314,10 +300,10 @@ namespace Marvel{
 		{
 			//item->setParent(this);
 
-			std::vector<mvAppItem*> oldchildren = m_children;
+			std::vector<mvRef<mvAppItem>> oldchildren = m_children;
 			m_children.clear();
 
-			for (auto child : oldchildren)
+			for (auto& child : oldchildren)
 			{
 				m_children.push_back(child);
 				if (child->m_name == prev)
@@ -329,7 +315,7 @@ namespace Marvel{
 		
 
 		// check children
-		for (mvAppItem* child : m_children)
+		for (auto& child : m_children)
 		{
 			if (child->getDescription().container)
 			{
@@ -348,7 +334,7 @@ namespace Marvel{
 		bool childfound = false;
 		bool itemDeleted = false;
 
-		for (mvAppItem* item : m_children)
+		for (auto& item : m_children)
 		{
 			if (item->m_name == name)
 			{
@@ -366,7 +352,7 @@ namespace Marvel{
 
 		if (childfound)
 		{
-			std::vector<mvAppItem*> oldchildren = m_children;
+			std::vector<mvRef<mvAppItem>> oldchildren = m_children;
 
 			m_children.clear();
 
@@ -374,8 +360,6 @@ namespace Marvel{
 			{
 				if (item->m_name == name)
 				{
-					delete item;
-					item = nullptr;
 					itemDeleted = true;
 					continue;
 				}
@@ -389,27 +373,21 @@ namespace Marvel{
 
 	void mvAppItem::deleteChildren()
 	{
-		for (auto& child : m_children)
-		{
-			delete child;
-			child = nullptr;
-		}
-
 		m_children.clear();
 	}
 
 	void mvAppItem::setLabel(const std::string& value)
 	{
-		m_label = value + "##" + m_name;
+		m_label = value + "###" + m_name;
 	}
 
-	mvAppItem* mvAppItem::stealChild(const std::string& name)
+	mvRef<mvAppItem> mvAppItem::stealChild(const std::string& name)
 	{
-		mvAppItem* stolenChild = nullptr;
+		mvRef<mvAppItem> stolenChild = nullptr;
 
 		bool childfound = false;
 
-		for (mvAppItem* item : m_children)
+		for (auto& item : m_children)
 		{
 			if (item->m_name == name)
 			{
@@ -427,7 +405,7 @@ namespace Marvel{
 
 		if (childfound)
 		{
-			std::vector<mvAppItem*> oldchildren = m_children;
+			std::vector<mvRef<mvAppItem>> oldchildren = m_children;
 
 			m_children.clear();
 
@@ -446,9 +424,9 @@ namespace Marvel{
 		return stolenChild;
 	}
 
-	mvAppItem* mvAppItem::getChild(const std::string& name)
+	mvRef<mvAppItem> mvAppItem::getChild(const std::string& name)
 	{
-		for (mvAppItem* item : m_children)
+		for (auto& item : m_children)
 		{
 			if (item->m_name == name)
 				return item;

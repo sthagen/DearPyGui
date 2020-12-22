@@ -6,10 +6,11 @@
 #include <unordered_map>
 #include <functional>
 #include <variant>
+#include "mvCore.h"
 #include "mvCompileTimeCRC32.h"
 #include "mvEventMacros.h"
 
-#define BIND_EVENT_METH(x) std::bind(&x, this, std::placeholders::_1)
+#define BIND_EVENT_METH(x) [this](auto&& event){ return x(std::forward<decltype(event)>(event));}
 
 namespace Marvel {
 
@@ -23,6 +24,7 @@ namespace Marvel {
 		std::string, 
 		bool, 
 		float, 
+		mvColor,
 		void*
 	>; // more types can be added
 	
@@ -40,6 +42,7 @@ namespace Marvel {
 	bool               GetEBool  (mvEvent& event, const char* name);
 	int                GetEInt   (mvEvent& event, const char* name);
 	float              GetEFloat (mvEvent& event, const char* name);
+	mvColor            GetEColor (mvEvent& event, const char* name);
 
 	//-----------------------------------------------------------------------------
 	// mvEvent
@@ -104,6 +107,8 @@ namespace Marvel {
 		// event bus events
 		static bool OnEvent(mvEvent& event);
 		static bool OnFrame(mvEvent& event);
+		
+		static void ShowDebug();
 
 	private:
 

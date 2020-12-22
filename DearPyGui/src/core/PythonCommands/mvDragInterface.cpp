@@ -23,7 +23,6 @@ namespace Marvel {
 			{mvPythonDataType::Bool, "no_input", "Disable CTRL+Click or Enter key allowing to input text directly into the widget", "False"},
 			{mvPythonDataType::Bool, "clamped", "Clamp value to min/max bounds when input manually with CTRL+Click. By default CTRL+Click allows going out of bounds.", "False"},
 			{mvPythonDataType::String, "label", "", "''"},
-			{mvPythonDataType::String, "popup", "", "''"},
 			{mvPythonDataType::Bool, "show", "Attempt to render", "True"},
 		}, "Adds drag for a single float value. CTRL+Click to directly modify the value.", "None", "Adding Widgets") });
 
@@ -46,7 +45,6 @@ namespace Marvel {
 			{mvPythonDataType::Bool, "no_input", "Disable CTRL+Click or Enter key allowing to input text directly into the widget", "False"},
 			{mvPythonDataType::Bool, "clamped", "Clamp value to min/max bounds when input manually with CTRL+Click. By default CTRL+Click allows going out of bounds.", "False"},
 			{mvPythonDataType::String, "label", "", "''"},
-			{mvPythonDataType::String, "popup", "", "''"},
 			{mvPythonDataType::Bool, "show", "Attempt to render", "True"},
 		}, "Adds drag for a 2 float values. CTRL+Click to directly modify the value.", "None", "Adding Widgets") });
 
@@ -69,7 +67,6 @@ namespace Marvel {
 			{mvPythonDataType::Bool, "no_input", "Disable CTRL+Click or Enter key allowing to input text directly into the widget", "False"},
 			{mvPythonDataType::Bool, "clamped", "Clamp value to min/max bounds when input manually with CTRL+Click. By default CTRL+Click allows going out of bounds.", "False"},
 			{mvPythonDataType::String, "label", "", "''"},
-			{mvPythonDataType::String, "popup", "", "''"},
 			{mvPythonDataType::Bool, "show", "Attempt to render", "True"},
 		}, "Adds drag for a 3 float values. CTRL+Click to directly modify the value.", "None", "Adding Widgets") });
 
@@ -92,7 +89,6 @@ namespace Marvel {
 			{mvPythonDataType::Bool, "no_input", "Disable CTRL+Click or Enter key allowing to input text directly into the widget", "False"},
 			{mvPythonDataType::Bool, "clamped", "Clamp value to min/max bounds when input manually with CTRL+Click. By default CTRL+Click allows going out of bounds.", "False"},
 			{mvPythonDataType::String, "label", "", "''"},
-			{mvPythonDataType::String, "popup", "", "''"},
 			{mvPythonDataType::Bool, "show", "Attempt to render", "True"},
 		}, "Adds drag for a 4 float values. CTRL+Click to directly modify the value.", "None", "Adding Widgets") });
 
@@ -115,7 +111,6 @@ namespace Marvel {
 			{mvPythonDataType::Bool, "no_input", "Disable CTRL+Click or Enter key allowing to input text directly into the widget", "False"},
 			{mvPythonDataType::Bool, "clamped", "Clamp value to min/max bounds when input manually with CTRL+Click. By default CTRL+Click allows going out of bounds.", "False"},
 			{mvPythonDataType::String, "label", "", "''"},
-			{mvPythonDataType::String, "popup", "", "''"},
 			{mvPythonDataType::Bool, "show", "Attempt to render", "True"},
 		}, "Adds drag for a single int value. CTRL+Click to directly modify the value.", "None", "Adding Widgets") });
 
@@ -138,7 +133,6 @@ namespace Marvel {
 			{mvPythonDataType::Bool, "no_input", "Disable CTRL+Click or Enter key allowing to input text directly into the widget", "False"},
 			{mvPythonDataType::Bool, "clamped", "Clamp value to min/max bounds when input manually with CTRL+Click. By default CTRL+Click allows going out of bounds.", "False"},
 			{mvPythonDataType::String, "label", "", "''"},
-			{mvPythonDataType::String, "popup", "", "''"},
 			{mvPythonDataType::Bool, "show", "Attempt to render", "True"},
 		}, "Adds drag for a 2 int values. CTRL+Click to directly modify the value.", "None", "Adding Widgets") });
 
@@ -161,7 +155,6 @@ namespace Marvel {
 			{mvPythonDataType::Bool, "no_input", "Disable CTRL+Click or Enter key allowing to input text directly into the widget", "False"},
 			{mvPythonDataType::Bool, "clamped", "Clamp value to min/max bounds when input manually with CTRL+Click. By default CTRL+Click allows going out of bounds.", "False"},
 			{mvPythonDataType::String, "label", "", "''"},
-			{mvPythonDataType::String, "popup", "", "''"},
 			{mvPythonDataType::Bool, "show", "Attempt to render", "True"},
 		}, "Adds drag for a 3 int values. CTRL+Click to directly modify the value.", "None", "Adding Widgets") });
 
@@ -184,7 +177,6 @@ namespace Marvel {
 			{mvPythonDataType::Bool, "no_input", "Disable CTRL+Click or Enter key allowing to input text directly into the widget", "False"},
 			{mvPythonDataType::Bool, "clamped", "Clamp value to min/max bounds when input manually with CTRL+Click. By default CTRL+Click allows going out of bounds.", "False"},
 			{mvPythonDataType::String, "label", "", "''"},
-			{mvPythonDataType::String, "popup", "", "''"},
 			{mvPythonDataType::Bool, "show", "Attempt to render", "True"},
 		}, "Adds drag for a 4 int values. CTRL+Click to directly modify the value.", "None", "Adding Widgets") });
 	}
@@ -208,15 +200,14 @@ namespace Marvel {
 		int no_input = false;
 		int clamped = false;
 		const char* label = "";
-		const char* popup = "";
 		int show = true;
 
 		if (!(*mvApp::GetApp()->getParsers())["add_drag_float"].parse(args, kwargs, __FUNCTION__, &name, &default_value, &speed,
 			&min_value, &max_value, &format, &callback, &callback_data, &tip, &parent, &before, &source, &enable, &width, &no_input, &clamped,
-			&label, &popup, &show))
+			&label, &show))
 			return ToPyBool(false);
 
-		mvAppItem* item = new mvDragFloat(name, default_value, source);
+		auto item = CreateRef<mvDragFloat>(name, default_value, source);
 		if (callback)
 			Py_XINCREF(callback);
 		item->setCallback(callback);
@@ -253,16 +244,15 @@ namespace Marvel {
 		int no_input = false;
 		int clamped = false;
 		const char* label = "";
-		const char* popup = "";
 		int show = true;
 
 		if (!(*mvApp::GetApp()->getParsers())["add_drag_float2"].parse(args, kwargs, __FUNCTION__, &name, &default_value, &speed,
 			&min_value, &max_value, &format, &callback, &callback_data, &tip, &parent, &before, &source, &enable, &width, &no_input, &clamped,
-			&label, &popup, &show))
+			&label, &show))
 			return ToPyBool(false);
 
 		auto vec = ToFloatVect(default_value);
-		mvAppItem* item = new mvDragFloat2(name, vec.data(), source);
+		auto item = CreateRef<mvDragFloat2>(name, vec.data(), source);
 		if (callback)
 			Py_XINCREF(callback);
 		item->setCallback(callback);
@@ -300,16 +290,15 @@ namespace Marvel {
 		int no_input = false;
 		int clamped = false;
 		const char* label = "";
-		const char* popup = "";
 		int show = true;
 
 		if (!(*mvApp::GetApp()->getParsers())["add_drag_float3"].parse(args, kwargs, __FUNCTION__, &name, &default_value, &speed,
 			&min_value, &max_value, &format, &callback, &callback_data, &tip, &parent, &before, &source, &enable, &width, &no_input, &clamped,
-			&label, &popup, &show))
+			&label, &show))
 			return ToPyBool(false);
 
 		auto vec = ToFloatVect(default_value);
-		mvAppItem* item = new mvDragFloat3(name, vec.data(), source);
+		auto item = CreateRef<mvDragFloat3>(name, vec.data(), source);
 		if (callback)
 			Py_XINCREF(callback);
 		item->setCallback(callback);
@@ -348,17 +337,16 @@ namespace Marvel {
 		int no_input = false;
 		int clamped = false;
 		const char* label = "";
-		const char* popup = "";
 		int show = true;
 
 		if (!(*mvApp::GetApp()->getParsers())["add_drag_float4"].parse(args, kwargs, __FUNCTION__, &name, &default_value, &speed,
 			&min_value, &max_value, &format, &callback, &callback_data, &tip, &parent, &before, &source, &enable, &width, &no_input, &clamped,
-			&label, &popup, &show))
+			&label, &show))
 			return ToPyBool(false);
 
 		auto vec = ToFloatVect(default_value);
 
-		mvAppItem* item = new mvDragFloat4(name, vec.data(), source);
+		auto item = CreateRef<mvDragFloat4>(name, vec.data(), source);
 		if (callback)
 			Py_XINCREF(callback);
 		item->setCallback(callback);
@@ -370,7 +358,6 @@ namespace Marvel {
 		item->setConfigDict(kwargs);
 		item->setExtraConfigDict(kwargs);
 
-		
 		return ToPyBool(mvApp::GetApp()->getItemRegistry().addItemWithRuntimeChecks(item, parent, before));
 	}
 
@@ -401,7 +388,7 @@ namespace Marvel {
 			&label, &popup, &show))
 			return ToPyBool(false);
 
-		mvAppItem* item = new mvDragInt(name, default_value, source);
+		auto item = CreateRef<mvDragInt>(name, default_value, source);
 		if (callback)
 			Py_XINCREF(callback);
 		item->setCallback(callback);
@@ -413,7 +400,6 @@ namespace Marvel {
 		item->setConfigDict(kwargs);
 		item->setExtraConfigDict(kwargs);
 
-		
 		return ToPyBool(mvApp::GetApp()->getItemRegistry().addItemWithRuntimeChecks(item, parent, before));
 	}
 
@@ -438,16 +424,15 @@ namespace Marvel {
 		int no_input = false;
 		int clamped = false;
 		const char* label = "";
-		const char* popup = "";
 		int show = true;
 
 		if (!(*mvApp::GetApp()->getParsers())["add_drag_int2"].parse(args, kwargs, __FUNCTION__, &name, &default_value, &speed,
 			&min_value, &max_value, &format, &callback, &callback_data, &tip, &parent, &before, &source, &enable, &width, &no_input, &clamped,
-			&label, &popup, &show))
+			&label, &show))
 			return ToPyBool(false);
 
 		auto vec = ToIntVect(default_value);
-		mvAppItem* item = new mvDragInt2(name, vec.data(), source);
+		auto item = CreateRef<mvDragInt2>(name, vec.data(), source);
 		if (callback)
 			Py_XINCREF(callback);
 		item->setCallback(callback);
@@ -459,7 +444,6 @@ namespace Marvel {
 		item->setConfigDict(kwargs);
 		item->setExtraConfigDict(kwargs);
 
-		
 		return ToPyBool(mvApp::GetApp()->getItemRegistry().addItemWithRuntimeChecks(item, parent, before));
 	}
 
@@ -485,16 +469,15 @@ namespace Marvel {
 		int no_input = false;
 		int clamped = false;
 		const char* label = "";
-		const char* popup = "";
 		int show = true;
 
 		if (!(*mvApp::GetApp()->getParsers())["add_drag_int3"].parse(args, kwargs, __FUNCTION__, &name, &default_value, &speed,
 			&min_value, &max_value, &format, &callback, &callback_data, &tip, &parent, &before, &source, &enable, &width, &no_input, &clamped,
-			&label, &popup, &show))
+			&label, &show))
 			return ToPyBool(false);
 
 		auto vec = ToIntVect(default_value);
-		mvAppItem* item = new mvDragInt3(name, vec.data(), source);
+		auto item = CreateRef<mvDragInt3>(name, vec.data(), source);
 		if (callback)
 			Py_XINCREF(callback);
 		item->setCallback(callback);
@@ -533,16 +516,15 @@ namespace Marvel {
 		int no_input = false;
 		int clamped = false;
 		const char* label = "";
-		const char* popup = "";
 		int show = true;
 
 		if (!(*mvApp::GetApp()->getParsers())["add_drag_int4"].parse(args, kwargs, __FUNCTION__, &name, &default_value, &speed,
 			&min_value, &max_value, &format, &callback, &callback_data, &tip, &parent, &before, &source, &enable, &width, &no_input, &clamped,
-			&label, &popup, &show))
+			&label, &show))
 			return ToPyBool(false);
 
 		auto vec = ToIntVect(default_value);
-		mvAppItem* item = new mvDragInt4(name, vec.data(), source);
+		auto item = CreateRef<mvDragInt4>(name, vec.data(), source);
 		if (callback)
 			Py_XINCREF(callback);
 		item->setCallback(callback);
@@ -554,7 +536,6 @@ namespace Marvel {
 		item->setConfigDict(kwargs);
 		item->setExtraConfigDict(kwargs);
 
-		
 		return ToPyBool(mvApp::GetApp()->getItemRegistry().addItemWithRuntimeChecks(item, parent, before));
 	}
 

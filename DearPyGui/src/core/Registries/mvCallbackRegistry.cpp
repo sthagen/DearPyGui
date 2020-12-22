@@ -5,19 +5,9 @@
 #include "mvThreadPool.h"
 #include "mvProfiler.h"
 #include "mvGlobalIntepreterLock.h"
+#include "mvApp.h"
 
 namespace Marvel {
-
-	mvCallbackRegistry* mvCallbackRegistry::s_instance = nullptr;
-
-	mvCallbackRegistry* mvCallbackRegistry::GetCallbackRegistry()
-	{
-		if (s_instance)
-			return s_instance;
-
-		s_instance = new mvCallbackRegistry();
-		return s_instance;
-	}
 
 	mvCallbackRegistry::mvCallbackRegistry()
 	{
@@ -75,7 +65,7 @@ namespace Marvel {
 
 	bool mvCallbackRegistry::onInputs(mvEvent& event)
 	{
-		const char* active = "new system";
+		const char* active = mvApp::GetApp()->getItemRegistry().getActiveWindow().c_str();
 
 		switch (event.type)
 		{
@@ -170,7 +160,7 @@ namespace Marvel {
 	{
 		// submit to thread pool
 		for (auto& callback : m_asyncCallbacks)
-			threadpool->submit(std::bind(&mvCallbackRegistry::runAsyncCallback, mvCallbackRegistry::GetCallbackRegistry(),
+			threadpool->submit(std::bind(&mvCallbackRegistry::runAsyncCallback, this,
 				callback.name, callback.data, callback.returnname));
 
 		m_asyncCallbacks.clear();

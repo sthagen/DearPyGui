@@ -7,6 +7,32 @@
 
 namespace Marvel {
 
+	void mvDocWindow::InsertParser(std::map<std::string, mvPythonParser>* parsers)
+	{
+		parsers->insert({ "add_doc_window", mvPythonParser({
+			{mvPythonDataType::String, "name"},
+			{mvPythonDataType::KeywordOnly},
+			{mvPythonDataType::Integer, "width", "", "-1"},
+			{mvPythonDataType::Integer, "height", "", "-1"},
+			{mvPythonDataType::Integer, "x_pos", "x position the window will start at", "200"},
+			{mvPythonDataType::Integer, "y_pos", "y position the window will start at", "200"},
+			{mvPythonDataType::Bool, "autosize", "Autosized the window to fit it's items.", "True"},
+			{mvPythonDataType::Bool, "no_resize", "Allows for the window size to be changed or fixed", "False"},
+			{mvPythonDataType::Bool, "no_title_bar", "Title name for the title bar of the window", "False"},
+			{mvPythonDataType::Bool, "no_move", "Allows for the window's position to be changed or fixed", "False"},
+			{mvPythonDataType::Bool, "no_scrollbar" ," Disable scrollbars (window can still scroll with mouse or programmatically)", "False"},
+			{mvPythonDataType::Bool, "no_collapse" ,"Disable user collapsing window by double-clicking on it", "False"},
+			{mvPythonDataType::Bool, "horizontal_scrollbar" ,"Allow horizontal scrollbar to appear (off by default).", "False"},
+			{mvPythonDataType::Bool, "no_focus_on_appearing" ,"Disable taking focus when transitioning from hidden to visible state", "False"},
+			{mvPythonDataType::Bool, "no_bring_to_front_on_focus" ,"Disable bringing window to front when taking focus (e.g. clicking on it or programmatically giving it focus)", "False"},
+			{mvPythonDataType::Bool, "no_close", "", "False"},
+			{mvPythonDataType::Bool, "no_background", "", "False"},
+			{mvPythonDataType::String, "label", "", "''"},
+			{mvPythonDataType::Bool, "show", "Attempt to render", "True"},
+		}, "Creates a documentation window.",
+			"None", "Containers") });
+	}
+
 	static void ColorText(const char* item)
 	{
 		ImGui::TextColored(ImGui::GetStyleColorVec4(ImGuiCol_PlotLinesHovered), "%s", item);
@@ -36,12 +62,6 @@ namespace Marvel {
 		setup();
 	}
 
-	mvDocWindow::~mvDocWindow()
-	{
-		m_docmap->clear();
-		delete m_docmap;
-	}
-
 	void mvDocWindow::setup()
 	{
 		m_docmap = BuildDearPyGuiInterface();
@@ -50,7 +70,7 @@ namespace Marvel {
 		for (auto& item : m_constants)
 		{
 			m_cconstants.push_back(item.first.c_str());
-			m_constantsValues.push_back("Constant with a value of " + std::to_string(item.second));
+			m_constantsValues.emplace_back("Constant with a value of " + std::to_string(item.second));
 		}
 
 		for (const auto& item : *m_docmap)
@@ -143,11 +163,10 @@ namespace Marvel {
 
 
 				ColorText("ABOUT THIS GUIDE:");
-				ImGui::BulletText("Sections below cover the basic aspects of DearPyGui Core.");
+				ImGui::BulletText("Sections below cover the basic aspects of Dear PyGui Core.");
 				ImGui::BulletText("This document can be found by calling the \"show_documentation\" command.");
 				ImGui::BulletText("Additional information on specific commands can be found in the commands tab.");
 				ImGui::BulletText("The complete documentation can be found at: https://hoffstadt.github.io/DearPyGui/");
-
 
 				if (ImGui::CollapsingHeader("Logging and Console Output"))
 				{
@@ -187,7 +206,7 @@ namespace Marvel {
 
 					ImGui::Separator();
 					CodeColorText("ERROR"); ImGui::NextColumn();
-					ColorText("ERROR"); ImGui::NextColumn();
+					ColorText("mvERROR"); ImGui::NextColumn();
 					CodeColorText("log_error('some message')"); ImGui::NextColumn();
 
 					ImGui::Separator();
@@ -312,7 +331,7 @@ namespace Marvel {
 					ImGui::BulletText("METHOD 1 (RECOMMENDED):");
 					ImGui::Indent();
 					ImGui::Text("You simply call the add_* commands, while creating a nested hierarchy by");
-					ImGui::Text("placing widgets between the add_* and end_* of container widgets.");
+					ImGui::Text("placing widgets between the add_* and end of container widgets.");
 					ImGui::Text("With this method, widgets automatically know which containers they");
 					ImGui::Text("belong to. Example:");
 					ImGui::Spacing();
@@ -355,18 +374,16 @@ namespace Marvel {
 				if (ImGui::CollapsingHeader("Value Storage"))
 				{
 					ColorText("BASICS");
-					ImGui::BulletText("There are 3 use cases for the data storage system:");
+					ImGui::BulletText("There are 2 use cases for the data storage system:");
 					ImGui::Indent();
 					ImGui::BulletText("1. For widgets to use the same underlying data (i.e. both modify the same data)");
 					ImGui::BulletText("2. To store data for use at a later time or in a different callback.");
-					ImGui::BulletText("3. A combination of 1 and 2.");
 					ImGui::Unindent();
 					ImGui::Separator();
 
 					ColorText("USE CASE 1");
 					ImGui::BulletText("To share the underlying data of multiple widgets, just use the 'source' keyword when adding the widget.");
 					ImGui::BulletText("Ensure the underlying data structures match or it will not work.");
-					ImGui::BulletText("Some widgets have a 'secondary_data_source' (i.e. listbox, which allows modification of the listed items)");
 					ImGui::Separator();
 
 					ColorText("USE CASE 2");
@@ -378,16 +395,13 @@ namespace Marvel {
 					ImGui::Unindent();
 					ImGui::Separator();
 
-					ColorText("USE CASE 3");
-					ImGui::BulletText("With this use case, you store data with 'add_data' and use that data with the 'ource' keyword.");
-
 				}
 
 				if (ImGui::CollapsingHeader("Callbacks"))
 				{
 					ColorText("BASICS:");
 					ImGui::BulletText("Callbacks are functions that are ran when some event occurs.");
-					ImGui::BulletText("There are currently 3 'types' of callbacks used in DearPyGui:");
+					ImGui::BulletText("There are currently 3 'types' of callbacks used in Dear PyGui:");
 					ImGui::Indent();
 					CodeColorText("Render  - ran every frame");
 					CodeColorText("Inputs  - ran when mouse/keyboard events occurr");
@@ -396,7 +410,7 @@ namespace Marvel {
 					ImGui::BulletText("Notes:");
 					ImGui::Indent();
 					ImGui::BulletText("The 'set_*_callback' commands take a string with the name of the callback to use.");
-					ImGui::BulletText("Always be ran on the same thread as the GUI.");
+					ImGui::BulletText("Always ran on the same thread as the GUI.");
 					ImGui::BulletText("Should NOT be computationally expensive (because of the note above),");
 					ImGui::Text("otherwise you may see a drop in frame rate.");
 					ImGui::Unindent();
@@ -419,7 +433,6 @@ namespace Marvel {
 					ColorText("INPUT CALLBACKS:");
 					ImGui::BulletText("Useful for capturing key strokes, making iteractive drawings, etc.");
 					ImGui::BulletText("Commands take the form of 'set_*_callback(...)'");
-					ImGui::BulletText("The optional 'handler' keyword will set which window triggers the callback.");
 					ImGui::BulletText("Most should take the following form:");
 					ImGui::Indent();
 					CodeColorText("def callbackname(sender, data):");
@@ -438,7 +451,6 @@ namespace Marvel {
 					CodeColorText("    ...");
 					ImGui::Unindent();
 					ImGui::BulletText("The 'sender' parameter is the name of widget the callback was sent from.");
-					ImGui::BulletText("The data parameter depends on the actual callback. Check the documentation.");
 
 				}
 
@@ -448,7 +460,7 @@ namespace Marvel {
 					ColorText("BASICS:");
 					ImGui::BulletText("If a callback needs to perform time consuming calculations, functions can be");
 					ImGui::Text("    ran asyncronously (on seperate threads).");
-					ImGui::BulletText("Currently, the async function CAN NOT call Marvel API commands.");
+					ImGui::BulletText("Currently, the async function can only call some Dear PyGui commands.");
 
 					ImGui::BulletText("The following command is used for asyncronous functions:");
 					ImGui::Indent();
@@ -507,17 +519,17 @@ namespace Marvel {
 				if (ImGui::CollapsingHeader("Drawings"))
 				{
 					ColorText("BASICS:");
-					ImGui::BulletText("The drawing API is a low-level drawing API useful as a canvas or custom widget.");
+					ImGui::BulletText("The drawing API is a low-level drawing API useful for simple graphics.");
 					ImGui::BulletText("Drawings are added using the 'add_drawing(...)' command.");
-					ImGui::BulletText("All drawing commands' first argument is the name of the drawing you are refering to.");
-					ImGui::BulletText("The drawings scale and coordinate origin can be set through keywords");
+					ImGui::BulletText("All drawing commands' first argument can either refer to a drawing widget,");
+					ImGui::Text("    window, '##FOREGROUND', or '##BACKGROUND'.");
 					ImGui::Separator();
 
 					ColorText("TAGS:");
 					ImGui::BulletText("To efficiently update a drawing, you should use the tag system (as opposed to clearing and redrawing)");
 					ImGui::BulletText("All draw commands of the form 'draw_*' accept an optional tag argument.");
 					ImGui::BulletText("The tag argument is a string that acts as an indentifier for the draw item.");
-					ImGui::BulletText("On subsequent calls to the same draw command with the given tag, the item will be updated.");
+					ImGui::BulletText("You can update previously submitted draw commands using 'modify_draw_command'.");
 				}
 
 				ImGui::EndTabItem();
@@ -673,9 +685,7 @@ namespace Marvel {
 			float titleBarHeight = ImGui::GetStyle().FramePadding.y * 2 + ImGui::GetFontSize();
 
 			// update mouse
-			mvVec2 oldMousePos = mvInput::getGlobalMousePosition();
 			ImVec2 mousePos = ImGui::GetMousePos();
-			mvInput::setGlobalMousePosition(mousePos.x, mousePos.y);
 			float x = mousePos.x - ImGui::GetWindowPos().x;
 			float y = mousePos.y - ImGui::GetWindowPos().y - titleBarHeight;
 			mvInput::setMousePosition(x, y);
@@ -683,19 +693,56 @@ namespace Marvel {
 			if (mvApp::GetApp()->getItemRegistry().getActiveWindow() != "documentation##standard")
 				mvEventBus::Publish(mvEVT_CATEGORY_ITEM, mvEVT_ACTIVE_WINDOW, { CreateEventArgument("WINDOW", std::string("documentation##standard")) });
 
-			// mouse move callback
-			//if (getMouseMoveCallback() != nullptr)
-			//{
-			//	if (oldMousePos.x != mousePos.x || oldMousePos.y != mousePos.y)
-			//	{
-			//		mvCallbackRegistry::GetCallbackRegistry()->runCallback(getMouseMoveCallback(), m_name,
-			//			ToPyPair(x, y));
-			//	}
-			//}
-
 		}
 
 		ImGui::End();
+	}
+
+	PyObject* add_doc_window(PyObject* self, PyObject* args, PyObject* kwargs)
+	{
+		const char* name;
+		int width = -1;
+		int height = -1;
+		int x_pos = 200;
+		int y_pos = 200;
+		int autosize = false;
+		int no_resize = false;
+		int no_title_bar = false;
+		int no_move = false;
+		int no_scrollbar = false;
+		int no_collapse = false;
+		int horizontal_scrollbar = false;
+		int no_focus_on_appearing = false;
+		int no_bring_to_front_on_focus = false;
+		int noclose = false;
+		int no_background = false;
+
+		const char* label = "";
+		int show = true;
+
+		if (!(*mvApp::GetApp()->getParsers())["add_doc_window"].parse(args, kwargs, __FUNCTION__, &name, &width,
+			&height, &x_pos, &y_pos, &autosize, &no_resize, &no_title_bar, &no_move, &no_scrollbar,
+			&no_collapse, &horizontal_scrollbar, &no_focus_on_appearing, &no_bring_to_front_on_focus,
+			&noclose, &no_background, &label, &show))
+			return ToPyBool(false);
+
+		auto item = CreateRef<mvDocWindow>(name);
+
+		item->checkConfigDict(kwargs);
+		item->setConfigDict(kwargs);
+		item->setExtraConfigDict(kwargs);
+
+		if (mvApp::GetApp()->getItemRegistry().addItemWithRuntimeChecks(item, "", ""))
+		{
+			mvApp::GetApp()->getItemRegistry().pushParent(item);
+
+			if (!show)
+				item->hide();
+
+			return ToPyBool(true);
+		}
+
+		return ToPyBool(false);
 	}
 
 }

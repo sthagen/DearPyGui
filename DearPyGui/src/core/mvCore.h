@@ -9,8 +9,25 @@
 
 #include <imgui.h>
 #include <utility>
+#include <memory>
 
 namespace Marvel {
+
+	template<typename T>
+	using mvOwnedPtr = std::unique_ptr<T>;
+	template<typename T, typename ... Args>
+	constexpr mvOwnedPtr<T> CreateOwnedPtr(Args&& ... args)
+	{
+		return std::make_unique<T>(std::forward<Args>(args)...);
+	}
+
+	template<typename T>
+	using mvRef = std::shared_ptr<T>;
+	template<typename T, typename ... Args>
+	constexpr mvRef<T> CreateRef(Args&& ... args)
+	{
+		return std::make_shared<T>(std::forward<Args>(args)...);
+	}
 
 	//-----------------------------------------------------------------------------
 	// mvVec2
@@ -57,6 +74,8 @@ namespace Marvel {
 	{
 		int r=0, g=0, b=0, a=255;
 		bool specified = true;
+
+		mvColor() = default;
 
 		mvColor(int r, int g, int b, int a, bool specified = true)
 			: r(r), g(g), b(b), a(a), specified(specified)

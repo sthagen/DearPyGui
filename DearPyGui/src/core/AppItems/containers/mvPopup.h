@@ -15,8 +15,6 @@ namespace Marvel {
 			: mvBoolPtrBase(name, false, name), m_parentAddress(parentAddress)
 		{
 			m_description.container = true;
-			if (parentAddress)
-				parentAddress->m_name;
 		}
 
 		void closePopup() { m_close = true; }
@@ -41,7 +39,7 @@ namespace Marvel {
 						m_close = false;
 					}
 
-					for (mvAppItem* item : m_children)
+					for (mvRef<mvAppItem> item : m_children)
 					{
 						// skip item if it's not shown
 						if (!item->m_show)
@@ -69,7 +67,7 @@ namespace Marvel {
 				if (ImGui::BeginPopupContextItem(m_name.c_str(), m_button))
 				{
 
-					for (mvAppItem* item : m_children)
+					for (mvRef<mvAppItem> item : m_children)
 					{
 						// skip item if it's not shown
 						if (!item->m_show)
