@@ -23,13 +23,17 @@ HOW TO UPDATE?
 - Please report any issue!
 
 ------------------------------------------------------------------------
- VERSION 0.6.x
+ VERSION 0.6.117
 ------------------------------------------------------------------------
 
-Decorated log: https://github.com/hoffstadt/DearPyGui/releases/tag/v0.6.x
+Decorated log: https://github.com/hoffstadt/DearPyGui/releases/tag/v0.6.117
 
 Updates:
 - glfw:              updated to 3.3.2
+- implot:            updated to 0.9 WIP a9d3347
+
+New Keywords:
+- plot:               Added "equal_aspects" keyword #305
 
 Breaking Changes:
 - popup keyword:     removed unused popup keyword
@@ -37,6 +41,10 @@ Breaking Changes:
 - get_item_popup:    removed command
 
 Fixes:
+- start_dearpygui:   can be called more than once now
+- textures:          fixed texture decrementing and buffer support (numpy)
+- drawlist:          fixed crash from viewport drawing before starting app
+- input text:        tabs(\t) can now be input #408
 - drawing api:       polygon fill to draw before outline, related to #371
 - collapsing header: quering open/close works now
 - numpy:             list of int/float can now use numpy #105
@@ -45,7 +53,6 @@ Fixes:
 - Mac sizing:        Partially fixed. #348 #365
 - Logger:            Fixed autoscroll mac bug #347
 - Delete Item:       does_item_exists now looks at children delete queue
-
 
 -----------------------------------------------------------------------
  VERSION 0.6.35

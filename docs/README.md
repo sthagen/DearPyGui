@@ -11,7 +11,7 @@
 ![Python Version](https://img.shields.io/pypi/pyversions/dearpygui)
 [![PYPI](https://img.shields.io/pypi/v/dearpygui)](https://pypi.org/project/dearpygui/)
 [![Downloads](https://pepy.tech/badge/dearpygui)](https://pepy.tech/project/dearpygui)
-[![Sponsors](https://img.shields.io/badge/sponsors-16-brightgreen)](https://img.shields.io/badge/sponsors-16-brightgreen)
+[![Sponsors](https://img.shields.io/badge/sponsors-18-brightgreen)](https://img.shields.io/badge/sponsors-18-brightgreen)
 
 [![build status](https://github.com/hoffstadt/DearPyGui/workflows/Embedded%20Build/badge.svg)](https://github.com/hoffstadt/DearPyGui/actions?workflow=Embedded%20Build)
 [![Build status](https://ci.appveyor.com/api/projects/status/eypfn2lyuwfv8mel?svg=true)](https://ci.appveyor.com/project/hoffstadt/dearpygui)
@@ -53,10 +53,7 @@ Ensure you have at least Python 3.6 64bit.
 
  ---
  
-- [Wiki](https://github.com/hoffstadt/DearPyGui/wiki) for most information.
-- [DearPyGui-Examples](https://hoffstadt.github.io/DearPyGui/examples.html) for examples.
-- [Tutorials](https://hoffstadt.github.io/DearPyGui/tutorial-portal.html) for getting started.
-- [Online Documentation](https://hoffstadt.github.io/DearPyGui/) for official documentation.
+- [Documentation](https://github.com/hoffstadt/DearPyGui/wiki) comprehensive documentaion, tutorials, and examples.
 - Internal Documentation: Run the `show_documentation` command from within the library to view an reference guide. 
 - Complete Demo: You can also view a mostly complete showcase of _Dear PyGui_ by running the `show_demo` command found in _dearpygui.demo_.
 
@@ -148,6 +145,7 @@ Ongoing _Dear PyGui_ development is financially supported by users and private s
 
 These include:
 * 🏆 [Dean Keinan](https://github.com/deankeinan) _Partner Sponsor_
+* 🏆 [何凌锋](https://github.com/Hedaozi) _Partner Sponsor_
 * 🥇 [Caden Bloxham](https://github.com/cubic-unit) _Gold Sponsor_
 * 🥇 [Michael Kadziela](https://github.com/Innominus) _Gold Sponsor_
 * 🥇 [Yan Zaretskiy](https://github.com/mindv0rtex) _Gold Sponsor_
