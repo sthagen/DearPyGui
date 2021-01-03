@@ -27,7 +27,7 @@ namespace Marvel {
 			m_autoScrollButtonName = "Auto-scroll##" + name;
 			m_clearButtonName = "Clear##" + name;
 			m_copyButtonName = "Copy##" + name;
-			LogInfo("[Logger] " + m_name);
+			ClearLog();
 			LogInfo("[Logger] " + m_name);
 			m_description.ignoreSizeUpdate = true;
 		}
@@ -69,9 +69,9 @@ namespace Marvel {
 		ImGuiTextBuffer  Buf;
 		ImGuiTextFilter  Filter;
 		ImVector<int>    LineOffsets; // Index to lines offset. We maintain this with AddLog() calls, allowing us to have a random access on lines
-		bool             AutoScroll;  // Keep scrolling if already at the bottom
-		bool             show;        // Keep scrolling if already at the bottom
-		bool             mainmode;
+		bool             AutoScroll = true;  // Keep scrolling if already at the bottom
+		bool             show = true; // Keep scrolling if already at the bottom
+		bool             mainmode = false;
 
 #if defined (_WIN32)
 		static std::chrono::steady_clock::time_point s_start;
