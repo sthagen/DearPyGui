@@ -16,11 +16,12 @@
 #include <implot.h>
 #include "mvEventListener.h"
 #include "mvTheme.h"
+#include "mvCallbackRegistry.h"
 
 namespace Marvel {
 
 	mvApp* mvApp::s_instance = nullptr;
-	bool   mvApp::s_started = false;
+	std::atomic_bool mvApp::s_started = false;
 
 
 	// utility structure for realtime plot
@@ -73,16 +74,15 @@ namespace Marvel {
 	void mvApp::SetAppStarted() 
 	{
 		s_started = true; 
+        GetApp()->m_future = std::async(std::launch::async, []() {return GetApp()->m_callbackRegistry->runCallbacks(); });
 	}
 
 	void mvApp::SetAppStopped() 
 	{ 
-		if (GetApp())
-		{
-			GetApp()->m_callbackRegistry->runCallback(GetApp()->m_callbackRegistry->getOnCloseCallback(), "Main Application");
-            GetApp()->m_callbackRegistry->setOnCloseCallback(nullptr);
-		}
 
+        GetApp()->getCallbackRegistry().stop();
+        GetApp()->getCallbackRegistry().addCallback(nullptr, "null", nullptr);
+        GetApp()->m_future.get();
 		s_started = false; 
 		auto viewport = s_instance->getViewport();
 		if (viewport)
@@ -114,7 +114,16 @@ namespace Marvel {
 				ThrowPythonException("Window does not exists.");
 		}
 
+        //std::thread t([&]() {m_callbackRegistry->runCallbacks(); });
+        //t.detach();
+
+        m_future = std::async(std::launch::async, [&]() {return m_callbackRegistry->runCallbacks(); });
+
 		m_viewport->run();
+
+        GetApp()->getCallbackRegistry().stop();
+        GetApp()->getCallbackRegistry().addCallback(nullptr, "null", nullptr);
+        m_future.get();
 		delete m_viewport;
 		s_started = false;
 	}
@@ -147,6 +156,11 @@ namespace Marvel {
 
 	}
 
+    mvCallbackRegistry& mvApp::getCallbackRegistry()
+    { 
+        return *m_callbackRegistry; 
+    }
+
 	bool mvApp::onEvent(mvEvent& event)
 	{
 		mvEventDispatcher dispatcher(event);
@@ -163,9 +177,9 @@ namespace Marvel {
 		m_clientWidth  = GetEInt(event, "client_width");
 		m_clientHeight = GetEInt(event, "client_height");
 
-		m_callbackRegistry->runCallback(
+		m_callbackRegistry->addCallback(
 			m_callbackRegistry->getResizeCallback(), 
-			"Main Application");
+			"Main Application", nullptr);
 
 		return true;
 	}
@@ -217,6 +231,7 @@ namespace Marvel {
 		// route input callbacks
 		mvInput::CheckInputs();
 
+        std::lock_guard<std::mutex> lk(m_mutex);
 		mvEventBus::Publish(mvEVT_CATEGORY_APP, mvEVT_PRE_RENDER);
 		mvEventBus::Publish(mvEVT_CATEGORY_APP, mvEVT_PRE_RENDER_RESET);
 		mvEventBus::Publish(mvEVT_CATEGORY_APP, mvEVT_RENDER);
@@ -263,7 +278,7 @@ namespace Marvel {
 		{
 			int line = PyFrame_GetLineNumber(PyEval_GetFrame());
 			PyErr_Format(PyExc_Exception,
-				"DearPyGui command on line %d can not be called asycronously", line);
+				"DearPyGui command on line %d can not be called asynchronously", line);
 			PyErr_Print();
 			return false;
 		}

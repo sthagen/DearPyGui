@@ -37,6 +37,8 @@ namespace Marvel {
 	mvWindowAppItem::mvWindowAppItem(const std::string& name, bool mainWindow, PyObject* closing_callback)
 		: mvAppItem(name), m_mainWindow(mainWindow), m_closing_callback(SanitizeCallback(closing_callback))
 	{
+		m_drawList = CreateRef<mvDrawList>();
+
 		m_description.root = true;
 		m_description.container = true;
 
@@ -133,7 +135,7 @@ namespace Marvel {
 			if (!m_closing)
 			{
 				m_closing = true;
-				mvApp::GetApp()->getCallbackRegistry().runCallback(m_closing_callback, m_name);
+				mvApp::GetApp()->getCallbackRegistry().addCallback(m_closing_callback, m_name, nullptr);
 
 			}
 			return;
@@ -212,7 +214,7 @@ namespace Marvel {
 		{
 			m_width = (int)ImGui::GetWindowWidth();
 			m_height = (int)ImGui::GetWindowHeight();
-			mvApp::GetApp()->getCallbackRegistry().runCallback(m_resize_callback, m_name);
+			mvApp::GetApp()->getCallbackRegistry().addCallback(m_resize_callback, m_name, nullptr);
 		}
 
 		m_width = (int)ImGui::GetWindowWidth();
@@ -237,7 +239,7 @@ namespace Marvel {
 		m_xpos = (int)ImGui::GetWindowPos().x;
 		m_ypos = (int)ImGui::GetWindowPos().y;
 
-		m_drawList.draw(ImGui::GetWindowDrawList(), m_xpos, m_ypos);
+		m_drawList->draw(ImGui::GetWindowDrawList(), m_xpos, m_ypos);
 
 		ImGui::End();
 	}
@@ -246,7 +248,7 @@ namespace Marvel {
 	{
 		if (dict == nullptr)
 			return;
-		mvGlobalIntepreterLock gil;
+		 
 		if (PyObject* item = PyDict_GetItemString(dict, "x_pos")) setWindowPos((float)ToInt(item), (float)m_ypos);
 		if (PyObject* item = PyDict_GetItemString(dict, "y_pos")) setWindowPos((float)m_xpos, (float)ToInt(item));
 		if (PyObject* item = PyDict_GetItemString(dict, "no_close")) m_noclose = ToBool(item);
@@ -282,7 +284,7 @@ namespace Marvel {
 	{
 		if (dict == nullptr)
 			return;
-		mvGlobalIntepreterLock gil;
+		 
 		PyDict_SetItemString(dict, "x_pos", ToPyInt(m_xpos));
 		PyDict_SetItemString(dict, "y_pos", ToPyInt(m_ypos));
 		PyDict_SetItemString(dict, "no_close", ToPyBool(m_closing));
@@ -309,11 +311,13 @@ namespace Marvel {
 
 	mvWindowAppItem::~mvWindowAppItem()
 	{
-		mvGlobalIntepreterLock gil;
-		if (m_closing_callback)
-			Py_XDECREF(m_closing_callback);
-	}
+		PyObject* callback = m_closing_callback;
+		mvApp::GetApp()->getCallbackRegistry().submitCallback([callback]() {
+			if (callback)
+				Py_XDECREF(callback);
+			});
 
+	}
 
 	PyObject* add_window(PyObject* self, PyObject* args, PyObject* kwargs)
 	{
@@ -359,14 +363,12 @@ namespace Marvel {
 		if (mvApp::GetApp()->getItemRegistry().addItemWithRuntimeChecks(item, "", ""))
 		{
 			mvApp::GetApp()->getItemRegistry().pushParent(item);
-
 			if (!show)
 				item->hide();
 
-			return ToPyBool(true);
 		}
 
-		return ToPyBool(false);
+		return GetPyNone();
 	}
 
 }

@@ -30,10 +30,11 @@ namespace Marvel {
 	{
 		if (dict == nullptr)
 			return;
-		mvGlobalIntepreterLock gil;
+		 
 
 		if (PyObject* item = PyDict_GetItemString(dict, "center")) m_center = ToVec2(item);
 		if (PyObject* item = PyDict_GetItemString(dict, "color")) m_color = ToColor(item);
+		if (PyObject* item = PyDict_GetItemString(dict, "fill")) m_fill = ToColor(item);
 		if (PyObject* item = PyDict_GetItemString(dict, "thickness")) m_thickness = ToFloat(item);
 		if (PyObject* item = PyDict_GetItemString(dict, "radius")) m_radius = ToFloat(item);
 		if (PyObject* item = PyDict_GetItemString(dict, "segments")) m_segments = ToInt(item);
@@ -44,9 +45,10 @@ namespace Marvel {
 	{
 		if (dict == nullptr)
 			return;
-		mvGlobalIntepreterLock gil;
+		 
 		PyDict_SetItemString(dict, "center", ToPyPair(m_center.x, m_center.y));
 		PyDict_SetItemString(dict, "color", ToPyColor(m_color));
+		PyDict_SetItemString(dict, "fill", ToPyColor(m_fill));
 		PyDict_SetItemString(dict, "thickness", ToPyFloat(m_thickness));
 		PyDict_SetItemString(dict, "radius", ToPyFloat(m_radius));
 		PyDict_SetItemString(dict, "segments", ToPyInt(m_segments));
@@ -70,13 +72,14 @@ namespace Marvel {
 		mvColor mcolor = ToColor(color);
 		mvColor mfill = ToColor(fill);
 
-		mvDrawList* drawlist = GetDrawListFromTarget(drawing);
+		auto cmd = CreateRef<mvDrawCircleCmd>(mcenter, radius, mcolor, segments, thickness, mfill);
+		cmd->tag = tag;
+
+		std::lock_guard<std::mutex> lk(mvApp::GetApp()->GetApp()->getMutex());
+		mvRef<mvDrawList> drawlist = GetDrawListFromTarget(drawing);
 		if (drawlist)
-		{
-			auto cmd = CreateRef<mvDrawCircleCmd>(mcenter, radius, mcolor, segments, thickness, mfill);
-			cmd->tag = tag;
 			drawlist->addCommand(cmd);
-		}
+
 		return GetPyNone();
 	}
 }

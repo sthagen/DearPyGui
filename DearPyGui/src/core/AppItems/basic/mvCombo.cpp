@@ -89,7 +89,7 @@ namespace Marvel {
 	{
 		if (dict == nullptr)
 			return;
-		mvGlobalIntepreterLock gil;
+
 		if (PyObject* item = PyDict_GetItemString(dict, "items")) m_items = ToStringVect(item);
 
 		// helpers for bit flipping
@@ -139,7 +139,7 @@ namespace Marvel {
 	{
 		if (dict == nullptr)
 			return;
-		mvGlobalIntepreterLock gil;
+
 		PyDict_SetItemString(dict, "items", ToPyList(m_items));
 
 		// helper to check and set bit
@@ -198,7 +198,9 @@ namespace Marvel {
 		item->setConfigDict(kwargs);
 		item->setExtraConfigDict(kwargs);
 
-		return ToPyBool(mvApp::GetApp()->getItemRegistry().addItemWithRuntimeChecks(item, parent, before));
+		mvApp::GetApp()->getItemRegistry().addItemWithRuntimeChecks(item, parent, before);
+
+		return GetPyNone();
 	}
 
 }

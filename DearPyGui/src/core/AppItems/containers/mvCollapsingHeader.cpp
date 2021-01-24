@@ -81,7 +81,7 @@ namespace Marvel {
 	{
 		if (dict == nullptr)
 			return;
-		mvGlobalIntepreterLock gil;
+		 
 		if (PyObject* item = PyDict_GetItemString(dict, "closable")) m_closable = ToBool(item);
 
 		// helper for bit flipping
@@ -104,7 +104,7 @@ namespace Marvel {
 	{
 		if (dict == nullptr)
 			return;
-		mvGlobalIntepreterLock gil;
+		 
 		PyDict_SetItemString(dict, "closable", ToPyBool(m_closable));
 
 		// helper to check and set bit
@@ -150,9 +150,12 @@ namespace Marvel {
 		if (mvApp::GetApp()->getItemRegistry().addItemWithRuntimeChecks(item, parent, before))
 		{
 			mvApp::GetApp()->getItemRegistry().pushParent(item);
-			return ToPyBool(true);
+			if (!show)
+				item->hide();
+
 		}
-		return ToPyBool(false);
+
+		return GetPyNone();
 	}
 
 }

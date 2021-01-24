@@ -20,13 +20,16 @@
 #include <string>
 #include <queue>
 #include <thread>
+#include <future>
+#include <atomic>
 #include "mvEvents.h"
-#include "mvAppItem.h"
+//#include "mvAppItem.h"
 #include "mvPythonParser.h"
 #include "mvItemRegistry.h"
 #include "mvDrawList.h"
 #include "mvTextureStorage.h"
 #include "mvValueStorage.h"
+#include "mvPythonExceptions.h"
 #include <memory>
 
 //-----------------------------------------------------------------------------
@@ -43,6 +46,7 @@ namespace Marvel {
     class mvTextEditor;
     class mvWindow;
     class mvTheme;
+    class mvCallbackRegistry;
     struct mvColor;
     
     //-----------------------------------------------------------------------------
@@ -69,6 +73,7 @@ namespace Marvel {
         static bool              IsAppStarted        () { return s_started; }
         static void              SetAppStarted       ();
         static void              SetAppStopped       ();
+        static void              StopApp             () { s_started = false; } // ugly
 
         void start(const std::string& primaryWindow);
 
@@ -91,7 +96,7 @@ namespace Marvel {
         mvItemRegistry&          getItemRegistry    () { return *m_itemRegistry; }
         mvTextureStorage&        getTextureStorage  () { return *m_textureStorage; }
         mvValueStorage&          getValueStorage    () { return *(m_valueStorage.get()); }
-        mvCallbackRegistry&      getCallbackRegistry() { return *m_callbackRegistry; }
+        mvCallbackRegistry&      getCallbackRegistry();
         
         //-----------------------------------------------------------------------------
         // App Settings
@@ -144,6 +149,7 @@ namespace Marvel {
         // Other
         //-----------------------------------------------------------------------------
         std::map<std::string, mvPythonParser>* getParsers      () { return m_parsers.get(); }
+        std::mutex& getMutex() const { return m_mutex; }
             
     private:
 
@@ -160,7 +166,7 @@ namespace Marvel {
     private:
 
         static mvApp* s_instance;
-        static bool   s_started;
+        static std::atomic_bool s_started;
 
         // managers
         mvOwnedPtr<mvItemRegistry>                   m_itemRegistry;
@@ -205,6 +211,8 @@ namespace Marvel {
         double                       m_time      = 0.0;  // total time since starting
         
         std::thread::id                  m_mainThreadID;
+        mutable std::mutex               m_mutex;
+        std::future<bool>                m_future;
 
     };
 

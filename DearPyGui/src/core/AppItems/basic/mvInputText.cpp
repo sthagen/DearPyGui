@@ -104,7 +104,7 @@ namespace Marvel {
 	{
 		if (dict == nullptr)
 			return;
-		mvGlobalIntepreterLock gil;
+		 
 		if (PyObject* item = PyDict_GetItemString(dict, "hint")) m_hint = ToString(item);
 		if (PyObject* item = PyDict_GetItemString(dict, "multiline")) m_multiline = ToBool(item);
 
@@ -130,7 +130,7 @@ namespace Marvel {
 	{
 		if (dict == nullptr)
 			return;
-		mvGlobalIntepreterLock gil;
+		 
 		PyDict_SetItemString(dict, "hint", ToPyString(m_hint));
 		PyDict_SetItemString(dict, "multline", ToPyBool(m_multiline));
 
@@ -201,8 +201,9 @@ namespace Marvel {
 		item->setConfigDict(kwargs);
 		item->setExtraConfigDict(kwargs);
 
+		mvApp::GetApp()->getItemRegistry().addItemWithRuntimeChecks(item, parent, before);
 
-		return ToPyBool(mvApp::GetApp()->getItemRegistry().addItemWithRuntimeChecks(item, parent, before));
+		return GetPyNone();
 	}
 
 }

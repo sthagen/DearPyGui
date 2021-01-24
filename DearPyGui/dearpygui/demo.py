@@ -43,17 +43,17 @@ def demo_main_callback(sender, data):
         set_value("Q key Released##demo", "False")
 
     # mouse dragging
-    if is_mouse_button_dragging(mvMouseButton_Left, 10):
+    if is_mouse_button_dragging(mvMouseButton_Left, 1):
         set_value("Left Mouse Dragging##demo", "True")
     else:
         set_value("Left Mouse Dragging##demo", "False")
 
-    if is_mouse_button_dragging(mvMouseButton_Right, 10):
+    if is_mouse_button_dragging(mvMouseButton_Right, 1):
         set_value("Right Mouse Dragging##demo", "True")
     else:
         set_value("Right Mouse Dragging##demo", "False")
 
-    if is_mouse_button_dragging(mvMouseButton_Middle, 10):
+    if is_mouse_button_dragging(mvMouseButton_Middle, 1):
         set_value("Middle Mouse Dragging##demo", "True")
     else:
         set_value("Middle Mouse Dragging##demo", "False")
@@ -400,6 +400,7 @@ def show_demo():
                 add_text("Progress Bar##text##demo")
                 set_value("Progress Bar##text##demo", "Progress Bar")
                 add_progress_bar("##Progress Bar##demo", default_value=0.78, overlay="1367/1753")
+                set_item_color("##Progress Bar##demo", mvGuiCol_PlotHistogram, [255,0,0, 255])
 
             with tree_node("Color/Picker Widgets##demo"):
                 # wrapper to apply configuration to all items passed in as a list

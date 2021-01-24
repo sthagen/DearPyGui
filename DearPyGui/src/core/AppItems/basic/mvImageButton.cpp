@@ -98,11 +98,12 @@ namespace Marvel {
 
 		if (m_texture)
 		{
+			ImGui::PushID(m_name.c_str());
 			if (ImGui::ImageButton(m_texture, ImVec2((float)m_width, (float)m_height),
 				ImVec2(m_uv_min.x, m_uv_min.y), ImVec2(m_uv_max.x, m_uv_max.y), m_framePadding,
 				m_backgroundColor.toVec4(), m_tintColor.toVec4()))
 				mvApp::GetApp()->getCallbackRegistry().addCallback(m_callback, m_name, m_callbackData);
-
+			ImGui::PopID();
 		}
 
 	}
@@ -111,7 +112,7 @@ namespace Marvel {
 	{
 		if (dict == nullptr)
 			return;
-		mvGlobalIntepreterLock gil;
+
 		if (PyObject* item = PyDict_GetItemString(dict, "uv_min"))
 		{
 			m_uv_min = ToVec2(item);
@@ -131,7 +132,7 @@ namespace Marvel {
 	{
 		if (dict == nullptr)
 			return;
-		mvGlobalIntepreterLock gil;
+
 		PyDict_SetItemString(dict, "uv_min", ToPyPair(m_uv_min.x, m_uv_min.y));
 		PyDict_SetItemString(dict, "uv_max", ToPyPair(m_uv_max.x, m_uv_max.y));
 		PyDict_SetItemString(dict, "tint_color", ToPyColor(m_tintColor));
@@ -174,11 +175,6 @@ namespace Marvel {
 			&before, &width, &height, &frame_padding, &uv_min, &uv_max, &show))
 			return ToPyBool(false);
 
-		//auto mtintcolor = ToColor(tintcolor);
-		//auto mbackgroundColor = ToColor(backgroundColor);
-		//mvVec2 muv_min = ToVec2(uv_min);
-		//mvVec2 muv_max = ToVec2(uv_max);
-
 		auto item = CreateRef<mvImageButton>(name, value);
 		if (callback)
 			Py_XINCREF(callback);
@@ -191,6 +187,8 @@ namespace Marvel {
 		item->setConfigDict(kwargs);
 		item->setExtraConfigDict(kwargs);
 
-		return ToPyBool(mvApp::GetApp()->getItemRegistry().addItemWithRuntimeChecks(item, parent, before));
+		mvApp::GetApp()->getItemRegistry().addItemWithRuntimeChecks(item, parent, before);
+
+		return GetPyNone();
 	}
 }

@@ -5,6 +5,8 @@
 #include "mvAppLog.h"
 #include "mvPythonTranslator.h"
 #include "mvAppItems.h"
+#include "mvDrawList.h"
+#include "mvDrawCmdCommon.h"
 #include "mvWindow.h"
 #include "mvPythonExceptions.h"
 #include <ImGuiFileDialog.h>
@@ -12,7 +14,6 @@
 
 // new includes
 #include "mvPlotInterface.h"
-#include "mvDrawingInterface.h"
 #include "mvTableInterface.h"
 #include "mvThemeInterface.h"
 #include "mvInputInterface.h"
@@ -78,8 +79,8 @@ namespace Marvel {
 		mvInputText::InsertParser(parsers.get());
 		mvTable::InsertParser(parsers.get());
 		mvPlot::InsertParser(parsers.get());
+		mvDrawList::InsertParser(parsers.get());
 
-		AddDrawingCommands(parsers.get());
 		AddPlotCommands(parsers.get());
 		AddLogCommands(parsers.get());
 		AddInputCommands(parsers.get());
@@ -209,17 +210,19 @@ namespace Marvel {
 			{"mvGuiCol_TabHovered"           , 34},
 			{"mvGuiCol_TabActive"            , 35},
 			{"mvGuiCol_TabUnfocused"         , 36},
-			{"mvGuiCol_TabUnfocusedActive"   , 37},
-			{"mvGuiCol_PlotLines"            , 38},
-			{"mvGuiCol_PlotLinesHovered"     , 39},
-			{"mvGuiCol_PlotHistogram"        , 40},
-			{"mvGuiCol_PlotHistogramHovered" , 41},
-			{"mvGuiCol_TextSelectedBg"       , 42},
-			{"mvGuiCol_DragDropTarget"       , 43},
-			{"mvGuiCol_NavHighlight"         , 44}, // Gamepad/keyboard: current highlighted item
-			{"mvGuiCol_NavWindowingHighlight", 45}, // Highlight window when using CTRL+TAB
-			{"mvGuiCol_NavWindowingDimBg"    , 46}, // Darken/colorize entire screen behind the CTRL+TAB window list, when active 
-			{"mvGuiCol_ModalWindowDimBg"     , 47}, // Darken/colorize entire screen behind a modal window, when one is active
+			{"mvGuiCol_DockingPreview"       , 37},
+			{"mvGuiCol_DockingEmptyBg"       , 38},
+			{"mvGuiCol_TabUnfocusedActive"   , 39},
+			{"mvGuiCol_PlotLines"            , 40},
+			{"mvGuiCol_PlotLinesHovered"     , 41},
+			{"mvGuiCol_PlotHistogram"        , 42},
+			{"mvGuiCol_PlotHistogramHovered" , 43},
+			{"mvGuiCol_TextSelectedBg"       , 44},
+			{"mvGuiCol_DragDropTarget"       , 45},
+			{"mvGuiCol_NavHighlight"         , 46}, // Gamepad/keyboard: current highlighted item
+			{"mvGuiCol_NavWindowingHighlight", 47}, // Highlight window when using CTRL+TAB
+			{"mvGuiCol_NavWindowingDimBg"    , 48}, // Darken/colorize entire screen behind the CTRL+TAB window list, when active 
+			{"mvGuiCol_ModalWindowDimBg"     , 49}, // Darken/colorize entire screen behind a modal window, when one is active
 
 			//-----------------------------------------------------------------------------
 			// Theme style variable IDs
@@ -590,6 +593,7 @@ namespace Marvel {
 		ADD_PYTHON_FUNCTION(get_log_level)
 		ADD_PYTHON_FUNCTION(clear_log)
 		ADD_PYTHON_FUNCTION(show_logger)
+		ADD_PYTHON_FUNCTION(set_logger_window_title)
 		ADD_PYTHON_FUNCTION(set_log_level)
 		ADD_PYTHON_FUNCTION(log)
 		ADD_PYTHON_FUNCTION(log_debug)
@@ -603,6 +607,7 @@ namespace Marvel {
 		ADD_PYTHON_FUNCTION(set_managed_column_width)
 		ADD_PYTHON_FUNCTION(get_item_type)
 		ADD_PYTHON_FUNCTION(set_item_callback)
+		ADD_PYTHON_FUNCTION(set_item_callback_data)
 		ADD_PYTHON_FUNCTION(get_value)
 		ADD_PYTHON_FUNCTION(set_value)
 		ADD_PYTHON_FUNCTION(add_value)
@@ -624,6 +629,7 @@ namespace Marvel {
 		ADD_PYTHON_FUNCTION(get_item_rect_max)
 		ADD_PYTHON_FUNCTION(get_item_rect_size)
 		ADD_PYTHON_FUNCTION(get_item_callback)
+		ADD_PYTHON_FUNCTION(get_item_callback_data)
 		ADD_PYTHON_FUNCTION(get_item_parent)
 		ADD_PYTHON_FUNCTION(delete_item)
 		ADD_PYTHON_FUNCTION(does_item_exist)

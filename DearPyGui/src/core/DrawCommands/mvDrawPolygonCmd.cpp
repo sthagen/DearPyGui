@@ -101,7 +101,7 @@ namespace Marvel {
 	{
 		if (dict == nullptr)
 			return;
-		mvGlobalIntepreterLock gil;
+		 
 
 		if (PyObject* item = PyDict_GetItemString(dict, "points")) m_points = ToVectVec2(item);
 		if (PyObject* item = PyDict_GetItemString(dict, "fill")) m_fill = ToColor(item);
@@ -114,7 +114,7 @@ namespace Marvel {
 	{
 		if (dict == nullptr)
 			return;
-		mvGlobalIntepreterLock gil;
+		 
 		PyDict_SetItemString(dict, "points", ToPyList(m_points));
 		PyDict_SetItemString(dict, "fill", ToPyColor(m_fill));
 		PyDict_SetItemString(dict, "color", ToPyColor(m_color));
@@ -137,13 +137,14 @@ namespace Marvel {
 		mvColor mcolor = ToColor(color);
 		mvColor mfill = ToColor(fill);
 
-		mvDrawList* drawlist = GetDrawListFromTarget(drawing);
+		auto cmd = CreateRef<mvDrawPolygonCmd>(mpoints, mcolor, mfill, thickness);
+		cmd->tag = tag;
+
+		std::lock_guard<std::mutex> lk(mvApp::GetApp()->GetApp()->getMutex());
+		mvRef<mvDrawList> drawlist = GetDrawListFromTarget(drawing);
 		if (drawlist)
-		{
-			auto cmd = CreateRef<mvDrawPolygonCmd>(mpoints, mcolor, mfill, thickness);
-			cmd->tag = tag;
 			drawlist->addCommand(cmd);
-		}
+
 		return GetPyNone();
 	}
 }

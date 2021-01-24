@@ -76,7 +76,7 @@ namespace Marvel {
 	{
 		if (dict == nullptr)
 			return;
-		mvGlobalIntepreterLock gil;
+		 
 		if (PyObject* item = PyDict_GetItemString(dict, "enabled")) m_enabled = ToBool(item);
 
 	}
@@ -85,7 +85,7 @@ namespace Marvel {
 	{
 		if (dict == nullptr)
 			return;
-		mvGlobalIntepreterLock gil;
+		 
 		PyDict_SetItemString(dict, "enabled", ToPyBool(m_enabled));
 	}
 
@@ -112,9 +112,12 @@ namespace Marvel {
 		if (mvApp::GetApp()->getItemRegistry().addItemWithRuntimeChecks(item, parent, before))
 		{
 			mvApp::GetApp()->getItemRegistry().pushParent(item);
-			return ToPyBool(true);
+			if (!show)
+				item->hide();
+
 		}
-		return ToPyBool(false);
+
+		return GetPyNone();
 	}
 
 }

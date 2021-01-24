@@ -4,6 +4,7 @@
 #include "mvEvents.h"
 #include <ImGuiFileDialog.h>
 #include "mvDataStorage.h"
+#include <iostream>
 
 namespace Marvel {
 
@@ -50,6 +51,10 @@ namespace Marvel {
 		parsers->insert({ "set_main_window_title", mvPythonParser({
 			{mvPythonDataType::String, "title"}
 		}, "Sets the title of the main window.") });
+
+		parsers->insert({ "set_logger_window_title", mvPythonParser({
+			{mvPythonDataType::String, "title"}
+		}, "Sets the title of the logger window.") });
 
 		parsers->insert({ "set_main_window_resizable", mvPythonParser({
 			{mvPythonDataType::Bool, "resizable"}
@@ -215,63 +220,38 @@ namespace Marvel {
 			return GetPyNone();
 
 		mvTextureFormat tformat = (mvTextureFormat)format;
+		std::vector<float> fdata;
 
 		if (tformat == mvTextureFormat::RGBA_INT)
 		{
 			std::vector<int> mdata = ToIntVect(data);
 
-			std::vector<float> fdata;
 			for (auto& item : mdata)
 				fdata.push_back(item / 255.0f);
-
-			if (mvApp::IsAppStarted())
-				mvApp::GetApp()->getTextureStorage().addTexture(name, fdata.data(), width, height, tformat);
-
-			else
-				mvApp::GetApp()->getTextureStorage().addDelayedTexture(name, fdata, width, height, tformat);
-			return GetPyNone();
 		}
 
 		else if (tformat == mvTextureFormat::RGB_INT)
 		{
-			
+
 			std::vector<int> mdata = ToIntVect(data);
 
-			std::vector<float> fdata;
 			for (int i = 0; i < mdata.size(); i = i + 3)
 			{
 				fdata.push_back(mdata[i] / 255.0f);
-				fdata.push_back(mdata[i+1] / 255.0f);
-				fdata.push_back(mdata[i+2] / 255.0f);
+				fdata.push_back(mdata[i + 1] / 255.0f);
+				fdata.push_back(mdata[i + 2] / 255.0f);
 				fdata.push_back(1.0f);
 			}
 
-			if (mvApp::IsAppStarted())
-				mvApp::GetApp()->getTextureStorage().addTexture(name, fdata.data(), width, height, tformat);
-
-			else
-				mvApp::GetApp()->getTextureStorage().addDelayedTexture(name, fdata, width, height, tformat);
-
-			return GetPyNone();
 		}
 
 		else if (tformat == mvTextureFormat::RGBA_FLOAT)
-		{
-			std::vector<float> mdata = ToFloatVect(data);
-
-			if (mvApp::IsAppStarted())
-				mvApp::GetApp()->getTextureStorage().addTexture(name, mdata.data(), width, height, tformat);
-
-			else
-				mvApp::GetApp()->getTextureStorage().addDelayedTexture(name, mdata, width, height, tformat);
-			return GetPyNone();
-		}
+			fdata = ToFloatVect(data);
 
 		else if (tformat == mvTextureFormat::RGB_FLOAT)
 		{
 			std::vector<float> mdata = ToFloatVect(data);
 
-			std::vector<float> fdata;
 			for (int i = 0; i < mdata.size(); i = i + 3)
 			{
 				fdata.push_back(mdata[i]);
@@ -280,13 +260,15 @@ namespace Marvel {
 				fdata.push_back(1.0f);
 			}
 
-			if (mvApp::IsAppStarted())
-				mvApp::GetApp()->getTextureStorage().addTexture(name, fdata.data(), width, height, tformat);
-
-			else
-				mvApp::GetApp()->getTextureStorage().addDelayedTexture(name, fdata, width, height, tformat);
-			return GetPyNone();
 		}
+
+		std::lock_guard<std::mutex> lk(mvApp::GetApp()->GetApp()->getMutex());
+		if (mvApp::IsAppStarted())
+			mvApp::GetApp()->getTextureStorage().addTexture(name, fdata.data(), width, height, tformat);
+
+		else
+			mvApp::GetApp()->getTextureStorage().addDelayedTexture(name, fdata, width, height, tformat);
+
 
 		return GetPyNone();
 	}
@@ -300,7 +282,10 @@ namespace Marvel {
 			&shift_only, &dockspace))
 			return GetPyNone();
 
-		mvApp::GetApp()->turnOnDocking(shift_only, dockspace);
+		mvApp::GetApp()->getCallbackRegistry().submit([=]()
+			{
+				mvApp::GetApp()->turnOnDocking(shift_only, dockspace);
+			});
 
 		return GetPyNone();
 	}
@@ -313,6 +298,7 @@ namespace Marvel {
 			&name))
 			return GetPyNone();
 
+		std::lock_guard<std::mutex> lk(mvApp::GetApp()->GetApp()->getMutex());
 		mvEventBus::PublishEndFrame(mvEVT_CATEGORY_TEXTURE, mvEVT_DEC_TEXTURE, { CreateEventArgument("NAME", std::string(name)) });
 
 		return GetPyNone();
@@ -331,10 +317,13 @@ namespace Marvel {
 			&title))
 			return GetPyNone();
 
-		mvApp::GetApp()->setTitle(title);
+		mvApp::GetApp()->getCallbackRegistry().submit([=]()
+			{
+				mvApp::GetApp()->setTitle(title);
 
-		if (mvApp::IsAppStarted())
-			mvApp::GetApp()->getViewport()->setWindowText(title);
+				if (mvApp::IsAppStarted())
+					mvApp::GetApp()->getViewport()->setWindowText(title);
+			});
 
 		return GetPyNone();
 	}
@@ -348,6 +337,7 @@ namespace Marvel {
 			&x, &y))
 			return GetPyNone();
 
+		std::lock_guard<std::mutex> lk(mvApp::GetApp()->GetApp()->getMutex());
 		mvApp::GetApp()->setMainPos(x, y);
 
 		return GetPyNone();
@@ -362,7 +352,10 @@ namespace Marvel {
 			&destination, &source))
 			return GetPyNone();
 
-		mvApp::GetApp()->addRemapChar(destination, source);
+		mvApp::GetApp()->getCallbackRegistry().submit([=]()
+			{
+				mvApp::GetApp()->addRemapChar(destination, source);
+			});
 
 		return GetPyNone();
 	}
@@ -375,6 +368,7 @@ namespace Marvel {
 			&resizable))
 			return GetPyNone();
 
+		std::lock_guard<std::mutex> lk(mvApp::GetApp()->GetApp()->getMutex());
 		mvApp::GetApp()->setResizable(resizable);
 
 		return GetPyNone();
@@ -382,20 +376,23 @@ namespace Marvel {
 
 	PyObject* set_vsync(PyObject* self, PyObject* args, PyObject* kwargs)
 	{
-
 		int value;
 
 		if (!(*mvApp::GetApp()->getParsers())["set_vsync"].parse(args, kwargs, __FUNCTION__,
 			&value))
 			return GetPyNone();
 
-		mvApp::GetApp()->setVSync(value);
+		mvApp::GetApp()->getCallbackRegistry().submit([=]()
+			{
+				mvApp::GetApp()->setVSync(value);
+			});
+
 		return GetPyNone();
 	}
 
 	PyObject* setup_dearpygui(PyObject* self, PyObject* args, PyObject* kwargs)
 	{
-
+		Py_BEGIN_ALLOW_THREADS;
 		mvApp::SetAppStarted();
 
 		// create window
@@ -403,6 +400,7 @@ namespace Marvel {
 		window->show();
 		mvApp::GetApp()->setViewport(window);
 		window->setup();
+		Py_END_ALLOW_THREADS;
 
 		return GetPyNone();
 	}
@@ -410,20 +408,23 @@ namespace Marvel {
 	PyObject* render_dearpygui_frame(PyObject* self, PyObject* args, PyObject* kwargs)
 	{
 
+		Py_BEGIN_ALLOW_THREADS;
 		auto window = mvApp::GetApp()->getViewport();
 		window->renderFrame();
+		Py_END_ALLOW_THREADS;
 
 		return GetPyNone();
 	}
 
 	PyObject* cleanup_dearpygui(PyObject* self, PyObject* args, PyObject* kwargs)
 	{
-
 		auto window = mvApp::GetApp()->getViewport();
 		delete window;
 		mvApp::GetApp()->setViewport(nullptr);
+		Py_BEGIN_ALLOW_THREADS;
 		mvApp::SetAppStopped();
 		mvApp::DeleteApp();
+		Py_END_ALLOW_THREADS;
 
 		return GetPyNone();
 	}
@@ -440,7 +441,9 @@ namespace Marvel {
 			return GetPyNone();
 		}
 
+		Py_BEGIN_ALLOW_THREADS;
 		mvApp::GetApp()->start(primary_window);
+		Py_END_ALLOW_THREADS;
 		
 		mvApp::DeleteApp();
 		mvEventBus::Reset();
@@ -457,7 +460,11 @@ namespace Marvel {
 			return GetPyNone();
 
 		Py_XINCREF(callback);
-		mvApp::GetApp()->getCallbackRegistry().setOnStartCallback(callback);
+		mvApp::GetApp()->getCallbackRegistry().submit([=]()
+			{
+				mvApp::GetApp()->getCallbackRegistry().setOnStartCallback(callback);
+			});
+
 		return GetPyNone();
 	}
 
@@ -469,7 +476,10 @@ namespace Marvel {
 			return GetPyNone();
 
 		Py_XINCREF(callback);
-		mvApp::GetApp()->getCallbackRegistry().setOnCloseCallback(callback);
+		mvApp::GetApp()->getCallbackRegistry().submit([=]()
+			{
+				mvApp::GetApp()->getCallbackRegistry().setOnCloseCallback(callback);
+			});
 		return GetPyNone();
 	}
 
@@ -481,13 +491,19 @@ namespace Marvel {
 			return GetPyNone();
 
 		Py_XINCREF(callback);
-		mvApp::GetApp()->getCallbackRegistry().setAcceleratorCallback(callback);
+		mvApp::GetApp()->getCallbackRegistry().submit([=]()
+			{
+				mvApp::GetApp()->getCallbackRegistry().setAcceleratorCallback(callback);
+			});
 		return GetPyNone();
 	}
 
 	PyObject* stop_dearpygui(PyObject* self, PyObject* args, PyObject* kwargs)
 	{
-		mvApp::SetAppStopped();
+		mvApp::StopApp();
+		auto viewport = mvApp::GetApp()->getViewport();
+		if (viewport)
+			viewport->stop();
 		return GetPyNone();
 	}
 
@@ -498,13 +514,17 @@ namespace Marvel {
 		if (!(*mvApp::GetApp()->getParsers())["select_directory_dialog"].parse(args, kwargs, __FUNCTION__, &callback))
 			return GetPyNone();
 
-		igfd::ImGuiFileDialog::Instance()->OpenModal("ChooseFileDlgKey", "Choose Directory", 0, ".");
-		auto window = mvApp::GetApp()->getItemRegistry().getItem("filedialog");
-		auto dialog = static_cast<mvFileDialog*>(window.get());
 		if (callback)
 			Py_XINCREF(callback);
-		dialog->setCallback(callback);
-		window->show();
+
+		mvApp::GetApp()->getCallbackRegistry().submit([=]()
+			{
+				igfd::ImGuiFileDialog::Instance()->OpenModal("ChooseFileDlgKey", "Choose Directory", 0, ".");
+				auto window = mvApp::GetApp()->getItemRegistry().getItem("filedialog");
+				auto dialog = static_cast<mvFileDialog*>(window.get());
+				dialog->setCallback(callback);
+				window->show();
+			});
 
 		return GetPyNone();
 	}
@@ -518,34 +538,44 @@ namespace Marvel {
 			&callback, &extensions))
 			return GetPyNone();
 
-		igfd::ImGuiFileDialog::Instance()->OpenModal("ChooseFileDlgKey", "Choose File", extensions, ".");
-		auto window = mvApp::GetApp()->getItemRegistry().getItem("filedialog");
-		auto dialog = static_cast<mvFileDialog*>(window.get());
 		if (callback)
 			Py_XINCREF(callback);
-		dialog->setCallback(callback);
-		window->show();
+
+		mvApp::GetApp()->getCallbackRegistry().submit([=]()
+			{
+				igfd::ImGuiFileDialog::Instance()->OpenModal("ChooseFileDlgKey", "Choose File", extensions, ".");
+				auto window = mvApp::GetApp()->getItemRegistry().getItem("filedialog");
+				auto dialog = static_cast<mvFileDialog*>(window.get());
+
+				dialog->setCallback(callback);
+				window->show();
+			});
 
 		return GetPyNone();
 	}
 
 	PyObject* get_total_time(PyObject* self, PyObject* args, PyObject* kwargs)
 	{
+		std::lock_guard<std::mutex> lk(mvApp::GetApp()->GetApp()->getMutex());
 		return ToPyFloat((float)mvApp::GetApp()->getTotalTime());
 	}
 
 	PyObject* get_delta_time(PyObject* self, PyObject* args, PyObject* kwargs)
 	{
+		std::lock_guard<std::mutex> lk(mvApp::GetApp()->GetApp()->getMutex());
 		return ToPyFloat(mvApp::GetApp()->getDeltaTime());
+
 	}
 
 	PyObject* get_main_window_size(PyObject* self, PyObject* args, PyObject* kwargs)
 	{
+		std::lock_guard<std::mutex> lk(mvApp::GetApp()->GetApp()->getMutex());
 		return ToPyPairII(mvApp::GetApp()->getActualWidth(), mvApp::GetApp()->getActualHeight());
 	}
 
 	PyObject* get_active_window(PyObject* self, PyObject* args, PyObject* kwargs)
 	{
+		std::lock_guard<std::mutex> lk(mvApp::GetApp()->GetApp()->getMutex());
 		return ToPyString(mvApp::GetApp()->getItemRegistry().getActiveWindow());
 	}
 
@@ -563,9 +593,10 @@ namespace Marvel {
 		if (!(*mvApp::GetApp()->getParsers())["add_data"].parse(args, kwargs, __FUNCTION__, &name, &data))
 			return GetPyNone();
 
-		mvDataStorage::AddData(name, data);
 		Py_XINCREF(data);
 
+		mvDataStorage::AddData(name, data);
+		
 		return GetPyNone();
 	}
 
@@ -577,12 +608,8 @@ namespace Marvel {
 		if (!(*mvApp::GetApp()->getParsers())["get_data"].parse(args, kwargs, __FUNCTION__, &name))
 			return GetPyNone();
 
-		auto result = mvDataStorage::GetDataIncRef(name);
+		return mvDataStorage::GetDataIncRef(name);
 
-		if (result)
-			return result;
-
-		return GetPyNone();
 	}
 
 	PyObject* delete_data(PyObject* self, PyObject* args, PyObject* kwargs)
@@ -594,7 +621,7 @@ namespace Marvel {
 			return GetPyNone();
 
 		mvDataStorage::DeleteData(name);
-
+		
 		return GetPyNone();
 	}
 
@@ -606,6 +633,8 @@ namespace Marvel {
 		if (!(*mvApp::GetApp()->getParsers())["set_main_window_size"].parse(args, kwargs, __FUNCTION__, &width, &height))
 			return GetPyNone();
 
+
+		std::lock_guard<std::mutex> lk(mvApp::GetApp()->GetApp()->getMutex());
 		mvEventBus::Publish(mvEVT_CATEGORY_VIEWPORT, mvEVT_VIEWPORT_RESIZE, {
 			CreateEventArgument("actual_width", width),
 			CreateEventArgument("actual_height", height),
@@ -623,26 +652,29 @@ namespace Marvel {
 		if (!(*mvApp::GetApp()->getParsers())["get_log_level"].parse(args, kwargs, __FUNCTION__, &logger))
 			return GetPyNone();
 
+
 		if (!std::string(logger).empty())
 		{
-			auto loggeritem = mvApp::GetApp()->getItemRegistry().getItemAsync(logger);
+			auto loggeritem = mvApp::GetApp()->getItemRegistry().getItem(logger);
 			if (loggeritem == nullptr)
 			{
 				ThrowPythonException(std::string(logger) + " logger does not exist.");
-				return GetPyNone();
+				return ToPyInt(-1);
 			}
 
 			if (loggeritem->getType() != mvAppItemType::Logger)
 			{
 				ThrowPythonException(std::string(logger) + " is not a logger.");
-				return GetPyNone();
+				return ToPyInt(-1);
 			}
 
 			auto loggerwidget = static_cast<mvLoggerItem*>(loggeritem.get());
 			return ToPyInt(loggerwidget->getLogLevel());
 
 		}
-		return ToPyInt(mvAppLog::getLogLevel());
+		else
+			return ToPyInt((int)mvAppLog::getLogLevel());
+
 	}
 
 	PyObject* set_log_level(PyObject* self, PyObject* args, PyObject* kwargs)
@@ -653,9 +685,10 @@ namespace Marvel {
 			&level, &logger))
 			return GetPyNone();
 
+
 		if (!std::string(logger).empty())
 		{
-			auto loggeritem = mvApp::GetApp()->getItemRegistry().getItemAsync(logger);
+			auto loggeritem = mvApp::GetApp()->getItemRegistry().getItem(logger);
 			if (loggeritem == nullptr)
 			{
 				ThrowPythonException(std::string(logger) + " logger does not exist.");
@@ -670,11 +703,11 @@ namespace Marvel {
 
 			auto loggerwidget = static_cast<mvLoggerItem*>(loggeritem.get());
 			loggerwidget->setLogLevel(level);
-			return GetPyNone();
 
 		}
-
-		mvAppLog::setLogLevel(level);
+		else
+			mvAppLog::setLogLevel(level);
+		
 		return GetPyNone();
 	}
 
@@ -686,9 +719,11 @@ namespace Marvel {
 		if (!(*mvApp::GetApp()->getParsers())["log"].parse(args, kwargs, __FUNCTION__, &message, &level, &logger))
 			return GetPyNone();
 
+		std::string cmessage = ToString(message);
+
 		if (!std::string(logger).empty())
 		{
-			auto loggeritem = mvApp::GetApp()->getItemRegistry().getItemAsync(logger);
+			auto loggeritem = mvApp::GetApp()->getItemRegistry().getItem(logger);
 			if (loggeritem == nullptr)
 			{
 				ThrowPythonException(std::string(logger) + " logger does not exist.");
@@ -702,12 +737,12 @@ namespace Marvel {
 			}
 
 			auto loggerwidget = static_cast<mvLoggerItem*>(loggeritem.get());
-			loggerwidget->Log(ToString(message), std::string(level));
-			return GetPyNone();
+			loggerwidget->Log(cmessage, std::string(level));
 
 		}
+		else
+			mvAppLog::Log(cmessage, std::string(level));
 
-		mvAppLog::Log(ToString(message), std::string(level));
 		return GetPyNone();
 	}
 
@@ -719,9 +754,11 @@ namespace Marvel {
 		if (!(*mvApp::GetApp()->getParsers())["log_debug"].parse(args, kwargs, __FUNCTION__, &message, &logger))
 			return GetPyNone();
 
+		std::string cmessage = ToString(message);
+
 		if (!std::string(logger).empty())
 		{
-			auto loggeritem = mvApp::GetApp()->getItemRegistry().getItemAsync(logger);
+			auto loggeritem = mvApp::GetApp()->getItemRegistry().getItem(logger);
 			if (loggeritem == nullptr)
 			{
 				ThrowPythonException(std::string(logger) + " logger does not exist.");
@@ -735,12 +772,12 @@ namespace Marvel {
 			}
 
 			auto loggerwidget = static_cast<mvLoggerItem*>(loggeritem.get());
-			loggerwidget->LogDebug(ToString(message));
-			return GetPyNone();
+			loggerwidget->LogDebug(cmessage);
 
 		}
+		else
+			mvAppLog::LogDebug(cmessage);
 
-		mvAppLog::LogDebug(ToString(message));
 		return GetPyNone();
 	}
 
@@ -752,9 +789,11 @@ namespace Marvel {
 		if (!(*mvApp::GetApp()->getParsers())["log_info"].parse(args, kwargs, __FUNCTION__, &message, &logger))
 			return GetPyNone();
 
+		std::string cmessage = ToString(message);
+
 		if (!std::string(logger).empty())
 		{
-			auto loggeritem = mvApp::GetApp()->getItemRegistry().getItemAsync(logger);
+			auto loggeritem = mvApp::GetApp()->getItemRegistry().getItem(logger);
 			if (loggeritem == nullptr)
 			{
 				ThrowPythonException(std::string(logger) + " logger does not exist.");
@@ -768,11 +807,12 @@ namespace Marvel {
 			}
 
 			auto loggerwidget = static_cast<mvLoggerItem*>(loggeritem.get());
-			loggerwidget->LogInfo(ToString(message));
-			return GetPyNone();
-		}
+			loggerwidget->LogInfo(cmessage);
 
-		mvAppLog::LogInfo(ToString(message));
+		}
+		else
+			mvAppLog::LogInfo(cmessage);
+
 		return GetPyNone();
 	}
 
@@ -784,9 +824,11 @@ namespace Marvel {
 		if (!(*mvApp::GetApp()->getParsers())["log_warning"].parse(args, kwargs, __FUNCTION__, &message, &logger))
 			return GetPyNone();
 
+		std::string cmessage = ToString(message);
+
 		if (!std::string(logger).empty())
 		{
-			auto loggeritem = mvApp::GetApp()->getItemRegistry().getItemAsync(logger);
+			auto loggeritem = mvApp::GetApp()->getItemRegistry().getItem(logger);
 			if (loggeritem == nullptr)
 			{
 				ThrowPythonException(std::string(logger) + " logger does not exist.");
@@ -800,11 +842,11 @@ namespace Marvel {
 			}
 
 			auto loggerwidget = static_cast<mvLoggerItem*>(loggeritem.get());
-			loggerwidget->LogWarning(ToString(message));
-			return GetPyNone();
-		}
+			loggerwidget->LogWarning(cmessage);
 
-		mvAppLog::LogWarning(ToString(message));
+		}
+		else
+			mvAppLog::LogWarning(cmessage);
 		return GetPyNone();
 	}
 
@@ -816,9 +858,10 @@ namespace Marvel {
 		if (!(*mvApp::GetApp()->getParsers())["log_error"].parse(args, kwargs, __FUNCTION__, &message, &logger))
 			return GetPyNone();
 
+		std::string cmessage = ToString(message);
 		if (!std::string(logger).empty())
 		{
-			auto loggeritem = mvApp::GetApp()->getItemRegistry().getItemAsync(logger);
+			auto loggeritem = mvApp::GetApp()->getItemRegistry().getItem(logger);
 			if (loggeritem == nullptr)
 			{
 				ThrowPythonException(std::string(logger) + " logger does not exist.");
@@ -832,11 +875,11 @@ namespace Marvel {
 			}
 
 			auto loggerwidget = static_cast<mvLoggerItem*>(loggeritem.get());
-			loggerwidget->LogError(ToString(message));
-			return GetPyNone();
-		}
+			loggerwidget->LogError(cmessage);
 
-		mvAppLog::LogError(ToString(message));
+		}
+		else
+			mvAppLog::LogError(cmessage);
 		return GetPyNone();
 	}
 
@@ -849,7 +892,7 @@ namespace Marvel {
 
 		if (!std::string(logger).empty())
 		{
-			auto loggeritem = mvApp::GetApp()->getItemRegistry().getItemAsync(logger);
+			auto loggeritem = mvApp::GetApp()->getItemRegistry().getItem(logger);
 			if (loggeritem == nullptr)
 			{
 				ThrowPythonException(std::string(logger) + " logger does not exist.");
@@ -864,16 +907,32 @@ namespace Marvel {
 
 			auto loggerwidget = static_cast<mvLoggerItem*>(loggeritem.get());
 			loggerwidget->ClearLog();
-			return GetPyNone();
-		}
 
-		mvAppLog::ClearLog();
+		}
+		else
+			mvAppLog::ClearLog();
+
 		return GetPyNone();
 	}
 
 	PyObject* show_logger(PyObject* self, PyObject* args)
 	{
+		std::lock_guard<std::mutex> lk(mvApp::GetApp()->GetApp()->getMutex());
 		mvAppLog::Show();
+		return GetPyNone();
+	}
+
+	PyObject* set_logger_window_title(PyObject* self, PyObject* args, PyObject* kwargs)
+	{
+		const char* title;
+
+		if (!(*mvApp::GetApp()->getParsers())["set_logger_window_title"].parse(args, kwargs, __FUNCTION__,
+			&title))
+			return GetPyNone();
+
+		std::lock_guard<std::mutex> lk(mvApp::GetApp()->GetApp()->getMutex());
+		mvAppLog::setTitle(title);
+
 		return GetPyNone();
 	}
 
@@ -884,6 +943,7 @@ namespace Marvel {
 		if (!(*mvApp::GetApp()->getParsers())["close_popup"].parse(args, kwargs, __FUNCTION__, &popup))
 			return GetPyNone();
 
+		std::lock_guard<std::mutex> lk(mvApp::GetApp()->GetApp()->getMutex());
 
 		auto item = mvApp::GetApp()->getItemRegistry().getItem(popup);
 
@@ -902,6 +962,7 @@ namespace Marvel {
 			ThrowPythonException(std::string(popup) + " is not a popup.");
 			return GetPyNone();
 		}
+
 		pop->closePopup();
 
 		return GetPyNone();
@@ -915,9 +976,9 @@ namespace Marvel {
 		if (!(*mvApp::GetApp()->getParsers())["set_primary_window"].parse(args, kwargs, __FUNCTION__, &item, &value))
 			return GetPyNone();
 
-
+		std::lock_guard<std::mutex> lk(mvApp::GetApp()->GetApp()->getMutex());
 		mvApp::GetApp()->getItemRegistry().setPrimaryWindow(item, value);
-
+		
 		return GetPyNone();
 	}
 }

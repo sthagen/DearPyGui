@@ -239,7 +239,7 @@ namespace Marvel {
 	{
 		if (dict == nullptr)
 			return;
-		mvGlobalIntepreterLock gil;
+		 
 		if (PyObject* item = PyDict_GetItemString(dict, "log_level")) m_loglevel = ToInt(item);
 		if (PyObject* item = PyDict_GetItemString(dict, "auto_scroll")) AutoScroll = ToBool(item);
 		if (PyObject* item = PyDict_GetItemString(dict, "auto_scroll_button")) m_autoScrollButton = ToBool(item);
@@ -255,7 +255,7 @@ namespace Marvel {
 	{
 		if (dict == nullptr)
 			return;
-		mvGlobalIntepreterLock gil;
+		 
 
 		PyDict_SetItemString(dict, "log_level", ToPyInt(m_loglevel));
 		PyDict_SetItemString(dict, "auto_scroll", ToPyBool(AutoScroll));
@@ -295,7 +295,9 @@ namespace Marvel {
 		item->setConfigDict(kwargs);
 		item->setExtraConfigDict(kwargs);
 
-		return ToPyBool(mvApp::GetApp()->getItemRegistry().addItemWithRuntimeChecks(item, parent, before));
+		mvApp::GetApp()->getItemRegistry().addItemWithRuntimeChecks(item, parent, before);
+
+		return GetPyNone();
 	}
 
 }

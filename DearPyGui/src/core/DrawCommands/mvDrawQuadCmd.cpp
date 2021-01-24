@@ -29,7 +29,7 @@ namespace Marvel {
 	{
 		if (dict == nullptr)
 			return;
-		mvGlobalIntepreterLock gil;
+		 
 
 		if (PyObject* item = PyDict_GetItemString(dict, "p1")) m_p1 = ToVec2(item);
 		if (PyObject* item = PyDict_GetItemString(dict, "p2")) m_p2 = ToVec2(item);
@@ -45,7 +45,7 @@ namespace Marvel {
 	{
 		if (dict == nullptr)
 			return;
-		mvGlobalIntepreterLock gil;
+		 
 		PyDict_SetItemString(dict, "p1", ToPyPair(m_p1.x, m_p1.y));
 		PyDict_SetItemString(dict, "p2", ToPyPair(m_p2.x, m_p2.y));
 		PyDict_SetItemString(dict, "p3", ToPyPair(m_p3.x, m_p3.y));
@@ -75,13 +75,14 @@ namespace Marvel {
 		mvColor mcolor = ToColor(color);
 		mvColor mfill = ToColor(fill);
 
-		mvDrawList* drawlist = GetDrawListFromTarget(drawing);
+		auto cmd = CreateRef<mvDrawQuadCmd>(mp1, mp2, mp3, mp4, mcolor, mfill, thickness);
+		cmd->tag = tag;
+
+		std::lock_guard<std::mutex> lk(mvApp::GetApp()->GetApp()->getMutex());
+		mvRef<mvDrawList> drawlist = GetDrawListFromTarget(drawing);
 		if (drawlist)
-		{
-			auto cmd = CreateRef<mvDrawQuadCmd>(mp1, mp2, mp3, mp4, mcolor, mfill, thickness);
-			cmd->tag = tag;
 			drawlist->addCommand(cmd);
-		}
+
 		return GetPyNone();
 	}
 }

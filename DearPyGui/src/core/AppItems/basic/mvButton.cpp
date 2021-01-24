@@ -73,7 +73,6 @@ namespace Marvel {
 	{
 		if (dict == nullptr)
 			return;
-		mvGlobalIntepreterLock gil;
 
 		if (PyObject* item = PyDict_GetItemString(dict, "small")) m_small = ToBool(item);
 		if (PyObject* item = PyDict_GetItemString(dict, "arrow")) m_arrow = ToBool(item);
@@ -84,7 +83,7 @@ namespace Marvel {
 	{
 		if (dict == nullptr)
 			return;
-		mvGlobalIntepreterLock gil;
+
 		PyDict_SetItemString(dict, "small", ToPyBool(m_small));
 		PyDict_SetItemString(dict, "arrow", ToPyBool(m_arrow));
 		PyDict_SetItemString(dict, "direction", ToPyInt(m_direction));
@@ -111,7 +110,7 @@ namespace Marvel {
 		if (!(*mvApp::GetApp()->getParsers())["add_button"].parse(args, kwargs, __FUNCTION__, &name, &smallb,
 			&arrow, &direction, &callback, &callback_data, &tip, &parent, &before, &width, &height,
 			&label, &show, &enabled))
-			return ToPyBool(false);
+			return GetPyNone();
 
 		auto item = CreateRef<mvButton>(name);
 		if (callback)
@@ -125,7 +124,9 @@ namespace Marvel {
 		item->setConfigDict(kwargs);
 		item->setExtraConfigDict(kwargs);
 
-		return ToPyBool(mvApp::GetApp()->getItemRegistry().addItemWithRuntimeChecks(item, parent, before));
+		mvApp::GetApp()->getItemRegistry().addItemWithRuntimeChecks(item, parent, before);
+
+		return GetPyNone();
 	}
 
 

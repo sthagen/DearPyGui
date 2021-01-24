@@ -9,34 +9,6 @@
 
 namespace Marvel {
 
-	PyObject* draw_arrow(PyObject* self, PyObject* args, PyObject* kwargs)
-	{
-		const char* drawing;
-		int thickness;
-		int size;
-		PyObject* p1, * p2;
-		PyObject* color;
-		const char* tag = "";
-
-		if (!(*mvApp::GetApp()->getParsers())["draw_arrow"].parse(args, kwargs, __FUNCTION__, &drawing, &p1, &p2, &color, &thickness, &size, &tag))
-			return GetPyNone();
-
-		mvVec2 mp1 = ToVec2(p1);
-		mvVec2 mp2 = ToVec2(p2);
-		mvColor mcolor = ToColor(color);
-
-		mvDrawList* drawlist = GetDrawListFromTarget(drawing);
-		if (drawlist)
-		{
-
-			auto cmd = CreateRef<mvDrawArrowCmd>(mp1, mp2, mcolor, (float)thickness, (float)size);
-			cmd->tag = tag;
-			drawlist->addCommand(cmd);
-
-		}
-		return GetPyNone();
-	}
-
 	mvDrawArrowCmd::mvDrawArrowCmd(const mvVec2& p1, const mvVec2& p2,
 		const mvColor& color, float thickness, float size)
 		:
@@ -98,7 +70,7 @@ namespace Marvel {
 	{
 		if (dict == nullptr)
 			return;
-		mvGlobalIntepreterLock gil;
+		 
 
 		if (PyObject* item = PyDict_GetItemString(dict, "p1")) m_p1 = ToVec2(item);
 		if (PyObject* item = PyDict_GetItemString(dict, "p2")) m_p2 = ToVec2(item);
@@ -113,11 +85,38 @@ namespace Marvel {
 	{
 		if (dict == nullptr)
 			return;
-		mvGlobalIntepreterLock gil;
+		 
 		PyDict_SetItemString(dict, "p1", ToPyPair(m_p1.x, m_p1.y));
 		PyDict_SetItemString(dict, "p2", ToPyPair(m_p2.x, m_p2.y));
 		PyDict_SetItemString(dict, "color", ToPyColor(m_color));
 		PyDict_SetItemString(dict, "thickness", ToPyFloat(m_thickness));
 		PyDict_SetItemString(dict, "size", ToPyFloat(m_size));
+	}
+
+	PyObject* draw_arrow(PyObject* self, PyObject* args, PyObject* kwargs)
+	{
+		const char* drawing;
+		int thickness;
+		int size;
+		PyObject* p1, * p2;
+		PyObject* color;
+		const char* tag = "";
+
+		if (!(*mvApp::GetApp()->getParsers())["draw_arrow"].parse(args, kwargs, __FUNCTION__, &drawing, &p1, &p2, &color, &thickness, &size, &tag))
+			return GetPyNone();
+
+		mvVec2 mp1 = ToVec2(p1);
+		mvVec2 mp2 = ToVec2(p2);
+		mvColor mcolor = ToColor(color);
+
+		auto cmd = CreateRef<mvDrawArrowCmd>(mp1, mp2, mcolor, (float)thickness, (float)size);
+		cmd->tag = tag;
+
+		std::lock_guard<std::mutex> lk(mvApp::GetApp()->GetApp()->getMutex());
+		mvRef<mvDrawList> drawlist = GetDrawListFromTarget(drawing);
+		if (drawlist)
+			drawlist->addCommand(cmd);
+
+		return GetPyNone();
 	}
 }

@@ -250,14 +250,14 @@ namespace Marvel {
 		m_height = -1;
 	}
 
-	void mvPlot::addDragPoint(const std::string& name, bool show_label, const mvColor& color, float radius, PyObject* callback, double* dummyValue, const std::string& source)
+	void mvPlot::addDragPoint(const std::string& name, bool show_label, const mvColor& color, float radius, PyObject* callback, const double* dummyValue, const std::string& source)
 	{
 		float* value = mvApp::GetApp()->getValueStorage().AddFloat2Value(source, { (float)dummyValue[0], (float)dummyValue[1] });
 
 		m_dragPoints.push_back({ name, value, show_label, color, radius, callback, value[0], value[1], source});
 	}
 
-	void mvPlot::updateDragPoint(const std::string& name, bool show_label, const mvColor& color, float radius, PyObject* callback, double* dummyValue, const std::string& source)
+	void mvPlot::updateDragPoint(const std::string& name, bool show_label, const mvColor& color, float radius, PyObject* callback, const double* dummyValue, const std::string& source)
 	{
 		// check if drag point exist
 		bool exists = false;
@@ -703,7 +703,7 @@ namespace Marvel {
 						if (ImPlot::DragLineY(line.name.c_str(), &line.dummyValue, line.show_label, line.color.toVec4(), line.thickness))
 						{
 							*line.value = (float)line.dummyValue;
-							mvApp::GetApp()->getCallbackRegistry().runCallback(line.callback, line.name, nullptr);
+							mvApp::GetApp()->getCallbackRegistry().addCallback(line.callback, line.name, nullptr);
 						}
 					}
 					else
@@ -711,7 +711,7 @@ namespace Marvel {
 						if (ImPlot::DragLineX(line.name.c_str(), &line.dummyValue, line.show_label, line.color.toVec4(), line.thickness))
 						{
 							*line.value = (float)line.dummyValue;
-							mvApp::GetApp()->getCallbackRegistry().runCallback(line.callback, line.name, nullptr);
+							mvApp::GetApp()->getCallbackRegistry().addCallback(line.callback, line.name, nullptr);
 						}
 					}
 				}
@@ -728,7 +728,7 @@ namespace Marvel {
 					{
 						point.value[0] = (float)point.dummyx;
 						point.value[1] = (float)point.dummyy;
-						mvApp::GetApp()->getCallbackRegistry().runCallback(point.callback, point.name, nullptr);
+						mvApp::GetApp()->getCallbackRegistry().addCallback(point.callback, point.name, nullptr);
 					}
 				}
 			}
@@ -748,14 +748,14 @@ namespace Marvel {
 
 			if (m_queryCallback != nullptr && m_queried)
 			{
-				PyGILState_STATE gstate = PyGILState_Ensure();
-				PyObject* area = PyTuple_New(4);
-				PyTuple_SetItem(area, 0, PyFloat_FromDouble(m_queryArea[0]));
-				PyTuple_SetItem(area, 1, PyFloat_FromDouble(m_queryArea[1]));
-				PyTuple_SetItem(area, 2, PyFloat_FromDouble(m_queryArea[2]));
-				PyTuple_SetItem(area, 3, PyFloat_FromDouble(m_queryArea[3]));
-				PyGILState_Release(gstate);
-				mvApp::GetApp()->getCallbackRegistry().runCallback(m_queryCallback, m_name, area);
+				mvApp::GetApp()->getCallbackRegistry().submitCallback([=]() {
+					PyObject* area = PyTuple_New(4);
+					PyTuple_SetItem(area, 0, PyFloat_FromDouble(m_queryArea[0]));
+					PyTuple_SetItem(area, 1, PyFloat_FromDouble(m_queryArea[1]));
+					PyTuple_SetItem(area, 2, PyFloat_FromDouble(m_queryArea[2]));
+					PyTuple_SetItem(area, 3, PyFloat_FromDouble(m_queryArea[3]));
+					mvApp::GetApp()->getCallbackRegistry().addCallback(m_queryCallback, m_name, area);
+					});
 			}
 
 
@@ -789,6 +789,18 @@ namespace Marvel {
 		m_ylimits = ImVec2(y_min, y_max);
 	}
 
+	void mvPlot::setY2Limits(float y_min, float y_max)
+	{
+		m_setY2Limits = true;
+		m_y2limits = ImVec2(y_min, y_max);
+	}
+
+	void mvPlot::setY3Limits(float y_min, float y_max)
+	{
+		m_setY3Limits = true;
+		m_y3limits = ImVec2(y_min, y_max);
+	}
+
 	void mvPlot::setXLimitsAuto()
 	{
 		m_setXLimits = false;
@@ -797,6 +809,16 @@ namespace Marvel {
 	void mvPlot::setYLimitsAuto()
 	{
 		m_setYLimits = false;
+	}
+
+	void mvPlot::setY2LimitsAuto()
+	{
+		m_setY2Limits = false;
+	}
+
+	void mvPlot::setY3LimitsAuto()
+	{
+		m_setY3Limits = false;
 	}
 
 	bool mvPlot::isPlotQueried() const
@@ -814,7 +836,7 @@ namespace Marvel {
 		if (dict == nullptr)
 			return;
 
-		mvGlobalIntepreterLock gil;
+		 
 
 		if (PyObject* item = PyDict_GetItemString(dict, "x_axis_name"))m_xaxisName = ToString(item);
 		if (PyObject* item = PyDict_GetItemString(dict, "y_axis_name")) m_yaxisName = ToString(item);
@@ -890,7 +912,7 @@ namespace Marvel {
 		if (dict == nullptr)
 			return;
 
-		mvGlobalIntepreterLock gil;
+		 
 
 		PyDict_SetItemString(dict, "x_axis_name", ToPyString(m_xaxisName));
 		PyDict_SetItemString(dict, "y_axis_name", ToPyString(m_yaxisName));
@@ -1069,7 +1091,7 @@ namespace Marvel {
 			&y3axis_lock_max,
 			&parent, &before, &width, &height, &query_callback, &show_color_scale, &scale_min, &scale_max,
 			&scale_height, &label, &show, &show_annotations, &show_drag_lines, &show_drag_points))
-			return ToPyBool(false);
+			return GetPyNone();
 
 		if (query_callback)
 			Py_XINCREF(query_callback);
@@ -1080,7 +1102,9 @@ namespace Marvel {
 		item->setConfigDict(kwargs);
 		item->setExtraConfigDict(kwargs);
 
-		return ToPyBool(mvApp::GetApp()->getItemRegistry().addItemWithRuntimeChecks(item, parent, before));
+		mvApp::GetApp()->getItemRegistry().addItemWithRuntimeChecks(item, parent, before);
+		
+		return GetPyNone();
 	}
 
 	PyObject* add_drag_line(PyObject* self, PyObject* args, PyObject* kwargs)
@@ -1123,7 +1147,9 @@ namespace Marvel {
 			Py_XINCREF(callback);
 
 		mvPlot* graph = static_cast<mvPlot*>(aplot.get());
+		
 		graph->updateDragLine(name, show_label, ToColor(color), thickness, y_line, callback, default_value, source);
+		
 		return GetPyNone();
 	}
 
@@ -1153,7 +1179,9 @@ namespace Marvel {
 		}
 
 		mvPlot* graph = static_cast<mvPlot*>(aplot.get());
+		
 		graph->deleteDragLine(name);
+
 		return GetPyNone();
 	}
 
@@ -1198,7 +1226,9 @@ namespace Marvel {
 
 		mvPlot* graph = static_cast<mvPlot*>(aplot.get());
 		double defaults[2] = { (double)default_x, (double)default_y };
+		
 		graph->updateDragPoint(name, show_label, ToColor(color), radius, callback, defaults, source);
+
 		return GetPyNone();
 	}
 
@@ -1228,7 +1258,9 @@ namespace Marvel {
 		}
 
 		mvPlot* graph = static_cast<mvPlot*>(aplot.get());
+
 		graph->deleteDragPoint(name);
+		
 		return GetPyNone();
 	}
 
@@ -1269,7 +1301,9 @@ namespace Marvel {
 		}
 
 		mvPlot* graph = static_cast<mvPlot*>(aplot.get());
+
 		graph->updateAnnotation(tag, x, y, xoffset, yoffset, ToColor(color), text, clamped);
+
 		return GetPyNone();
 	}
 
@@ -1299,7 +1333,9 @@ namespace Marvel {
 		}
 
 		mvPlot* graph = static_cast<mvPlot*>(aplot.get());
+
 		graph->deleteAnnotation(name);
+
 		return GetPyNone();
 	}
 

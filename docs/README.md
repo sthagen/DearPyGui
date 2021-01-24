@@ -1,20 +1,21 @@
 <a id="user-content-dear-pygui" class="anchor" aria-hidden="true" href="#dear-pygui">
  
-<p align="center">
+<div align="center">
   <img src="https://github.com/hoffstadt/DearPyGui/blob/assets/newlogo.jpg?raw=true" alt="Dear PyGui">
-</p>
+</div>
 
 </a>
 
-<sub>(This library is available under a free and permissive license)</sub>
+
+<sub>(This library is available under a free and permissive license however, if you Enjoy _Dear PyGui_ please consider becoming a [Sponsor](https://github.com/hoffstadt/DearPyGui/wiki/Sponsors))</sub>
 
 ![Python Version](https://img.shields.io/pypi/pyversions/dearpygui)
 [![PYPI](https://img.shields.io/pypi/v/dearpygui)](https://pypi.org/project/dearpygui/)
 [![Downloads](https://pepy.tech/badge/dearpygui)](https://pepy.tech/project/dearpygui)
-[![Sponsors](https://img.shields.io/badge/sponsors-21-brightgreen)](https://img.shields.io/badge/sponsors-21-brightgreen)
+[![Sponsors](https://img.shields.io/badge/sponsors-23-brightgreen)](https://img.shields.io/badge/sponsors-23-brightgreen)
 
-[![build status](https://github.com/hoffstadt/DearPyGui/workflows/Embedded%20Build/badge.svg)](https://github.com/hoffstadt/DearPyGui/actions?workflow=Embedded%20Build)
-![static-analysis](https://github.com/hoffstadt/DearPyGui/workflows/static-analysis/badge.svg)
+[![build status](https://github.com/hoffstadt/DearPyGui/workflows/Embedded%20Build/badge.svg?branch=master)](https://github.com/hoffstadt/DearPyGui/actions?workflow=Embedded%20Build)
+[![static-analysis](https://github.com/hoffstadt/DearPyGui/workflows/static-analysis/badge.svg?branch=master)](https://github.com/hoffstadt/DearPyGui/actions?workflow=static-analysis)
 [![Build status](https://ci.appveyor.com/api/projects/status/eypfn2lyuwfv8mel?svg=true)](https://ci.appveyor.com/project/hoffstadt/dearpygui)
 
 **Dear PyGui** is a **simple to use (but powerful) Python GUI framework**. _Dear PyGui_ provides a wrapping of **[Dear ImGui](https://github.com/ocornut/imgui)** which simulates a traditional retained mode GUI (as opposed to _Dear ImGui_'s immediate mode paradigm).
@@ -34,9 +35,9 @@ the following platforms:
 In the same manner Dear ImGui provides a simple way to create tools for game developers, _Dear PyGui_ provides a 
 simple way for python developers to **create quick and powerful GUIs for scripts**.
 
-| [Installing](#installation) - [Usage](#usage) - [Resources](#Resources) - [Features](#some-features) - [Support](#support) |
+| [Installing](#installation) - [Usage](#usage) - [Resources](#Resources) - [Support](#support) |
 :----------------------------------------------------------: |
-| [Upcoming changes](#upcoming-changes) - [Sponsors](#sponsors) - [Credits](#credits) - [License](#license)|
+| [Features](#some-features) - [Sponsors](#sponsors) - [Credits](#credits) - [License](#license)|
 
 ### Installation
 
@@ -55,6 +56,7 @@ Ensure you have at least Python 3.6 64bit.
  ---
  
 - [Documentation](https://github.com/hoffstadt/DearPyGui/wiki) comprehensive documentaion, tutorials, and examples.
+- [Development Roadmap](https://github.com/hoffstadt/DearPyGui/projects/4) future features and changes.
 - Internal Documentation: Run the `show_documentation` command from within the library to view an reference guide. 
 - Complete Demo: You can also view a mostly complete showcase of _Dear PyGui_ by running the `show_demo` command found in _dearpygui.demo_.
 
@@ -118,50 +120,39 @@ _Dear PyGui_ includes several tools to help developers with _DearPyGui_ app deve
 
 ### Support
 
----
-
-- [Sponsor](https://github.com/sponsors/hoffstadt) If you enjoy _Dear PyGui_ please consider becoming a sponsor.
-- [Paypal](https://www.paypal.com/paypalme/JonathanHoffstadt) For those who don't like rewards.
-
 If you are having issues or want to help, here are some places you can go:
 - [Github Discussions](https://github.com/hoffstadt/DearPyGui/discussions/)
 - [Discord Forum](https://discord.gg/tyE7Gu4)
 - [Reddit](https://www.reddit.com/r/DearPyGui/)
 
-### Upcoming Changes
-
----
-
-Some upcoming features:
-- An object oriented interface
-- Support for multiple viewports.
-- 3D widget.
-- Custom Widget API.
-
 ### Sponsors
 
 ---
 
+ If you enjoy _Dear PyGui_ please consider becoming a [sponsor](https://github.com/hoffstadt/DearPyGui/wiki/Sponsors).
+
 Ongoing _Dear PyGui_ development is financially supported by users and private sponsors.
 
 These include:
+* 🏢 [Tkachenko Igor](https://github.com/foozzi) _Corporate Sponsor_
 * 🏆 [Dean Keinan](https://github.com/deankeinan) _Partner Sponsor_
 * 🏆 [何凌锋](https://github.com/Hedaozi) _Partner Sponsor_
 * 🏆 [Nikki Luzader](https://github.com/nikkiluzader) _Partner Sponsor_
-* 🏆 [Tkachenko Igor](https://github.com/foozzi) _Partner Sponsor_
 * 🥇 [Caden Bloxham](https://github.com/cubic-unit) _Gold Sponsor_
 * 🥇 [Michael Kadziela](https://github.com/Innominus) _Gold Sponsor_
 * 🥇 [Yan Zaretskiy](https://github.com/mindv0rtex) _Gold Sponsor_
 * 🥇 [Trinnik](https://github.com/Trinnik) _Gold Sponsor_
 
 
-Thank you to all other sponsors for keeping this project moving forward!
+Thank you to all other [sponsors](https://github.com/hoffstadt/DearPyGui/wiki/Sponsors) for keeping this project moving forward!
+
+<a href="https://www.buymeacoffee.com/DearPyGui"><img src="https://img.buymeacoffee.com/button-api/?text=Buy us a coffee&emoji=&slug=DearPyGui&button_colour=FFDD00&font_colour=000000&font_family=Cookie&outline_colour=000000&coffee_colour=ffffff"></a>
 
 ### Credits
 
 ---
 
-Developed by Jonathan Hoffstadt, Preston Cothren, and every direct or indirect contributor.
+Developed by [Jonathan Hoffstadt](https://github.com/hoffstadt), [Preston Cothren](https://github.com/Pcothren), and every direct or indirect contributor.
 
 [Omar Cornut](http://www.miracleworld.net/) for all his incredible work on [Dear ImGui](https://github.com/ocornut/imgui).
 

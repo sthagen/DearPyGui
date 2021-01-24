@@ -93,7 +93,9 @@ namespace Marvel {
 		item->setConfigDict(kwargs);
 		item->setExtraConfigDict(kwargs);
 
-		return ToPyBool(mvApp::GetApp()->getItemRegistry().addItemWithRuntimeChecks(item, parent, before));
+		mvApp::GetApp()->getItemRegistry().addItemWithRuntimeChecks(item, parent, before);
+
+		return GetPyNone();
 	}
 
 	void mvTable::setTableItem(int row, int column, const std::string& value)
@@ -570,7 +572,7 @@ namespace Marvel {
 				if (ImGui::Selectable(m_hashValues[i][j].c_str(), m_selections[{i, j}]))
 				{
 					m_selections[{i, j}] = !m_selections[{i, j}];
-					mvApp::GetApp()->getCallbackRegistry().runCallback(m_callback, m_name);
+					mvApp::GetApp()->getCallbackRegistry().addCallback(m_callback, m_name, m_callbackData);
 				}
 				ImGui::NextColumn();
 				index++;

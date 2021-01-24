@@ -5,6 +5,8 @@
 #include "mvProfiler.h"
 #include "mvGlobalIntepreterLock.h"
 #include "mvApp.h"
+#include <chrono>
+#include <iostream>
 
 namespace Marvel {
 
@@ -14,6 +16,16 @@ namespace Marvel {
 		mvEventBus::Subscribe(this, mvEVT_PRE_RENDER);
 		mvEventBus::Subscribe(this, mvEVT_END_FRAME);
 		mvEventBus::Subscribe(this, 0, mvEVT_CATEGORY_INPUT);
+	}
+
+	void mvCallbackRegistry::runTasks()
+	{
+		while (!m_tasks.empty())
+		{
+			mvCallbackRegistry::task_type t;
+			m_tasks.wait_and_pop(t);
+			t();
+		}
 	}
 
 	bool mvCallbackRegistry::onEvent(mvEvent& event)
@@ -33,7 +45,7 @@ namespace Marvel {
 		switch (GetEInt(event, "FRAME"))
 		{
 		case 3:
-			runCallback(m_onStartCallback, "Main Application");
+			addCallback(m_onStartCallback, "Main Application", nullptr);
 			break;
 
 		default:
@@ -47,8 +59,14 @@ namespace Marvel {
 	{
 		MV_PROFILE_FUNCTION()
 
-		runCallbacks();
+		runTasks();
 
+		if(m_renderCallback)
+			submitCallback([=]() mutable
+				{
+					runCallback(m_renderCallback, "Main Application");
+				});
+		
 		return false;
 	}
 
@@ -56,8 +74,8 @@ namespace Marvel {
 	{
 		MV_PROFILE_FUNCTION()
 
-		runCallback(m_renderCallback, "Main Application");
-
+		runTasks();
+	
 		return false;
 	}
 
@@ -68,45 +86,86 @@ namespace Marvel {
 		switch (event.type)
 		{
 		case mvEVT_KEY_PRESS:
-			runCallback(m_acceleratorCallback, active, ToPyInt(GetEInt(event, "KEY")));
-			runCallback(m_keyPressCallback, active, ToPyInt(GetEInt(event, "KEY")));
+			if(m_keyPressCallback)
+				submitCallback([=]() mutable
+				{
+					runCallback(m_acceleratorCallback, active, ToPyInt(GetEInt(event, "KEY")));
+					runCallback(m_keyPressCallback, active, ToPyInt(GetEInt(event, "KEY")));
+				});
+
 			break;
 
 		case mvEVT_KEY_DOWN:
-			runCallback(m_keyDownCallback, active, ToPyMPair(GetEInt(event, "KEY"), GetEFloat(event, "DURATION")));
+			if (m_keyDownCallback)
+				submitCallback([=]() mutable
+				{
+					runCallback(m_keyDownCallback, active, ToPyMPair(GetEInt(event, "KEY"), GetEFloat(event, "DURATION")));
+				});
 			break;
 
 		case mvEVT_KEY_RELEASE:
-			runCallback(m_keyReleaseCallback, active, ToPyInt(GetEInt(event, "KEY")));
+			if (m_keyReleaseCallback)
+				submitCallback([=]() mutable
+				{
+					runCallback(m_keyReleaseCallback, active, ToPyInt(GetEInt(event, "KEY")));
+				});
 			break;
 
 		case mvEVT_MOUSE_WHEEL:
-			runCallback(m_mouseWheelCallback, active, ToPyInt(GetEFloat(event, "DELTA")));
+			if (m_mouseWheelCallback)
+				submitCallback([=]() mutable
+				{
+					runCallback(m_mouseWheelCallback, active, ToPyInt(GetEFloat(event, "DELTA")));
+				});
 			break;
 
 		case mvEVT_MOUSE_DRAG:
-			runCallback(m_mouseDragCallback, active, 
-				ToPyMTrip(GetEInt(event, "BUTTON"), GetEFloat(event, "X"), GetEFloat(event, "Y")));
+			if (m_mouseDragCallback)
+				submitCallback([=]() mutable
+				{
+					runCallback(m_mouseDragCallback, active,
+						ToPyMTrip(GetEInt(event, "BUTTON"), GetEFloat(event, "X"), GetEFloat(event, "Y")));
+				});
 			break;
 
 		case mvEVT_MOUSE_CLICK:
-			runCallback(m_mouseClickCallback, active, ToPyInt(GetEInt(event, "BUTTON")));
+			if (m_mouseClickCallback)
+				submitCallback([=]() mutable
+				{
+					runCallback(m_mouseClickCallback, active, ToPyInt(GetEInt(event, "BUTTON")));
+				});
 			break;
 
 		case mvEVT_MOUSE_DOWN:
-			runCallback(m_mouseDownCallback, active, ToPyMPair(GetEInt(event, "BUTTON"), GetEFloat(event, "DURATION")));
+			if (m_mouseDownCallback)
+				submitCallback([=]() mutable
+				{
+					runCallback(m_mouseDownCallback, active, ToPyMPair(GetEInt(event, "BUTTON"), GetEFloat(event, "DURATION")));
+				});
 			break;
 
 		case mvEVT_MOUSE_DBL_CLK:
-			runCallback(m_mouseDoubleClickCallback, active, ToPyInt(GetEInt(event, "BUTTON")));
+			if (m_mouseDoubleClickCallback)
+				submitCallback([=]() mutable
+				{
+					runCallback(m_mouseDoubleClickCallback, active, ToPyInt(GetEInt(event, "BUTTON")));
+				});
 			break;
 
 		case mvEVT_MOUSE_RELEASE:
-			runCallback(m_mouseReleaseCallback, active, ToPyInt(GetEInt(event, "BUTTON")));
+			if (m_mouseReleaseCallback)
+				submitCallback([=]() mutable
+				{
+					runCallback(m_mouseReleaseCallback, active, ToPyInt(GetEInt(event, "BUTTON")));
+				});
 			break;
 
 		case mvEVT_MOUSE_MOVE:
-			runCallback(m_mouseMoveCallback, active, ToPyPair(GetEFloat(event, "X"), GetEFloat(event, "Y")));
+			if (m_mouseMoveCallback)
+				submitCallback([=]() mutable
+				{
+					runCallback(m_mouseMoveCallback, active, ToPyPair(GetEFloat(event, "X"), GetEFloat(event, "Y")));
+				});
 			break;
 
 		default:
@@ -116,19 +175,30 @@ namespace Marvel {
 		return true;
 	}
 
-	void mvCallbackRegistry::runCallbacks()
+	bool mvCallbackRegistry::runCallbacks()
 	{
-		while (!m_callbacks.empty())
+		m_running = true;
+
+		mvGlobalIntepreterLock gil;
+
+		while (m_running)
 		{
-			NewCallback callback = m_callbacks.front();
-			runCallback(callback.callback, callback.sender, callback.data);
-			m_callbacks.pop();
+				mvCallbackRegistry::task_type t2;
+				Py_BEGIN_ALLOW_THREADS;
+				m_calls.wait_and_pop(t2);
+				Py_END_ALLOW_THREADS;
+				t2();
 		}
+
+		runCallback(m_onCloseCallback, "Main Application", nullptr);
+		return true;
 	}
 
 	void mvCallbackRegistry::addCallback(PyObject* callable, const std::string& sender, PyObject* data)
 	{
-		m_callbacks.push({ sender, callable, data });
+		submitCallback([=]() {
+			runCallback(callable, sender, data);
+			});
 	}
 
 	void mvCallbackRegistry::runCallback(PyObject* callable, const std::string& sender, PyObject* data)
@@ -141,7 +211,7 @@ namespace Marvel {
 			return;
 		}
 
-		mvGlobalIntepreterLock gil;
+		 
 
 		if (!PyCallable_Check(callable))
 		{
@@ -161,9 +231,30 @@ namespace Marvel {
 
 		PyErr_Clear();
 
+		PyObject* intermediateResult = nullptr;
+		if (PyCallable_Check(data))
+		{
+			intermediateResult = PyObject_CallObject(data, nullptr);
+			// check if call succeeded
+			if (intermediateResult == nullptr)
+			{
+				PyErr_Print();
+				ThrowPythonException("Callable data failed");
+				intermediateResult = data;
+			}
+
+			// check if error occurred
+			if (PyErr_Occurred())
+				PyErr_Print();
+		}
+		else
+			intermediateResult = data;
+
+		PyErr_Clear();
+
 		mvPyObject pArgs(PyTuple_New(2));
 		PyTuple_SetItem(pArgs, 0, PyUnicode_FromString(sender.c_str()));
-		PyTuple_SetItem(pArgs, 1, data); // steals data, so don't deref
+		PyTuple_SetItem(pArgs, 1, intermediateResult); // steals data, so don't deref
 
 		mvPyObject result(PyObject_CallObject(callable, pArgs));
 

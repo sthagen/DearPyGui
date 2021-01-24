@@ -45,7 +45,7 @@ namespace Marvel {
 	{
 		if (dict == nullptr)
 			return;
-		mvGlobalIntepreterLock gil;
+		 
 
 		// helper for bit flipping
 		auto flagop = [dict](const char* keyword, int flag, int& flags)
@@ -68,7 +68,7 @@ namespace Marvel {
 	{
 		if (dict == nullptr)
 			return;
-		mvGlobalIntepreterLock gil;
+		 
 
 		// helper to check and set bit
 		auto checkbitset = [dict](const char* keyword, int flag, const int& flags)
@@ -127,8 +127,10 @@ namespace Marvel {
 				item->checkConfigDict(kwargs);
 				item->setConfigDict(kwargs);
 				item->setExtraConfigDict(kwargs);
-				if (mvApp::GetApp()->getItemRegistry().addItemWithRuntimeChecks(item, parent, before))
-					return ToPyBool(true);
+
+				mvApp::GetApp()->getItemRegistry().addItemWithRuntimeChecks(item, parent, before);
+
+				return GetPyNone();
 
 			}
 
@@ -158,8 +160,10 @@ namespace Marvel {
 				item->checkConfigDict(kwargs);
 				item->setConfigDict(kwargs);
 				item->setExtraConfigDict(kwargs);
-				if (mvApp::GetApp()->getItemRegistry().addItemWithRuntimeChecks(item, parent, before))
-					return ToPyBool(true);
+
+				mvApp::GetApp()->getItemRegistry().addItemWithRuntimeChecks(item, parent, before);
+
+				return GetPyNone();
 			}
 
 			else

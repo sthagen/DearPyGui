@@ -570,6 +570,10 @@ def get_item_callback(item: str) -> Callable:
 	"""Returns an item' callback"""
 	...
 
+def get_item_callback_data(item: str) -> Any:
+	"""Returns an item' callback data"""
+	...
+
 def get_item_children(item: str) -> List[str]:
 	"""Returns a list of an item's children."""
 	...
@@ -1002,6 +1006,10 @@ def set_item_callback(item: str, callback: Callable, *, callback_data: Any = Non
 	"""Sets an item's callback if applicable."""
 	...
 
+def set_item_callback_data(item: str, callback_data: Any) -> None:
+	"""Sets an item's callback data if applicable."""
+	...
+
 def set_item_color(item: str, style: int, color: List[float]) -> None:
 	"""Sets an color style for a single item."""
 	...
@@ -1040,6 +1048,10 @@ def set_key_release_callback(callback: Callable) -> None:
 
 def set_log_level(level: int, *, logger: str = '') -> None:
 	"""Sets the log level."""
+	...
+
+def set_logger_window_title(title: str) -> None:
+	"""Sets the title of the logger window."""
 	...
 
 def set_main_window_pos(x: int, y: int) -> None:

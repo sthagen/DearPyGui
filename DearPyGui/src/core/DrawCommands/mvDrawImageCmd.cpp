@@ -81,7 +81,7 @@ namespace Marvel {
 	{
 		if (dict == nullptr)
 			return;
-		mvGlobalIntepreterLock gil;
+		 
 
 		if (PyObject* item = PyDict_GetItemString(dict, "pmax")) m_pmax = ToVec2(item);
 		if (PyObject* item = PyDict_GetItemString(dict, "pmin")) m_pmin = ToVec2(item);
@@ -106,7 +106,7 @@ namespace Marvel {
 	{
 		if (dict == nullptr)
 			return;
-		mvGlobalIntepreterLock gil;
+		 
 		PyDict_SetItemString(dict, "pmax", ToPyPair(m_pmax.x, m_pmax.y));
 		PyDict_SetItemString(dict, "pmin", ToPyPair(m_pmin.x, m_pmin.y));
 		PyDict_SetItemString(dict, "uv_min", ToPyPair(m_uv_min.x, m_uv_min.y));
@@ -146,15 +146,14 @@ namespace Marvel {
 		mvVec2 muv_max = ToVec2(uv_max);
 		mvColor mcolor = ToColor(color);
 
-		mvDrawList* drawlist = GetDrawListFromTarget(drawing);
-		if (drawlist)
-		{
+		auto cmd = CreateRef<mvDrawImageCmd>(file, mpmin, mpmax, muv_min, muv_max, mcolor);
+		cmd->tag = tag;
 
-			auto cmd = CreateRef<mvDrawImageCmd>(file, mpmin, mpmax, muv_min, muv_max, mcolor);
-			cmd->tag = tag;
+		std::lock_guard<std::mutex> lk(mvApp::GetApp()->GetApp()->getMutex());
+		mvRef<mvDrawList> drawlist = GetDrawListFromTarget(drawing);
+		if (drawlist)
 			drawlist->addCommand(cmd);
 
-		}
 		return GetPyNone();
 	}
 }
