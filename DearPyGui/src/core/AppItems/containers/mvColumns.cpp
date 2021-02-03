@@ -1,6 +1,4 @@
 #include "mvColumns.h"
-#include "mvPythonTranslator.h"
-#include "mvGlobalIntepreterLock.h"
 #include "mvApp.h"
 
 namespace Marvel {
@@ -79,25 +77,20 @@ namespace Marvel {
 	{
 		m_previousColCount = ImGui::GetColumnsCount();
 		ScopedID id;
+		mvImGuiThemeScope scope(this);
 
-		ImGui::Columns(m_columns, m_name.c_str(), m_border);
+		ImGui::Columns(m_columns, m_core_config.name.c_str(), m_border);
 		for (auto& item : m_children)
 		{
 			// skip item if it's not shown
-			if (!item->m_show)
+			if (!item->m_core_config.show)
 				continue;
 
 			// set item width
-			if (item->m_width != 0)
-				ImGui::SetNextItemWidth((float)item->m_width);
+			if (item->m_core_config.width != 0)
+				ImGui::SetNextItemWidth((float)item->m_core_config.width);
 
-			//item->pushColorStyles();
 			item->draw();
-			//item->popColorStyles();
-
-			// Regular Tooltip (simple)
-			if (!item->m_tip.empty() && ImGui::IsItemHovered())
-				ImGui::SetTooltip("%s", item->m_tip.c_str());
 
 			item->getState().update();
 
@@ -122,36 +115,6 @@ namespace Marvel {
 
 	}
 
-	void mvManagedColumns::setExtraConfigDict(PyObject* dict)
-	{
-		if (dict == nullptr)
-			return;
-		 
-		if (PyObject* item = PyDict_GetItemString(dict, "border")) m_border = ToBool(item);
-		if (PyObject* item = PyDict_GetItemString(dict, "columns"))
-		{
-			m_columns = ToInt(item);
-
-			if (m_columns < 1)
-				m_columns = 1;
-			else if (m_columns > 64)
-				m_columns = 64;
-
-			m_widths.clear();
-			for (int i = 0; i < m_columns; i++)
-				m_widths.push_back(0);
-		}
-	}
-
-	void mvManagedColumns::getExtraConfigDict(PyObject* dict)
-	{
-		if (dict == nullptr)
-			return;
-		 
-		PyDict_SetItemString(dict, "border", ToPyBool(m_border));
-		PyDict_SetItemString(dict, "columns", ToPyInt(m_columns));
-	}
-
 	mvColumn::mvColumn(const std::string& name, int columns)
 		: mvAppItem(name)
 	{
@@ -166,33 +129,7 @@ namespace Marvel {
 	void mvColumn::draw()
 	{
 		ScopedID id;
-		ImGui::Columns(m_columns, m_name.c_str(), m_border);
-	}
-
-	void mvColumn::setExtraConfigDict(PyObject* dict)
-	{
-		if (dict == nullptr)
-			return;
-		 
-		if (PyObject* item = PyDict_GetItemString(dict, "border")) m_border = ToBool(item);
-		if (PyObject* item = PyDict_GetItemString(dict, "columns"))
-		{
-			m_columns = ToInt(item);
-
-			if (m_columns < 1)
-				m_columns = 1;
-			else if (m_columns > 64)
-				m_columns = 64;
-		}
-	}
-
-	void mvColumn::getExtraConfigDict(PyObject* dict)
-	{
-		if (dict == nullptr)
-			return;
-		 
-		PyDict_SetItemString(dict, "border", ToPyBool(m_border));
-		PyDict_SetItemString(dict, "columns", ToPyInt(m_columns));
+		ImGui::Columns(m_columns, m_core_config.name.c_str(), m_border);
 	}
 
 	mvNextColumn::mvNextColumn(const std::string& name)
@@ -204,6 +141,8 @@ namespace Marvel {
 	{
 		ImGui::NextColumn();
 	}
+
+#ifndef MV_CPP
 
 	PyObject* add_managed_columns(PyObject* self, PyObject* args, PyObject* kwargs)
 	{
@@ -281,4 +220,62 @@ namespace Marvel {
 
 		return GetPyNone();
 	}
+
+	void mvManagedColumns::setExtraConfigDict(PyObject* dict)
+	{
+		if (dict == nullptr)
+			return;
+
+		if (PyObject* item = PyDict_GetItemString(dict, "border")) m_border = ToBool(item);
+		if (PyObject* item = PyDict_GetItemString(dict, "columns"))
+		{
+			m_columns = ToInt(item);
+
+			if (m_columns < 1)
+				m_columns = 1;
+			else if (m_columns > 64)
+				m_columns = 64;
+
+			m_widths.clear();
+			for (int i = 0; i < m_columns; i++)
+				m_widths.push_back(0);
+		}
+	}
+
+	void mvManagedColumns::getExtraConfigDict(PyObject* dict)
+	{
+		if (dict == nullptr)
+			return;
+
+		PyDict_SetItemString(dict, "border", ToPyBool(m_border));
+		PyDict_SetItemString(dict, "columns", ToPyInt(m_columns));
+	}
+
+	void mvColumn::setExtraConfigDict(PyObject* dict)
+	{
+		if (dict == nullptr)
+			return;
+
+		if (PyObject* item = PyDict_GetItemString(dict, "border")) m_border = ToBool(item);
+		if (PyObject* item = PyDict_GetItemString(dict, "columns"))
+		{
+			m_columns = ToInt(item);
+
+			if (m_columns < 1)
+				m_columns = 1;
+			else if (m_columns > 64)
+				m_columns = 64;
+		}
+	}
+
+	void mvColumn::getExtraConfigDict(PyObject* dict)
+	{
+		if (dict == nullptr)
+			return;
+
+		PyDict_SetItemString(dict, "border", ToPyBool(m_border));
+		PyDict_SetItemString(dict, "columns", ToPyInt(m_columns));
+	}
+
+#endif // !MV_CPP
 }

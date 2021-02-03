@@ -2,10 +2,9 @@
 #include "mvSelectable.h"
 #include "mvApp.h"
 #include "mvValueStorage.h"
-#include "mvPythonTranslator.h"
-#include "mvGlobalIntepreterLock.h"
 
 namespace Marvel {
+
 	void mvSelectable::InsertParser(std::map<std::string, mvPythonParser>* parsers)
 	{
 		parsers->insert({ "add_selectable", mvPythonParser({
@@ -14,7 +13,6 @@ namespace Marvel {
 			{mvPythonDataType::Bool, "default_value", "", "False"},
 			{mvPythonDataType::Callable, "callback", "Registers a callback", "None"},
 			{mvPythonDataType::Object, "callback_data", "Callback data", "None"},
-			{mvPythonDataType::String, "tip", "Adds a simple tooltip", "''"},
 			{mvPythonDataType::String, "parent", "Parent this item will be added to. (runtime adding)", "''"},
 			{mvPythonDataType::String, "before", "This item will be displayed before the specified item in the parent. (runtime adding)", "''"},
 			{mvPythonDataType::String, "source", "", "''"},
@@ -39,18 +37,21 @@ namespace Marvel {
 		else
 			m_flags |= ImGuiSelectableFlags_Disabled;
 
-		m_enabled = value;
+		m_core_config.enabled = value;
 	}
 
 	void mvSelectable::draw()
 	{
 		auto styleManager = m_styleManager.getScopedStyleManager();
 		ScopedID id;
+		mvImGuiThemeScope scope(this);
 
 		if (ImGui::Selectable(m_label.c_str(), m_value, m_flags))
-			mvApp::GetApp()->getCallbackRegistry().addCallback(m_callback, m_name, m_callbackData);
+			mvApp::GetApp()->getCallbackRegistry().addCallback(m_core_config.callback, m_core_config.name, m_core_config.callback_data);
 
 	}
+
+#ifndef MV_CPP
 
 	void mvSelectable::setExtraConfigDict(PyObject* dict)
 	{
@@ -91,7 +92,6 @@ namespace Marvel {
 		int default_value = false;
 		PyObject* callback = nullptr;
 		PyObject* callback_data = nullptr;
-		const char* tip = "";
 		const char* before = "";
 		const char* parent = "";
 		const char* source = "";
@@ -103,7 +103,7 @@ namespace Marvel {
 		//ImGuiSelectableFlags flags = ImGuiSelectableFlags_None;
 
 		if (!(*mvApp::GetApp()->getParsers())["add_selectable"].parse(args, kwargs, __FUNCTION__, &name,
-			&default_value, &callback, &callback_data, &tip, &parent, &before, &source, &enabled,
+			&default_value, &callback, &callback_data, &parent, &before, &source, &enabled,
 			&label, &show, &span_columns))
 			return ToPyBool(false);
 
@@ -123,5 +123,7 @@ namespace Marvel {
 
 		return GetPyNone();
 	}
+
+#endif // !MV_CPP
 
 }

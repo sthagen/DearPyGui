@@ -28,9 +28,52 @@ HOW TO UPDATE?
 
 Decorated log: https://github.com/hoffstadt/DearPyGui/releases/tag/v0.7.x
 
+Updates:
+- imgui: updated to v1.80
+- implot: updated to 7234801
+
+Fixes:
+- start_dearpygui: fixed primary window not found crash #523
+- callback_error: prevent callback error crash
+- numpy: numpy arrays not work with plots
+
 ------------------------------------------------------------------------
- VERSION 0.6.x
+ VERSION 0.6.151
 ------------------------------------------------------------------------
+Fixes:
+- add_text: changed default wrap to -1
+- tree_node: fixed label being ignored in context manager
+
+------------------------------------------------------------------------
+ VERSION 0.6.149
+------------------------------------------------------------------------
+
+Fixes:
+- callback: fixed method callback issue #506 
+
+------------------------------------------------------------------------
+ VERSION 0.6.148
+------------------------------------------------------------------------
+
+Fixes:
+- debug tool: fix item position freeze
+
+------------------------------------------------------------------------
+ VERSION 0.6.146
+------------------------------------------------------------------------
+
+Upgrades:
+- callbacks: number of arguments do not matter anymore
+
+Fixes:
+- images: fixed crashes caused by unfound images
+
+------------------------------------------------------------------------
+ VERSION 0.6.144
+------------------------------------------------------------------------
+
+Fixes:
+- debug window: the "commands" section works again.
 
 ------------------------------------------------------------------------
  VERSION 0.6.139

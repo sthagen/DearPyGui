@@ -1,6 +1,4 @@
 #include "mvDrawBezierCurveCmd.h"
-#include "mvPythonTranslator.h"
-#include "mvGlobalIntepreterLock.h"
 #include "mvApp.h"
 
 namespace Marvel {
@@ -20,7 +18,7 @@ namespace Marvel {
 	void mvDrawBezierCurveCmd::draw(ImDrawList* drawlist, float x, float y)
 	{
 		mvVec2 start = {x, y};
-		drawlist->AddBezierCurve(m_p1 + start, m_p2 + start, m_p3 + start, m_p4 + start, m_color, m_thickness);
+		drawlist->AddBezierCubic(m_p1 + start, m_p2 + start, m_p3 + start, m_p4 + start, m_color, m_thickness);
 	}
 
 	void mvDrawBezierCurveCmd::setConfigDict(PyObject* dict)

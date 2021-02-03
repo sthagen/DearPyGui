@@ -3,10 +3,8 @@
 #include <misc/cpp/imgui_stdlib.h>
 #include "mvApp.h"
 #include "mvInput.h"
-#include "mvDataStorage.h"
 #include "mvTextureStorage.h"
 #include "mvValueStorage.h"
-#include "mvPythonTranslator.h"
 
 namespace Marvel {
 
@@ -63,32 +61,32 @@ namespace Marvel {
 
 		if (item->getDescription().container)
 		{
-			std::string container = item->m_name + "*";
+			std::string container = item->m_core_config.name + "*";
 
 			ImGui::PushID(item);
 			if (ImGui::TreeNodeEx(container.c_str()))
 			{
 				
-				auto stringPos = item->m_name.find_first_not_of("###");
+				auto stringPos = item->m_core_config.name.find_first_not_of("###");
 				if (stringPos != std::string::npos && stringPos > 0)
 				{
 					ImGui::PushID(item);
-					if (ImGui::Selectable(item->m_name.substr().erase(0, 2).c_str(),
-						item->m_name == m_selectedItem && ImGui::GetID(item->m_name.substr().erase(0, 2).c_str()) == m_selectedID))
+					if (ImGui::Selectable(item->m_core_config.name.substr().erase(0, 2).c_str(),
+						item->m_core_config.name == m_selectedItem && ImGui::GetID(item->m_core_config.name.substr().erase(0, 2).c_str()) == m_selectedID))
 					{
-						m_selectedItem = item->m_name;
-						m_selectedID = ImGui::GetID(item->m_name.substr().erase(0, 2).c_str());
+						m_selectedItem = item->m_core_config.name;
+						m_selectedID = ImGui::GetID(item->m_core_config.name.substr().erase(0, 2).c_str());
 					}
 					ImGui::PopID();
 				}
 				else
 				{
 					ImGui::PushID(item);
-					if (ImGui::Selectable(item->m_name.c_str(),
-						item->m_name == m_selectedItem && ImGui::GetID(item->m_name.c_str()) == m_selectedID))
+					if (ImGui::Selectable(item->m_core_config.name.c_str(),
+						item->m_core_config.name == m_selectedItem && ImGui::GetID(item->m_core_config.name.c_str()) == m_selectedID))
 					{
-						m_selectedItem = item->m_name;
-						m_selectedID = ImGui::GetID(item->m_name.c_str());
+						m_selectedItem = item->m_core_config.name;
+						m_selectedID = ImGui::GetID(item->m_core_config.name.c_str());
 					}
 					ImGui::PopID();
 				}			
@@ -102,26 +100,26 @@ namespace Marvel {
 		}
 		else
 		{
-			auto stringPos = item->m_name.find_first_not_of("###");
+			auto stringPos = item->m_core_config.name.find_first_not_of("###");
 			if (stringPos != std::string::npos && stringPos > 0)
 			{
 				ImGui::PushID(item);
-				if (ImGui::Selectable(item->m_name.substr().erase(0, 2).c_str(),
-					item->m_name == m_selectedItem && ImGui::GetID(item->m_name.substr().erase(0, 2).c_str()) == m_selectedID))
+				if (ImGui::Selectable(item->m_core_config.name.substr().erase(0, 2).c_str(),
+					item->m_core_config.name == m_selectedItem && ImGui::GetID(item->m_core_config.name.substr().erase(0, 2).c_str()) == m_selectedID))
 				{
-					m_selectedItem = item->m_name;
-					m_selectedID = ImGui::GetID(item->m_name.substr().erase(0, 2).c_str());
+					m_selectedItem = item->m_core_config.name;
+					m_selectedID = ImGui::GetID(item->m_core_config.name.substr().erase(0, 2).c_str());
 				}
 				ImGui::PopID();
 			}
 			else
 			{
 				ImGui::PushID(item);
-				if (ImGui::Selectable(item->m_name.c_str(),
-					item->m_name == m_selectedItem && ImGui::GetID(item->m_name.c_str()) == m_selectedID))
+				if (ImGui::Selectable(item->m_core_config.name.c_str(),
+					item->m_core_config.name == m_selectedItem && ImGui::GetID(item->m_core_config.name.c_str()) == m_selectedID))
 				{
-					m_selectedItem = item->m_name;
-					m_selectedID = ImGui::GetID(item->m_name.c_str());
+					m_selectedItem = item->m_core_config.name;
+					m_selectedID = ImGui::GetID(item->m_core_config.name.c_str());
 				}
 				ImGui::PopID();
 			}
@@ -156,7 +154,10 @@ namespace Marvel {
 				ImGui::Text("%d active allocations", io.MetricsActiveAllocations);
 				DebugItem("DearPyGui Version: ", mvApp::GetVersion());
 				DebugItem("ImGui Version: ", IMGUI_VERSION);
+#ifndef MV_CPP
 				DebugItem("Stored Data: ", std::to_string(mvDataStorage::GetDataCount()).c_str());
+#endif // !MV_CPP
+
 				DebugItem("Stored Textures: ", std::to_string(mvApp::GetApp()->getTextureStorage().getTextureCount()).c_str());
 				ImGui::Separator();
 				DebugItem("Int Values", std::to_string(mvApp::GetApp()->getValueStorage().s_ints.size()).c_str());
@@ -227,10 +228,10 @@ namespace Marvel {
 					selectedItem = mvApp::GetApp()->getItemRegistry().getBackWindows()[0];
 				
 				if (selectedItem->m_parent)
-					parentName = selectedItem->m_parent->m_name;
+					parentName = selectedItem->m_parent->m_core_config.name;
 
-				std::string width = std::to_string(selectedItem->m_width);
-				std::string height = std::to_string(selectedItem->m_height);
+				std::string width = std::to_string(selectedItem->m_core_config.width);
+				std::string height = std::to_string(selectedItem->m_core_config.height);
 				
 				std::string sizex = std::to_string(selectedItem->getState().getItemRectSize().x);
 				std::string sizey = std::to_string(selectedItem->getState().getItemRectSize().y);
@@ -238,21 +239,21 @@ namespace Marvel {
                 ImGui::BeginGroup();
 
                 if (ImGui::ArrowButton("Move Up", ImGuiDir_Up))
-					mvApp::GetApp()->getCallbackRegistry().submit([&]()
+					mvApp::GetApp()->getCallbackRegistry().submitCallback([&]()
 						{
 							mvApp::GetApp()->getItemRegistry().moveItemUp(m_selectedItem);
 						});
 
                 ImGui::SameLine();
                 if (ImGui::ArrowButton("Move Down", ImGuiDir_Down))
-					mvApp::GetApp()->getCallbackRegistry().submit([&]()
+					mvApp::GetApp()->getCallbackRegistry().submitCallback([&]()
 						{
 							mvApp::GetApp()->getItemRegistry().moveItemDown(m_selectedItem);
 						});
                 ImGui::SameLine();
                 if (ImGui::Button("Delete"))
                 {
-					mvApp::GetApp()->getCallbackRegistry().submit([&]()
+					mvApp::GetApp()->getCallbackRegistry().submitCallback([&]()
 						{
 							mvApp::GetApp()->getItemRegistry().deleteItem(m_selectedItem, false);
 							m_selectedItem = "";
@@ -274,8 +275,7 @@ namespace Marvel {
                 DebugItem("Item Height:", height.c_str());
                 DebugItem("Item Size x:", sizex.c_str());
                 DebugItem("Item Size y:", sizey.c_str());
-                DebugItem("Item Tip:", selectedItem->m_tip.c_str());
-                DebugItem("Item Show:", selectedItem->m_show ? ts : fs);
+                DebugItem("Item Show:", selectedItem->m_core_config.show ? ts : fs);
                 DebugItem("Item Visible:", selectedItem->getState().isItemVisible() ? ts : fs);
                 DebugItem("Item Hovered:", selectedItem->getState().isItemHovered() ? ts : fs);
                 DebugItem("Item Active:", selectedItem->getState().isItemActive() ? ts : fs);
@@ -331,15 +331,21 @@ namespace Marvel {
 				ImGui::PopStyleColor();
 				ImGui::PopTextWrapPos();
 				ImGui::EndChild();
+
+#ifndef MV_CPP
+
 				ImGui::InputTextMultiline("Command##debug", &commandstring, ImVec2(-1, -50));
 				ImGui::PopItemWidth();
 				if (ImGui::Button("Run##debug"))
 				{
 					std::string command = "from dearpygui.core import *\nfrom dearpygui.simple import *\nfrom dearpygui.demo import *\n" + commandstring;
-					PyGILState_STATE gstate = PyGILState_Ensure();
-					PyRun_SimpleString(command.c_str());
-					PyGILState_Release(gstate);
+					mvApp::GetApp()->getCallbackRegistry().submitCallback([=]() {
+						PyRun_SimpleString(command.c_str());
+						});
+
 				}
+#endif // !MV_CPP
+
 				ImGui::EndTabItem();
 			}
 
@@ -365,6 +371,8 @@ namespace Marvel {
 		ImGui::End();
 
 	}
+
+#ifndef MV_CPP
 
 	PyObject* add_debug_window(PyObject* self, PyObject* args, PyObject* kwargs)
 	{
@@ -411,4 +419,5 @@ namespace Marvel {
 		return GetPyNone();
 	}
 
+#endif
 }

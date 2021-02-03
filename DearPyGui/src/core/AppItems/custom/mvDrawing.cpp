@@ -1,6 +1,5 @@
 #include "mvDrawing.h"
 #include "mvApp.h"
-#include "mvPythonTranslator.h"
 
 namespace Marvel {
 
@@ -9,7 +8,6 @@ namespace Marvel {
 		parsers->insert({ "add_drawing", mvPythonParser({
 			{mvPythonDataType::String, "name"},
 			{mvPythonDataType::KeywordOnly},
-			{mvPythonDataType::String, "tip", "Adds a simple tooltip", "''"},
 			{mvPythonDataType::String, "parent", "Parent this item will be added to. (runtime adding)", "''"},
 			{mvPythonDataType::String, "before", "This item will be displayed before the specified item in the parent. (runtime adding)", "''"},
 			{mvPythonDataType::Integer, "width","", "0"},
@@ -30,12 +28,12 @@ namespace Marvel {
 		m_startx = (float)ImGui::GetCursorScreenPos().x;
 		m_starty = (float)ImGui::GetCursorScreenPos().y;
 
-		ImGui::PushClipRect({ m_startx, m_starty }, { m_startx + (float)m_width, m_starty + (float)m_height }, true);
+		ImGui::PushClipRect({ m_startx, m_starty }, { m_startx + (float)m_core_config.width, m_starty + (float)m_core_config.height }, true);
 
 		m_drawList->draw(ImGui::GetWindowDrawList(), m_startx, m_starty);
 
 		ImGui::PopClipRect();
-		ImGui::Dummy(ImVec2((float)m_width, (float)m_height));
+		ImGui::Dummy(ImVec2((float)m_core_config.width, (float)m_core_config.height));
 	}
 
 	mvRef<mvDrawList> mvDrawing::getDrawList()
@@ -43,11 +41,11 @@ namespace Marvel {
 		return m_drawList;
 	}
 
+#ifndef MV_CPP
 
 	PyObject* add_drawing(PyObject* self, PyObject* args, PyObject* kwargs)
 	{
 		const char* name;
-		const char* tip = "";
 		const char* parent = "";
 		const char* before = "";
 		int width = 0;
@@ -59,7 +57,7 @@ namespace Marvel {
 		float scaley = 1.0f;
 
 		if (!(*mvApp::GetApp()->getParsers())["add_drawing"].parse(args, kwargs, __FUNCTION__,
-			&name, &tip, &parent, &before, &width, &height, &show, &originx, &originy, &scalex, &scaley))
+			&name, &parent, &before, &width, &height, &show, &originx, &originy, &scalex, &scaley))
 			return ToPyBool(false);
 
 		auto item = CreateRef<mvDrawing>(name);
@@ -75,4 +73,6 @@ namespace Marvel {
 
 		return GetPyNone();
 	}
+
+#endif
 }

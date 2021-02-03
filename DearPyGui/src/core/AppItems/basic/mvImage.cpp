@@ -1,8 +1,6 @@
 #include "mvImage.h"
 #include "mvTextureStorage.h"
-#include "mvPythonExceptions.h"
 #include "mvApp.h"
-#include "mvGlobalIntepreterLock.h"
 
 namespace Marvel {
 
@@ -14,7 +12,6 @@ namespace Marvel {
 			{mvPythonDataType::KeywordOnly},
 			{mvPythonDataType::FloatList, "tint_color", "", "(255, 255, 255, 255)"},
 			{mvPythonDataType::FloatList, "border_color", "", "(0, 0, 0, 0)"},
-			{mvPythonDataType::String, "tip", "Adds a simple tooltip", "''"},
 			{mvPythonDataType::String, "parent", "Parent this item will be added to. (runtime adding)", "''"},
 			{mvPythonDataType::String, "before", "This item will be displayed before the specified item in the parent. (runtime adding)", "''"},
 			{mvPythonDataType::String, "source", "data source for shared data", "''"},
@@ -71,18 +68,21 @@ namespace Marvel {
 			mvTexture* texture = mvApp::GetApp()->getTextureStorage().getTexture(m_value);
 			if (texture == nullptr)
 			{
-				PyErr_Format(PyExc_Exception,
-					"Image %s could not be found for add_image. Check the path to the image "
-					"you provided.", m_value.c_str());
-				PyErr_Print();
-				m_value = "";
+				mvApp::GetApp()->getCallbackRegistry().submitCallback([&]()
+					{
+						PyErr_Format(PyExc_Exception,
+							"Image %s could not be found for add_image. Check the path to the image "
+							"you provided.", m_value.c_str());
+						PyErr_Print();
+						m_value = "";
+					});
 				return;
 			}
 			
 			m_texture = texture->texture;
 
-			if (m_width == 0) m_width = (int)((float)texture->width * (m_uv_max.x - m_uv_min.x));
-			if (m_height == 0) m_height = (int)((float)texture->height * (m_uv_max.y - m_uv_min.y));
+			if (m_core_config.width == 0) m_core_config.width = (int)((float)texture->width * (m_uv_max.x - m_uv_min.x));
+			if (m_core_config.height == 0) m_core_config.height = (int)((float)texture->height * (m_uv_max.y - m_uv_min.y));
 
 		}
 
@@ -92,15 +92,15 @@ namespace Marvel {
 			if (texture)
 			{
 				m_texture = texture->texture;
-				m_width = (int)((float)texture->width * (m_uv_max.x - m_uv_min.x));
-				m_height = (int)((float)texture->height * (m_uv_max.y - m_uv_min.y));
+				m_core_config.width = (int)((float)texture->width * (m_uv_max.x - m_uv_min.x));
+				m_core_config.height = (int)((float)texture->height * (m_uv_max.y - m_uv_min.y));
 			}
 			m_dirty = false;
 		}
 
 		if (m_texture)
 		{
-			ImGui::Image(m_texture, ImVec2((float)m_width, (float)m_height), ImVec2(m_uv_min.x, m_uv_min.y), ImVec2(m_uv_max.x, m_uv_max.y),
+			ImGui::Image(m_texture, ImVec2((float)m_core_config.width, (float)m_core_config.height), ImVec2(m_uv_min.x, m_uv_min.y), ImVec2(m_uv_max.x, m_uv_max.y),
 				ImVec4((float)m_tintColor.r, (float)m_tintColor.g, (float)m_tintColor.b, (float)m_tintColor.a),
 				ImVec4((float)m_borderColor.r, (float)m_borderColor.g, (float)m_borderColor.b, (float)m_borderColor.a));
 
@@ -117,6 +117,8 @@ namespace Marvel {
 	{ 
 		return m_value; 
 	}
+
+#ifndef MV_CPP
 
 	void mvImage::setExtraConfigDict(PyObject* dict)
 	{
@@ -162,7 +164,6 @@ namespace Marvel {
 		PyTuple_SetItem(bordercolor, 1, PyFloat_FromDouble(0.0));
 		PyTuple_SetItem(bordercolor, 2, PyFloat_FromDouble(0.0));
 		PyTuple_SetItem(bordercolor, 3, PyFloat_FromDouble(0.0));
-		const char* tip = "";
 		const char* parent = "";
 		const char* before = "";
 		const char* source = "";
@@ -177,7 +178,7 @@ namespace Marvel {
 		int show = true;
 
 		if (!(*mvApp::GetApp()->getParsers())["add_image"].parse(args, kwargs, __FUNCTION__, &name,
-			&value, &tintcolor, &bordercolor, &tip, &parent, &before, &source, &width,
+			&value, &tintcolor, &bordercolor, &parent, &before, &source, &width,
 			&height, &uv_min, &uv_max, &show))
 			return ToPyBool(false);
 
@@ -192,4 +193,5 @@ namespace Marvel {
 		return GetPyNone();
 	}
 
+#endif // !MV_CPP
 }

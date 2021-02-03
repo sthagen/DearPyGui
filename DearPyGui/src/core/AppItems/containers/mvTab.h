@@ -1,7 +1,6 @@
 #pragma once
 
 #include "mvTypeBases.h"
-#include "mvPythonParser.h"
 
 namespace Marvel {
 
@@ -21,8 +20,11 @@ namespace Marvel {
 		mvTab(const std::string& name);
 
 		void draw              ()               override;
+
+#ifndef MV_CPP
 		void setExtraConfigDict(PyObject* dict) override;
 		void getExtraConfigDict(PyObject* dict) override;
+#endif // !MV_CPP
 
 	private:
 

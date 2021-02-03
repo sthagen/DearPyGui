@@ -2,7 +2,6 @@
 #include "mvTypeBases.h"
 #include "mvApp.h"
 #include <ImGuiFileDialog.h>
-#include "mvPythonTranslator.h"
 
 namespace Marvel {
 
@@ -16,11 +15,11 @@ namespace Marvel {
 
 		void draw       () override;
 		bool prerender2 ();
-		void setCallback(PyObject* callback);
+		void setCallback(mvCallable callback);
 
 	private:
 
-		PyObject*   m_callback2 = nullptr;
+		mvCallable   m_callback2 = nullptr;
 	};
 
 }

@@ -2,9 +2,7 @@
 #include <implot.h>
 #include <implot_internal.h>
 #include <misc/cpp/imgui_stdlib.h>
-#include "mvPythonTranslator.h"
 #include "mvApp.h"
-#include "mvGlobalIntepreterLock.h"
 
 namespace Marvel {
 
@@ -18,7 +16,6 @@ namespace Marvel {
 			{mvPythonDataType::Bool, "hour24", "show 24 hour clock", "False"},
 			{mvPythonDataType::Callable, "callback", "Registers a callback", "None"},
 			{mvPythonDataType::Object, "callback_data", "Callback data", "None"},
-			{mvPythonDataType::String, "tip", "Adds a simple tooltip", "''"},
 			{mvPythonDataType::String, "parent", "Parent this item will be added to. (runtime adding)", "''"},
 			{mvPythonDataType::String, "before","This item will be displayed before the specified item in the parent. (runtime adding)", "''"},
 			{mvPythonDataType::Bool, "show", "Attempt to render", "True"},
@@ -35,16 +32,19 @@ namespace Marvel {
 	{
 		auto styleManager = m_styleManager.getScopedStyleManager();
 		ScopedID id;
+		mvImGuiThemeScope scope(this);
 
 		ImPlot::GetStyle().Use24HourClock = m_hour24;
 
-		if (ImPlot::ShowTimePicker(m_name.c_str(), m_imvalue))
+		if (ImPlot::ShowTimePicker(m_core_config.name.c_str(), m_imvalue))
 		{
 			ImPlot::GetGmtTime(*m_imvalue, m_value);
-			mvApp::GetApp()->getCallbackRegistry().addCallback(m_callback, m_name, m_callbackData);
+			mvApp::GetApp()->getCallbackRegistry().addCallback(m_core_config.callback, m_core_config.name, m_core_config.callback_data);
 		}
 
 	}
+
+#ifndef MV_CPP
 
 	void mvTimePicker::setExtraConfigDict(PyObject* dict)
 	{
@@ -69,13 +69,12 @@ namespace Marvel {
 		int hour24 = false;
 		PyObject* callback = nullptr;
 		PyObject* callback_data = nullptr;
-		const char* tip = "";
 		const char* before = "";
 		const char* parent = "";
 		int show = true;
 
 		if (!(*mvApp::GetApp()->getParsers())["add_time_picker"].parse(args, kwargs, __FUNCTION__,
-			&name, &default_value, &hour24, &callback, &callback_data, &tip, &parent, &before, &show))
+			&name, &default_value, &hour24, &callback, &callback_data, &parent, &before, &show))
 			return ToPyBool(false);
 
 		auto item = CreateRef<mvTimePicker>(name, ToTime(default_value));
@@ -94,5 +93,7 @@ namespace Marvel {
 
 		return GetPyNone();
 	}
+
+#endif
 
 }

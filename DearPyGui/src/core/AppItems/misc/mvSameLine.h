@@ -1,7 +1,6 @@
 #pragma once
 
 #include "mvTypeBases.h"
-#include "mvPythonTranslator.h"
 
 namespace Marvel {
 
@@ -23,6 +22,9 @@ namespace Marvel {
 			ImGui::SameLine(m_xoffset, m_spacing);
 		}
 
+#ifndef MV_CPP
+
+
 		void setExtraConfigDict(PyObject* dict) override
 		{
 			if (dict == nullptr)
@@ -41,6 +43,8 @@ namespace Marvel {
 			PyDict_SetItemString(dict, "xoffset", ToPyFloat(m_xoffset));
 			PyDict_SetItemString(dict, "spacing", ToPyFloat(m_spacing));
 		}
+
+#endif
 
 	private:
 

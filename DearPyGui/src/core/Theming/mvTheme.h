@@ -2,24 +2,33 @@
 
 #include <unordered_map>
 #include "mvAppItem.h"
-#include "mvAppItemTheme.h"
 
 namespace Marvel {
 
-	class mvTheme
+	class mvTheme : public mvEventHandler
 	{
 
 	public:
 
 		mvTheme();
-
-		mvAppItemTheme* getThemeItem(mvAppItemType type);
-
+		~mvTheme();
 
 	private:
+		bool onEvent(mvEvent& event) override;
+		bool add_color(mvEvent& event);
 
-		std::unordered_map<mvAppItemType, mvAppItemTheme> m_themeItems;
+	};
 
+	class mvImGuiThemeScope
+	{
+	public:
+		mvImGuiThemeScope(mvAppItem* item);
+		~mvImGuiThemeScope();
+
+		void cleanup();
+
+	private:
+		int libIDCount = 0;
 	};
 
 }

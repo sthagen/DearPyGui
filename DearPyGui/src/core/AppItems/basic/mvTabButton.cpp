@@ -1,8 +1,5 @@
 #include "mvTabButton.h"
 #include "mvApp.h"
-#include "mvPythonTranslator.h"
-#include "mvGlobalIntepreterLock.h"
-#include "mvPythonExceptions.h"
 
 namespace Marvel {
 
@@ -17,7 +14,6 @@ namespace Marvel {
 			{mvPythonDataType::Bool, "leading", "Enforce the tab position to the left of the tab bar (after the tab list popup button)", "False"},
 			{mvPythonDataType::Bool, "trailing", "Enforce the tab position to the right of the tab bar (before the scrolling buttons)", "False"},
 			{mvPythonDataType::Bool, "no_tooltip", "Disable tooltip for the given tab", "False"},
-			{mvPythonDataType::String, "tip", "Adds a simple tooltip", "''"},
 			{mvPythonDataType::Callable, "callback", "Registers a callback", "None"},
 			{mvPythonDataType::Object, "callback_data", "Callback data", "None"},
 			{mvPythonDataType::String, "parent", "Parent to add this item to. (runtime adding)", "''"},
@@ -35,11 +31,14 @@ namespace Marvel {
 	{
 		auto styleManager = m_styleManager.getScopedStyleManager();
 		ScopedID id;
+		mvImGuiThemeScope scope(this);
 
 		if (ImGui::TabItemButton(m_label.c_str(), m_flags))
-			mvApp::GetApp()->getCallbackRegistry().addCallback(getCallback(false), m_name, m_callbackData);
+			mvApp::GetApp()->getCallbackRegistry().addCallback(getCallback(false), m_core_config.name, m_core_config.callback_data);
 
 	}
+
+#ifndef MV_CPP
 
 	void mvTabButton::setExtraConfigDict(PyObject* dict)
 	{
@@ -93,14 +92,13 @@ namespace Marvel {
 		int leading = false;
 		int trailing = false;
 		int no_tooltip = false;
-		const char* tip = "";
 		PyObject* callback = nullptr;
 		PyObject* callback_data = nullptr;
 		const char* parent = "";
 		const char* before = "";
 
 		if (!(*mvApp::GetApp()->getParsers())["add_tab_button"].parse(args, kwargs, __FUNCTION__, &name,
-			&label, &show, &no_reorder, &leading, &trailing, &no_tooltip, &tip, &callback,
+			&label, &show, &no_reorder, &leading, &trailing, &no_tooltip, &callback,
 			&callback_data, &parent, &before))
 			return ToPyBool(false);
 
@@ -176,4 +174,5 @@ namespace Marvel {
 		return ToPyBool(false);
 	}
 
+#endif // !MV_CPP
 }

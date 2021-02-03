@@ -1,7 +1,6 @@
 #pragma once
 
 #include "mvTypeBases.h"
-#include "mvPythonParser.h"
 
 namespace Marvel {
 
@@ -23,8 +22,11 @@ namespace Marvel {
 		std::string& getValue();
 		void         setValue(const std::string& value);
 		void         draw()               override;
-		void         setExtraConfigDict(PyObject* dict) override;
-		void         getExtraConfigDict(PyObject* dict) override;
+
+#ifndef MV_CPP
+		void setExtraConfigDict(PyObject* dict) override;
+		void getExtraConfigDict(PyObject* dict) override;
+#endif // !MV_CPP
 
 	private:
 

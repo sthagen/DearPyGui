@@ -29,10 +29,10 @@ namespace Marvel {
         ImGui::Text("Dear PyGui is licensed under the MIT License, see LICENSE for more information.");
         ImGui::Separator();
         ImGui::TextColored(ImGui::GetStyleColorVec4(ImGuiCol_PlotHistogramHovered), "Partners");
+        ImGui::BulletText("Tkachenko Igor");
         ImGui::BulletText("Dean Keinan");
         ImGui::BulletText("He Lingfeng");
         ImGui::BulletText("Nikki Luzader");
-        ImGui::BulletText("Tkachenko Igor");
         ImGui::Separator();
         ImGui::TextColored(ImGui::GetStyleColorVec4(ImGuiCol_PlotHistogramHovered), "ImPlot");
         ImGui::Text("ImPlot Author Evan Pezent.");
@@ -80,7 +80,6 @@ namespace Marvel {
             if (io.ConfigInputTextCursorBlink)                              ImGui::Text("io.ConfigInputTextCursorBlink");
             if (io.ConfigWindowsResizeFromEdges)                            ImGui::Text("io.ConfigWindowsResizeFromEdges");
             if (io.ConfigWindowsMoveFromTitleBarOnly)                       ImGui::Text("io.ConfigWindowsMoveFromTitleBarOnly");
-            if (io.ConfigWindowsMemoryCompactTimer >= 0.0f)                 ImGui::Text("io.ConfigWindowsMemoryCompactTimer = %.1ff", io.ConfigWindowsMemoryCompactTimer);
             ImGui::Text("io.BackendFlags: 0x%08X", io.BackendFlags);
             if (io.BackendFlags & ImGuiBackendFlags_HasGamepad)             ImGui::Text(" HasGamepad");
             if (io.BackendFlags & ImGuiBackendFlags_HasMouseCursors)        ImGui::Text(" HasMouseCursors");
@@ -118,8 +117,8 @@ namespace Marvel {
             float y = mousePos.y - ImGui::GetWindowPos().y - titleBarHeight;
             mvInput::setMousePosition(x, y);
 
-            if (mvApp::GetApp()->getItemRegistry().getActiveWindow() != m_name)
-                mvEventBus::Publish(mvEVT_CATEGORY_ITEM, mvEVT_ACTIVE_WINDOW, { CreateEventArgument("WINDOW", m_name) });
+            if (mvApp::GetApp()->getItemRegistry().getActiveWindow() != m_core_config.name)
+                mvEventBus::Publish(mvEVT_CATEGORY_ITEM, mvEVT_ACTIVE_WINDOW, { CreateEventArgument("WINDOW", m_core_config.name) });
         }
 
         ImGui::End();

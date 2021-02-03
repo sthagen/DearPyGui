@@ -2,8 +2,6 @@
 
 #include "mvMenu.h"
 #include "mvApp.h"
-#include "mvPythonTranslator.h"
-#include "mvGlobalIntepreterLock.h"
 
 namespace Marvel {
 
@@ -30,9 +28,10 @@ namespace Marvel {
 	{
 		auto styleManager = m_styleManager.getScopedStyleManager();
 		ScopedID id;
+		mvImGuiThemeScope scope(this);
 
 		// create menu and see if its selected
-		if (ImGui::BeginMenu(m_label.c_str(), m_enabled))
+		if (ImGui::BeginMenu(m_label.c_str(), m_core_config.enabled))
 		{
 
 			// set other menus's value false on same level
@@ -46,21 +45,20 @@ namespace Marvel {
 			// set current menu value true
 			*m_value = true;
 
+			//we do this so that the children dont get the theme
+			scope.cleanup();
+
 			for (auto& item : m_children)
 			{
 				// skip item if it's not shown
-				if (!item->m_show)
+				if (!item->m_core_config.show)
 					continue;
 
 				// set item width
-				if (item->m_width != 0)
-					ImGui::SetNextItemWidth((float)item->m_width);
+				if (item->m_core_config.width != 0)
+					ImGui::SetNextItemWidth((float)item->m_core_config.width);
 
 				item->draw();
-
-				// Regular Tooltip (simple)
-				if (!item->m_tip.empty() && ImGui::IsItemHovered())
-					ImGui::SetTooltip("%s", item->m_tip.c_str());
 
 				item->getState().update();
 			}
@@ -72,12 +70,14 @@ namespace Marvel {
 
 	}
 
+#ifndef MV_CPP
+
 	void mvMenu::setExtraConfigDict(PyObject* dict)
 	{
 		if (dict == nullptr)
 			return;
 		 
-		if (PyObject* item = PyDict_GetItemString(dict, "enabled")) m_enabled = ToBool(item);
+		if (PyObject* item = PyDict_GetItemString(dict, "enabled")) m_core_config.enabled = ToBool(item);
 
 	}
 
@@ -86,7 +86,7 @@ namespace Marvel {
 		if (dict == nullptr)
 			return;
 		 
-		PyDict_SetItemString(dict, "enabled", ToPyBool(m_enabled));
+		PyDict_SetItemString(dict, "enabled", ToPyBool(m_core_config.enabled));
 	}
 
 
@@ -120,4 +120,5 @@ namespace Marvel {
 		return GetPyNone();
 	}
 
+#endif
 }

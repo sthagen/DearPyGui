@@ -1,9 +1,6 @@
 #include "mvTab.h"
 #include "mvTabBar.h"
 #include "mvApp.h"
-#include "mvPythonTranslator.h"
-#include "mvGlobalIntepreterLock.h"
-#include "mvPythonExceptions.h"
 
 namespace Marvel {
 	void mvTab::InsertParser(std::map<std::string, mvPythonParser>* parsers)
@@ -18,7 +15,6 @@ namespace Marvel {
 			{mvPythonDataType::Bool, "leading", "Enforce the tab position to the left of the tab bar (after the tab list popup button)", "False"},
 			{mvPythonDataType::Bool, "trailing", "Enforce the tab position to the right of the tab bar (before the scrolling buttons)", "False"},
 			{mvPythonDataType::Bool, "no_tooltip", "Disable tooltip for the given tab", "False"},
-			{mvPythonDataType::String, "tip", "Adds a simple tooltip", "''"},
 			{mvPythonDataType::String, "parent", "Parent to add this item to. (runtime adding)", "''"},
 			{mvPythonDataType::String, "before", "This item will be displayed before the specified item in the parent. (runtime adding)", "''"},
 		}, "Adds a tab to a tab bar. Must be closed with the end command.", "None", "Containers") });
@@ -34,6 +30,7 @@ namespace Marvel {
 	{
 		auto styleManager = m_styleManager.getScopedStyleManager();
 		ScopedID id;
+		mvImGuiThemeScope scope(this);
 
 		// cast parent to mvTabBar
 		auto parent = (mvTabBar*)m_parent;
@@ -42,16 +39,13 @@ namespace Marvel {
 		if (parent->getValue().empty())
 		{
 			// set mvTabBar value to the first tab name
-			parent->setValue(m_name);
+			parent->setValue(m_core_config.name);
 			*m_value = true;
 		}
 
 		// create tab item and see if it is selected
-		if (ImGui::BeginTabItem(m_label.c_str(), m_closable ? &m_show : nullptr, m_flags))
+		if (ImGui::BeginTabItem(m_label.c_str(), m_closable ? &m_core_config.show : nullptr, m_flags))
 		{
-			// Regular Tooltip (simple)
-			if (!m_tip.empty() && ImGui::IsItemHovered())
-				ImGui::SetTooltip("%s", m_tip.c_str());
 
 			// set other tab's value false
 			for (auto child : parent->m_children)
@@ -64,26 +58,25 @@ namespace Marvel {
 			*m_value = true;
 
 			// run call back if it exists
-			if (parent->getValue() != m_name)
-				mvApp::GetApp()->getCallbackRegistry().addCallback(parent->getCallback(), m_name, parent->getCallbackData());
+			if (parent->getValue() != m_core_config.name)
+				mvApp::GetApp()->getCallbackRegistry().addCallback(parent->getCallback(), m_core_config.name, parent->getCallbackData());
 
-			parent->setValue(m_name);
+			parent->setValue(m_core_config.name);
+
+			//we do this so that the children dont get the theme
+			scope.cleanup();
 
 			for (auto& item : m_children)
 			{
 				// skip item if it's not shown
-				if (!item->m_show)
+				if (!item->m_core_config.show)
 					continue;
 
 				// set item width
-				if (item->m_width != 0)
-					ImGui::SetNextItemWidth((float)item->m_width);
+				if (item->m_core_config.width != 0)
+					ImGui::SetNextItemWidth((float)item->m_core_config.width);
 
 				item->draw();
-
-				// Regular Tooltip (simple)
-				if (!item->m_tip.empty() && ImGui::IsItemHovered())
-					ImGui::SetTooltip("%s", item->m_tip.c_str());
 
 				item->getState().update();
 			}
@@ -91,14 +84,9 @@ namespace Marvel {
 			ImGui::EndTabItem();
 		}
 
-		else
-		{
-			// Regular Tooltip (simple)
-			if (!m_tip.empty() && ImGui::IsItemHovered())
-				ImGui::SetTooltip("%s", m_tip.c_str());
-		}
-
 	}
+
+#ifndef MV_CPP
 
 	void mvTab::setExtraConfigDict(PyObject* dict)
 	{
@@ -155,12 +143,11 @@ namespace Marvel {
 		int leading = false;
 		int trailing = false;
 		int no_tooltip = false;
-		const char* tip = "";
 		const char* parent = "";
 		const char* before = "";
 
 		if (!(*mvApp::GetApp()->getParsers())["add_tab"].parse(args, kwargs, __FUNCTION__, &name, &closeable,
-			&label, &show, &no_reorder, &leading, &trailing, &no_tooltip, &tip, &parent, &before))
+			&label, &show, &no_reorder, &leading, &trailing, &no_tooltip, &parent, &before))
 			return ToPyBool(false);
 
 		if (std::string(parent).empty())
@@ -233,4 +220,6 @@ namespace Marvel {
 		return ToPyBool(false);
 	}
 
+
+#endif
 }

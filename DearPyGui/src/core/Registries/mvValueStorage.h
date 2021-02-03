@@ -21,8 +21,7 @@
 #include "mvEvents.h"
 #include "implot.h"
 #include "implot_internal.h"
-#define PY_SSIZE_T_CLEAN
-#include <Python.h>
+#include "mvPython.h"
 
 // forward declarations
 struct ImPlotTime;
@@ -51,10 +50,12 @@ namespace Marvel {
 
 		mvValueStorage();
 
+#ifndef MV_CPP
 		// python interfacing
-		PyObject*           GetPyValue          (const std::string& name);
+		PyObject* GetPyValue(const std::string& name);
 		bool                SetPyValue          (const std::string& name, PyObject* value);
 		void                AddPyValue          (const std::string& name, PyObject* value);
+#endif
 
 		// adders
 		int*                AddIntValue         (const std::string& name, int value = 0);

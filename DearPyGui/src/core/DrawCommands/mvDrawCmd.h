@@ -5,9 +5,7 @@
 #include "mvApp.h"
 #include "mvAppItems.h"
 #include "mvWindow.h"
-#define PY_SSIZE_T_CLEAN
-#include <Python.h>
-#include "mvPythonExceptions.h"
+#include "mvPython.h"
 
 #define MV_DRAWCMD_TYPE(x) mvDrawCmdType getType() const override { return x; }
 

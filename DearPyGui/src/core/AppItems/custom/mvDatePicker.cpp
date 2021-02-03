@@ -3,8 +3,6 @@
 #include <implot.h>
 #include <implot_internal.h>
 #include <misc/cpp/imgui_stdlib.h>
-#include "mvPythonTranslator.h"
-#include "mvGlobalIntepreterLock.h"
 
 namespace Marvel {
 
@@ -17,7 +15,6 @@ namespace Marvel {
 			{mvPythonDataType::Integer, "level", "0-day, 1-month, 2-year", "0"},
 			{mvPythonDataType::Callable, "callback", "Registers a callback", "None"},
 			{mvPythonDataType::Object, "callback_data", "Callback data", "None"},
-			{mvPythonDataType::String, "tip", "Adds a simple tooltip", "''"},
 			{mvPythonDataType::String, "parent", "Parent this item will be added to. (runtime adding)", "''"},
 			{mvPythonDataType::String, "before","This item will be displayed before the specified item in the parent. (runtime adding)", "''"},
 			{mvPythonDataType::Bool, "show", "Attempt to render", "True"},
@@ -33,14 +30,17 @@ namespace Marvel {
 	{
 		auto styleManager = m_styleManager.getScopedStyleManager();
 		ScopedID id;
+		mvImGuiThemeScope scope(this);
 
-		if (ImPlot::ShowDatePicker(m_name.c_str(), &m_level, m_imvalue, m_imvalue))
+		if (ImPlot::ShowDatePicker(m_core_config.name.c_str(), &m_level, m_imvalue, m_imvalue))
 		{
 			ImPlot::GetGmtTime(*m_imvalue, m_value);
-			mvApp::GetApp()->getCallbackRegistry().addCallback(m_callback, m_name, m_callbackData);
+			mvApp::GetApp()->getCallbackRegistry().addCallback(m_core_config.callback, m_core_config.name, m_core_config.callback_data);
 		}
 
 	}
+
+#ifndef MV_CPP
 
 	void mvDatePicker::setExtraConfigDict(PyObject* dict)
 	{
@@ -58,7 +58,6 @@ namespace Marvel {
 		PyDict_SetItemString(dict, "level", ToPyInt(m_level));
 	}
 
-
 	PyObject* add_date_picker(PyObject* self, PyObject* args, PyObject* kwargs)
 	{
 		const char* name;
@@ -66,13 +65,12 @@ namespace Marvel {
 		int level = 0;
 		PyObject* callback = nullptr;
 		PyObject* callback_data = nullptr;
-		const char* tip = "";
 		const char* before = "";
 		const char* parent = "";
 		int show = true;
 
 		if (!(*mvApp::GetApp()->getParsers())["add_date_picker"].parse(args, kwargs, __FUNCTION__,
-			&name, &default_value, &level, &callback, &callback_data, &tip, &parent, &before, &show))
+			&name, &default_value, &level, &callback, &callback_data, &parent, &before, &show))
 			return ToPyBool(false);
 
 		auto item = CreateRef<mvDatePicker>(name, ToTime(default_value));
@@ -92,4 +90,5 @@ namespace Marvel {
 		return GetPyNone();
 	}
 
+#endif // !MV_CPP
 }

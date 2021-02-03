@@ -1,7 +1,5 @@
 #include "mvTreeNode.h"
 #include "core/mvInput.h"
-#include "mvPythonTranslator.h"
-#include "mvGlobalIntepreterLock.h"
 #include "mvApp.h"
 
 namespace Marvel {
@@ -12,7 +10,6 @@ namespace Marvel {
 			{mvPythonDataType::KeywordOnly},
 			{mvPythonDataType::String, "label", "", "''"},
 			{mvPythonDataType::Bool, "show", "Attempt to render", "True"},
-			{mvPythonDataType::String, "tip", "Adds a simple tooltip", "''"},
 			{mvPythonDataType::String, "parent", "Parent to add this item to. (runtime adding)", "''"},
 			{mvPythonDataType::String, "before", "This item will be displayed before the specified item in the parent. (runtime adding)", "''"},
 			{mvPythonDataType::Bool, "default_open", "", "False"},
@@ -33,38 +30,35 @@ namespace Marvel {
 	{
 		auto styleManager = m_styleManager.getScopedStyleManager();
 		ScopedID id;
+		mvImGuiThemeScope scope(this);
 
 		ImGui::BeginGroup();
 		if (ImGui::TreeNodeEx(m_label.c_str(), m_flags))
 		{
+			//we do this so that the children dont get the theme
+			scope.cleanup();
 
 			for (auto& item : m_children)
 			{
 				// skip item if it's not shown
-				if (!item->m_show)
+				if (!item->m_core_config.show)
 					continue;
 
 				// set item width
-				if (item->m_width != 0)
-					ImGui::SetNextItemWidth((float)item->m_width);
+				if (item->m_core_config.width != 0)
+					ImGui::SetNextItemWidth((float)item->m_core_config.width);
 
 				item->draw();
-
-				// Regular Tooltip (simple)
-				if (!item->m_tip.empty() && ImGui::IsItemHovered())
-					ImGui::SetTooltip("%s", item->m_tip.c_str());
 
 				item->getState().update();
 			}
 			ImGui::TreePop();
 		}
 
-		// Regular Tooltip (simple)
-		if (!m_tip.empty() && ImGui::IsItemHovered())
-			ImGui::SetTooltip("%s", m_tip.c_str());
-
 		ImGui::EndGroup();
 	}
+
+#ifndef MV_CPP
 
 	void mvTreeNode::setExtraConfigDict(PyObject* dict)
 	{
@@ -112,7 +106,6 @@ namespace Marvel {
 		const char* name;
 		const char* label = "";
 		int show = false;
-		const char* tip = "";
 		const char* parent = "";
 		const char* before = "";
 		int default_open = false;
@@ -122,7 +115,7 @@ namespace Marvel {
 		int bullet = false;
 
 		if (!(*mvApp::GetApp()->getParsers())["add_tree_node"].parse(args, kwargs, __FUNCTION__, &name,
-			&label, &show, &tip, &parent, &before, &default_open, &open_on_double_click, &open_on_arrow, &leaf, &bullet))
+			&label, &show, &parent, &before, &default_open, &open_on_double_click, &open_on_arrow, &leaf, &bullet))
 			return ToPyBool(false);
 
 		auto item = CreateRef<mvTreeNode>(name);
@@ -140,4 +133,6 @@ namespace Marvel {
 
 		return GetPyNone();
 	}
+
+#endif
 }

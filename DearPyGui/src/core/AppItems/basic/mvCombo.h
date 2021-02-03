@@ -1,7 +1,6 @@
 #pragma once
 
 #include "mvTypeBases.h"
-#include "mvPythonParser.h"
 
 namespace Marvel {
 
@@ -21,8 +20,11 @@ namespace Marvel {
 		mvCombo(const std::string& name, const std::string& default_value, const std::string& dataSource);
 
 		void draw()               override;
+
+#ifndef MV_CPP
 		void setExtraConfigDict(PyObject* dict) override;
 		void getExtraConfigDict(PyObject* dict) override;
+#endif // !MV_CPP
 
 	private:
 		ImGuiComboFlags m_flags = ImGuiComboFlags_None;

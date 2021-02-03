@@ -1,4 +1,32 @@
 ﻿
+set(MARVEL_PY_SOURCES
+
+	"src/core/Registries/mvDataStorage.cpp"
+
+	"src/core/PythonUtilities/mvPyObject.cpp"
+	"src/core/PythonUtilities/mvPythonTranslator.cpp"
+	"src/core/PythonUtilities/mvPythonParser.cpp"
+	"src/core/PythonUtilities/mvPythonExceptions.cpp"
+	"src/core/PythonUtilities/mvGlobalIntepreterLock.cpp"
+
+	"src/core/PythonCommands/mvPlotInterface.cpp"
+	"src/core/PythonCommands/mvTableInterface.cpp"
+	"src/core/PythonCommands/mvThemeInterface.cpp"
+	"src/core/PythonCommands/mvInputInterface.cpp"
+	"src/core/PythonCommands/mvBasicWidgetInterface.cpp"
+	"src/core/PythonCommands/mvSliderInterface.cpp"
+	"src/core/PythonCommands/mvInputsInterface.cpp"
+	"src/core/PythonCommands/mvDragInterface.cpp"
+	"src/core/PythonCommands/mvContainerInterface.cpp"
+	"src/core/PythonCommands/mvAppItemInterface.cpp"
+	"src/core/PythonCommands/mvAppInterface.cpp"
+)
+
+set(MARVEL_CPP_SOURCES
+
+	"src/core/CppUtilities/mvCppTranslator.cpp"
+)
+
 set(MARVEL_SOURCES
 
 	"$<$<PLATFORM_ID:Windows>:src/core/mvMarvel.cpp>"
@@ -22,7 +50,6 @@ set(MARVEL_SOURCES
 	"src/core/mvProfiler.cpp"
 
 	"src/core/Theming/mvAppItemStyleManager.cpp"
-	"src/core/Theming/mvAppItemTheme.cpp"
 	"src/core/Theming/mvTheme.cpp"
 
 	"src/core/DrawCommands/mvDrawList.cpp"
@@ -39,27 +66,9 @@ set(MARVEL_SOURCES
 	"src/core/DrawCommands/mvDrawBezierCurveCmd.cpp"
 
 	"src/core/Registries/mvCallbackRegistry.cpp"
-	"src/core/Registries/mvDataStorage.cpp"
+	
 	"src/core/Registries/mvTextureStorage.cpp"
 	"src/core/Registries/mvValueStorage.cpp"
-
-	"src/core/PythonUtilities/mvPyObject.cpp"
-	"src/core/PythonUtilities/mvPythonTranslator.cpp"
-	"src/core/PythonUtilities/mvPythonParser.cpp"
-	"src/core/PythonUtilities/mvPythonExceptions.cpp"
-	"src/core/PythonUtilities/mvGlobalIntepreterLock.cpp"
-
-	"src/core/PythonCommands/mvPlotInterface.cpp"
-	"src/core/PythonCommands/mvTableInterface.cpp"
-	"src/core/PythonCommands/mvThemeInterface.cpp"
-	"src/core/PythonCommands/mvInputInterface.cpp"
-	"src/core/PythonCommands/mvBasicWidgetInterface.cpp"
-	"src/core/PythonCommands/mvSliderInterface.cpp"
-	"src/core/PythonCommands/mvInputsInterface.cpp"
-	"src/core/PythonCommands/mvDragInterface.cpp"
-	"src/core/PythonCommands/mvContainerInterface.cpp"
-	"src/core/PythonCommands/mvAppItemInterface.cpp"
-	"src/core/PythonCommands/mvAppInterface.cpp"
 
 	"src/core/AppItems/mvAppItemState.cpp"
 	"src/core/AppItems/mvAppItem.cpp"
@@ -130,13 +139,14 @@ set(MARVEL_SOURCES
 	"../Dependencies/imgui/imgui_demo.cpp"
 	"../Dependencies/imgui/imgui_draw.cpp"
 	"../Dependencies/imgui/imgui_widgets.cpp"
-	"$<$<PLATFORM_ID:Windows>:../Dependencies/imgui/examples/imgui_impl_win32.cpp>"
-	"$<$<PLATFORM_ID:Windows>:../Dependencies/imgui/examples/imgui_impl_dx11.cpp>"
-	"$<$<PLATFORM_ID:Darwin>:../Dependencies/imgui/examples/imgui_impl_metal.mm>"
-	"$<$<PLATFORM_ID:Darwin>:../Dependencies/imgui/examples/imgui_impl_glfw.cpp>"
+	"../Dependencies/imgui/imgui_tables.cpp"
+	"$<$<PLATFORM_ID:Windows>:../Dependencies/imgui/backends/imgui_impl_win32.cpp>"
+	"$<$<PLATFORM_ID:Windows>:../Dependencies/imgui/backends/imgui_impl_dx11.cpp>"
+	"$<$<PLATFORM_ID:Darwin>:../Dependencies/imgui/backends/imgui_impl_metal.mm>"
+	"$<$<PLATFORM_ID:Darwin>:../Dependencies/imgui/backends/imgui_impl_glfw.cpp>"
 	"$<$<PLATFORM_ID:Linux>:../Dependencies/imgui/examples/libs/gl3w/GL/gl3w.c>"
-	"$<$<PLATFORM_ID:Linux>:../Dependencies/imgui/examples/imgui_impl_glfw.cpp>"
-	"$<$<PLATFORM_ID:Linux>:../Dependencies/imgui/examples/imgui_impl_opengl3.cpp>"
+	"$<$<PLATFORM_ID:Linux>:../Dependencies/imgui/backends/imgui_impl_glfw.cpp>"
+	"$<$<PLATFORM_ID:Linux>:../Dependencies/imgui/backends/imgui_impl_opengl3.cpp>"
 )
 
 set(MARVEL_INCLUDE_DIR
@@ -148,6 +158,7 @@ set(MARVEL_INCLUDE_DIR
 	"src/core/AppItems"
 	"src/core/DrawCommands"
 	"src/core/PythonCommands"
+	"src/core/CppUtilities"
 	"src/core/PythonUtilities"
 	"src/core/Registries"
 	"src/core/Theming"
@@ -156,7 +167,7 @@ set(MARVEL_INCLUDE_DIR
 	"../Dependencies/glfw/include/"
 	"../Dependencies/glfw/deps/"
 	"../Dependencies/imgui/"
-	"../Dependencies/imgui/examples/"
+	"../Dependencies/imgui/backends/"
 	"../Dependencies/imgui/examples/libs/gl3w"
 	"../Dependencies/cpython/"
 	"../Dependencies/cpython/Include/"

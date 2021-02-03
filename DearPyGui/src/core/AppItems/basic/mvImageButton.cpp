@@ -1,8 +1,6 @@
 #include "mvImageButton.h"
 #include "mvTextureStorage.h"
-#include "mvPythonExceptions.h"
 #include "mvApp.h"
-#include "mvGlobalIntepreterLock.h"
 
 namespace Marvel {
 
@@ -16,7 +14,6 @@ namespace Marvel {
 			{mvPythonDataType::Object, "callback_data", "Callback data", "None"},
 			{mvPythonDataType::FloatList, "tint_color", "", "(255, 255, 255, 255)"},
 			{mvPythonDataType::FloatList, "background_color", "", "(0, 0, 0, 0)"},
-			{mvPythonDataType::String, "tip", "Adds a simple tooltip", "''"},
 			{mvPythonDataType::String, "parent", "Parent this item will be added to. (runtime adding)", "''"},
 			{mvPythonDataType::String, "before", "This item will be displayed before the specified item in the parent. (runtime adding)", "''"},
 			{mvPythonDataType::Integer, "width","", "0"},
@@ -66,21 +63,26 @@ namespace Marvel {
 
 	void mvImageButton::draw()
 	{
+		mvImGuiThemeScope scope(this);
+
 		if (m_texture == nullptr && !m_value.empty())
 		{
 			mvApp::GetApp()->getTextureStorage().addTexture(m_value);
 			mvTexture* texture = mvApp::GetApp()->getTextureStorage().getTexture(m_value);
 			if (texture == nullptr)
 			{
-				PyErr_Format(PyExc_Exception,
-					"Image %s could not be found for add_image. Check the path to the image "
-					"you provided.", m_value.c_str());
-				PyErr_Print();
-				m_value = "";
+				mvApp::GetApp()->getCallbackRegistry().submitCallback([&]()
+					{
+						PyErr_Format(PyExc_Exception,
+							"Image %s could not be found for add_image_button. Check the path to the image "
+							"you provided.", m_value.c_str());
+						PyErr_Print();
+						m_value = "";
+					});
 				return;
 			}
-			if (m_width == 0) m_width = (int)((float)texture->width * (m_uv_max.x - m_uv_min.x));
-			if (m_height == 0) m_height = (int)((float)texture->height * (m_uv_max.y - m_uv_min.y));
+			if (m_core_config.width == 0) m_core_config.width = (int)((float)texture->width * (m_uv_max.x - m_uv_min.x));
+			if (m_core_config.height == 0) m_core_config.height = (int)((float)texture->height * (m_uv_max.y - m_uv_min.y));
 
 			m_texture = texture->texture;
 		}
@@ -90,23 +92,25 @@ namespace Marvel {
 			mvTexture* texture = mvApp::GetApp()->getTextureStorage().getTexture(m_value);
 			if (texture)
 			{
-				m_width = (int)((float)texture->width * (m_uv_max.x - m_uv_min.x));
-				m_height = (int)((float)texture->height * (m_uv_max.y - m_uv_min.y));
+				m_core_config.width = (int)((float)texture->width * (m_uv_max.x - m_uv_min.x));
+				m_core_config.height = (int)((float)texture->height * (m_uv_max.y - m_uv_min.y));
 			}
 			m_dirty = false;
 		}
 
 		if (m_texture)
 		{
-			ImGui::PushID(m_name.c_str());
-			if (ImGui::ImageButton(m_texture, ImVec2((float)m_width, (float)m_height),
+			ImGui::PushID(m_core_config.name.c_str());
+			if (ImGui::ImageButton(m_texture, ImVec2((float)m_core_config.width, (float)m_core_config.height),
 				ImVec2(m_uv_min.x, m_uv_min.y), ImVec2(m_uv_max.x, m_uv_max.y), m_framePadding,
 				m_backgroundColor.toVec4(), m_tintColor.toVec4()))
-				mvApp::GetApp()->getCallbackRegistry().addCallback(m_callback, m_name, m_callbackData);
+				mvApp::GetApp()->getCallbackRegistry().addCallback(m_core_config.callback, m_core_config.name, m_core_config.callback_data);
 			ImGui::PopID();
 		}
 
 	}
+
+#ifndef MV_CPP
 
 	void mvImageButton::setExtraConfigDict(PyObject* dict)
 	{
@@ -156,7 +160,6 @@ namespace Marvel {
 		PyTuple_SetItem(backgroundColor, 1, PyFloat_FromDouble(0.0));
 		PyTuple_SetItem(backgroundColor, 2, PyFloat_FromDouble(0.0));
 		PyTuple_SetItem(backgroundColor, 3, PyFloat_FromDouble(0.0));
-		const char* tip = "";
 		const char* parent = "";
 		const char* before = "";
 		int width = 0;
@@ -171,7 +174,7 @@ namespace Marvel {
 		int show = true;
 
 		if (!(*mvApp::GetApp()->getParsers())["add_image_button"].parse(args, kwargs, __FUNCTION__,
-			&name, &value, &callback, &callback_data, &tintcolor, &backgroundColor, &tip, &parent,
+			&name, &value, &callback, &callback_data, &tintcolor, &backgroundColor, &parent,
 			&before, &width, &height, &frame_padding, &uv_min, &uv_max, &show))
 			return ToPyBool(false);
 
@@ -191,4 +194,6 @@ namespace Marvel {
 
 		return GetPyNone();
 	}
+
+#endif // !MV_CPP
 }

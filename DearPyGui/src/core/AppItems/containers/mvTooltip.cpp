@@ -1,6 +1,5 @@
 #include "mvTooltip.h"
 #include "mvApp.h"
-#include "mvPythonTranslator.h"
 
 namespace Marvel {
 
@@ -24,7 +23,7 @@ namespace Marvel {
 
 		// has to be showed that way it can check for hovering
 		// otherwise it will never show
-		m_show = true;
+		m_core_config.show = true;
 		m_description.container = true;
 		
 	}
@@ -34,22 +33,23 @@ namespace Marvel {
 		if (ImGui::IsItemHovered())
 		{
 			auto styleManager = m_styleManager.getScopedStyleManager();
+			mvImGuiThemeScope scope(this);
 			ImGui::BeginTooltip();
+
+			//we do this so that the children dont get the theme
+			scope.cleanup();
+
 			for (auto& item : m_children)
 			{
 				// skip item if it's not shown
-				if (!item->m_show)
+				if (!item->m_core_config.show)
 					continue;
 
 				// set item width
-				if (item->m_width != 0)
-					ImGui::SetNextItemWidth((float)item->m_width);
+				if (item->m_core_config.width != 0)
+					ImGui::SetNextItemWidth((float)item->m_core_config.width);
 
 				item->draw();
-
-				// Regular Tooltip (simple)
-				if (!item->m_tip.empty() && ImGui::IsItemHovered())
-					ImGui::SetTooltip("%s", item->m_tip.c_str());
 
 				item->getState().update();
 			}
@@ -58,6 +58,8 @@ namespace Marvel {
 		}
 
 	}
+
+#ifndef MV_CPP
 
 	PyObject* add_tooltip(PyObject* self, PyObject* args, PyObject* kwargs)
 	{
@@ -89,4 +91,5 @@ namespace Marvel {
 
 	}
 
+#endif
 }

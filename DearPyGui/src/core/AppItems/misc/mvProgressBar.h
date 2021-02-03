@@ -1,7 +1,6 @@
 #pragma once
 
 #include "mvTypeBases.h"
-#include "mvPythonParser.h"
 
 namespace Marvel {
 
@@ -20,8 +19,11 @@ namespace Marvel {
 		mvProgressBar(const std::string& name, float default_value, const std::string& dataSource);
 
 		void draw              ()               override;
+
+#ifndef MV_CPP
 		void setExtraConfigDict(PyObject* dict) override;
 		void getExtraConfigDict(PyObject* dict) override;
+#endif // !MV_CPP
 
 	private:
 

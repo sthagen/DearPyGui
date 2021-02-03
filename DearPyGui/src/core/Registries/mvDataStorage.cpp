@@ -2,8 +2,6 @@
 #include "mvApp.h"
 #include "mvAppLog.h"
 #include <thread>
-#include "mvPythonExceptions.h"
-#include "mvGlobalIntepreterLock.h"
 
 namespace Marvel {
 
@@ -36,13 +34,22 @@ namespace Marvel {
 		{
 			if (s_dataStorage.at(name) != data)
 			{
-				 
 
-				// this is different item, delete the old
-				Py_XDECREF(s_dataStorage.at(name));
+				if (s_dataStorage.at(name) == Py_None)
+					Py_XDECREF(s_dataStorage.at(name));
+				else if (PyLong_Check(s_dataStorage.at(name)))
+					Py_XDECREF(s_dataStorage.at(name));
+				else if (PyFloat_Check(s_dataStorage.at(name)))
+					Py_XDECREF(s_dataStorage.at(name));
+				else if (PyUnicode_Check(s_dataStorage.at(name)))
+					Py_XDECREF(s_dataStorage.at(name));
+				else
+				{
+					while (s_dataStorage.at(name)->ob_refcnt > 0)
+						Py_XDECREF(s_dataStorage.at(name));
+				}
+
 				s_dataStorage.erase(name);
-
-				Py_XINCREF(data);
 				s_dataStorage[name] = data;
 			}
 		}

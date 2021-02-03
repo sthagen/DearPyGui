@@ -2,8 +2,6 @@
 #include "mvProgressBar.h"
 #include "mvApp.h"
 #include "mvValueStorage.h"
-#include "mvPythonTranslator.h"
-#include "mvGlobalIntepreterLock.h"
 
 namespace Marvel {
 
@@ -14,7 +12,6 @@ namespace Marvel {
 			{mvPythonDataType::KeywordOnly},
 			{mvPythonDataType::Float, "default_value", "value from 0 to 1", "0.0"},
 			{mvPythonDataType::String, "overlay", "overlayed text", "''"},
-			{mvPythonDataType::String, "tip", "Adds a simple tooltip", "''"},
 			{mvPythonDataType::String, "parent", "Parent this item will be added to. (runtime adding)", "''"},
 			{mvPythonDataType::String, "before", "This item will be displayed before the specified item in the parent. (runtime adding)", "''"},
 			{mvPythonDataType::String, "source", "data source for shared data", "''"},
@@ -33,10 +30,13 @@ namespace Marvel {
 	{
 		auto styleManager = m_styleManager.getScopedStyleManager();
 		ScopedID id;
+		mvImGuiThemeScope scope(this);
 
-		ImGui::ProgressBar(*m_value, ImVec2((float)m_width, (float)m_height), m_overlay.c_str());
+		ImGui::ProgressBar(*m_value, ImVec2((float)m_core_config.width, (float)m_core_config.height), m_overlay.c_str());
 
 	}
+
+#ifndef MV_CPP
 
 	void mvProgressBar::setExtraConfigDict(PyObject* dict)
 	{
@@ -59,7 +59,6 @@ namespace Marvel {
 		const char* name;
 		float default_value = 0.0f;
 		const char* overlay = "";
-		const char* tip = "";
 		const char* parent = "";
 		const char* before = "";
 		const char* source = "";
@@ -68,7 +67,7 @@ namespace Marvel {
 		int show = true;
 
 		if (!(*mvApp::GetApp()->getParsers())["add_progress_bar"].parse(args, kwargs, __FUNCTION__, &name, &default_value,
-			&overlay, &tip, &parent, &before, &source, &width, &height, &show))
+			&overlay, &parent, &before, &source, &width, &height, &show))
 			return ToPyBool(false);
 
 		auto item = CreateRef<mvProgressBar>(name, default_value, source);
@@ -82,4 +81,5 @@ namespace Marvel {
 		return GetPyNone();
 	}
 
+#endif
 }

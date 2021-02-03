@@ -2,7 +2,6 @@
 
 #include "mvMenuBar.h"
 #include "mvApp.h"
-#include "mvPythonTranslator.h"
 
 namespace Marvel {
 
@@ -26,36 +25,38 @@ namespace Marvel {
 			//float FontSize = ImGui::GetFontSize(); // = Base Font Size * Current Window Scale
 			//ImGuiStyle currentStyle = ImGui::GetStyle(); // = Padding for the Top and Bottom
 			//m_height = int(currentStyle.FramePadding.y * 2 + FontSize);
-			m_height = 21;
+			m_core_config.height = 21;
 		}
 
 	void mvMenuBar::draw()
 	{
 		auto styleManager = m_styleManager.getScopedStyleManager();
+		mvImGuiThemeScope scope(this);
 
 		if (ImGui::BeginMenuBar())
 		{
+			//we do this so that the children dont get the theme
+			scope.cleanup();
+
 			for (auto& item : m_children)
 			{
 				// skip item if it's not shown
-				if (!item->m_show)
+				if (!item->m_core_config.show)
 					continue;
 
 				// set item width
-				if (item->m_width != 0)
-					ImGui::SetNextItemWidth((float)item->m_width);
+				if (item->m_core_config.width != 0)
+					ImGui::SetNextItemWidth((float)item->m_core_config.width);
 
 				item->draw();
-
-				// Regular Tooltip (simple)
-				if (!item->m_tip.empty() && ImGui::IsItemHovered())
-					ImGui::SetTooltip("%s", item->m_tip.c_str());
 
 				item->getState().update();
 			}
 			ImGui::EndMenuBar();
 		}
 	}
+
+#ifndef MV_CPP
 
 	PyObject* add_menu_bar(PyObject* self, PyObject* args, PyObject* kwargs)
 	{
@@ -124,4 +125,6 @@ namespace Marvel {
 		return ToPyBool(false);
 	}
 
+
+#endif
 }

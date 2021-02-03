@@ -12,8 +12,7 @@
 //     
 //-----------------------------------------------------------------------------
 
-#define PY_SSIZE_T_CLEAN
-#include <Python.h>
+#include "mvPython.h"
 #include <vector>
 #include <map>
 #include <stack>
@@ -22,14 +21,12 @@
 #include <thread>
 #include <future>
 #include <atomic>
+#include "mvCore.h"
 #include "mvEvents.h"
-//#include "mvAppItem.h"
-#include "mvPythonParser.h"
 #include "mvItemRegistry.h"
 #include "mvDrawList.h"
 #include "mvTextureStorage.h"
 #include "mvValueStorage.h"
-#include "mvPythonExceptions.h"
 #include <memory>
 
 //-----------------------------------------------------------------------------
@@ -48,6 +45,7 @@ namespace Marvel {
     class mvTheme;
     class mvCallbackRegistry;
     struct mvColor;
+    enum class mvAppItemType;
     
     //-----------------------------------------------------------------------------
     // mvApp
@@ -119,20 +117,10 @@ namespace Marvel {
         int                      getActualHeight   () const { return m_actualHeight; }
         int                      getClientWidth    () const { return m_clientWidth; }
         int                      getClientHeight   () const { return m_clientHeight; }
-        ImGuiStyle&              getStyle          ()       { return m_newStyle; }
         mvWindow*                getViewport       ()       { return m_viewport; }
         bool                     getVSync          () const { return m_vsync; }
         bool                     getResizable      () const { return m_resizable; }
-        
-        //-----------------------------------------------------------------------------
-        // Styles/Themes
-        //-----------------------------------------------------------------------------
-        void                     setAppTheme      (const std::string& theme);
-        void                     setThemeItem     (long item, mvColor& color);
-        void                     setStyleChanged  () { m_styleChange = true; }
-                                 
-        const std::string&       getAppTheme () const { return m_theme; }
-        mvColor                  getThemeItem(long item);
+       
 
         //-----------------------------------------------------------------------------
         // Concurrency
@@ -150,6 +138,7 @@ namespace Marvel {
         //-----------------------------------------------------------------------------
         std::map<std::string, mvPythonParser>* getParsers      () { return m_parsers.get(); }
         std::mutex& getMutex() const { return m_mutex; }
+        std::unordered_map<mvAppItemType, ThemeColors>& getColors() { return m_colors; }
             
     private:
 
@@ -160,8 +149,6 @@ namespace Marvel {
         void postProfile    ();
 
         mvApp();
-
-        void updateStyle();
         
     private:
 
@@ -169,11 +156,12 @@ namespace Marvel {
         static std::atomic_bool s_started;
 
         // managers
-        mvOwnedPtr<mvItemRegistry>                   m_itemRegistry;
-        mvOwnedPtr<mvTextureStorage>                 m_textureStorage;
-        mvOwnedPtr<mvValueStorage>                   m_valueStorage;
-        mvOwnedPtr<mvTheme>                          m_themeManager;
-        mvOwnedPtr<mvCallbackRegistry>               m_callbackRegistry;
+        mvOwnedPtr<mvItemRegistry>                     m_itemRegistry;
+        mvOwnedPtr<mvTextureStorage>                   m_textureStorage;
+        mvOwnedPtr<mvValueStorage>                     m_valueStorage;
+        mvOwnedPtr<mvTheme>                            m_themeManager;
+        mvOwnedPtr<mvCallbackRegistry>                 m_callbackRegistry;
+        std::unordered_map<mvAppItemType, ThemeColors> m_colors;
                                                      
         // docking                                   
         bool                                         m_docking          = false;
@@ -191,10 +179,7 @@ namespace Marvel {
         mvRef<std::map<std::string, mvPythonParser>> m_parsers;
         
         // appearance
-        std::string m_theme = "Dark";
         float       m_globalFontScale = 1.0f;
-        ImGuiStyle  m_newStyle;
-        bool        m_styleChange = true;
         bool        m_vsync = true;
         bool        m_resizable = true;
 

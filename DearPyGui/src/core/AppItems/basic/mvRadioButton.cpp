@@ -2,8 +2,6 @@
 #include "mvRadioButton.h"
 #include "mvApp.h"
 #include "mvValueStorage.h"
-#include "mvPythonTranslator.h"
-#include "mvGlobalIntepreterLock.h"
 
 namespace Marvel {
 	void mvRadioButton::InsertParser(std::map<std::string, mvPythonParser>* parsers)
@@ -15,7 +13,6 @@ namespace Marvel {
 			{mvPythonDataType::Integer, "default_value", "", "0"},
 			{mvPythonDataType::Callable, "callback", "Registers a callback", "None"},
 			{mvPythonDataType::Object, "callback_data", "Callback data", "None"},
-			{mvPythonDataType::String, "tip", "Adds a simple tooltip", "''"},
 			{mvPythonDataType::String, "parent", "Parent to add this item to. (runtime adding)", "''"},
 			{mvPythonDataType::String, "before", "This item will be displayed before the specified item in the parent. (runtime adding)", "''"},
 			{mvPythonDataType::String, "source", "", "''"},
@@ -38,8 +35,9 @@ namespace Marvel {
 
 		auto styleManager = m_styleManager.getScopedStyleManager();
 		ScopedID id;
+		mvImGuiThemeScope scope(this);
 
-		if (!m_enabled)
+		if (!m_core_config.enabled)
 		{
 			ImVec4 disabled_color = ImVec4(ImGui::GetStyleColorVec4(ImGuiCol_TextDisabled));
 			disabled_color.w = 0.392f;
@@ -55,12 +53,14 @@ namespace Marvel {
 			if (m_horizontal && i != 0)
 				ImGui::SameLine();
 
-			if (ImGui::RadioButton((m_itemnames[i] + "##" + m_name).c_str(), m_enabled ? m_value : &m_disabled_value, (int)i))
-				mvApp::GetApp()->getCallbackRegistry().addCallback(getCallback(false), m_name, m_callbackData);
+			if (ImGui::RadioButton((m_itemnames[i] + "##" + m_core_config.name).c_str(), m_core_config.enabled ? m_value : &m_disabled_value, (int)i))
+				mvApp::GetApp()->getCallbackRegistry().addCallback(getCallback(false), m_core_config.name, m_core_config.callback_data);
 		}
 
 		ImGui::EndGroup();
 	}
+
+#ifndef MV_CPP
 
 	void mvRadioButton::setExtraConfigDict(PyObject* dict)
 	{
@@ -87,7 +87,6 @@ namespace Marvel {
 		int default_value = 0;
 		PyObject* callback = nullptr;
 		PyObject* callback_data = nullptr;
-		const char* tip = "";
 		const char* before = "";
 		const char* parent = "";
 		const char* source = "";
@@ -96,7 +95,7 @@ namespace Marvel {
 		int show = true;
 
 		if (!(*mvApp::GetApp()->getParsers())["add_radio_button"].parse(args, kwargs, __FUNCTION__, &name, &items,
-			&default_value, &callback, &callback_data, &tip, &parent, &before, &source, &enabled, &horizontal, &show))
+			&default_value, &callback, &callback_data, &parent, &before, &source, &enabled, &horizontal, &show))
 			return ToPyBool(false);
 
 		auto item = CreateRef<mvRadioButton>(name, default_value, source);
@@ -116,4 +115,5 @@ namespace Marvel {
 		return GetPyNone();
 	}
 
+#endif
 }

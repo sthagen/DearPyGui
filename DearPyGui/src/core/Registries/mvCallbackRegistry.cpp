@@ -1,9 +1,5 @@
 #include "mvCallbackRegistry.h"
-#include "mvPyObject.h"
-#include "mvPythonTranslator.h"
-#include "mvPythonExceptions.h"
 #include "mvProfiler.h"
-#include "mvGlobalIntepreterLock.h"
 #include "mvApp.h"
 #include <chrono>
 #include <iostream>
@@ -22,7 +18,7 @@ namespace Marvel {
 	{
 		while (!m_tasks.empty())
 		{
-			mvCallbackRegistry::task_type t;
+			mvFunctionWrapper t;
 			m_tasks.wait_and_pop(t);
 			t();
 		}
@@ -179,30 +175,42 @@ namespace Marvel {
 	{
 		m_running = true;
 
+#ifndef MV_CPP
 		mvGlobalIntepreterLock gil;
+#endif // !MV_CPP
 
 		while (m_running)
 		{
-				mvCallbackRegistry::task_type t2;
-				Py_BEGIN_ALLOW_THREADS;
-				m_calls.wait_and_pop(t2);
-				Py_END_ALLOW_THREADS;
-				t2();
+			mvFunctionWrapper t2;
+			Py_BEGIN_ALLOW_THREADS;
+			m_calls.wait_and_pop(t2);
+			Py_END_ALLOW_THREADS;
+			t2();
 		}
 
 		runCallback(m_onCloseCallback, "Main Application", nullptr);
 		return true;
 	}
 
-	void mvCallbackRegistry::addCallback(PyObject* callable, const std::string& sender, PyObject* data)
+	void mvCallbackRegistry::addCallback(mvCallable callable, const std::string& sender, mvCallableData data)
 	{
+#ifdef MV_CPP
+		submitCallback(callable);
+#else
 		submitCallback([=]() {
 			runCallback(callable, sender, data);
 			});
+#endif
 	}
 
-	void mvCallbackRegistry::runCallback(PyObject* callable, const std::string& sender, PyObject* data)
+	void mvCallbackRegistry::runCallback(mvCallable callable, const std::string& sender, PyObject* data)
 	{
+
+#ifdef MV_CPP
+
+		callable();
+		 
+#else
 
 		if (callable == nullptr)
 		{
@@ -210,8 +218,6 @@ namespace Marvel {
 				Py_XDECREF(data);
 			return;
 		}
-
-		 
 
 		if (!PyCallable_Check(callable))
 		{
@@ -252,22 +258,87 @@ namespace Marvel {
 
 		PyErr_Clear();
 
-		mvPyObject pArgs(PyTuple_New(2));
-		PyTuple_SetItem(pArgs, 0, PyUnicode_FromString(sender.c_str()));
-		PyTuple_SetItem(pArgs, 1, intermediateResult); // steals data, so don't deref
+		PyObject* fc = PyObject_GetAttrString(callable, "__code__");
+		if (fc) {
+			PyObject* ac = PyObject_GetAttrString(fc, "co_argcount");
+			if (ac) {
+				int count = PyLong_AsLong(ac);
 
-		mvPyObject result(PyObject_CallObject(callable, pArgs));
+				if (PyMethod_Check(callable))
+					count--;
 
-		// check if call succeeded
-		if (!result.isOk())
-		{
-			PyErr_Print();
-			ThrowPythonException("Callable failed");
+				if (count > 2)
+				{
+					mvPyObject pArgs(PyTuple_New(count));
+					PyTuple_SetItem(pArgs, 0, PyUnicode_FromString(sender.c_str()));
+					PyTuple_SetItem(pArgs, 1, intermediateResult); // steals data, so don't deref
+					
+					for (int i = 2; i < count; i++)
+						PyTuple_SetItem(pArgs, i, GetPyNone());
+
+					mvPyObject result(PyObject_CallObject(callable, pArgs));
+
+					// check if call succeeded
+					if (!result.isOk())
+					{
+						PyErr_Print();
+						ThrowPythonException("Callable failed");
+					}
+
+				}
+				else if (count == 2)
+				{
+					mvPyObject pArgs(PyTuple_New(2));
+					PyTuple_SetItem(pArgs, 0, PyUnicode_FromString(sender.c_str()));
+					PyTuple_SetItem(pArgs, 1, intermediateResult); // steals data, so don't deref
+
+					mvPyObject result(PyObject_CallObject(callable, pArgs));
+
+					// check if call succeeded
+					if (!result.isOk())
+					{
+						PyErr_Print();
+						ThrowPythonException("Callable failed");
+					}
+
+				}
+				else if(count == 1)
+				{
+					mvPyObject pArgs(PyTuple_New(1));
+					PyTuple_SetItem(pArgs, 0, PyUnicode_FromString(sender.c_str()));
+
+					mvPyObject result(PyObject_CallObject(callable, pArgs));
+
+					// check if call succeeded
+					if (!result.isOk())
+					{
+						PyErr_Print();
+						ThrowPythonException("Callable failed");
+					}
+				}
+				else
+				{
+					mvPyObject result(PyObject_CallObject(callable, nullptr));
+
+					// check if call succeeded
+					if (!result.isOk())
+					{
+						PyErr_Print();
+						ThrowPythonException("Callable failed");
+					}
+
+
+				}
+				Py_DECREF(ac);
+
+				// check if error occurred
+				if (PyErr_Occurred())
+					PyErr_Print();
+			}
+			Py_DECREF(fc);
 		}
 
-		// check if error occurred
-		if (PyErr_Occurred())
-			PyErr_Print();
+#endif // !MV_CPP
 
 	}
 

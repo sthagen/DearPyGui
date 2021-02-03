@@ -1,20 +1,25 @@
-#define PY_SSIZE_T_CLEAN
-#include <Python.h>
-#include <frameobject.h>
+#include "mvPython.h"
 #include <string>
-#include "mvPythonTranslator.h"
-#include "mvGlobalIntepreterLock.h"
 
 namespace Marvel
 {
 
-	void ThrowPythonException(const std::string& message)
+	void ThrowPythonException(const std::string& message, bool line)
 	{
 
 		std::string fullMessage = "Line: %d \t" + message;
 
-		int line = PyFrame_GetLineNumber(PyEval_GetFrame());
-		PyErr_Format(PyExc_Exception, fullMessage.c_str(), line);
+		int lineno = 0;
+		if (line)
+		{
+			auto f = PyEval_GetFrame();
+			if (f)
+				lineno = PyFrame_GetLineNumber(f);
+			else
+				fullMessage.append(" || error occured in a callback");
+		}
+
+		PyErr_Format(PyExc_Exception, fullMessage.c_str(), lineno);
 		PyErr_Print();
 	}
 

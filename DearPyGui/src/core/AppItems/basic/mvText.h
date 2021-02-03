@@ -1,7 +1,6 @@
 #pragma once
 
 #include "mvTypeBases.h"
-#include "mvPythonParser.h"
 
 //-----------------------------------------------------------------------------
 // Widget Index
@@ -33,13 +32,16 @@ namespace Marvel {
 		mvText(const std::string& name, const std::string& default_value, const std::string& dataSource);
 
 		void draw              () override;
+
+#ifndef MV_CPP
 		void setExtraConfigDict(PyObject* dict) override;
 		void getExtraConfigDict(PyObject* dict) override;
+#endif // !MV_CPP
 
 	private:
 
 		mvColor m_color = {1000, 0, 0, 255, false};
-		int     m_wrap = 0;
+		int     m_wrap = -1;
 		bool    m_bullet = false;
 
 	};
@@ -61,8 +63,11 @@ namespace Marvel {
 		mvLabelText(const std::string& name, const std::string& value, const std::string& dataSource);
 
 		void draw              ()               override;
+
+#ifndef MV_CPP
 		void setExtraConfigDict(PyObject* dict) override;
 		void getExtraConfigDict(PyObject* dict) override;
+#endif // !MV_CPP
 
 	private:
 

@@ -1,7 +1,5 @@
 #include "mvGroup.h"
 #include "mvInput.h"
-#include "mvPythonTranslator.h"
-#include "mvGlobalIntepreterLock.h"
 #include "mvApp.h"
 
 namespace Marvel {
@@ -12,7 +10,6 @@ namespace Marvel {
 			{mvPythonDataType::String, "name"},
 			{mvPythonDataType::KeywordOnly},
 			{mvPythonDataType::Bool, "show", "Attempt to render", "True"},
-			{mvPythonDataType::String, "tip", "Adds a simple tooltip", "''"},
 			{mvPythonDataType::String, "parent", "Parent to add this item to. (runtime adding)", "''"},
 			{mvPythonDataType::String, "before", "This item will be displayed before the specified item in the parent. (runtime adding)", "''"},
 			{mvPythonDataType::Integer, "width","", "0"},
@@ -32,30 +29,30 @@ namespace Marvel {
 	void mvGroup::draw()
 	{
 		auto styleManager = m_styleManager.getScopedStyleManager();
+		mvImGuiThemeScope scope(this);
 
-		if (m_width != 0)
-			ImGui::PushItemWidth((float)m_width);
+		if (m_core_config.width != 0)
+			ImGui::PushItemWidth((float)m_core_config.width);
 
 		ImGui::BeginGroup();
 
+		//we do this so that the children dont get the theme
+		scope.cleanup();
+
 		for (auto& item : m_children)
 		{
-			if (m_width != 0)
-				item->setWidth(m_width);
+			if (m_core_config.width != 0)
+				item->setWidth(m_core_config.width);
 
 			// skip item if it's not shown
-			if (!item->m_show)
+			if (!item->m_core_config.show)
 				continue;
 
 			// set item width
-			if (item->m_width != 0)
-				ImGui::SetNextItemWidth((float)item->m_width);
+			if (item->m_core_config.width != 0)
+				ImGui::SetNextItemWidth((float)item->m_core_config.width);
 
 			item->draw();
-
-			// Regular Tooltip (simple)
-			if (!item->m_tip.empty() && ImGui::IsItemHovered())
-				ImGui::SetTooltip("%s", item->m_tip.c_str());
 
 			if (m_horizontal)
 				ImGui::SameLine(0.0, m_hspacing);
@@ -63,15 +60,13 @@ namespace Marvel {
 			item->getState().update();
 		}
 
-		if (m_width != 0)
+		if (m_core_config.width != 0)
 			ImGui::PopItemWidth();
 
 		ImGui::EndGroup();
-
-		if (!m_tip.empty() && ImGui::IsItemHovered())
-			ImGui::SetTooltip("%s", m_tip.c_str());
-
 	}
+
+#ifndef MV_CPP
 
 	void mvGroup::setExtraConfigDict(PyObject* dict)
 	{
@@ -95,7 +90,6 @@ namespace Marvel {
 	{
 		const char* name;
 		int show = true;
-		const char* tip = "";
 		const char* parent = "";
 		const char* before = "";
 		int width = 0;
@@ -103,7 +97,7 @@ namespace Marvel {
 		float horizontal_spacing = -1.0f;
 
 		if (!(*mvApp::GetApp()->getParsers())["add_group"].parse(args, kwargs, __FUNCTION__, &name,
-			&show, &tip, &parent, &before, &width, &horizontal, &horizontal_spacing))
+			&show, &parent, &before, &width, &horizontal, &horizontal_spacing))
 			return ToPyBool(false);
 
 		auto item = CreateRef<mvGroup>(name);
@@ -123,4 +117,6 @@ namespace Marvel {
 		return GetPyNone();
 	}
 
+
+#endif
 }

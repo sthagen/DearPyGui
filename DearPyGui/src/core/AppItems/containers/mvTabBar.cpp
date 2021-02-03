@@ -1,7 +1,5 @@
 #include "mvTabBar.h"
 #include "mvApp.h"
-#include "mvPythonTranslator.h"
-#include "mvGlobalIntepreterLock.h"
 
 namespace Marvel {
 
@@ -40,25 +38,24 @@ namespace Marvel {
 	{
 		auto styleManager = m_styleManager.getScopedStyleManager();
 		ScopedID id;
+		mvImGuiThemeScope scope(this);
 		ImGui::BeginGroup();
 
 		if (ImGui::BeginTabBar(m_label.c_str(), m_flags))
 		{
+			//we do this so that the children dont get the theme
+			scope.cleanup();
 			for (auto& item : m_children)
 			{
 				// skip item if it's not shown
-				if (!item->m_show)
+				if (!item->m_core_config.show)
 					continue;
 
 				// set item width
-				if (item->m_width != 0)
-					ImGui::SetNextItemWidth((float)item->m_width);
+				if (item->m_core_config.width != 0)
+					ImGui::SetNextItemWidth((float)item->m_core_config.width);
 
 				item->draw();
-
-				// Regular Tooltip (simple)
-				if (!item->m_tip.empty() && ImGui::IsItemHovered())
-					ImGui::SetTooltip("%s", item->m_tip.c_str());
 
 				item->getState().update();
 			}
@@ -68,6 +65,8 @@ namespace Marvel {
 
 		ImGui::EndGroup();
 	}
+
+#ifndef MV_CPP
 
 	void mvTabBar::setExtraConfigDict(PyObject* dict)
 	{
@@ -140,4 +139,6 @@ namespace Marvel {
 
 		return GetPyNone();
 	}
+
+#endif
 }

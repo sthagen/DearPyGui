@@ -2,8 +2,6 @@
 #include "mvListbox.h"
 #include "mvApp.h"
 #include "mvValueStorage.h"
-#include "mvPythonTranslator.h"
-#include "mvGlobalIntepreterLock.h"
 
 namespace Marvel {
 
@@ -16,7 +14,6 @@ namespace Marvel {
 			{mvPythonDataType::Integer, "default_value", "", "0"},
 			{mvPythonDataType::Callable, "callback", "Registers a callback", "None"},
 			{mvPythonDataType::Object, "callback_data", "Callback data", "None"},
-			{mvPythonDataType::String, "tip", "Adds a simple tooltip", "''"},
 			{mvPythonDataType::String, "parent", "Parent this item will be added to. (runtime adding)", "''"},
 			{mvPythonDataType::String, "before", "This item will be displayed before the specified item in the parent. (runtime adding)", "''"},
 			{mvPythonDataType::String, "source", "", "''"},
@@ -38,8 +35,9 @@ namespace Marvel {
 	{
 		auto styleManager = m_styleManager.getScopedStyleManager();
 		ScopedID id;
+		mvImGuiThemeScope scope(this);
 
-		if (!m_enabled)
+		if (!m_core_config.enabled)
 		{
 			ImVec4 disabled_color = ImVec4(ImGui::GetStyleColorVec4(ImGuiCol_TextDisabled));
 			disabled_color.w = 0.392f;
@@ -57,10 +55,12 @@ namespace Marvel {
 			m_disabled_value = *m_value;
 		}
 
-		if (ImGui::ListBox(m_label.c_str(), m_enabled ? m_value : &m_disabled_value, m_charNames.data(), (int)m_names.size(), m_itemsHeight))
-			mvApp::GetApp()->getCallbackRegistry().addCallback(getCallback(false), m_name, m_callbackData);
+		if (ImGui::ListBox(m_label.c_str(), m_core_config.enabled ? m_value : &m_disabled_value, m_charNames.data(), (int)m_names.size(), m_itemsHeight))
+			mvApp::GetApp()->getCallbackRegistry().addCallback(getCallback(false), m_core_config.name, m_core_config.callback_data);
 
 	}
+
+#ifndef MV_CPP
 
 	void mvListbox::setExtraConfigDict(PyObject* dict)
 	{
@@ -93,7 +93,6 @@ namespace Marvel {
 		int default_value = 0;
 		PyObject* callback = nullptr;
 		PyObject* callback_data = nullptr;
-		const char* tip = "";
 		int width = 0;
 		int num_items = 3;
 		const char* before = "";
@@ -104,7 +103,7 @@ namespace Marvel {
 		int show = true;
 
 		if (!(*mvApp::GetApp()->getParsers())["add_listbox"].parse(args, kwargs, __FUNCTION__, &name, &items,
-			&default_value, &callback, &callback_data, &tip, &parent, &before, &source, &enabled, &width,
+			&default_value, &callback, &callback_data, &parent, &before, &source, &enabled, &width,
 			&num_items, &label, &show))
 			return ToPyBool(false);
 
@@ -125,4 +124,5 @@ namespace Marvel {
 		return GetPyNone();
 	}
 
+#endif
 }

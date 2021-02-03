@@ -24,13 +24,14 @@ namespace Marvel {
 
 			auto styleManager = m_styleManager.getScopedStyleManager();
 			ScopedID id(m_parentAddress);
+			mvImGuiThemeScope scope(this);
 
 			if (m_modal)
 			{
 				if (ImGui::IsItemHovered() && ImGui::IsMouseReleased(m_button))
-					ImGui::OpenPopup(m_name.c_str());
+					ImGui::OpenPopup(m_core_config.name.c_str());
 
-				if (ImGui::BeginPopupModal(m_name.c_str(), nullptr, ImGuiWindowFlags_AlwaysAutoResize))
+				if (ImGui::BeginPopupModal(m_core_config.name.c_str(), nullptr, ImGuiWindowFlags_AlwaysAutoResize))
 				{
 
 					if (m_close)
@@ -39,21 +40,20 @@ namespace Marvel {
 						m_close = false;
 					}
 
+					//we do this so that the children dont get the theme
+					scope.cleanup();
+
 					for (mvRef<mvAppItem> item : m_children)
 					{
 						// skip item if it's not shown
-						if (!item->m_show)
+						if (!item->m_core_config.show)
 							continue;
 
 						// set item width
-						if (item->m_width != 0)
-							ImGui::SetNextItemWidth((float)item->m_width);
+						if (item->m_core_config.width != 0)
+							ImGui::SetNextItemWidth((float)item->m_core_config.width);
 
 						item->draw();
-
-						// Regular Tooltip (simple)
-						if (!item->m_tip.empty() && ImGui::IsItemHovered())
-							ImGui::SetTooltip("%s", item->m_tip.c_str());
 
 						item->getState().update();
 					}
@@ -64,18 +64,21 @@ namespace Marvel {
 
 			else 
 			{
-				if (ImGui::BeginPopupContextItem(m_name.c_str(), m_button))
+				if (ImGui::BeginPopupContextItem(m_core_config.name.c_str(), m_button))
 				{
+
+					//we do this so that the children dont get the theme
+					scope.cleanup();
 
 					for (mvRef<mvAppItem> item : m_children)
 					{
 						// skip item if it's not shown
-						if (!item->m_show)
+						if (!item->m_core_config.show)
 							continue;
 
 						// set item width
-						if (item->m_width > 0)
-							ImGui::SetNextItemWidth((float)item->m_width);
+						if (item->m_core_config.width > 0)
+							ImGui::SetNextItemWidth((float)item->m_core_config.width);
 
 						item->draw();
 
@@ -89,6 +92,8 @@ namespace Marvel {
 				}
 			}
 		}
+
+#ifndef MV_CPP
 
 		void setExtraConfigDict(PyObject* dict) override
 		{
@@ -108,6 +113,8 @@ namespace Marvel {
 			PyDict_SetItemString(dict, "modal", ToPyBool(m_modal));
 			PyDict_SetItemString(dict, "mousebutton", ToPyInt(m_button));
 		}
+
+#endif
 
 	private:
 

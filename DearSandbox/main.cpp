@@ -1,5 +1,4 @@
-#define PY_SSIZE_T_CLEAN
-#include <Python.h>
+#include "mvPython.h"
 #include "mvStdOutput.h"
 #include "mvMarvel.h"
 #include "mvApp.h"
@@ -7,7 +6,6 @@
 #include <iostream>
 #include <fstream>
 #include <filesystem>
-#include "mvPythonParser.h"
 
 namespace fs = std::filesystem;
 using namespace Marvel;
