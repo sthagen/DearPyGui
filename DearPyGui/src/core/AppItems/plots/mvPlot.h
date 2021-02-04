@@ -47,7 +47,7 @@ namespace Marvel {
 
 	public:
 
-		MV_APPITEM_TYPE(mvAppItemType::Plot, "add_plot")
+		MV_APPITEM_TYPE_OLD_SYSTEM(mvAppItemType::Plot, "add_plot")
 
 		mvPlot(const std::string& name, mvCallable queryCallback);
 		~mvPlot(){clear();}
@@ -91,6 +91,7 @@ namespace Marvel {
 
 		[[nodiscard]] bool isPlotQueried() const;
 		float* getPlotQueryArea();
+		mvRef<mvDrawList> getDrawList() { return m_drawList; }
 		
 		ImPlotFlags        getFlags         () const { return m_flags; }
 		ImPlotAxisFlags    getXFlags        () const { return m_xflags; }
@@ -116,7 +117,8 @@ namespace Marvel {
 
 	private:
 
-		// new
+		mvRef<mvDrawList>             m_drawList;
+		
 		std::string                   m_xaxisName;
 		std::string                   m_yaxisName;
 		ImPlotFlags                   m_flags    = 0;
@@ -230,7 +232,7 @@ namespace Marvel {
 		{
 			None = 0, Line, Area, Bar, Error, Heat, 
 			Image, Label, Pie, Scatter, Stem, Shade, 
-			Stair, Candle
+			Stair, Candle, VLine, HLine
 		};
 
 		mvSeries(std::string name, const std::vector<const std::vector<float>*>& data, ImPlotYAxis_ axis = ImPlotYAxis_1);
