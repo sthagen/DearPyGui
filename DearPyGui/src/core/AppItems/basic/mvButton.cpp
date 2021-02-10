@@ -2,6 +2,7 @@
 #include "mvButton.h"
 #include "mvApp.h"
 #include "mvValueStorage.h"
+#include "mvItemRegistry.h"
 
 namespace Marvel {
 
@@ -70,7 +71,7 @@ namespace Marvel {
 	{
 		auto styleManager = m_styleManager.getScopedStyleManager();
 		ScopedID id;
-		mvNewImGuiThemeScope scope(this);
+		mvImGuiThemeScope scope(this);
 
 		if (!m_core_config.enabled)
 		{
@@ -102,14 +103,23 @@ namespace Marvel {
 
 	}
 
-	void mv_add_button(const char* name, const mvButtonConfig& config)
+#ifdef MV_CPP
+
+	void add_button(const char* name, const mvButtonConfig& config)
 	{
 		auto item = CreateRef<mvButton>(name, config);
 
 		mvApp::GetApp()->getItemRegistry().addItemWithRuntimeChecks(item, config.parent.c_str(), config.before.c_str());
 	}
 
-#ifndef MV_CPP
+	void add_button(const char* name, mvCallable callable)
+	{
+		mvButtonConfig config;
+		config.callback = callable;
+		add_button(name, config);
+	}
+
+#else
 
 	void mvButton::setExtraConfigDict(PyObject* dict)
 	{

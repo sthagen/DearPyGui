@@ -9,13 +9,42 @@ namespace Marvel {
 	class mvTab : public mvBoolPtrBase
 	{
 
+		MV_APPITEM_TYPE(mvAppItemType::TabItem, mvTab, "add_tab")
+
+		MV_CREATE_THEME_CONSTANT(mvAppItemType::TabItem, mvThemeCol_Tab_Text			,  0L, 0L);
+		MV_CREATE_THEME_CONSTANT(mvAppItemType::TabItem, mvThemeCol_Tab_Border			,  5L, 0L);
+		MV_CREATE_THEME_CONSTANT(mvAppItemType::TabItem, mvThemeCol_Tab_Bg				, 33L, 0L);
+		MV_CREATE_THEME_CONSTANT(mvAppItemType::TabItem, mvThemeCol_Tab_BgHovered		, 34L, 0L);
+		MV_CREATE_THEME_CONSTANT(mvAppItemType::TabItem, mvThemeCol_Tab_BgActive		, 35L, 0L);
+		MV_CREATE_THEME_CONSTANT(mvAppItemType::TabItem, mvThemeCol_Tab_PopupBg			,  4L, 0L);
+		MV_CREATE_THEME_CONSTANT(mvAppItemType::TabItem, mvThemeStyle_Tab_Rounding		, 21L, 0L);
+		MV_CREATE_THEME_CONSTANT(mvAppItemType::TabItem, mvThemeStyle_Tab_PaddingX		, 10L, 0L);
+		MV_CREATE_THEME_CONSTANT(mvAppItemType::TabItem, mvThemeStyle_Tab_PaddingY		, 10L, 1L);
+		MV_CREATE_THEME_CONSTANT(mvAppItemType::TabItem, mvThemeStyle_Tab_InnerSpacingX	, 14L, 0L);
+		MV_CREATE_THEME_CONSTANT(mvAppItemType::TabItem, mvThemeStyle_Tab_InnerSpacingY	, 14L, 1L);
+
+		MV_START_COLOR_CONSTANTS
+			MV_CREATE_CONSTANT_PAIR(mvThemeCol_Tab_Text),
+			MV_CREATE_CONSTANT_PAIR(mvThemeCol_Tab_Border),
+			MV_CREATE_CONSTANT_PAIR(mvThemeCol_Tab_Bg),
+			MV_CREATE_CONSTANT_PAIR(mvThemeCol_Tab_BgHovered),
+			MV_CREATE_CONSTANT_PAIR(mvThemeCol_Tab_BgActive),
+			MV_CREATE_CONSTANT_PAIR(mvThemeCol_Tab_PopupBg),
+		MV_END_COLOR_CONSTANTS
+
+		MV_START_STYLE_CONSTANTS
+			MV_CREATE_CONSTANT_TUPLE(mvThemeStyle_Tab_Rounding		, 0, 12),
+			MV_CREATE_CONSTANT_TUPLE(mvThemeStyle_Tab_PaddingX		, 0, 20),
+			MV_CREATE_CONSTANT_TUPLE(mvThemeStyle_Tab_PaddingY		, 0, 20),
+			MV_CREATE_CONSTANT_TUPLE(mvThemeStyle_Tab_InnerSpacingX	, 0, 20),
+			MV_CREATE_CONSTANT_TUPLE(mvThemeStyle_Tab_InnerSpacingY	, 0, 20),
+		MV_END_STYLE_CONSTANTS
+
 	public:
 
 		static void InsertParser(std::map<std::string, mvPythonParser>* parsers);
 
 	public:
-
-		MV_APPITEM_TYPE_OLD_SYSTEM(mvAppItemType::TabItem, "add_tab")
 
 		mvTab(const std::string& name);
 

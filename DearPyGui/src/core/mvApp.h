@@ -21,18 +21,8 @@
 #include <thread>
 #include <future>
 #include <atomic>
-#include "mvCore.h"
 #include "mvEvents.h"
-#include "mvItemRegistry.h"
-#include "mvDrawList.h"
-#include "mvTextureStorage.h"
-#include "mvValueStorage.h"
 #include <memory>
-
-//-----------------------------------------------------------------------------
-// Typedefs
-//-----------------------------------------------------------------------------
-typedef std::map<ImGuiStyleVar, ImVec2> mvStyle;
 
 namespace Marvel {
 
@@ -42,7 +32,10 @@ namespace Marvel {
     class mvWindowAppItem;
     class mvTextEditor;
     class mvWindow;
-    class mvTheme;
+    class mvThemeManager;
+    class mvItemRegistry;
+    class mvTextureStorage;
+    class mvValueStorage;
     class mvCallbackRegistry;
     struct mvColor;
     enum class mvAppItemType;
@@ -91,9 +84,9 @@ namespace Marvel {
         //-----------------------------------------------------------------------------
         // Managers
         //-----------------------------------------------------------------------------
-        mvItemRegistry&          getItemRegistry    () { return *m_itemRegistry; }
-        mvTextureStorage&        getTextureStorage  () { return *m_textureStorage; }
-        mvValueStorage&          getValueStorage    () { return *(m_valueStorage.get()); }
+        mvItemRegistry&          getItemRegistry    ();
+        mvTextureStorage&        getTextureStorage  ();
+        mvValueStorage&          getValueStorage    ();
         mvCallbackRegistry&      getCallbackRegistry();
         
         //-----------------------------------------------------------------------------
@@ -138,7 +131,8 @@ namespace Marvel {
         //-----------------------------------------------------------------------------
         std::map<std::string, mvPythonParser>* getParsers      () { return m_parsers.get(); }
         std::mutex& getMutex() const { return m_mutex; }
-        std::unordered_map<mvAppItemType, ThemeColors>& getColors() { return m_colors; }
+        std::unordered_map<mvAppItemType, mvThemeColors>& getColors() { return m_colors; }
+        std::unordered_map<mvAppItemType, mvThemeStyles>& getStyles() { return m_styles; }
             
     private:
 
@@ -159,9 +153,10 @@ namespace Marvel {
         mvOwnedPtr<mvItemRegistry>                     m_itemRegistry;
         mvOwnedPtr<mvTextureStorage>                   m_textureStorage;
         mvOwnedPtr<mvValueStorage>                     m_valueStorage;
-        mvOwnedPtr<mvTheme>                            m_themeManager;
+        mvOwnedPtr<mvThemeManager>                     m_themeManager;
         mvOwnedPtr<mvCallbackRegistry>                 m_callbackRegistry;
-        std::unordered_map<mvAppItemType, ThemeColors> m_colors;
+        std::unordered_map<mvAppItemType, mvThemeColors> m_colors;
+        std::unordered_map<mvAppItemType, mvThemeStyles> m_styles;
                                                      
         // docking                                   
         bool                                         m_docking          = false;

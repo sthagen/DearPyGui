@@ -18,7 +18,7 @@
 [![static-analysis](https://github.com/hoffstadt/DearPyGui/workflows/static-analysis/badge.svg?branch=master)](https://github.com/hoffstadt/DearPyGui/actions?workflow=static-analysis)
 [![Build status](https://ci.appveyor.com/api/projects/status/eypfn2lyuwfv8mel?svg=true)](https://ci.appveyor.com/project/hoffstadt/dearpygui)
 
-**Dear PyGui** is a **simple to use (but powerful) Python GUI framework**. _Dear PyGui_ provides a wrapping of **[Dear ImGui](https://github.com/ocornut/imgui)** which simulates a traditional retained mode GUI (as opposed to _Dear ImGui_'s immediate mode paradigm).
+**Dear PyGui** is a **simple to use (but powerful) Python GUI framework**. _Dear PyGui_ is **NOT** a wrapping of **[Dear ImGui](https://github.com/ocornut/imgui)** in the normal sense. It is a library built with _Dear ImGui_ which simulates a traditional retained mode GUI (as opposed to _Dear ImGui_'s immediate mode paradigm).
 
 <BR>![Themes](https://github.com/hoffstadt/DearPyGui/blob/assets/linuxthemes.PNG?raw=true)
 
@@ -134,7 +134,7 @@ If you are having issues or want to help, here are some places you can go:
 Ongoing _Dear PyGui_ development is financially supported by users and private sponsors.
 
 These include:
-* 🏢 [Tkachenko Igor](https://github.com/foozzi) _Corporate Sponsor_
+* 🏆 [Tkachenko Igor](https://github.com/foozzi) _Partner Sponsor_
 * 🏆 [Dean Keinan](https://github.com/deankeinan) _Partner Sponsor_
 * 🏆 [何凌锋](https://github.com/Hedaozi) _Partner Sponsor_
 * 🏆 [Nikki Luzader](https://github.com/nikkiluzader) _Partner Sponsor_

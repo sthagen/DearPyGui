@@ -7,20 +7,41 @@ namespace Marvel{
 
 	class mvSimplePlot : public mvFloatVectPtrBase
 	{
+		MV_APPITEM_TYPE(mvAppItemType::SimplePlot, mvSimplePlot, "add_simple_plot")
 
-		MV_APPITEM_TYPE_OLD_SYSTEM(mvAppItemType::SimplePlot, "add_simple_plot")
+		MV_CREATE_THEME_CONSTANT(mvAppItemType::SimplePlot, mvThemeCol_SimplePlot_Text				,  0L, 0L);
+		MV_CREATE_THEME_CONSTANT(mvAppItemType::SimplePlot, mvThemeCol_SimplePlot_Border			,  5L, 0L);
+		MV_CREATE_THEME_CONSTANT(mvAppItemType::SimplePlot, mvThemeCol_SimplePlot_BorderShadow		,  6L, 0L);
+		MV_CREATE_THEME_CONSTANT(mvAppItemType::SimplePlot, mvThemeCol_SimplePlot_Bg				,  7L, 0L);
+		MV_CREATE_THEME_CONSTANT(mvAppItemType::SimplePlot, mvThemeCol_SimplePlot_PopupBg			,  4L, 0L);
+		MV_CREATE_THEME_CONSTANT(mvAppItemType::SimplePlot, mvThemeCol_SimplePlot_Lines				, 40L, 0L);
+		MV_CREATE_THEME_CONSTANT(mvAppItemType::SimplePlot, mvThemeCol_SimplePlot_LinesHovered		, 41L, 0L);
+		MV_CREATE_THEME_CONSTANT(mvAppItemType::SimplePlot, mvThemeCol_SimplePlot_Histogram			, 42L, 0L);
+		MV_CREATE_THEME_CONSTANT(mvAppItemType::SimplePlot, mvThemeCol_SimplePlot_HistogramHovered	, 43L, 0L);
+
+		MV_START_COLOR_CONSTANTS
+			MV_CREATE_CONSTANT_PAIR(mvThemeCol_SimplePlot_Text),
+			MV_CREATE_CONSTANT_PAIR(mvThemeCol_SimplePlot_Border),
+			MV_CREATE_CONSTANT_PAIR(mvThemeCol_SimplePlot_BorderShadow),
+			MV_CREATE_CONSTANT_PAIR(mvThemeCol_SimplePlot_Bg),
+			MV_CREATE_CONSTANT_PAIR(mvThemeCol_SimplePlot_PopupBg),
+			MV_CREATE_CONSTANT_PAIR(mvThemeCol_SimplePlot_Lines),
+			MV_CREATE_CONSTANT_PAIR(mvThemeCol_SimplePlot_LinesHovered),
+			MV_CREATE_CONSTANT_PAIR(mvThemeCol_SimplePlot_Histogram),
+			MV_CREATE_CONSTANT_PAIR(mvThemeCol_SimplePlot_HistogramHovered),
+		MV_END_COLOR_CONSTANTS
 
 	public:
 		mvSimplePlot(const std::string& name, const std::vector<float>& value)
-			: mvFloatVectPtrBase(name, value, name) 
+			: mvFloatVectPtrBase(name, value, "") 
 		{
 
 			m_description.ignoreSizeUpdate = true;
 
 			if (!value.empty())
 			{
-				m_max = (*m_value)[0];
-				m_min = (*m_value)[0];
+				m_max = m_value->data()[0];
+				m_min = m_value->data()[0];
 
 				for (auto& item : *m_value)
 				{

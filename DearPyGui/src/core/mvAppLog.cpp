@@ -3,6 +3,7 @@
 #include <mutex>
 #include "mvApp.h"
 #include "mvInput.h"
+#include "mvItemRegistry.h"
 
 typedef std::chrono::high_resolution_clock clock_;
 typedef std::chrono::duration<double, std::ratio<1> > second_;
@@ -120,6 +121,8 @@ namespace Marvel {
 		static std::mutex mutex;
 
 		std::lock_guard<std::mutex> lock(mutex);
+		if (LineOffsets.size() > 100000)
+			Clear();
 
 		int old_size = Buf.size();
 		va_list args;

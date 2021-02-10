@@ -11,8 +11,11 @@
 #include "mvProfiler.h"
 #include <implot.h>
 #include "mvEventListener.h"
-#include "mvTheme.h"
+#include "mvThemeManager.h"
 #include "mvCallbackRegistry.h"
+#include "mvTextureStorage.h"
+#include "mvValueStorage.h"
+#include "mvItemRegistry.h"
 
 namespace Marvel {
 
@@ -109,7 +112,7 @@ namespace Marvel {
 			else
                 mvApp::GetApp()->getCallbackRegistry().submitCallback([=]()
                     {
-                        ThrowPythonException("Window does not exists.", false);
+                        ThrowPythonException("Window does not exists.");
                     });
 		}
 
@@ -135,7 +138,7 @@ namespace Marvel {
 
 		mvEventBus::Subscribe(this, 0, mvEVT_CATEGORY_VIEWPORT);
 
-		m_parsers = BuildDearPyGuiInterface();
+	
 
 		// info
         mvAppLog::Clear();
@@ -143,6 +146,7 @@ namespace Marvel {
 		mvAppLog::AddLog("[DearImGui Version] %0s\n", IMGUI_VERSION);
 
 #ifndef MV_CPP
+		m_parsers = BuildDearPyGuiInterface();
         mvAppLog::AddLog("[Python Version] %0s\n", PY_VERSION);
 #endif // !MV_CPP
 
@@ -157,7 +161,7 @@ namespace Marvel {
 		m_itemRegistry = CreateOwnedPtr<mvItemRegistry>();
 		m_textureStorage = CreateOwnedPtr<mvTextureStorage>();
 		m_valueStorage = CreateOwnedPtr<mvValueStorage>();
-		m_themeManager = CreateOwnedPtr<mvTheme>();
+		m_themeManager = CreateOwnedPtr<mvThemeManager>();
         m_callbackRegistry = CreateOwnedPtr<mvCallbackRegistry>();
 
 	}
@@ -166,6 +170,21 @@ namespace Marvel {
     { 
         return *m_callbackRegistry; 
     }
+
+	mvItemRegistry& mvApp::getItemRegistry() 
+	{ 
+		return *m_itemRegistry; 
+	}
+
+	mvTextureStorage& mvApp::getTextureStorage() 
+	{ 
+		return *m_textureStorage; 
+	}
+
+	mvValueStorage& mvApp::getValueStorage() 
+	{ 
+		return *(m_valueStorage.get()); 
+	}
 
 	bool mvApp::onEvent(mvEvent& event)
 	{

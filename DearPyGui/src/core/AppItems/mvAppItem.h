@@ -12,12 +12,11 @@
 #include <vector>
 #include <map>
 #include <imgui.h>
-#include "mvCore.h"
 #include "mvAppItemState.h"
 #include "mvAppItemDescription.h"
 #include "mvAppItemStyleManager.h"
 #include "mvCallbackRegistry.h"
-#include "mvTheme.h"
+#include "mvThemeManager.h"
 
 //-----------------------------------------------------------------------------
 // Helper Macros
@@ -142,14 +141,22 @@ namespace Marvel {
         mvAppItem*                          getParent() { return m_parent; }
 
         // theme get/set
-        std::unordered_map<mvAppItemType, ThemeColors>& getColors() { return m_colors; }
+        std::unordered_map<mvAppItemType, mvThemeColors>& getColors() { return m_colors; }
         virtual const std::vector<std::pair<std::string, long>>& getColorConstants() const 
         { 
             static std::vector<std::pair<std::string, long>> constants;
             return constants;
         }
+        std::unordered_map<mvAppItemType, mvThemeStyles>& getStyles() { return m_styles; }
+        virtual const std::vector<std::tuple<std::string, long, int, int>>& getStyleConstants() const
+        {
+            static std::vector<std::tuple<std::string, long, int, int>> constants;
+            return constants;
+        }
 
+        //-----------------------------------------------------------------------------
         // cpp interface
+        //-----------------------------------------------------------------------------
         virtual void updateConfig(mvAppItemConfig* config) {}
         virtual mvAppItemConfig* getConfig() { return nullptr; }
         void updateCoreConfig();
@@ -191,7 +198,8 @@ namespace Marvel {
 
         std::string                   m_label; // internal label
 
-        std::unordered_map<mvAppItemType, ThemeColors> m_colors;
+        std::unordered_map<mvAppItemType, mvThemeColors> m_colors;
+        std::unordered_map<mvAppItemType, mvThemeStyles> m_styles;
     };
 
 }

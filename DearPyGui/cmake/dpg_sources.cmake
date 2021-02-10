@@ -1,7 +1,14 @@
 ﻿
 set(MARVEL_PY_SOURCES
 
+	"$<$<PLATFORM_ID:Windows>:src/core/mvMarvel.cpp>"
+	"$<$<PLATFORM_ID:Linux>:src/core/mvMarvel.cpp>"
+	"$<$<PLATFORM_ID:Darwin>:src/core/mvMarvel.mm>"
+
 	"src/core/Registries/mvDataStorage.cpp"
+
+	"src/core/AppItems/composite/mvDebugWindow.cpp"
+	"src/core/AppItems/composite/mvDocWindow.cpp"
 
 	"src/core/PythonUtilities/mvPyObject.cpp"
 	"src/core/PythonUtilities/mvPythonTranslator.cpp"
@@ -29,10 +36,6 @@ set(MARVEL_CPP_SOURCES
 
 set(MARVEL_SOURCES
 
-	"$<$<PLATFORM_ID:Windows>:src/core/mvMarvel.cpp>"
-	"$<$<PLATFORM_ID:Linux>:src/core/mvMarvel.cpp>"
-	"$<$<PLATFORM_ID:Darwin>:src/core/mvMarvel.mm>"
-
 	"$<$<PLATFORM_ID:Windows>:src/platform/Windows/mvWindowsWindow.cpp>"
 	"$<$<PLATFORM_ID:Windows>:src/platform/Windows/mvUtilities.cpp>"
 
@@ -50,7 +53,7 @@ set(MARVEL_SOURCES
 	"src/core/mvProfiler.cpp"
 
 	"src/core/Theming/mvAppItemStyleManager.cpp"
-	"src/core/Theming/mvTheme.cpp"
+	"src/core/Theming/mvThemeManager.cpp"
 
 	"src/core/DrawCommands/mvDrawList.cpp"
 	"src/core/DrawCommands/mvDrawImageCmd.cpp"
@@ -114,8 +117,6 @@ set(MARVEL_SOURCES
 	
 	"src/core/AppItems/composite/mvFileDialog.cpp"
 	"src/core/AppItems/composite/mvAboutWindow.cpp"
-	"src/core/AppItems/composite/mvDebugWindow.cpp"
-	"src/core/AppItems/composite/mvDocWindow.cpp"
 	"src/core/AppItems/composite/mvTable.cpp"
 	"src/core/AppItems/composite/mvLogger.cpp"
 	"src/core/AppItems/composite/mvStyleWindow.cpp"

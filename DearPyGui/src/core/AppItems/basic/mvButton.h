@@ -11,20 +11,31 @@ namespace Marvel {
 		bool arrow = false;
 	};
 
+#ifdef MV_CPP
+	void add_button(const char* name, const mvButtonConfig& config = {});
+	void add_button(const char* name, mvCallable callable);
+#else
 	PyObject* add_button(PyObject* self, PyObject* args, PyObject* kwargs);
-	void mv_add_button(const char* name, const mvButtonConfig& config = {});
+#endif
+	
 
 	class mvButton : public mvAppItem
 	{
 
 		MV_APPITEM_TYPE(mvAppItemType::Button, mvButton, "add_button")
 
-		MV_CREATE_THEME_CONSTANT(mvAppItemType::Button, mvThemeCol_Button_Text        ,  0L);
-		MV_CREATE_THEME_CONSTANT(mvAppItemType::Button, mvThemeCol_Button_Bg          , 21L);
-		MV_CREATE_THEME_CONSTANT(mvAppItemType::Button, mvThemeCol_Button_Hovered     , 22L);
-		MV_CREATE_THEME_CONSTANT(mvAppItemType::Button, mvThemeCol_Button_Active      , 23L);
-		MV_CREATE_THEME_CONSTANT(mvAppItemType::Button, mvThemeCol_Button_Border      ,  5L);
-		MV_CREATE_THEME_CONSTANT(mvAppItemType::Button, mvThemeCol_Button_BorderShadow,  6L);
+		MV_CREATE_THEME_CONSTANT(mvAppItemType::Button, mvThemeCol_Button_Text			,  0L, 0L);
+		MV_CREATE_THEME_CONSTANT(mvAppItemType::Button, mvThemeCol_Button_Bg			, 21L, 0L);
+		MV_CREATE_THEME_CONSTANT(mvAppItemType::Button, mvThemeCol_Button_Hovered		, 22L, 0L);
+		MV_CREATE_THEME_CONSTANT(mvAppItemType::Button, mvThemeCol_Button_Active		, 23L, 0L);
+		MV_CREATE_THEME_CONSTANT(mvAppItemType::Button, mvThemeCol_Button_Border		,  5L, 0L);
+		MV_CREATE_THEME_CONSTANT(mvAppItemType::Button, mvThemeCol_Button_BorderShadow	,  6L, 0L);
+		MV_CREATE_THEME_CONSTANT(mvAppItemType::Button, mvThemeStyle_Button_Rounding	, 11L, 0L);
+		MV_CREATE_THEME_CONSTANT(mvAppItemType::Button, mvThemeStyle_Button_BorderSize	, 12L, 0L);
+		MV_CREATE_THEME_CONSTANT(mvAppItemType::Button, mvThemeStyle_Button_TextAlignX	, 22L, 0L);
+		MV_CREATE_THEME_CONSTANT(mvAppItemType::Button, mvThemeStyle_Button_TextAlignY	, 22L, 1L);
+		MV_CREATE_THEME_CONSTANT(mvAppItemType::Button, mvThemeStyle_Button_PaddingX	, 10L, 0L);
+		MV_CREATE_THEME_CONSTANT(mvAppItemType::Button, mvThemeStyle_Button_PaddingY	, 10L, 1L);
 
 		MV_START_COLOR_CONSTANTS
 			MV_CREATE_CONSTANT_PAIR(mvThemeCol_Button_Text),
@@ -34,6 +45,16 @@ namespace Marvel {
 			MV_CREATE_CONSTANT_PAIR(mvThemeCol_Button_Border),
 			MV_CREATE_CONSTANT_PAIR(mvThemeCol_Button_BorderShadow),
 		MV_END_COLOR_CONSTANTS
+
+		MV_START_STYLE_CONSTANTS
+			MV_CREATE_CONSTANT_TUPLE(mvThemeStyle_Button_Rounding	, 0, 12),
+			MV_CREATE_CONSTANT_TUPLE(mvThemeStyle_Button_BorderSize	, 0 , 1),
+			MV_CREATE_CONSTANT_TUPLE(mvThemeStyle_Button_TextAlignX	, 0 , 1),
+			MV_CREATE_CONSTANT_TUPLE(mvThemeStyle_Button_TextAlignY	, 0 , 1),
+			MV_CREATE_CONSTANT_TUPLE(mvThemeStyle_Button_PaddingX	, 0 ,20),
+			MV_CREATE_CONSTANT_TUPLE(mvThemeStyle_Button_PaddingY	, 0 ,20),
+		MV_END_STYLE_CONSTANTS
+
 
 	public:
 

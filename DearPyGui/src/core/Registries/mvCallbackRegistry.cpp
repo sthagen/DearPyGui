@@ -3,6 +3,7 @@
 #include "mvApp.h"
 #include <chrono>
 #include <iostream>
+#include "mvItemRegistry.h"
 
 namespace Marvel {
 
@@ -58,10 +59,7 @@ namespace Marvel {
 		runTasks();
 
 		if(m_renderCallback)
-			submitCallback([=]() mutable
-				{
-					runCallback(m_renderCallback, "Main Application");
-				});
+			addCallback(m_renderCallback, "Main Application", nullptr);
 		
 		return false;
 	}
@@ -77,7 +75,7 @@ namespace Marvel {
 
 	bool mvCallbackRegistry::onInputs(mvEvent& event)
 	{
-		const char* active = mvApp::GetApp()->getItemRegistry().getActiveWindow().c_str();
+		std::string active = mvApp::GetApp()->getItemRegistry().getActiveWindow();
 
 		switch (event.type)
 		{
@@ -97,6 +95,11 @@ namespace Marvel {
 				{
 					runCallback(m_keyDownCallback, active, ToPyMPair(GetEInt(event, "KEY"), GetEFloat(event, "DURATION")));
 				});
+			if (m_acceleratorCallback)
+				submitCallback([=]() mutable
+					{
+						runCallback(m_acceleratorCallback, active, ToPyInt(GetEInt(event, "KEY")));
+					});
 			break;
 
 		case mvEVT_KEY_RELEASE:
@@ -186,6 +189,7 @@ namespace Marvel {
 			m_calls.wait_and_pop(t2);
 			Py_END_ALLOW_THREADS;
 			t2();
+			m_callCount--;
 		}
 
 		runCallback(m_onCloseCallback, "Main Application", nullptr);
@@ -194,9 +198,18 @@ namespace Marvel {
 
 	void mvCallbackRegistry::addCallback(mvCallable callable, const std::string& sender, mvCallableData data)
 	{
+
 #ifdef MV_CPP
 		submitCallback(callable);
 #else
+		if (m_callCount > s_MaxNumberOfCalls)
+		{
+			if (data != nullptr)
+				Py_XDECREF(data);
+			mvAppLog::LogWarning("[W0001] Too many callbacks already in the queue.");
+			return;
+		}
+
 		submitCallback([=]() {
 			runCallback(callable, sender, data);
 			});
