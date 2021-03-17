@@ -12,18 +12,19 @@ namespace Marvel {
 
 	PyObject* add_group(PyObject* self, PyObject* args, PyObject* kwargs);
 
+	MV_REGISTER_WIDGET(mvGroup);
 	class mvGroup : public mvAppItem
 	{
-		MV_APPITEM_TYPE(mvAppItemType::Group, mvGroup, "add_group")
-		MV_CREATE_THEME_CONSTANT(mvAppItemType::Group, mvThemeStyle_Group_ItemSpacingX, 13L, 0L);
-		MV_CREATE_THEME_CONSTANT(mvAppItemType::Group, mvThemeStyle_Group_ItemSpacingY, 13L, 1L);
+		MV_APPITEM_TYPE(mvAppItemType::mvGroup, "add_group")
+		MV_CREATE_THEME_CONSTANT(mvThemeStyle_Group_ItemSpacingX, 13L, 0L);
+		MV_CREATE_THEME_CONSTANT(mvThemeStyle_Group_ItemSpacingY, 13L, 1L);
 
 		MV_START_COLOR_CONSTANTS
 		MV_END_COLOR_CONSTANTS
 
 		MV_START_STYLE_CONSTANTS
-			MV_CREATE_CONSTANT_TUPLE(mvThemeStyle_Group_ItemSpacingX, 0, 20),
-			MV_CREATE_CONSTANT_TUPLE(mvThemeStyle_Group_ItemSpacingY, 0, 20),
+			MV_CREATE_CONSTANT_TUPLE(mvThemeStyle_Group_ItemSpacingX, 8, 20),
+			MV_CREATE_CONSTANT_TUPLE(mvThemeStyle_Group_ItemSpacingY, 4, 20),
 		MV_END_STYLE_CONSTANTS
 
 	public:

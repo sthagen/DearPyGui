@@ -2,6 +2,7 @@
 #include "mvInput.h"
 #include "mvApp.h"
 #include "mvItemRegistry.h"
+#include "mvImGuiThemeScope.h"
 
 namespace Marvel {
 
@@ -29,7 +30,6 @@ namespace Marvel {
 
 	void mvGroup::draw()
 	{
-		auto styleManager = m_styleManager.getScopedStyleManager();
 		mvImGuiThemeScope scope(this);
 
 		if (m_core_config.width != 0)
@@ -97,7 +97,7 @@ namespace Marvel {
 		int horizontal = false;
 		float horizontal_spacing = -1.0f;
 
-		if (!(*mvApp::GetApp()->getParsers())["add_group"].parse(args, kwargs, __FUNCTION__, &name,
+		if (!(mvApp::GetApp()->getParsers())["add_group"].parse(args, kwargs, __FUNCTION__, &name,
 			&show, &parent, &before, &width, &horizontal, &horizontal_spacing))
 			return ToPyBool(false);
 

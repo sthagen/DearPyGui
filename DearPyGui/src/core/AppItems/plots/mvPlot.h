@@ -20,6 +20,16 @@
 //-----------------------------------------------------------------------------
 
 namespace Marvel {
+
+	// forward declarations
+	class mvSeries;
+	struct mvPlotAnnotation;
+	struct mvDragLine;
+	struct mvDragPoint;
+	class mvDrawList;
+
+#ifdef MV_CPP
+#else
 	
 	PyObject* add_plot         (PyObject* self, PyObject* args, PyObject* kwargs);
 	PyObject* add_drag_point   (PyObject* self, PyObject* args, PyObject* kwargs);
@@ -29,26 +39,107 @@ namespace Marvel {
 	PyObject* add_drag_line    (PyObject* self, PyObject* args, PyObject* kwargs);
 	PyObject* delete_drag_line (PyObject* self, PyObject* args, PyObject* kwargs);
 
-	// forward declarations
-	class mvSeries;
-	struct mvPlotAnnotation;
-	struct mvDragLine;
-	struct mvDragPoint;
-	class mvDrawList;
+	// data removal
+	PyObject* clear_plot(PyObject* self, PyObject* args, PyObject* kwargs);
+	PyObject* delete_series(PyObject* self, PyObject* args, PyObject* kwargs);
+
+	// ticks
+	PyObject* reset_xticks(PyObject* self, PyObject* args, PyObject* kwargs);
+	PyObject* reset_yticks(PyObject* self, PyObject* args, PyObject* kwargs);
+	PyObject* set_xticks(PyObject* self, PyObject* args, PyObject* kwargs);
+	PyObject* set_yticks(PyObject* self, PyObject* args, PyObject* kwargs);
+
+	// query
+	PyObject* is_plot_queried(PyObject* self, PyObject* args, PyObject* kwargs);
+	PyObject* get_plot_query_area(PyObject* self, PyObject* args, PyObject* kwargs);
+
+	// limits
+	PyObject* set_plot_xlimits_auto(PyObject* self, PyObject* args, PyObject* kwargs);
+	PyObject* set_plot_ylimits_auto(PyObject* self, PyObject* args, PyObject* kwargs);
+	PyObject* set_plot_xlimits(PyObject* self, PyObject* args, PyObject* kwargs);
+	PyObject* set_plot_ylimits(PyObject* self, PyObject* args, PyObject* kwargs);
+	PyObject* get_plot_xlimits(PyObject* self, PyObject* args, PyObject* kwargs);
+	PyObject* get_plot_ylimits(PyObject* self, PyObject* args, PyObject* kwargs);
+
+	// series
+	PyObject* add_image_series(PyObject* self, PyObject* args, PyObject* kwargs);
+	PyObject* add_pie_series(PyObject* self, PyObject* args, PyObject* kwargs);
+	PyObject* add_line_series(PyObject* self, PyObject* args, PyObject* kwargs);
+	PyObject* add_bar_series(PyObject* self, PyObject* args, PyObject* kwargs);
+	PyObject* add_shade_series(PyObject* self, PyObject* args, PyObject* kwargs);
+	PyObject* add_scatter_series(PyObject* self, PyObject* args, PyObject* kwargs);
+	PyObject* add_stem_series(PyObject* self, PyObject* args, PyObject* kwargs);
+	PyObject* add_text_point(PyObject* self, PyObject* args, PyObject* kwargs);
+	PyObject* add_area_series(PyObject* self, PyObject* args, PyObject* kwargs);
+	PyObject* add_error_series(PyObject* self, PyObject* args, PyObject* kwargs);
+	PyObject* add_heat_series(PyObject* self, PyObject* args, PyObject* kwargs);
+	PyObject* add_stair_series(PyObject* self, PyObject* args, PyObject* kwargs);
+	PyObject* add_candle_series(PyObject* self, PyObject* args, PyObject* kwargs);
+	PyObject* add_vline_series(PyObject* self, PyObject* args, PyObject* kwargs);
+	PyObject* add_hline_series(PyObject* self, PyObject* args, PyObject* kwargs);
+#endif
+
 
 	//-----------------------------------------------------------------------------
 	// mvPlot
 	//-----------------------------------------------------------------------------
+	MV_REGISTER_WIDGET(mvPlot);
 	class mvPlot : public mvAppItem
 	{
 
 	public:
 
-		static void InsertParser(std::map<std::string, mvPythonParser>* parsers);
+		static void InsertParser   (std::map<std::string, mvPythonParser>* parsers);
+		static void InsertConstants(std::vector<std::pair<std::string, long>>& constants);
 
 	public:
 
-		MV_APPITEM_TYPE_OLD_SYSTEM(mvAppItemType::Plot, "add_plot")
+		MV_APPITEM_TYPE(mvAppItemType::mvPlot, "add_plot")
+
+		MV_CREATE_THEME_CONSTANT(mvThemeCol_Plot_FrameBg,       5L, 0L);
+		MV_CREATE_THEME_CONSTANT(mvThemeCol_Plot_PlotBg,        6L, 0L);
+		MV_CREATE_THEME_CONSTANT(mvThemeCol_Plot_PlotBorder,    7L, 0L);
+		MV_CREATE_THEME_CONSTANT(mvThemeCol_Plot_LegendBg,      8L, 0L);
+		MV_CREATE_THEME_CONSTANT(mvThemeCol_Plot_LegendBorder,  9L, 0L);
+		MV_CREATE_THEME_CONSTANT(mvThemeCol_Plot_LegendText,   10L, 0L);
+		MV_CREATE_THEME_CONSTANT(mvThemeCol_Plot_TitleText,    11L, 0L);
+		MV_CREATE_THEME_CONSTANT(mvThemeCol_Plot_InlayText,    12L, 0L);
+		MV_CREATE_THEME_CONSTANT(mvThemeCol_Plot_XAxis,        13L, 0L);
+		MV_CREATE_THEME_CONSTANT(mvThemeCol_Plot_XAxisGrid,    14L, 0L);
+		MV_CREATE_THEME_CONSTANT(mvThemeCol_Plot_YAxis,        15L, 0L);
+		MV_CREATE_THEME_CONSTANT(mvThemeCol_Plot_YAxisGrid,    16L, 0L);
+		MV_CREATE_THEME_CONSTANT(mvThemeCol_Plot_YAxis2,       17L, 0L);
+		MV_CREATE_THEME_CONSTANT(mvThemeCol_Plot_YAxisGrid2,   18L, 0L);
+		MV_CREATE_THEME_CONSTANT(mvThemeCol_Plot_YAxis3,       19L, 0L);
+		MV_CREATE_THEME_CONSTANT(mvThemeCol_Plot_YAxisGrid3,   20L, 0L);
+		MV_CREATE_THEME_CONSTANT(mvThemeCol_Plot_Selection,    21L, 0L);
+		MV_CREATE_THEME_CONSTANT(mvThemeCol_Plot_Query,        22L, 0L);
+		MV_CREATE_THEME_CONSTANT(mvThemeCol_Plot_Crosshairs,   23L, 0L);
+
+		MV_START_COLOR_CONSTANTS
+			MV_CREATE_CONSTANT_PAIR(mvThemeCol_Plot_FrameBg,      mvColor(255, 255, 255,  18)),
+			MV_CREATE_CONSTANT_PAIR(mvThemeCol_Plot_PlotBg,       mvColor(  0,   0,   0, 128)),
+			MV_CREATE_CONSTANT_PAIR(mvThemeCol_Plot_PlotBorder,   mvColor(110, 110, 128, 128)),
+			MV_CREATE_CONSTANT_PAIR(mvThemeCol_Plot_LegendBg,     mvColor( 20,  20,  20, 255)),
+			MV_CREATE_CONSTANT_PAIR(mvThemeCol_Plot_LegendBorder, mvColor(110, 110, 128, 128)),
+			MV_CREATE_CONSTANT_PAIR(mvThemeCol_Plot_LegendText,   mvColor(255, 255, 255, 255)),
+			MV_CREATE_CONSTANT_PAIR(mvThemeCol_Plot_TitleText,    mvColor(255, 255, 255, 255)),
+			MV_CREATE_CONSTANT_PAIR(mvThemeCol_Plot_InlayText,    mvColor(255, 255, 255, 255)),
+			MV_CREATE_CONSTANT_PAIR(mvThemeCol_Plot_XAxis,        mvColor(255, 255, 255, 255)),
+			MV_CREATE_CONSTANT_PAIR(mvThemeCol_Plot_XAxisGrid,    mvColor(255, 255, 255, 255)),
+			MV_CREATE_CONSTANT_PAIR(mvThemeCol_Plot_YAxis,        mvColor(255, 255, 255, 255)),
+			MV_CREATE_CONSTANT_PAIR(mvThemeCol_Plot_YAxisGrid,    mvColor(255, 255, 255, 255)),
+			MV_CREATE_CONSTANT_PAIR(mvThemeCol_Plot_YAxis2,       mvColor(255, 255, 255, 255)),
+			MV_CREATE_CONSTANT_PAIR(mvThemeCol_Plot_YAxisGrid2,   mvColor(255, 255, 255, 255)),
+			MV_CREATE_CONSTANT_PAIR(mvThemeCol_Plot_YAxis3,       mvColor(255, 255, 255, 255)),
+			MV_CREATE_CONSTANT_PAIR(mvThemeCol_Plot_YAxisGrid3,   mvColor(255, 255, 255, 255)),
+			MV_CREATE_CONSTANT_PAIR(mvThemeCol_Plot_Selection,    mvColor(255, 153,   0, 255)),
+			MV_CREATE_CONSTANT_PAIR(mvThemeCol_Plot_Query,        mvColor(  0, 255, 112, 255)),
+			MV_CREATE_CONSTANT_PAIR(mvThemeCol_Plot_Crosshairs,   mvColor(255, 255, 255, 128)),
+		MV_END_COLOR_CONSTANTS
+
+		MV_START_STYLE_CONSTANTS
+		MV_END_STYLE_CONSTANTS
 
 		mvPlot(const std::string& name, mvCallable queryCallback);
 		~mvPlot(){clear();}
@@ -132,7 +223,7 @@ namespace Marvel {
 		bool                          m_showDragPoints = true;
 
 
-		ImPlotColormap                m_colormap = ImPlotColormap_Default;
+		ImPlotColormap                m_colormap = ImPlotColormap_Deep;
 
 		bool                          m_setXLimits = false;
 		bool                          m_setYLimits = false;

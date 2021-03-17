@@ -17,7 +17,7 @@ namespace Marvel {
 	void mvDrawRectCmd::draw(ImDrawList* drawlist, float x, float y)
 	{
 		mvVec2 start = {x, y};
-		if (m_fill.specified)
+		if (m_fill.r > 0.0f)
 			drawlist->AddRectFilled(m_pmin + start, m_pmax + start, m_fill, m_rounding, ImDrawCornerFlags_All);
 		drawlist->AddRect(m_pmin + start, m_pmax + start, m_color, m_rounding, ImDrawCornerFlags_All, m_thickness);
 	}
@@ -59,7 +59,7 @@ namespace Marvel {
 		PyObject* fill = nullptr;
 		const char* tag = "";
 
-		if (!(*mvApp::GetApp()->getParsers())["draw_rectangle"].parse(args, kwargs, __FUNCTION__, &drawing, &pmin, &pmax, &color, &fill, &rounding, &thickness, &tag))
+		if (!(mvApp::GetApp()->getParsers())["draw_rectangle"].parse(args, kwargs, __FUNCTION__, &drawing, &pmin, &pmax, &color, &fill, &rounding, &thickness, &tag))
 			return GetPyNone();
 
 
@@ -71,7 +71,7 @@ namespace Marvel {
 		auto cmd = CreateRef<mvDrawRectCmd>(mpmin, mpmax, mcolor, mfill, rounding, thickness);
 		cmd->tag = tag;
 
-		std::lock_guard<std::mutex> lk(mvApp::GetApp()->GetApp()->getMutex());
+		std::lock_guard<std::mutex> lk(mvApp::GetApp()->getMutex());
 		mvRef<mvDrawList> drawlist = GetDrawListFromTarget(drawing);
 		if (drawlist)
 			drawlist->addCommand(cmd);

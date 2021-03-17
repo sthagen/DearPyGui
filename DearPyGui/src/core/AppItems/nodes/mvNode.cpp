@@ -2,6 +2,7 @@
 #include <imnodes.h>
 #include "mvApp.h"
 #include "mvItemRegistry.h"
+#include "mvImNodesThemeScope.h"
 
 namespace Marvel {
 
@@ -64,9 +65,8 @@ namespace Marvel {
 
 	void mvNode::draw()
 	{
-		auto styleManager = m_styleManager.getScopedStyleManager();
 		ScopedID id;
-		mvImGuiThemeScope scope(this);
+		mvImNodesThemeScope scope(this);
 
 		if (m_dirty_pos)
 		{
@@ -144,7 +144,7 @@ namespace Marvel {
 		int xpos = 100;
 		int ypos = 100;
 
-		if (!(*mvApp::GetApp()->getParsers())["add_node"].parse(args, kwargs, __FUNCTION__, &name,
+		if (!(mvApp::GetApp()->getParsers())["add_node"].parse(args, kwargs, __FUNCTION__, &name,
 			&show, &label, &draggable, &parent, &before, &xpos, &ypos))
 			return ToPyBool(false);
 
@@ -156,7 +156,7 @@ namespace Marvel {
 		auto topParent = mvApp::GetApp()->getItemRegistry().topParent();
 		if (topParent)
 		{
-			if (topParent->getType() != mvAppItemType::NodeEditor)
+			if (topParent->getType() != mvAppItemType::mvNodeEditor)
 			{
 				ThrowPythonException("Parent on parent stack must be a node editor.");
 				return ToPyBool(false);

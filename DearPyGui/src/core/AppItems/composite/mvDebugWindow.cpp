@@ -14,7 +14,9 @@ namespace Marvel {
 		m_core_config.width = 700;
 		m_core_config.height = 500;
 		m_description.deleteAllowed = false;
-		m_commands = GetAllCommands();
+
+		for (const auto& item : mvModule_Core::GetModuleParsers())
+			m_commands.emplace_back(item.first, item.second.getDocumentation());
 	}
 
 	void mvDebugWindow::InsertParser(std::map<std::string, mvPythonParser>* parsers)
@@ -163,10 +165,6 @@ namespace Marvel {
 				ImGui::Text("%d active allocations", io.MetricsActiveAllocations);
 				DebugItem("DearPyGui Version: ", mvApp::GetVersion());
 				DebugItem("ImGui Version: ", IMGUI_VERSION);
-#ifndef MV_CPP
-				DebugItem("Stored Data: ", std::to_string(mvDataStorage::GetDataCount()).c_str());
-#endif // !MV_CPP
-
 				DebugItem("Stored Textures: ", std::to_string(mvApp::GetApp()->getTextureStorage().getTextureCount()).c_str());
 
 
@@ -390,7 +388,7 @@ namespace Marvel {
 		const char* label = "";
 		int show = true;
 
-		if (!(*mvApp::GetApp()->getParsers())["add_debug_window"].parse(args, kwargs, __FUNCTION__, &name, &width,
+		if (!(mvApp::GetApp()->getParsers())["add_debug_window"].parse(args, kwargs, __FUNCTION__, &name, &width,
 			&height, &x_pos, &y_pos, &autosize, &no_resize, &no_title_bar, &no_move, &no_scrollbar,
 			&no_collapse, &horizontal_scrollbar, &no_focus_on_appearing, &no_bring_to_front_on_focus,
 			&noclose, &no_background, &label, &show))

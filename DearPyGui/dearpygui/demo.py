@@ -1072,7 +1072,6 @@ def show_demo():
                 add_pie_series("##PieChart1##demo", "PieChart1", [0.25, 0.30, 0.30], ["fish", "cow", "chicken"], 0.5, 0.5, 0.5)
                 add_pie_series("##PieChart2##demo", "PieChart2", [1, 1, 2, 3, 5], ["A", "B", "C", "D", "E"], 0.5, 0.5, 0.5, 
                                normalize=True, format="%.0f")
-                set_color_map("##PieChart2##demo", mvPlotColormap_Deep)
 
             with tree_node("Heatmaps##demo"):
                 add_plot("Heat Plot##demo", show_color_scale=True, scale_min=0.0, scale_max=6.0, 
@@ -1267,6 +1266,25 @@ def show_demo():
                     log_info("Info Message")
                     log_warning("Warning Message")
                     log_error("Error Message")
+                    py_items = [
+                        memoryview(bytes(5)),
+                        bytearray(5),
+                        b"Hello",
+                        True,
+                        frozenset({"apple", "banana", "cherry"}),
+                        {"apple", "banana", "cherry"},
+                        {"name" : "John", "age" : 36},
+                        range(6),
+                        ("apple", "banana", "cherry"),
+                        ["apple", "banana", "cherry"],
+                        -1j,
+                        20.5,
+                        20,
+                        "Hello World",
+                        None]
+                    for item in py_items:
+                        log_debug(type(item))
+                        log_debug(item)
 
                 add_button("Test Logger##demo", callback=LogCallback1)
                 add_same_line(spacing=10)

@@ -2,6 +2,7 @@
 #include "mvButton.h"
 #include "mvApp.h"
 #include "mvItemRegistry.h"
+#include "mvImGuiThemeScope.h"
 
 namespace Marvel {
 
@@ -23,6 +24,18 @@ namespace Marvel {
 			{mvPythonDataType::Bool, "show", "Attempt to render", "True"},
 			{mvPythonDataType::Bool, "enabled", "", "True"},
 		}, "Adds a button.", "None", "Adding Widgets") });
+	}
+
+	void mvButton::InsertConstants(std::vector<std::pair<std::string, long>>& constants)
+	{
+		//-----------------------------------------------------------------------------
+		// Cardinal directions
+		//-----------------------------------------------------------------------------
+		constants.emplace_back("mvDir_None", -1);
+		constants.emplace_back("mvDir_Left" , 0);
+		constants.emplace_back("mvDir_Right", 1);
+		constants.emplace_back("mvDir_Up"   , 2);
+		constants.emplace_back("mvDir_Down" , 3);
 	}
 
 	mvButton::mvButton(const std::string& name)
@@ -70,18 +83,17 @@ namespace Marvel {
 
 	void mvButton::draw()
 	{
-		auto styleManager = m_styleManager.getScopedStyleManager();
 		ScopedID id;
 		mvImGuiThemeScope scope(this);
 
 		if (!m_core_config.enabled)
 		{
-			auto disabled_color = ImVec4(ImGui::GetStyleColorVec4(ImGuiCol_TextDisabled));
-			disabled_color.w = 0.392f;
-			styleManager.addColorStyle(ImGuiCol_Button, disabled_color);
-			styleManager.addColorStyle(ImGuiCol_ButtonHovered, disabled_color);
-			styleManager.addColorStyle(ImGuiCol_ButtonActive, disabled_color);
-			styleManager.addColorStyle(ImGuiCol_Text, ImVec4(ImGui::GetStyleColorVec4(ImGuiCol_TextDisabled)));
+			//auto disabled_color = ImVec4(ImGui::GetStyleColorVec4(ImGuiCol_TextDisabled));
+			//disabled_color.w = 0.392f;
+			//styleManager.addColorStyle(ImGuiCol_Button, disabled_color);
+			//styleManager.addColorStyle(ImGuiCol_ButtonHovered, disabled_color);
+			//styleManager.addColorStyle(ImGuiCol_ButtonActive, disabled_color);
+			//styleManager.addColorStyle(ImGuiCol_Text, ImVec4(ImGui::GetStyleColorVec4(ImGuiCol_TextDisabled)));
 		}
 
 		if (m_config.small_button)
@@ -159,7 +171,7 @@ namespace Marvel {
 		int show = true;
 		int enabled = true;
 
-		if (!(*mvApp::GetApp()->getParsers())["add_button"].parse(args, kwargs, __FUNCTION__, &name, &smallb,
+		if (!(mvApp::GetApp()->getParsers())["add_button"].parse(args, kwargs, __FUNCTION__, &name, &smallb,
 			&arrow, &direction, &callback, &callback_data, &parent, &before, &width, &height,
 			&label, &show, &enabled))
 			return GetPyNone();

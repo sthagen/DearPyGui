@@ -18,7 +18,7 @@ namespace Marvel {
 	void mvDrawCircleCmd::draw(ImDrawList* drawlist, float x, float y)
 	{
 		mvVec2 start = {x, y};
-		if (m_fill.specified)
+		if (m_fill.r > 0.0f)
 			drawlist->AddCircleFilled(m_center + start, m_radius, m_fill, m_segments);
 
 		drawlist->AddCircle(m_center + start, m_radius, m_color, m_segments, m_thickness);
@@ -63,7 +63,7 @@ namespace Marvel {
 		PyObject* fill = nullptr;
 		const char* tag = "";
 
-		if (!(*mvApp::GetApp()->getParsers())["draw_circle"].parse(args, kwargs, __FUNCTION__, &drawing, &center, &radius, &color, &segments, &thickness, &fill, &tag))
+		if (!(mvApp::GetApp()->getParsers())["draw_circle"].parse(args, kwargs, __FUNCTION__, &drawing, &center, &radius, &color, &segments, &thickness, &fill, &tag))
 			return GetPyNone();
 
 		mvVec2 mcenter = ToVec2(center);
@@ -73,7 +73,7 @@ namespace Marvel {
 		auto cmd = CreateRef<mvDrawCircleCmd>(mcenter, radius, mcolor, segments, thickness, mfill);
 		cmd->tag = tag;
 
-		std::lock_guard<std::mutex> lk(mvApp::GetApp()->GetApp()->getMutex());
+		std::lock_guard<std::mutex> lk(mvApp::GetApp()->getMutex());
 		mvRef<mvDrawList> drawlist = GetDrawListFromTarget(drawing);
 		if (drawlist)
 			drawlist->addCommand(cmd);

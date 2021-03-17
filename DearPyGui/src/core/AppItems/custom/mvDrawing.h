@@ -7,6 +7,7 @@ namespace Marvel {
 
 	PyObject* add_drawing(PyObject* self, PyObject* args, PyObject* kwargs);
 
+	MV_REGISTER_WIDGET(mvDrawing);
 	class mvDrawing : public mvAppItem
 	{
 
@@ -16,7 +17,13 @@ namespace Marvel {
 
 	public:
 
-		MV_APPITEM_TYPE_OLD_SYSTEM(mvAppItemType::Drawing, "add_drawing")
+		MV_APPITEM_TYPE(mvAppItemType::mvDrawing, "add_drawing")
+
+		MV_START_COLOR_CONSTANTS
+		MV_END_COLOR_CONSTANTS
+
+		MV_START_STYLE_CONSTANTS
+		MV_END_STYLE_CONSTANTS
 
 		mvDrawing(const std::string& name);
 

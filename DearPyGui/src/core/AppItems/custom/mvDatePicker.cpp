@@ -4,6 +4,7 @@
 #include <implot_internal.h>
 #include <misc/cpp/imgui_stdlib.h>
 #include "mvItemRegistry.h"
+#include "mvImGuiThemeScope.h"
 
 namespace Marvel {
 
@@ -29,7 +30,6 @@ namespace Marvel {
 
 	void mvDatePicker::draw()
 	{
-		auto styleManager = m_styleManager.getScopedStyleManager();
 		ScopedID id;
 		mvImGuiThemeScope scope(this);
 
@@ -70,7 +70,7 @@ namespace Marvel {
 		const char* parent = "";
 		int show = true;
 
-		if (!(*mvApp::GetApp()->getParsers())["add_date_picker"].parse(args, kwargs, __FUNCTION__,
+		if (!(mvApp::GetApp()->getParsers())["add_date_picker"].parse(args, kwargs, __FUNCTION__,
 			&name, &default_value, &level, &callback, &callback_data, &parent, &before, &show))
 			return ToPyBool(false);
 

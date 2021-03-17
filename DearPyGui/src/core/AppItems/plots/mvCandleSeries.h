@@ -56,7 +56,7 @@ namespace Marvel {
         // begin plot item
         if (ImPlot::BeginItem(label_id)) {
             // override legend icon color
-            ImPlot::GetCurrentItem()->Color = ImVec4(0.25f, 0.25f, 0.25f, 1);
+            ImPlot::GetCurrentItem()->Color = ImGui::ColorConvertFloat4ToU32({ 0.25f, 0.25f, 0.25f, 1.0f });
             // fit data if requested
             if (ImPlot::FitThisFrame()) {
                 for (int i = 0; i < count; ++i) {
@@ -114,8 +114,8 @@ namespace Marvel {
 		{
 
 			PlotCandlestick(m_name.c_str(), m_data[0].data(), m_data[1].data(), m_data[4].data(),
-				m_data[3].data(), m_data[2].data(), (int)m_data[0].size(), m_tooltip, m_width, m_bullColor.toVec4(), 
-				m_bearColor.toVec4());
+				m_data[3].data(), m_data[2].data(), (int)m_data[0].size(), m_tooltip, m_width, m_bullColor, 
+				m_bearColor);
 		}
 
 	private:

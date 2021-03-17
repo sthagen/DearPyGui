@@ -56,7 +56,7 @@ namespace Marvel {
 		float thickness = 1.0f;
 		const char* tag = "";
 
-		if (!(*mvApp::GetApp()->getParsers())["draw_polyline"].parse(args, kwargs, __FUNCTION__, &drawing, &points, &color, &closed, &thickness, &tag))
+		if (!(mvApp::GetApp()->getParsers())["draw_polyline"].parse(args, kwargs, __FUNCTION__, &drawing, &points, &color, &closed, &thickness, &tag))
 			return GetPyNone();
 
 		auto mpoints = ToVectVec2(points);
@@ -65,7 +65,7 @@ namespace Marvel {
 		auto cmd = CreateRef<mvDrawPolylineCmd>(mpoints, mcolor, closed, thickness);
 		cmd->tag = tag;
 
-		std::lock_guard<std::mutex> lk(mvApp::GetApp()->GetApp()->getMutex());
+		std::lock_guard<std::mutex> lk(mvApp::GetApp()->getMutex());
 		mvRef<mvDrawList> drawlist = GetDrawListFromTarget(drawing);
 		if (drawlist)
 			drawlist->addCommand(cmd);

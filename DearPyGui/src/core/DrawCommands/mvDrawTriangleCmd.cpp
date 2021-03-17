@@ -18,7 +18,7 @@ namespace Marvel {
 	void mvDrawTriangleCmd::draw(ImDrawList* drawlist, float x, float y)
 	{
 		mvVec2 start = {x, y};
-		if (m_fill.specified)
+		if (m_fill.r > 0.0f)
 			drawlist->AddTriangleFilled(m_p1 + start, m_p2 + start, m_p3 + start, m_fill);
 
 		drawlist->AddTriangle(m_p1 + start, m_p2 + start, m_p3 + start, m_color, m_thickness);
@@ -61,7 +61,7 @@ namespace Marvel {
 		PyObject* fill = nullptr;
 		const char* tag = "";
 
-		if (!(*mvApp::GetApp()->getParsers())["draw_triangle"].parse(args, kwargs, __FUNCTION__, &drawing, &p1, &p2, &p3, &color, &fill, &thickness, &tag))
+		if (!(mvApp::GetApp()->getParsers())["draw_triangle"].parse(args, kwargs, __FUNCTION__, &drawing, &p1, &p2, &p3, &color, &fill, &thickness, &tag))
 			return GetPyNone();
 
 
@@ -74,7 +74,7 @@ namespace Marvel {
 		auto cmd = CreateRef<mvDrawTriangleCmd>(mp1, mp2, mp3, mcolor, thickness, mfill);
 		cmd->tag = tag;
 
-		std::lock_guard<std::mutex> lk(mvApp::GetApp()->GetApp()->getMutex());
+		std::lock_guard<std::mutex> lk(mvApp::GetApp()->getMutex());
 		mvRef<mvDrawList> drawlist = GetDrawListFromTarget(drawing);
 		if (drawlist)
 			drawlist->addCommand(cmd);

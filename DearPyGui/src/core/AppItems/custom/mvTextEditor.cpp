@@ -5,7 +5,8 @@
 #include <cmath>
 #include "mvTextEditor.h"
 #include "mvApp.h"
-#include "mvMarvel.h"
+#include "mvModule_Core.h"
+#include "mvImGuiThemeScope.h"
 
 #define IMGUI_DEFINE_MATH_OPERATORS
 #include "imgui.h" // for imGui::GetCurrentWindow()
@@ -3178,16 +3179,16 @@ const mvTextEditor::LanguageDefinition& mvTextEditor::LanguageDefinition::Python
 		for (auto& k : cppKeywords)
 			langDef.mKeywords.insert(k);
 
-		auto docmap = BuildDearPyGuiInterface();
+		const auto& docmap = mvModule_Core::GetModuleParsers();
 		
-		for (auto& k : *docmap)
+		for (auto& k : docmap)
 		{
 			Identifier id;
 			id.mDeclaration = k.second.getDocumentation();
 			langDef.mIdentifiers.insert(std::make_pair(k.first, id));
 		}
 
-		for (auto& k : GetModuleConstants())
+		for (auto& k : mvModule_Core::GetModuleConstants())
 		{
 			Identifier id;
 			id.mDeclaration = "Constant with value " + std::to_string(k.second);

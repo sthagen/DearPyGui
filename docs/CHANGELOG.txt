@@ -32,9 +32,13 @@ Breaking Changes:
 - removed command: decref_value
 - removed command: incref_value
 - removed command: add_value
+- removed command: add_data
+- removed command: delete_data
+- removed command: get_data
 
 Updates:
-- imgui: updated to v1.81
+- imgui: updated to v1.82
+- implot: updated to commit 1d9381a
 - value_storage: removed
 
 Fixes:

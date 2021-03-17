@@ -23,22 +23,24 @@ namespace Marvel {
 
 	PyObject* add_input_text(PyObject* self, PyObject* args, PyObject* kwargs);
 
+	MV_REGISTER_WIDGET(mvInputText);
 	class mvInputText : public mvStringPtrBase
 	{
-		MV_APPITEM_TYPE(mvAppItemType::InputText, mvInputText, "add_input_text")
+		MV_APPITEM_TYPE(mvAppItemType::mvInputText, "add_input_text")
 
-		MV_CREATE_THEME_CONSTANT(mvAppItemType::InputText, mvThemeCol_InputText_Text			,  0L, 0L);
-		MV_CREATE_THEME_CONSTANT(mvAppItemType::InputText, mvThemeCol_InputText_TextHighlight	, 44L, 0L);
-		MV_CREATE_THEME_CONSTANT(mvAppItemType::InputText, mvThemeCol_InputText_Bg				,  7L, 0L);
-		MV_CREATE_THEME_CONSTANT(mvAppItemType::InputText, mvThemeCol_InputText_Hint			,  1L, 0L);
-		MV_CREATE_THEME_CONSTANT(mvAppItemType::InputText, mvThemeCol_InputText_Border			,  5L, 0L);
-		MV_CREATE_THEME_CONSTANT(mvAppItemType::InputText, mvThemeCol_InputText_BorderShadow	,  6L, 0L);
-		MV_CREATE_THEME_CONSTANT(mvAppItemType::InputText, mvThemeStyle_InputText_Rounding		, 11L, 0L);
-		MV_CREATE_THEME_CONSTANT(mvAppItemType::InputText, mvThemeStyle_InputText_BorderSize	, 12L, 0L);
-		MV_CREATE_THEME_CONSTANT(mvAppItemType::InputText, mvThemeStyle_InputText_PaddingX		, 10L, 0L);
-		MV_CREATE_THEME_CONSTANT(mvAppItemType::InputText, mvThemeStyle_InputText_PaddingY		, 10L, 1L);
-		MV_CREATE_THEME_CONSTANT(mvAppItemType::InputText, mvThemeStyle_InputText_InnerSpacingX	, 14L, 0L);
-		MV_CREATE_THEME_CONSTANT(mvAppItemType::InputText, mvThemeStyle_InputText_InnerSpacingY	, 14L, 1L);
+		MV_CREATE_THEME_CONSTANT(mvThemeCol_InputText_Text,             0L, 0L);
+		MV_CREATE_THEME_CONSTANT(mvThemeCol_InputText_TextHighlight,   44L, 0L);
+		MV_CREATE_THEME_CONSTANT(mvThemeCol_InputText_Bg,               7L, 0L);
+		MV_CREATE_THEME_CONSTANT(mvThemeCol_InputText_Hint,             1L, 0L);
+		MV_CREATE_THEME_CONSTANT(mvThemeCol_InputText_Border,           5L, 0L);
+		MV_CREATE_THEME_CONSTANT(mvThemeCol_InputText_BorderShadow,     6L, 0L);
+
+		MV_CREATE_THEME_CONSTANT(mvThemeStyle_InputText_Rounding,      11L, 0L);
+		MV_CREATE_THEME_CONSTANT(mvThemeStyle_InputText_BorderSize,    12L, 0L);
+		MV_CREATE_THEME_CONSTANT(mvThemeStyle_InputText_PaddingX,      10L, 0L);
+		MV_CREATE_THEME_CONSTANT(mvThemeStyle_InputText_PaddingY,      10L, 1L);
+		MV_CREATE_THEME_CONSTANT(mvThemeStyle_InputText_InnerSpacingX, 14L, 0L);
+		MV_CREATE_THEME_CONSTANT(mvThemeStyle_InputText_InnerSpacingY, 14L, 1L);
 
 		MV_START_COLOR_CONSTANTS
 			MV_CREATE_CONSTANT_PAIR(mvThemeCol_InputText_Text,			mvColor(255, 255, 255, 255)),
@@ -52,10 +54,10 @@ namespace Marvel {
 		MV_START_STYLE_CONSTANTS
 			MV_CREATE_CONSTANT_TUPLE(mvThemeStyle_InputText_Rounding		, 0, 12),
 			MV_CREATE_CONSTANT_TUPLE(mvThemeStyle_InputText_BorderSize		, 0,  1),
-			MV_CREATE_CONSTANT_TUPLE(mvThemeStyle_InputText_PaddingX		, 0, 20),
-			MV_CREATE_CONSTANT_TUPLE(mvThemeStyle_InputText_PaddingY		, 0, 20),
-			MV_CREATE_CONSTANT_TUPLE(mvThemeStyle_InputText_InnerSpacingX	, 0, 20),
-			MV_CREATE_CONSTANT_TUPLE(mvThemeStyle_InputText_InnerSpacingY	, 0, 20),
+			MV_CREATE_CONSTANT_TUPLE(mvThemeStyle_InputText_PaddingX		, 4, 20),
+			MV_CREATE_CONSTANT_TUPLE(mvThemeStyle_InputText_PaddingY		, 3, 20),
+			MV_CREATE_CONSTANT_TUPLE(mvThemeStyle_InputText_InnerSpacingX	, 4, 20),
+			MV_CREATE_CONSTANT_TUPLE(mvThemeStyle_InputText_InnerSpacingY	, 4, 20),
 		MV_END_STYLE_CONSTANTS
 
 	public:

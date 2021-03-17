@@ -17,19 +17,21 @@ namespace Marvel {
 
 	PyObject* add_image_button(PyObject* self, PyObject* args, PyObject* kwargs);
 
+	MV_REGISTER_WIDGET(mvImageButton);
 	class mvImageButton : public mvAppItem, public mvEventHandler
 	{
 
-		MV_APPITEM_TYPE(mvAppItemType::ImageButton, mvImageButton, "add_image_button")
+		MV_APPITEM_TYPE(mvAppItemType::mvImageButton, "add_image_button")
 
-		MV_CREATE_THEME_CONSTANT(mvAppItemType::ImageButton, mvThemeCol_ImageButton_Bg				, 21L, 0L);
-		MV_CREATE_THEME_CONSTANT(mvAppItemType::ImageButton, mvThemeCol_ImageButton_BgHovered		, 22L, 0L);
-		MV_CREATE_THEME_CONSTANT(mvAppItemType::ImageButton, mvThemeCol_ImageButton_BgActive		, 23L, 0L);
-		MV_CREATE_THEME_CONSTANT(mvAppItemType::ImageButton, mvThemeCol_ImageButton_Border			,  5L, 0L);
-		MV_CREATE_THEME_CONSTANT(mvAppItemType::ImageButton, mvThemeCol_ImageButton_BorderShadow	,  6L, 0L);
-		MV_CREATE_THEME_CONSTANT(mvAppItemType::ImageButton, mvThemeStyle_ImageButton_BorderSize	, 12L, 0L);
-		MV_CREATE_THEME_CONSTANT(mvAppItemType::ImageButton, mvThemeStyle_ImageButton_PaddingX		, 10L, 0L);
-		MV_CREATE_THEME_CONSTANT(mvAppItemType::ImageButton, mvThemeStyle_ImageButton_PaddingY		, 10L, 1L);
+		MV_CREATE_THEME_CONSTANT(mvThemeCol_ImageButton_Bg				, 21L, 0L);
+		MV_CREATE_THEME_CONSTANT(mvThemeCol_ImageButton_BgHovered		, 22L, 0L);
+		MV_CREATE_THEME_CONSTANT(mvThemeCol_ImageButton_BgActive		, 23L, 0L);
+		MV_CREATE_THEME_CONSTANT(mvThemeCol_ImageButton_Border			,  5L, 0L);
+		MV_CREATE_THEME_CONSTANT(mvThemeCol_ImageButton_BorderShadow	,  6L, 0L);
+
+		MV_CREATE_THEME_CONSTANT(mvThemeStyle_ImageButton_BorderSize	, 12L, 0L);
+		MV_CREATE_THEME_CONSTANT(mvThemeStyle_ImageButton_PaddingX		, 10L, 0L);
+		MV_CREATE_THEME_CONSTANT(mvThemeStyle_ImageButton_PaddingY		, 10L, 1L);
 
 		MV_START_COLOR_CONSTANTS
 			MV_CREATE_CONSTANT_PAIR(mvThemeCol_ImageButton_Bg,           mvColor( 41,  74, 122, 138)),
@@ -41,8 +43,8 @@ namespace Marvel {
 
 		MV_START_STYLE_CONSTANTS
 			MV_CREATE_CONSTANT_TUPLE(mvThemeStyle_ImageButton_BorderSize, 0,  1),
-			MV_CREATE_CONSTANT_TUPLE(mvThemeStyle_ImageButton_PaddingX	, 0, 20),
-			MV_CREATE_CONSTANT_TUPLE(mvThemeStyle_ImageButton_PaddingY	, 0, 20),
+			MV_CREATE_CONSTANT_TUPLE(mvThemeStyle_ImageButton_PaddingX	, 4, 20),
+			MV_CREATE_CONSTANT_TUPLE(mvThemeStyle_ImageButton_PaddingY	, 3, 20),
 		MV_END_STYLE_CONSTANTS
 
 	public:
@@ -74,8 +76,8 @@ namespace Marvel {
 		std::string m_value;
 		mvVec2	    m_uv_min = { 0.0f, 0.0f };
 		mvVec2	    m_uv_max = { 1.0f, 1.0f };
-		mvColor     m_tintColor = { 255, 255, 255, 255, true };
-		mvColor     m_backgroundColor = { 0, 0, 0, 0, true };
+		mvColor     m_tintColor = { 1.0f, 1.0f, 1.0f, 1.0f };
+		mvColor     m_backgroundColor = { 0.0f, 0.0f, 0.0f, 0.0f };
 		void*       m_texture = nullptr;
 		int         m_framePadding = -1;
 		bool        m_dirty = false;

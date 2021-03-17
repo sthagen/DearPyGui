@@ -1,8 +1,7 @@
-#pragma once
-
 #include "mvMenu.h"
 #include "mvApp.h"
 #include "mvItemRegistry.h"
+#include "mvImGuiThemeScope.h"
 
 namespace Marvel {
 
@@ -27,7 +26,6 @@ namespace Marvel {
 
 	void mvMenu::draw()
 	{
-		auto styleManager = m_styleManager.getScopedStyleManager();
 		ScopedID id;
 		mvImGuiThemeScope scope(this);
 
@@ -39,7 +37,7 @@ namespace Marvel {
 			for (auto sibling : m_parent->m_children)
 			{
 				// ensure sibling
-				if (sibling->getType() == mvAppItemType::Menu)
+				if (sibling->getType() == mvAppItemType::mvMenu)
 					*((mvMenu*)sibling.get())->m_value = false;
 			}
 
@@ -100,7 +98,7 @@ namespace Marvel {
 		const char* before = "";
 		int enabled = true;
 
-		if (!(*mvApp::GetApp()->getParsers())["add_menu"].parse(args, kwargs, __FUNCTION__, &name,
+		if (!(mvApp::GetApp()->getParsers())["add_menu"].parse(args, kwargs, __FUNCTION__, &name,
 			&label, &show, &parent, &before, &enabled))
 			return ToPyBool(false);
 

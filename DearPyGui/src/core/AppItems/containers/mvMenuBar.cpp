@@ -1,8 +1,9 @@
-#pragma once
-
 #include "mvMenuBar.h"
 #include "mvApp.h"
 #include "mvItemRegistry.h"
+#include "mvImGuiThemeScope.h"
+#include "containers/mvWindowAppItem.h"
+#include "containers/mvChild.h"
 
 namespace Marvel {
 
@@ -31,7 +32,6 @@ namespace Marvel {
 
 	void mvMenuBar::draw()
 	{
-		auto styleManager = m_styleManager.getScopedStyleManager();
 		mvImGuiThemeScope scope(this);
 
 		if (ImGui::BeginMenuBar())
@@ -66,7 +66,7 @@ namespace Marvel {
 		const char* parent = "";
 		const char* before = "";
 
-		if (!(*mvApp::GetApp()->getParsers())["add_menu_bar"].parse(args, kwargs, __FUNCTION__, &name,
+		if (!(mvApp::GetApp()->getParsers())["add_menu_bar"].parse(args, kwargs, __FUNCTION__, &name,
 			&show, &parent, &before))
 			return ToPyBool(false);
 
@@ -78,7 +78,7 @@ namespace Marvel {
 			return ToPyBool(false);
 		}
 
-		else if (parentItem->getType() == mvAppItemType::Window)
+		else if (parentItem->getType() == mvAppItemType::mvWindowAppItem)
 		{
 			auto window = static_cast<mvWindowAppItem*>(parentItem.get());
 			window->addFlag(ImGuiWindowFlags_MenuBar);
@@ -101,7 +101,7 @@ namespace Marvel {
 			return GetPyNone();
 		}
 
-		else if (parentItem->getType() == mvAppItemType::Child)
+		else if (parentItem->getType() == mvAppItemType::mvChild)
 		{
 			auto child = static_cast<mvChild*>(parentItem.get());
 			child->addFlag(ImGuiWindowFlags_MenuBar);

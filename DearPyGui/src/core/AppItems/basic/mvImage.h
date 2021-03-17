@@ -18,6 +18,7 @@ namespace Marvel {
 
 	PyObject* add_image(PyObject* self, PyObject* args, PyObject* kwargs);
 
+	MV_REGISTER_WIDGET(mvImage);
 	class mvImage : public mvAppItem, public mvEventHandler
 	{
 
@@ -27,7 +28,13 @@ namespace Marvel {
 
 	public:
 
-		MV_APPITEM_TYPE_OLD_SYSTEM(mvAppItemType::InputInt, "add_image")
+		MV_APPITEM_TYPE(mvAppItemType::mvImage, "add_image")
+
+		MV_START_COLOR_CONSTANTS
+		MV_END_COLOR_CONSTANTS
+
+		MV_START_STYLE_CONSTANTS
+		MV_END_STYLE_CONSTANTS
 
 		mvImage(const std::string& name, std::string default_value);
 
@@ -55,8 +62,8 @@ namespace Marvel {
 		std::string m_value;
 		mvVec2	    m_uv_min = {0.0f, 0.0f};
 		mvVec2	    m_uv_max = {1.0f, 1.0f};
-		mvColor     m_tintColor = {255, 255, 255, 255, true};
-		mvColor     m_borderColor = {0, 0, 0, 0, true};
+		mvColor     m_tintColor = {1.0f, 1.0f, 1.0f, 1.0f};
+		mvColor     m_borderColor = {0.0f, 0.0f, 0.0f, 0.0f};
 		void*       m_texture = nullptr;
 		bool        m_dirty = false;
 		mvImageConfig m_config;

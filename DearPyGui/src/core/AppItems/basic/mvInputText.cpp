@@ -2,6 +2,7 @@
 #include <misc/cpp/imgui_stdlib.h>
 #include <utility>
 #include "mvItemRegistry.h"
+#include "mvImGuiThemeScope.h"
 
 namespace Marvel {
 
@@ -59,18 +60,17 @@ namespace Marvel {
 
 	void mvInputText::draw()
 	{
-		auto styleManager = m_styleManager.getScopedStyleManager();
 		ScopedID id;
 		mvImGuiThemeScope scope(this);
 
 		if (!m_core_config.enabled)
 		{
-			ImVec4 disabled_color = ImVec4(ImGui::GetStyleColorVec4(ImGuiCol_TextDisabled));
-			disabled_color.w = 0.392f;
-			styleManager.addColorStyle(ImGuiCol_FrameBg, disabled_color);
-			styleManager.addColorStyle(ImGuiCol_FrameBgHovered, disabled_color);
-			styleManager.addColorStyle(ImGuiCol_FrameBgActive, disabled_color);
-			styleManager.addColorStyle(ImGuiCol_Text, ImVec4(ImGui::GetStyleColorVec4(ImGuiCol_TextDisabled)));
+			//ImVec4 disabled_color = ImVec4(ImGui::GetStyleColorVec4(ImGuiCol_TextDisabled));
+			//disabled_color.w = 0.392f;
+			//styleManager.addColorStyle(ImGuiCol_FrameBg, disabled_color);
+			//styleManager.addColorStyle(ImGuiCol_FrameBgHovered, disabled_color);
+			//styleManager.addColorStyle(ImGuiCol_FrameBgActive, disabled_color);
+			//styleManager.addColorStyle(ImGuiCol_Text, ImVec4(ImGui::GetStyleColorVec4(ImGuiCol_TextDisabled)));
 		}
 
 		if (m_multiline)
@@ -204,7 +204,7 @@ namespace Marvel {
 
 		//int flags = 0;
 
-		if (!(*mvApp::GetApp()->getParsers())["add_input_text"].parse(args, kwargs, __FUNCTION__,
+		if (!(mvApp::GetApp()->getParsers())["add_input_text"].parse(args, kwargs, __FUNCTION__,
 			&name, &default_value, &hint, &multiline, &no_spaces,
 			&uppercase, &tab_input, &decimal, &hexadecimal, &readonly, &password, &scientific, &callback,
 			&callback_data, &parent, &before, &source, &enabled, &width, &height, &on_enter,

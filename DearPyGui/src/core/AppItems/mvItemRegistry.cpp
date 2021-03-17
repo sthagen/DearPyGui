@@ -28,6 +28,7 @@ namespace Marvel {
 		add_hidden_window(CreateRef<mvMetricsWindow>("metrics##standard"), "Metrics");
 		add_hidden_window(CreateRef<mvStyleWindow>("style##standard"), "Dear PyGui Style Editor");
 		add_hidden_window(CreateRef<mvFileDialog>(), "FileDialog");
+		
 	}
 
 	mvItemRegistry::~mvItemRegistry()
@@ -375,7 +376,7 @@ namespace Marvel {
 		if (item == nullptr)
 			return nullptr;
 
-		if (item->getType() == mvAppItemType::Window)
+		if (item->getType() == mvAppItemType::mvWindowAppItem)
 			return static_cast<mvWindowAppItem*>(item.get());
 
 		return nullptr;
@@ -430,7 +431,7 @@ namespace Marvel {
 		if (item == nullptr)
 			return false;
 
-		std::lock_guard<std::mutex> lk(mvApp::GetApp()->GetApp()->getMutex());
+		std::lock_guard<std::mutex> lk(mvApp::GetApp()->getMutex());
 
 		// remove bad parent stack item
 		if (item->getDescription().root && topParent() != nullptr)
@@ -440,25 +441,25 @@ namespace Marvel {
 			ThrowPythonException("Parent stack not empty. Adding window will empty the parent stack. Don't forget to end container types.");
 		}
 
-		if (item->getType() != mvAppItemType::Node && topParent() != nullptr)
+		if (item->getType() != mvAppItemType::mvNode && topParent() != nullptr)
 		{
-			if (topParent()->getType() == mvAppItemType::NodeEditor)
+			if (topParent()->getType() == mvAppItemType::mvNodeEditor)
 			{
 				ThrowPythonException("Node editor children must be nodes only.");
 				return false;
 			}
 		}
 
-		if (item->getType() != mvAppItemType::NodeAttribute && topParent() != nullptr)
+		if (item->getType() != mvAppItemType::mvNodeAttribute && topParent() != nullptr)
 		{
-			if (topParent()->getType() == mvAppItemType::Node)
+			if (topParent()->getType() == mvAppItemType::mvNode)
 			{
 				ThrowPythonException("Node children must be nodes attributes only.");
 				return false;
 			}
 		}
 
-		if (item->getType() == mvAppItemType::Popup || item->getType() == mvAppItemType::Tooltip)
+		if (item->getType() == mvAppItemType::mvPopup || item->getType() == mvAppItemType::mvTooltip)
 		{
 			addItemAfter(parent, item);
 			return true;
@@ -544,9 +545,15 @@ namespace Marvel {
 		};
 
 		for (auto window : m_frontWindows)
+		{
+			childList.emplace_back(window->getCoreConfig().name);
 			ChildRetriever(window);
+		}
 		for (auto window : m_backWindows)
+		{
+			childList.emplace_back(window->getCoreConfig().name);
 			ChildRetriever(window);
+		}
 
 		return childList;
 	}

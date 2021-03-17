@@ -50,14 +50,14 @@ namespace Marvel {
 
 		void draw() override
 		{
-			if(m_texture)
-				ImPlot::PlotImage(m_name.c_str(), m_texture, m_bounds_min, m_bounds_max, m_uv_min, m_uv_max, m_tintColor.toVec4());
-			else
+			if(m_texture == nullptr)
 			{
 				mvApp::GetApp()->getTextureStorage().addTexture(m_value);
 				mvTexture* texture = mvApp::GetApp()->getTextureStorage().getTexture(m_value);
 				m_texture = texture->texture;
 			}
+			if (m_texture)
+				ImPlot::PlotImage(m_name.c_str(), m_texture, m_bounds_min, m_bounds_max, m_uv_min, m_uv_max, m_tintColor);
 		}
 
 		~mvImageSeries()
@@ -73,7 +73,7 @@ namespace Marvel {
 		ImPlotPoint m_bounds_max;
 		mvVec2	    m_uv_min = { 0.0f, 0.0f };
 		mvVec2	    m_uv_max = { 1.0f, 1.0f };
-		mvColor     m_tintColor = { 0, 0, 0, 255, true };
+		mvColor     m_tintColor = { 0.0f, 0.0f, 0.0f, 1.0f};
 		void*       m_texture = nullptr;
 
 	};

@@ -1,6 +1,7 @@
 #include "mvColumns.h"
 #include "mvApp.h"
 #include "mvItemRegistry.h"
+#include "mvImGuiThemeScope.h"
 
 namespace Marvel {
 
@@ -15,9 +16,20 @@ namespace Marvel {
 			{mvPythonDataType::String, "parent", "Parent this item will be added to. (runtime adding)", "''"},
 			{mvPythonDataType::String, "before", "This item will be displayed before the specified item in the parent. (runtime adding)", "''"},
 		}, "Adds managed columns.", "None", "Containers") });
+
+		parsers->insert({ "get_managed_column_width", mvPythonParser({
+			{mvPythonDataType::String, "item"},
+			{mvPythonDataType::Integer, "column"},
+		}, "Returns the width of the ith column.", "Float", "Widget Commands") });
+
+		parsers->insert({ "set_managed_column_width", mvPythonParser({
+			{mvPythonDataType::String, "item"},
+			{mvPythonDataType::Integer, "column"},
+			{mvPythonDataType::Float, "width"},
+		}, "Sets the width of the ith column.", "None", "Widget Commands") });
 	}
 
-	void mvColumn::InsertParser(std::map<std::string, mvPythonParser>* parsers)
+	void mvColumnSet::InsertParser(std::map<std::string, mvPythonParser>* parsers)
 	{
 		parsers->insert({ "add_columns", mvPythonParser({
 			{mvPythonDataType::String, "name"},
@@ -116,7 +128,7 @@ namespace Marvel {
 
 	}
 
-	mvColumn::mvColumn(const std::string& name, int columns)
+	mvColumnSet::mvColumnSet(const std::string& name, int columns)
 		: mvAppItem(name)
 	{
 		if (columns < 1)
@@ -127,7 +139,7 @@ namespace Marvel {
 			m_columns = columns;
 	}
 
-	void mvColumn::draw()
+	void mvColumnSet::draw()
 	{
 		ScopedID id;
 		ImGui::Columns(m_columns, m_core_config.name.c_str(), m_border);
@@ -155,7 +167,7 @@ namespace Marvel {
 		const char* before = "";
 
 
-		if (!(*mvApp::GetApp()->getParsers())["add_managed_columns"].parse(args, kwargs, __FUNCTION__,
+		if (!(mvApp::GetApp()->getParsers())["add_managed_columns"].parse(args, kwargs, __FUNCTION__,
 			&name, &columns, &border, &show, &parent, &before))
 			return ToPyBool(false);
 
@@ -184,7 +196,7 @@ namespace Marvel {
 		const char* parent = "";
 		int show = true;
 
-		if (!(*mvApp::GetApp()->getParsers())["add_next_column"].parse(args, kwargs, __FUNCTION__,
+		if (!(mvApp::GetApp()->getParsers())["add_next_column"].parse(args, kwargs, __FUNCTION__,
 			&name, &show, &parent, &before))
 			return ToPyBool(false);
 
@@ -208,16 +220,86 @@ namespace Marvel {
 		const char* before = "";
 
 
-		if (!(*mvApp::GetApp()->getParsers())["add_columns"].parse(args, kwargs, __FUNCTION__,
+		if (!(mvApp::GetApp()->getParsers())["add_columns"].parse(args, kwargs, __FUNCTION__,
 			&name, &columns, &border, &show, &parent, &before))
 			return ToPyBool(false);
 
-		auto item = CreateRef<mvColumn>(name, columns);
+		auto item = CreateRef<mvColumnSet>(name, columns);
 		item->checkConfigDict(kwargs);
 		item->setConfigDict(kwargs);
 		item->setExtraConfigDict(kwargs);
 
 		mvApp::GetApp()->getItemRegistry().addItemWithRuntimeChecks(item, parent, before);
+
+		return GetPyNone();
+	}
+
+	PyObject* get_managed_column_width(PyObject* self, PyObject* args, PyObject* kwargs)
+	{
+
+		const char* managed_columns;
+		int column;
+
+		if (!(mvApp::GetApp()->getParsers())["get_managed_column_width"].parse(args, kwargs, __FUNCTION__,
+			&managed_columns, &column))
+			return ToPyFloat(0.0f);
+
+
+		std::string returnMessage;
+
+		std::lock_guard<std::mutex> lk(mvApp::GetApp()->getMutex());
+		auto appitem = mvApp::GetApp()->getItemRegistry().getItem(managed_columns);
+
+		if (appitem == nullptr)
+		{
+			ThrowPythonException(managed_columns + std::string(" managed_columns does not exist."));
+			return ToPyFloat(0.0f);
+		}
+
+		mvManagedColumns* columns;
+		if (appitem->getType() == mvAppItemType::mvManagedColumns)
+			columns = static_cast<mvManagedColumns*>(appitem.get());
+		else
+		{
+			ThrowPythonException(std::string(managed_columns) + " is not a managed columns.");
+			return ToPyFloat(0.0f);
+		}
+
+		return ToPyFloat(columns->getColumnWidth(column));
+	}
+
+	PyObject* set_managed_column_width(PyObject* self, PyObject* args, PyObject* kwargs)
+	{
+
+		const char* managed_columns;
+		int column;
+		float width;
+
+		if (!(mvApp::GetApp()->getParsers())["set_managed_column_width"].parse(args, kwargs, __FUNCTION__,
+			&managed_columns, &column, &width))
+			return GetPyNone();
+
+		std::lock_guard<std::mutex> lk(mvApp::GetApp()->getMutex());
+		auto appitem = mvApp::GetApp()->getItemRegistry().getItem(managed_columns);
+
+		if (appitem == nullptr)
+		{
+			std::string message = managed_columns;
+			ThrowPythonException(message + " managed_columns does not exist.");
+			return GetPyNone();
+		}
+
+		mvManagedColumns* columns;
+		if (appitem->getType() == mvAppItemType::mvManagedColumns)
+		{
+			columns = static_cast<mvManagedColumns*>(appitem.get());
+			columns->setColumnWidth(column, width);
+		}
+		else
+		{
+			ThrowPythonException(std::string(managed_columns) + " is not a managed columns.");
+			return GetPyNone();
+		}
 
 		return GetPyNone();
 	}
@@ -252,7 +334,7 @@ namespace Marvel {
 		PyDict_SetItemString(dict, "columns", ToPyInt(m_columns));
 	}
 
-	void mvColumn::setExtraConfigDict(PyObject* dict)
+	void mvColumnSet::setExtraConfigDict(PyObject* dict)
 	{
 		if (dict == nullptr)
 			return;
@@ -269,7 +351,7 @@ namespace Marvel {
 		}
 	}
 
-	void mvColumn::getExtraConfigDict(PyObject* dict)
+	void mvColumnSet::getExtraConfigDict(PyObject* dict)
 	{
 		if (dict == nullptr)
 			return;

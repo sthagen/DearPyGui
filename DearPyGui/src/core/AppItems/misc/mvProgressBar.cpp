@@ -2,6 +2,7 @@
 #include "mvProgressBar.h"
 #include "mvApp.h"
 #include "mvItemRegistry.h"
+#include "mvImGuiThemeScope.h"
 
 namespace Marvel {
 
@@ -28,7 +29,6 @@ namespace Marvel {
 
 	void mvProgressBar::draw()
 	{
-		auto styleManager = m_styleManager.getScopedStyleManager();
 		ScopedID id;
 		mvImGuiThemeScope scope(this);
 
@@ -66,7 +66,7 @@ namespace Marvel {
 		int height = 0;
 		int show = true;
 
-		if (!(*mvApp::GetApp()->getParsers())["add_progress_bar"].parse(args, kwargs, __FUNCTION__, &name, &default_value,
+		if (!(mvApp::GetApp()->getParsers())["add_progress_bar"].parse(args, kwargs, __FUNCTION__, &name, &default_value,
 			&overlay, &parent, &before, &source, &width, &height, &show))
 			return ToPyBool(false);
 

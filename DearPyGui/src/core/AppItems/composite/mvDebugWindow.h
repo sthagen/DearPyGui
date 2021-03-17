@@ -1,9 +1,10 @@
 #pragma once
 #include "mvTypeBases.h"
-#include "mvMarvel.h"
+#include "mvModule_Core.h"
 
 
 namespace Marvel {
+
 	struct mvDebugWindowConfig : public mvAppItemConfig
 	{
 		
@@ -30,14 +31,21 @@ namespace Marvel {
 
 	PyObject* add_debug_window(PyObject* self, PyObject* args, PyObject* kwargs);
 
+	MV_REGISTER_WIDGET(mvDebugWindow);
 	class mvDebugWindow : public mvBaseWindowAppitem
 	{
+
+		MV_APPITEM_TYPE(mvAppItemType::mvDebugWindow, "add_debug_window")
+
+		MV_START_COLOR_CONSTANTS
+		MV_END_COLOR_CONSTANTS
+
+		MV_START_STYLE_CONSTANTS
+		MV_END_STYLE_CONSTANTS
 
 	public:
 
 		static void InsertParser(std::map<std::string, mvPythonParser>* parsers);
-
-		MV_APPITEM_TYPE_OLD_SYSTEM(mvAppItemType::DebugWindow, "add_debug_window")
 
 	public:
 

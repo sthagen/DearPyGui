@@ -4,6 +4,8 @@
 #include "mvItemRegistry.h"
 #include "mvNode.h"
 #include "mvNodeAttribute.h"
+#include "mvImGuiThemeScope.h"
+#include "mvImNodesThemeScope.h"
 
 namespace Marvel {
 
@@ -67,6 +69,11 @@ namespace Marvel {
 		m_description.container = true;
 	}
 
+	mvNodeEditor::~mvNodeEditor()
+	{
+		m_delinkCallback = nullptr;
+	}
+
 	void mvNodeEditor::addLink(const std::string& node1, const std::string& node2)
 	{
 		int64_t node1_id = 0;
@@ -107,7 +114,7 @@ namespace Marvel {
 
 	}
 
-	void mvNodeEditor::deleteLink(const std::string& node, int id)
+	void mvNodeEditor::deleteLink(const std::string& node, int id, bool deletion)
 	{
 		int nodeid = id;
 
@@ -129,9 +136,9 @@ namespace Marvel {
 			m_linksStrings.push_back(link_string);
 		}
 
-		if(m_delinkCallback)
+		if(m_delinkCallback && !deletion)
 			mvApp::GetApp()->getCallbackRegistry().submitCallback([=]() {
-				PyObject* link = PyTuple_New(2);
+				PyObject* link = PyTuple_New(1);
 				PyTuple_SetItem(link, 0, ToPyString(node));
 				mvApp::GetApp()->getCallbackRegistry().addCallback(m_delinkCallback, m_core_config.name, link);
 				});
@@ -171,7 +178,7 @@ namespace Marvel {
 			mvApp::GetApp()->getCallbackRegistry().submitCallback([=]() {
 			PyObject* link = PyTuple_New(2);
 			PyTuple_SetItem(link, 0, ToPyString(node1));
-			PyTuple_SetItem(link, 0, ToPyString(node2));
+			PyTuple_SetItem(link, 1, ToPyString(node2));
 			mvApp::GetApp()->getCallbackRegistry().addCallback(m_delinkCallback, m_core_config.name, link);
 				});
 
@@ -222,9 +229,9 @@ namespace Marvel {
 
 	void mvNodeEditor::draw()
 	{
-		auto styleManager = m_styleManager.getScopedStyleManager();
 		ScopedID id;
-		mvImGuiThemeScope scope(this);
+		imnodes::StyleColorsClassic();
+		mvImNodesThemeScope scope(this);
 
 		imnodes::PushAttributeFlag(imnodes::AttributeFlags_EnableLinkDetachWithDragClick);
 
@@ -356,7 +363,7 @@ namespace Marvel {
 		PyObject* delink_callback = nullptr;
 
 
-		if (!(*mvApp::GetApp()->getParsers())["add_node_editor"].parse(args, kwargs, __FUNCTION__, &name,
+		if (!(mvApp::GetApp()->getParsers())["add_node_editor"].parse(args, kwargs, __FUNCTION__, &name,
 			&show, &parent, &before, &link_callback, &delink_callback))
 			return ToPyBool(false);
 
@@ -396,11 +403,11 @@ namespace Marvel {
 		const char* node_2;
 
 
-		if (!(*mvApp::GetApp()->getParsers())["add_node_link"].parse(args, kwargs, __FUNCTION__, &node_editor,
+		if (!(mvApp::GetApp()->getParsers())["add_node_link"].parse(args, kwargs, __FUNCTION__, &node_editor,
 			&node_1, &node_2))
 			return ToPyBool(false);
 
-		std::lock_guard<std::mutex> lk(mvApp::GetApp()->GetApp()->getMutex());
+		std::lock_guard<std::mutex> lk(mvApp::GetApp()->getMutex());
 		auto anode_editor = mvApp::GetApp()->getItemRegistry().getItem(node_editor);
 		if (anode_editor == nullptr)
 		{
@@ -409,7 +416,7 @@ namespace Marvel {
 			return GetPyNone();
 		}
 
-		if (anode_editor->getType() != mvAppItemType::NodeEditor)
+		if (anode_editor->getType() != mvAppItemType::mvNodeEditor)
 		{
 			std::string message = node_editor;
 			ThrowPythonException(message + " is not a plot.");
@@ -431,11 +438,11 @@ namespace Marvel {
 		const char* node_2;
 
 
-		if (!(*mvApp::GetApp()->getParsers())["delete_node_link"].parse(args, kwargs, __FUNCTION__, &node_editor,
+		if (!(mvApp::GetApp()->getParsers())["delete_node_link"].parse(args, kwargs, __FUNCTION__, &node_editor,
 			&node_1, &node_2))
 			return ToPyBool(false);
 
-		std::lock_guard<std::mutex> lk(mvApp::GetApp()->GetApp()->getMutex());
+		std::lock_guard<std::mutex> lk(mvApp::GetApp()->getMutex());
 		auto anode_editor = mvApp::GetApp()->getItemRegistry().getItem(node_editor);
 		if (anode_editor == nullptr)
 		{
@@ -444,7 +451,7 @@ namespace Marvel {
 			return GetPyNone();
 		}
 
-		if (anode_editor->getType() != mvAppItemType::NodeEditor)
+		if (anode_editor->getType() != mvAppItemType::mvNodeEditor)
 		{
 			std::string message = node_editor;
 			ThrowPythonException(message + " is not a plot.");
@@ -464,10 +471,10 @@ namespace Marvel {
 		const char* node_editor;
 
 
-		if (!(*mvApp::GetApp()->getParsers())["get_selected_nodes"].parse(args, kwargs, __FUNCTION__, &node_editor))
+		if (!(mvApp::GetApp()->getParsers())["get_selected_nodes"].parse(args, kwargs, __FUNCTION__, &node_editor))
 			return ToPyBool(false);
 
-		std::lock_guard<std::mutex> lk(mvApp::GetApp()->GetApp()->getMutex());
+		std::lock_guard<std::mutex> lk(mvApp::GetApp()->getMutex());
 		auto anode_editor = mvApp::GetApp()->getItemRegistry().getItem(node_editor);
 		if (anode_editor == nullptr)
 		{
@@ -476,7 +483,7 @@ namespace Marvel {
 			return GetPyNone();
 		}
 
-		if (anode_editor->getType() != mvAppItemType::NodeEditor)
+		if (anode_editor->getType() != mvAppItemType::mvNodeEditor)
 		{
 			std::string message = node_editor;
 			ThrowPythonException(message + " is not a plot.");
@@ -495,10 +502,10 @@ namespace Marvel {
 	{
 		const char* node_editor;
 
-		if (!(*mvApp::GetApp()->getParsers())["get_selected_links"].parse(args, kwargs, __FUNCTION__, &node_editor))
+		if (!(mvApp::GetApp()->getParsers())["get_selected_links"].parse(args, kwargs, __FUNCTION__, &node_editor))
 			return ToPyBool(false);
 
-		std::lock_guard<std::mutex> lk(mvApp::GetApp()->GetApp()->getMutex());
+		std::lock_guard<std::mutex> lk(mvApp::GetApp()->getMutex());
 		auto anode_editor = mvApp::GetApp()->getItemRegistry().getItem(node_editor);
 		if (anode_editor == nullptr)
 		{
@@ -507,7 +514,7 @@ namespace Marvel {
 			return GetPyNone();
 		}
 
-		if (anode_editor->getType() != mvAppItemType::NodeEditor)
+		if (anode_editor->getType() != mvAppItemType::mvNodeEditor)
 		{
 			std::string message = node_editor;
 			ThrowPythonException(message + " is not a plot.");
@@ -531,10 +538,10 @@ namespace Marvel {
 	{
 		const char* node_editor;
 
-		if (!(*mvApp::GetApp()->getParsers())["get_links"].parse(args, kwargs, __FUNCTION__, &node_editor))
+		if (!(mvApp::GetApp()->getParsers())["get_links"].parse(args, kwargs, __FUNCTION__, &node_editor))
 			return ToPyBool(false);
 
-		std::lock_guard<std::mutex> lk(mvApp::GetApp()->GetApp()->getMutex());
+		std::lock_guard<std::mutex> lk(mvApp::GetApp()->getMutex());
 		auto anode_editor = mvApp::GetApp()->getItemRegistry().getItem(node_editor);
 		if (anode_editor == nullptr)
 		{
@@ -543,7 +550,7 @@ namespace Marvel {
 			return GetPyNone();
 		}
 
-		if (anode_editor->getType() != mvAppItemType::NodeEditor)
+		if (anode_editor->getType() != mvAppItemType::mvNodeEditor)
 		{
 			std::string message = node_editor;
 			ThrowPythonException(message + " is not a plot.");
@@ -562,10 +569,10 @@ namespace Marvel {
 	{
 		const char* node_editor;
 
-		if (!(*mvApp::GetApp()->getParsers())["clear_selected_links"].parse(args, kwargs, __FUNCTION__, &node_editor))
+		if (!(mvApp::GetApp()->getParsers())["clear_selected_links"].parse(args, kwargs, __FUNCTION__, &node_editor))
 			return ToPyBool(false);
 
-		std::lock_guard<std::mutex> lk(mvApp::GetApp()->GetApp()->getMutex());
+		std::lock_guard<std::mutex> lk(mvApp::GetApp()->getMutex());
 		auto anode_editor = mvApp::GetApp()->getItemRegistry().getItem(node_editor);
 		if (anode_editor == nullptr)
 		{
@@ -574,7 +581,7 @@ namespace Marvel {
 			return GetPyNone();
 		}
 
-		if (anode_editor->getType() != mvAppItemType::NodeEditor)
+		if (anode_editor->getType() != mvAppItemType::mvNodeEditor)
 		{
 			std::string message = node_editor;
 			ThrowPythonException(message + " is not a plot.");
@@ -592,10 +599,10 @@ namespace Marvel {
 	{
 		const char* node_editor;
 
-		if (!(*mvApp::GetApp()->getParsers())["clear_selected_nodes"].parse(args, kwargs, __FUNCTION__, &node_editor))
+		if (!(mvApp::GetApp()->getParsers())["clear_selected_nodes"].parse(args, kwargs, __FUNCTION__, &node_editor))
 			return ToPyBool(false);
 
-		std::lock_guard<std::mutex> lk(mvApp::GetApp()->GetApp()->getMutex());
+		std::lock_guard<std::mutex> lk(mvApp::GetApp()->getMutex());
 		auto anode_editor = mvApp::GetApp()->getItemRegistry().getItem(node_editor);
 		if (anode_editor == nullptr)
 		{
@@ -604,7 +611,7 @@ namespace Marvel {
 			return GetPyNone();
 		}
 
-		if (anode_editor->getType() != mvAppItemType::NodeEditor)
+		if (anode_editor->getType() != mvAppItemType::mvNodeEditor)
 		{
 			std::string message = node_editor;
 			ThrowPythonException(message + " is not a plot.");

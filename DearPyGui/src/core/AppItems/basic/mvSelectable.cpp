@@ -2,6 +2,7 @@
 #include "mvSelectable.h"
 #include "mvApp.h"
 #include "mvItemRegistry.h"
+#include "mvImGuiThemeScope.h"
 
 namespace Marvel {
 
@@ -45,7 +46,7 @@ namespace Marvel {
 
 	void mvSelectable::draw()
 	{
-		auto styleManager = m_styleManager.getScopedStyleManager();
+
 		ScopedID id;
 		mvImGuiThemeScope scope(this);
 
@@ -126,7 +127,7 @@ namespace Marvel {
 
 		//ImGuiSelectableFlags flags = ImGuiSelectableFlags_None;
 
-		if (!(*mvApp::GetApp()->getParsers())["add_selectable"].parse(args, kwargs, __FUNCTION__, &name,
+		if (!(mvApp::GetApp()->getParsers())["add_selectable"].parse(args, kwargs, __FUNCTION__, &name,
 			&default_value, &callback, &callback_data, &parent, &before, &source, &enabled,
 			&label, &show, &span_columns))
 			return ToPyBool(false);

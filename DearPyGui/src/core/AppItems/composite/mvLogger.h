@@ -18,18 +18,42 @@ namespace Marvel {
 		bool autosize_y = false;
 	};
 
-	PyObject* add_logger(PyObject* self, PyObject* args, PyObject* kwargs);
+	
 
+#ifdef MV_CPP
+#else
+	PyObject* add_logger             (PyObject* self, PyObject* args, PyObject* kwargs);
+	PyObject* get_log_level          (PyObject* self, PyObject* args, PyObject* kwargs);
+	PyObject* set_log_level          (PyObject* self, PyObject* args, PyObject* kwargs);
+	PyObject* log                    (PyObject* self, PyObject* args, PyObject* kwargs);
+	PyObject* log_debug              (PyObject* self, PyObject* args, PyObject* kwargs);
+	PyObject* log_info               (PyObject* self, PyObject* args, PyObject* kwargs);
+	PyObject* log_warning            (PyObject* self, PyObject* args, PyObject* kwargs);
+	PyObject* log_error              (PyObject* self, PyObject* args, PyObject* kwargs);
+	PyObject* clear_log              (PyObject* self, PyObject* args, PyObject* kwargs);
+	PyObject* show_logger            (PyObject* self, PyObject* args);
+	PyObject* set_logger_window_title(PyObject* self, PyObject* args, PyObject* kwargs);
+#endif
+
+	MV_REGISTER_WIDGET(mvLoggerItem);
 	class mvLoggerItem : public mvAppItem
 	{
 
 	public:
 
 		static void InsertParser(std::map<std::string, mvPythonParser>* parsers);
+		static void InsertConstants(std::vector<std::pair<std::string, long>>& constants);
 
 	public:
 
-		MV_APPITEM_TYPE_OLD_SYSTEM(mvAppItemType::Logger, "add_logger")
+
+		MV_APPITEM_TYPE(mvAppItemType::mvLoggerItem, "add_logger")
+
+		MV_START_COLOR_CONSTANTS
+		MV_END_COLOR_CONSTANTS
+
+		MV_START_STYLE_CONSTANTS
+		MV_END_STYLE_CONSTANTS
 
 		mvLoggerItem(const std::string& name)
 			: mvAppItem(name)

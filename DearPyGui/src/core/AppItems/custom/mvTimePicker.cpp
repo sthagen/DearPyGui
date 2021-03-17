@@ -4,6 +4,7 @@
 #include <misc/cpp/imgui_stdlib.h>
 #include "mvApp.h"
 #include "mvItemRegistry.h"
+#include "mvImGuiThemeScope.h"
 
 namespace Marvel {
 
@@ -31,7 +32,6 @@ namespace Marvel {
 
 	void mvTimePicker::draw()
 	{
-		auto styleManager = m_styleManager.getScopedStyleManager();
 		ScopedID id;
 		mvImGuiThemeScope scope(this);
 
@@ -74,7 +74,7 @@ namespace Marvel {
 		const char* parent = "";
 		int show = true;
 
-		if (!(*mvApp::GetApp()->getParsers())["add_time_picker"].parse(args, kwargs, __FUNCTION__,
+		if (!(mvApp::GetApp()->getParsers())["add_time_picker"].parse(args, kwargs, __FUNCTION__,
 			&name, &default_value, &hour24, &callback, &callback_data, &parent, &before, &show))
 			return ToPyBool(false);
 

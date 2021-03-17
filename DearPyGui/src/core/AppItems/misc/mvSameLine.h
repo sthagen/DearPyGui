@@ -4,46 +4,36 @@
 
 namespace Marvel {
 
+#ifdef MV_CPP
+#else
+	PyObject* add_same_line(PyObject* self, PyObject* args, PyObject* kwargs);
+#endif
+
+	MV_REGISTER_WIDGET(mvSameLine);
 	class mvSameLine : public mvAppItem
 	{
 
 	public:
 
-		MV_APPITEM_TYPE_OLD_SYSTEM(mvAppItemType::SameLine, "add_same_line")
+		static void InsertParser(std::map<std::string, mvPythonParser>* parsers);
 
-			mvSameLine(const std::string& name)
-			: mvAppItem(name)
-		{
-			m_description.duplicatesAllowed = true;
-		}
+	public:
 
-		void draw() override
-		{
-			ImGui::SameLine(m_xoffset, m_spacing);
-		}
+		MV_APPITEM_TYPE(mvAppItemType::mvSameLine, "add_same_line")
+
+		MV_START_COLOR_CONSTANTS
+		MV_END_COLOR_CONSTANTS
+
+		MV_START_STYLE_CONSTANTS
+		MV_END_STYLE_CONSTANTS
+
+		mvSameLine(const std::string& name);
+
+		void draw() override;
 
 #ifndef MV_CPP
-
-
-		void setExtraConfigDict(PyObject* dict) override
-		{
-			if (dict == nullptr)
-				return;
-			 
-			if (PyObject* item = PyDict_GetItemString(dict, "xoffset")) m_xoffset = ToFloat(item);
-			if (PyObject* item = PyDict_GetItemString(dict, "spacing")) m_spacing = ToFloat(item);
-
-		}
-
-		void getExtraConfigDict(PyObject* dict) override
-		{
-			if (dict == nullptr)
-				return;
-			 
-			PyDict_SetItemString(dict, "xoffset", ToPyFloat(m_xoffset));
-			PyDict_SetItemString(dict, "spacing", ToPyFloat(m_spacing));
-		}
-
+		void setExtraConfigDict(PyObject* dict) override;
+		void getExtraConfigDict(PyObject* dict) override;
 #endif
 
 	private:

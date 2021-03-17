@@ -5,9 +5,27 @@
 
 namespace Marvel {
 
+#ifdef MV_CPP
+#else
+	PyObject* select_directory_dialog(PyObject* self, PyObject* args, PyObject* kwargs);
+	PyObject* open_file_dialog       (PyObject* self, PyObject* args, PyObject* kwargs);
+#endif
+
+	MV_REGISTER_WIDGET(mvFileDialog);
 	class mvFileDialog : public mvBaseWindowAppitem
 	{
-		MV_APPITEM_TYPE_OLD_SYSTEM(mvAppItemType::FileDialog, "no_command_set")
+
+		MV_APPITEM_TYPE(mvAppItemType::mvFileDialog, "no_command_set")
+
+		MV_START_COLOR_CONSTANTS
+		MV_END_COLOR_CONSTANTS
+
+		MV_START_STYLE_CONSTANTS
+		MV_END_STYLE_CONSTANTS
+
+	public:
+
+		static void InsertParser(std::map<std::string, mvPythonParser>* parsers);
 
 	public:
 

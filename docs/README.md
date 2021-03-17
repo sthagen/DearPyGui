@@ -12,7 +12,7 @@
 ![Python Version](https://img.shields.io/pypi/pyversions/dearpygui)
 [![PYPI](https://img.shields.io/pypi/v/dearpygui)](https://pypi.org/project/dearpygui/)
 [![Downloads](https://pepy.tech/badge/dearpygui)](https://pepy.tech/project/dearpygui)
-[![Sponsors](https://img.shields.io/badge/sponsors-26-brightgreen)](https://img.shields.io/badge/sponsors-26-brightgreen)
+[![Sponsors](https://img.shields.io/badge/sponsors-29-brightgreen)](https://img.shields.io/badge/sponsors-29-brightgreen)
 
 [![build status](https://github.com/hoffstadt/DearPyGui/workflows/Embedded%20Build/badge.svg?branch=master)](https://github.com/hoffstadt/DearPyGui/actions?workflow=Embedded%20Build)
 [![static-analysis](https://github.com/hoffstadt/DearPyGui/workflows/static-analysis/badge.svg?branch=master)](https://github.com/hoffstadt/DearPyGui/actions?workflow=static-analysis)
@@ -58,8 +58,10 @@ Ensure you have at least Python 3.6 64bit.
  ---
  
 - [Documentation](https://github.com/hoffstadt/DearPyGui/wiki) comprehensive documentaion, tutorials, and examples.
-- [Development Roadmap](https://github.com/hoffstadt/DearPyGui/projects/4) future features and changes.
-- Internal Documentation: Run the `show_documentation` command from within the library to view an reference guide. 
+- [Development Roadmap](https://github.com/hoffstadt/DearPyGui/projects/4) major future features and changes.
+- [Feature Tracker](https://github.com/hoffstadt/DearPyGui/projects/5) all proposed new features.
+- [Bug Tracker](https://github.com/hoffstadt/DearPyGui/projects/1) current bugs and issues.
+- Internal Documentation: Run the `show_documentation` command from within the library to view a reference guide. 
 - Complete Demo: You can also view a mostly complete showcase of _Dear PyGui_ by running:
 ```python
 from dearpygui.core import start_dearpygui
@@ -157,6 +159,9 @@ These include:
 * 🥇 [Trinnik](https://github.com/Trinnik) _Gold Sponsor_
 * 🥇 [Anthony Doupe](https://github.com/Atlamillias) _Gold Sponsor_
 * 🥇 [Derek Barker](https://github.com/LordOdin) _Gold Sponsor_
+* 🥇 [Barney Mannerings](https://github.com/barnabee) _Gold Sponsor_
+* 🥇 [Leron Gray](https://github.com/daddycocoaman) _Gold Sponsor_
+* 🥇 [RB Blackstone](https://github.com/RBBlackstone) _Gold Sponsor_
 
 
 Thank you to all other [sponsors](https://github.com/hoffstadt/DearPyGui/wiki/Sponsors) for keeping this project moving forward!

@@ -19,7 +19,7 @@ namespace Marvel {
 		for (auto& point : points)
 			point = point + start;
 
-		if (m_fill.specified)
+		if (m_fill.r > 0.0f)
 		{
 			size_t i;
 			int y;
@@ -128,7 +128,7 @@ namespace Marvel {
 		float thickness = 1.0f;
 		const char* tag = "";
 
-		if (!(*mvApp::GetApp()->getParsers())["draw_polygon"].parse(args, kwargs, __FUNCTION__, &drawing, &points, &color, &fill, &thickness, &tag))
+		if (!(mvApp::GetApp()->getParsers())["draw_polygon"].parse(args, kwargs, __FUNCTION__, &drawing, &points, &color, &fill, &thickness, &tag))
 			return GetPyNone();
 
 		auto mpoints = ToVectVec2(points);
@@ -138,7 +138,7 @@ namespace Marvel {
 		auto cmd = CreateRef<mvDrawPolygonCmd>(mpoints, mcolor, mfill, thickness);
 		cmd->tag = tag;
 
-		std::lock_guard<std::mutex> lk(mvApp::GetApp()->GetApp()->getMutex());
+		std::lock_guard<std::mutex> lk(mvApp::GetApp()->getMutex());
 		mvRef<mvDrawList> drawlist = GetDrawListFromTarget(drawing);
 		if (drawlist)
 			drawlist->addCommand(cmd);

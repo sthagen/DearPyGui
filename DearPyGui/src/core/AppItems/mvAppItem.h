@@ -14,9 +14,7 @@
 #include <imgui.h>
 #include "mvAppItemState.h"
 #include "mvAppItemDescription.h"
-#include "mvAppItemStyleManager.h"
 #include "mvCallbackRegistry.h"
-#include "mvThemeManager.h"
 
 //-----------------------------------------------------------------------------
 // Helper Macros
@@ -25,32 +23,40 @@
 
 namespace Marvel {
 
+    // forward declarations
+    class mvThemeManager;
+
     //-----------------------------------------------------------------------------
-    // Widget Types
+    // mvAppItemType
     //-----------------------------------------------------------------------------
     enum class mvAppItemType
     {
-        None = 0, Spacing, SameLine, InputText, Button, 
-        RadioButtons, TabBar, TabItem, Image, MenuBar, 
-        Menu, EndMenu, MenuItem, EndMenuBar, Group, Child, 
-        SliderFloat, SliderFloat4, SliderInt, SliderInt4, 
-        SliderFloat2, SliderFloat3, SliderInt2, SliderInt3,
-        DragFloat, DragFloat4, DragInt, DragInt4, DragFloat2,
-        DragFloat3, DragInt2, DragInt3, InputFloat, InputFloat4, 
-        InputInt, InputInt4, InputFloat2, InputFloat3, 
-        InputInt2, InputInt3, ColorEdit3, ColorEdit4, 
-        ColorPicker3, ColorPicker4, Tooltip, CollapsingHeader, 
-        Separator, Checkbox, Listbox, Text, LabelText, Combo, 
-        Plot, SimplePlot, Indent, Unindent, Drawing, Window,
-        Popup, Selectable, TreeNode, ProgressBar, Table, Dummy,
-        ImageButton, TimePicker, DatePicker, ColorButton,
-        ManagedColumns, ColumnSet, NextColumn, Logger,
-        AboutWindow, DocWindow, DebugWindow, MetricsWindow,
-        StyleWindow, FileDialog, TabButton, 
-        NodeEditor, Node, NodeAttribute,
+        None = 0, mvSpacing, mvSameLine, mvInputText, mvButton,
+        mvRadioButton, mvTabBar, mvTab, mvImage, mvMenuBar,
+        mvMenu, mvMenuItem, mvGroup, mvChild,
+        mvSliderFloat, mvSliderFloat4, mvSliderInt, mvSliderInt4,
+        mvSliderFloat2, mvSliderFloat3, mvSliderInt2, mvSliderInt3,
+        mvDragFloat, mvDragFloat4, mvDragInt, mvDragInt4, mvDragFloat2,
+        mvDragFloat3, mvDragInt2, mvDragInt3, mvInputFloat, mvInputFloat4,
+        mvInputInt, mvInputInt4, mvInputFloat2, mvInputFloat3,
+        mvInputInt2, mvInputInt3, mvColorEdit3, mvColorEdit4,
+        mvColorPicker3, mvColorPicker4, mvTooltip, mvCollapsingHeader,
+        mvSeparator, mvCheckbox, mvListbox, mvText, mvLabelText, mvCombo,
+        mvPlot, mvSimplePlot, mvIndent, mvUnindent, mvDrawing, mvWindowAppItem,
+        mvPopup, mvSelectable, mvTreeNode, mvProgressBar, mvTable, mvDummy,
+        mvImageButton, mvTimePicker, mvDatePicker, mvColorButton,
+        mvManagedColumns, mvColumnSet, mvNextColumn, mvLoggerItem,
+        mvAboutWindow, mvDocWindow, mvDebugWindow, mvMetricsWindow,
+        mvStyleWindow, mvFileDialog, mvTabButton,
+        mvNodeEditor, mvNode, mvNodeAttribute,
         ItemTypeCount
     };
 
+    template<int item_type> struct mvItemType {};
+
+    //-----------------------------------------------------------------------------
+    // Core Config Struct
+    //-----------------------------------------------------------------------------
     struct mvAppItemConfig
     {
         std::string name = "";
@@ -144,30 +150,20 @@ namespace Marvel {
         [[nodiscard]] mvCallableData        getCallbackData()       { return m_core_config.callback_data; }
         const mvAppItemDescription&         getDescription () const { return m_description; }
         mvAppItemState&                     getState       () { return m_state; } 
-        mvAppItemStyleManager&              getStyleManager() { return m_styleManager; }
         mvAppItem*                          getParent() { return m_parent; }
 
         // theme get/set
         std::unordered_map<mvAppItemType, mvThemeColors>& getColors() { return m_colors; }
-        virtual const std::vector<std::tuple<std::string, long, mvColor>>& getColorConstants() const 
-        { 
-            static std::vector<std::tuple<std::string, long, mvColor>> constants;
-            return constants;
-        }
         std::unordered_map<mvAppItemType, mvThemeStyles>& getStyles() { return m_styles; }
-        virtual const std::vector<std::tuple<std::string, long, int, int>>& getStyleConstants() const
-        {
-            static std::vector<std::tuple<std::string, long, int, int>> constants;
-            return constants;
-        }
+
 
         //-----------------------------------------------------------------------------
         // cpp interface
         //-----------------------------------------------------------------------------
-        virtual void updateConfig(mvAppItemConfig* config) {}
-        virtual mvAppItemConfig* getConfig() { return nullptr; }
-        void updateCoreConfig();
-        mvAppItemConfig& getCoreConfig();
+        virtual void             updateConfig    (mvAppItemConfig* config) {}
+        virtual mvAppItemConfig* getConfig       () { return nullptr; }
+        void                     updateCoreConfig();
+        mvAppItemConfig&         getCoreConfig   ();
 
     protected:
 
@@ -196,7 +192,6 @@ namespace Marvel {
     protected:
 
         mvAppItemState                m_state;
-        mvAppItemStyleManager         m_styleManager;
         mvAppItemDescription          m_description;
         mvAppItemConfig               m_core_config;
 
@@ -209,4 +204,49 @@ namespace Marvel {
         std::unordered_map<mvAppItemType, mvThemeStyles> m_styles;
     };
 
+#ifdef MV_CPP
+#else
+    void AddItemCommands(std::map<std::string, mvPythonParser>* parsers);
+
+    PyObject* get_item_type(PyObject* self, PyObject* args, PyObject* kwargs);
+
+    PyObject* get_item_configuration(PyObject* self, PyObject* args, PyObject* kwargs);
+    PyObject* configure_item(PyObject* self, PyObject* args, PyObject* kwargs);
+
+    // replacing
+    PyObject* set_item_callback(PyObject* self, PyObject* args, PyObject* kwargs);
+    PyObject* set_item_callback_data(PyObject* self, PyObject* args, PyObject* kwargs);
+
+    PyObject* move_item(PyObject* self, PyObject* args, PyObject* kwargs);
+    PyObject* delete_item(PyObject* self, PyObject* args, PyObject* kwargs);
+    PyObject* does_item_exist(PyObject* self, PyObject* args, PyObject* kwargs);
+    PyObject* move_item_up(PyObject* self, PyObject* args, PyObject* kwargs);
+    PyObject* move_item_down(PyObject* self, PyObject* args, PyObject* kwargs);
+    PyObject* get_item_callback(PyObject* self, PyObject* args, PyObject* kwargs);
+    PyObject* get_item_callback_data(PyObject* self, PyObject* args, PyObject* kwargs);
+
+    PyObject* get_item_children(PyObject* self, PyObject* args, PyObject* kwargs);
+    PyObject* get_all_items(PyObject* self, PyObject* args, PyObject* kwargs);
+    PyObject* get_windows(PyObject* self, PyObject* args, PyObject* kwargs);
+
+    PyObject* get_item_parent(PyObject* self, PyObject* args, PyObject* kwargs);
+
+    PyObject* is_item_hovered(PyObject* self, PyObject* args, PyObject* kwargs);
+    PyObject* is_item_shown(PyObject* self, PyObject* args, PyObject* kwargs);
+    PyObject* is_item_active(PyObject* self, PyObject* args, PyObject* kwargs);
+    PyObject* is_item_focused(PyObject* self, PyObject* args, PyObject* kwargs);
+    PyObject* is_item_clicked(PyObject* self, PyObject* args, PyObject* kwargs);
+    PyObject* is_item_container(PyObject* self, PyObject* args, PyObject* kwargs);
+    PyObject* is_item_visible(PyObject* self, PyObject* args, PyObject* kwargs);
+    PyObject* is_item_edited(PyObject* self, PyObject* args, PyObject* kwargs);
+    PyObject* is_item_activated(PyObject* self, PyObject* args, PyObject* kwargs);
+    PyObject* is_item_deactivated(PyObject* self, PyObject* args, PyObject* kwargs);
+    PyObject* is_item_deactivated_after_edit(PyObject* self, PyObject* args, PyObject* kwargs);
+    PyObject* is_item_toggled_open(PyObject* self, PyObject* args, PyObject* kwargs);
+    PyObject* get_item_rect_min(PyObject* self, PyObject* args, PyObject* kwargs);
+    PyObject* get_item_rect_max(PyObject* self, PyObject* args, PyObject* kwargs);
+    PyObject* get_item_rect_size(PyObject* self, PyObject* args, PyObject* kwargs);
+    PyObject* get_value(PyObject* self, PyObject* args, PyObject* kwargs);
+    PyObject* set_value(PyObject* self, PyObject* args, PyObject* kwargs);
+#endif
 }

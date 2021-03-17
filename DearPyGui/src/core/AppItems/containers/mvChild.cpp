@@ -2,6 +2,7 @@
 #include "mvInput.h"
 #include "mvApp.h"
 #include "mvItemRegistry.h"
+#include "mvImGuiThemeScope.h"
 
 namespace Marvel {
 
@@ -43,7 +44,6 @@ namespace Marvel {
 
 	void mvChild::draw()
 	{
-		auto styleManager = m_styleManager.getScopedStyleManager();
 		ScopedID id;
 		mvImGuiThemeScope scope(this);
 
@@ -109,15 +109,15 @@ namespace Marvel {
 		PyDict_SetItemString(dict, "autosize_y", ToPyBool(m_autosize_y));
 
 		// helper for bit flipping
-		auto flagop = [dict](const char* keyword, int flag, int& flags)
+		auto checkbitset = [dict](const char* keyword, int flag, const int& flags)
 		{
-			if (PyObject* item = PyDict_GetItemString(dict, keyword)) ToBool(item) ? flags |= flag : flags &= ~flag;
+			PyDict_SetItemString(dict, keyword, ToPyBool(flags & flag));
 		};
 
 		// window flags
-		flagop("no_scrollbar", ImGuiWindowFlags_NoScrollbar, m_windowflags);
-		flagop("horizontal_scrollbar", ImGuiWindowFlags_HorizontalScrollbar, m_windowflags);
-		flagop("menubar", ImGuiWindowFlags_MenuBar, m_windowflags);
+		checkbitset("no_scrollbar", ImGuiWindowFlags_NoScrollbar, m_windowflags);
+		checkbitset("horizontal_scrollbar", ImGuiWindowFlags_HorizontalScrollbar, m_windowflags);
+		checkbitset("menubar", ImGuiWindowFlags_MenuBar, m_windowflags);
 	}
 
 	PyObject* add_child(PyObject* self, PyObject* args, PyObject* kwargs)
@@ -135,7 +135,7 @@ namespace Marvel {
 		int horizontal_scrollbar = false;
 		int menubar = false;
 
-		if (!(*mvApp::GetApp()->getParsers())["add_child"].parse(args, kwargs, __FUNCTION__, &name,
+		if (!(mvApp::GetApp()->getParsers())["add_child"].parse(args, kwargs, __FUNCTION__, &name,
 			&show, &parent, &before, &width, &height, &border, &autosize_x,
 			&autosize_y, &no_scrollbar, &horizontal_scrollbar, &menubar))
 			return ToPyBool(false);

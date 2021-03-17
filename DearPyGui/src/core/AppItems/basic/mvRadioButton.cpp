@@ -2,6 +2,7 @@
 #include "mvRadioButton.h"
 #include "mvApp.h"
 #include "mvItemRegistry.h"
+#include "mvImGuiThemeScope.h"
 
 namespace Marvel {
 	void mvRadioButton::InsertParser(std::map<std::string, mvPythonParser>* parsers)
@@ -33,20 +34,19 @@ namespace Marvel {
 
 		ImGui::BeginGroup();
 
-		auto styleManager = m_styleManager.getScopedStyleManager();
 		ScopedID id;
 		mvImGuiThemeScope scope(this);
 
 		if (!m_core_config.enabled)
 		{
-			ImVec4 disabled_color = ImVec4(ImGui::GetStyleColorVec4(ImGuiCol_TextDisabled));
-			disabled_color.w = 0.392f;
-			styleManager.addColorStyle(ImGuiCol_CheckMark, disabled_color);
-			styleManager.addColorStyle(ImGuiCol_FrameBg, disabled_color);
-			styleManager.addColorStyle(ImGuiCol_FrameBgHovered, disabled_color);
-			styleManager.addColorStyle(ImGuiCol_FrameBgActive, disabled_color);
-			styleManager.addColorStyle(ImGuiCol_Text, ImVec4(ImGui::GetStyleColorVec4(ImGuiCol_TextDisabled)));
-			m_disabled_value = *m_value;
+			//ImVec4 disabled_color = ImVec4(ImGui::GetStyleColorVec4(ImGuiCol_TextDisabled));
+			//disabled_color.w = 0.392f;
+			//styleManager.addColorStyle(ImGuiCol_CheckMark, disabled_color);
+			//styleManager.addColorStyle(ImGuiCol_FrameBg, disabled_color);
+			//styleManager.addColorStyle(ImGuiCol_FrameBgHovered, disabled_color);
+			//styleManager.addColorStyle(ImGuiCol_FrameBgActive, disabled_color);
+			//styleManager.addColorStyle(ImGuiCol_Text, ImVec4(ImGui::GetStyleColorVec4(ImGuiCol_TextDisabled)));
+			//m_disabled_value = *m_value;
 		}
 		for (size_t i = 0; i < m_itemnames.size(); i++)
 		{
@@ -114,7 +114,7 @@ namespace Marvel {
 		int horizontal = false;
 		int show = true;
 
-		if (!(*mvApp::GetApp()->getParsers())["add_radio_button"].parse(args, kwargs, __FUNCTION__, &name, &items,
+		if (!(mvApp::GetApp()->getParsers())["add_radio_button"].parse(args, kwargs, __FUNCTION__, &name, &items,
 			&default_value, &callback, &callback_data, &parent, &before, &source, &enabled, &horizontal, &show))
 			return ToPyBool(false);
 

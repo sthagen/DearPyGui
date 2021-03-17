@@ -51,7 +51,7 @@ namespace Marvel {
 		PyObject* color = nullptr;
 		const char* tag = "";
 
-		if (!(*mvApp::GetApp()->getParsers())["draw_text"].parse(args, kwargs, __FUNCTION__, &drawing, &pos, &text, &color, &size, &tag))
+		if (!(mvApp::GetApp()->getParsers())["draw_text"].parse(args, kwargs, __FUNCTION__, &drawing, &pos, &text, &color, &size, &tag))
 			return GetPyNone();
 
 		mvVec2 mpos = ToVec2(pos);
@@ -60,7 +60,7 @@ namespace Marvel {
 		auto cmd = CreateRef<mvDrawTextCmd>(mpos, text, mcolor, size);
 		cmd->tag = tag;
 
-		std::lock_guard<std::mutex> lk(mvApp::GetApp()->GetApp()->getMutex());
+		std::lock_guard<std::mutex> lk(mvApp::GetApp()->getMutex());
 		mvRef<mvDrawList> drawlist = GetDrawListFromTarget(drawing);
 		if (drawlist)
 			drawlist->addCommand(cmd);

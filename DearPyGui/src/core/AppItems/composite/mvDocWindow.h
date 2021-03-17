@@ -32,14 +32,21 @@ namespace Marvel {
 
 	PyObject* add_doc_window(PyObject* self, PyObject* args, PyObject* kwargs);
 
+	MV_REGISTER_WIDGET(mvDocWindow);
 	class mvDocWindow : public mvBaseWindowAppitem
 	{
+
+		MV_APPITEM_TYPE(mvAppItemType::mvDocWindow, "add_doc_window")
+
+		MV_START_COLOR_CONSTANTS
+		MV_END_COLOR_CONSTANTS
+
+		MV_START_STYLE_CONSTANTS
+		MV_END_STYLE_CONSTANTS
 
 	public:
 
 		static void InsertParser(std::map<std::string, mvPythonParser>* parsers);
-
-		MV_APPITEM_TYPE_OLD_SYSTEM(mvAppItemType::DocWindow, "add_doc_window")
 
 	public:
 
@@ -94,9 +101,9 @@ namespace Marvel {
 		std::vector<const char*> m_docContainers;
 
 		std::vector<std::pair<std::string, std::string>> m_commands;
-		std::vector<std::pair<std::string, long>> m_constants;
+		const std::vector<std::pair<std::string, long>>& m_constants = mvModule_Core::GetModuleConstants();
 		std::vector<std::string> m_constantsValues;
-		mvRef<std::map<std::string, mvPythonParser>> m_docmap = nullptr;
+		const std::map<std::string, mvPythonParser>& m_docmap = mvModule_Core::GetModuleParsers();
 
 	};
 

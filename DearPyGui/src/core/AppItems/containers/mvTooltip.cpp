@@ -1,6 +1,7 @@
 #include "mvTooltip.h"
 #include "mvApp.h"
 #include "mvItemRegistry.h"
+#include "mvImGuiThemeScope.h"
 
 namespace Marvel {
 
@@ -33,7 +34,6 @@ namespace Marvel {
 	{
 		if (ImGui::IsItemHovered())
 		{
-			auto styleManager = m_styleManager.getScopedStyleManager();
 			mvImGuiThemeScope scope(this);
 			ImGui::BeginTooltip();
 
@@ -70,7 +70,7 @@ namespace Marvel {
 		const char* before = "";
 		int show = true;
 
-		if (!(*mvApp::GetApp()->getParsers())["add_tooltip"].parse(args, kwargs, __FUNCTION__, &tipparent,
+		if (!(mvApp::GetApp()->getParsers())["add_tooltip"].parse(args, kwargs, __FUNCTION__, &tipparent,
 			&name, &parent, &before, &show))
 			return ToPyBool(false);
 

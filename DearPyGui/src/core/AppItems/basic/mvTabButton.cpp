@@ -1,6 +1,7 @@
 #include "mvTabButton.h"
 #include "mvApp.h"
 #include "mvItemRegistry.h"
+#include "mvImGuiThemeScope.h"
 
 namespace Marvel {
 
@@ -30,7 +31,6 @@ namespace Marvel {
 
 	void mvTabButton::draw()
 	{
-		auto styleManager = m_styleManager.getScopedStyleManager();
 		ScopedID id;
 		mvImGuiThemeScope scope(this);
 
@@ -118,7 +118,7 @@ namespace Marvel {
 		const char* parent = "";
 		const char* before = "";
 
-		if (!(*mvApp::GetApp()->getParsers())["add_tab_button"].parse(args, kwargs, __FUNCTION__, &name,
+		if (!(mvApp::GetApp()->getParsers())["add_tab_button"].parse(args, kwargs, __FUNCTION__, &name,
 			&label, &show, &no_reorder, &leading, &trailing, &no_tooltip, &callback,
 			&callback_data, &parent, &before))
 			return ToPyBool(false);
@@ -133,7 +133,7 @@ namespace Marvel {
 				return ToPyBool(false);
 			}
 
-			else if (parentItem->getType() == mvAppItemType::TabBar)
+			else if (parentItem->getType() == mvAppItemType::mvTabBar)
 			{
 				auto item = CreateRef<mvTabButton>(name);
 				if (callback)
@@ -167,7 +167,7 @@ namespace Marvel {
 				return ToPyBool(false);
 			}
 
-			else if (parentItem->getType() == mvAppItemType::TabBar)
+			else if (parentItem->getType() == mvAppItemType::mvTabBar)
 			{
 				auto item = CreateRef<mvTabButton>(name);
 				if (callback)

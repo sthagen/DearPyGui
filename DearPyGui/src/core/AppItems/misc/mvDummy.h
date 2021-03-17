@@ -4,23 +4,32 @@
 
 namespace Marvel {
 
+#ifdef MV_CPP
+#else
+	PyObject* add_dummy(PyObject* self, PyObject* args, PyObject* kwargs);
+#endif
+
+	MV_REGISTER_WIDGET(mvDummy);
 	class mvDummy : public mvAppItem
 	{
 
 	public:
 
-		MV_APPITEM_TYPE_OLD_SYSTEM(mvAppItemType::Dummy, "add_dummy")
+		static void InsertParser(std::map<std::string, mvPythonParser>* parsers);
 
-		mvDummy(const std::string& name)
-			: mvAppItem(name)
-		{
-			m_description.duplicatesAllowed = true;
-		}
+	public:
 
-		void draw() override
-		{
-			ImGui::Dummy({ (float)m_core_config.width, (float)m_core_config.height });
-		}
+		MV_APPITEM_TYPE(mvAppItemType::mvDummy, "add_dummy")
+
+		MV_START_COLOR_CONSTANTS
+		MV_END_COLOR_CONSTANTS
+
+		MV_START_STYLE_CONSTANTS
+		MV_END_STYLE_CONSTANTS
+
+		mvDummy(const std::string& name);
+
+		void draw() override;
 
 	};
 

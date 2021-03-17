@@ -2,7 +2,7 @@
 
 #include "mvTypeBases.h"
 #include "mvApp.h"
-#include "mvMarvel.h"
+#include "mvModule_Core.h"
 #include <string>
 
 //-----------------------------------------------------------------------------
@@ -37,27 +37,46 @@ namespace Marvel {
         int     step_fast      = 100;
         bool    readonly       = false;
     };
+
+#ifdef MV_CPP
+#else
+	PyObject* add_input_int   (PyObject* self, PyObject* args, PyObject* kwargs);
+	PyObject* add_input_int2  (PyObject* self, PyObject* args, PyObject* kwargs);
+	PyObject* add_input_int3  (PyObject* self, PyObject* args, PyObject* kwargs);
+	PyObject* add_input_int4  (PyObject* self, PyObject* args, PyObject* kwargs);
+	PyObject* add_input_float (PyObject* self, PyObject* args, PyObject* kwargs);
+	PyObject* add_input_float2(PyObject* self, PyObject* args, PyObject* kwargs);
+	PyObject* add_input_float3(PyObject* self, PyObject* args, PyObject* kwargs);
+	PyObject* add_input_float4(PyObject* self, PyObject* args, PyObject* kwargs);
+#endif
     
+    MV_REGISTER_WIDGET(mvInputInt);
     class mvInputInt : public mvIntPtrBase
     {
-        
-        MV_APPITEM_TYPE(mvAppItemType::InputInt, mvInputInt, "add_input_int")
 
-        MV_CREATE_THEME_CONSTANT(mvAppItemType::InputInt, mvThemeCol_InputInt_Text              ,  0L, 0L);
-        MV_CREATE_THEME_CONSTANT(mvAppItemType::InputInt, mvThemeCol_InputInt_TextHighlight     , 44L, 0L);
-        MV_CREATE_THEME_CONSTANT(mvAppItemType::InputInt, mvThemeCol_InputInt_Bg                ,  7L, 0L);
-        MV_CREATE_THEME_CONSTANT(mvAppItemType::InputInt, mvThemeCol_InputInt_ButtonBg          , 21L, 0L);
-        MV_CREATE_THEME_CONSTANT(mvAppItemType::InputInt, mvThemeCol_InputInt_ButtonBgHovered   , 22L, 0L);
-        MV_CREATE_THEME_CONSTANT(mvAppItemType::InputInt, mvThemeCol_InputInt_ButtonBgActive    , 23L, 0L);
-        MV_CREATE_THEME_CONSTANT(mvAppItemType::InputInt, mvThemeCol_InputInt_Border            ,  5L, 0L);
-        MV_CREATE_THEME_CONSTANT(mvAppItemType::InputInt, mvThemeCol_InputInt_BorderShadow      ,  6L, 0L);
-        MV_CREATE_THEME_CONSTANT(mvAppItemType::InputInt, mvThemeStyle_InputInt_Rounding        , 11L, 0L);
-        MV_CREATE_THEME_CONSTANT(mvAppItemType::InputInt, mvThemeStyle_InputInt_BorderSize      , 12L, 0L);
-        MV_CREATE_THEME_CONSTANT(mvAppItemType::InputInt, mvThemeStyle_InputInt_PaddingX        , 10L, 0L);
-        MV_CREATE_THEME_CONSTANT(mvAppItemType::InputInt, mvThemeStyle_InputInt_PaddingY        , 10L, 1L);
-        MV_CREATE_THEME_CONSTANT(mvAppItemType::InputInt, mvThemeStyle_InputInt_InnerSpacingX   , 14L, 0L);
-        MV_CREATE_THEME_CONSTANT(mvAppItemType::InputInt, mvThemeStyle_InputInt_InnerSpacingY   , 14L, 1L);
-        MV_CREATE_THEME_CONSTANT(mvAppItemType::InputInt, mvThemeStyle_InputInt_ButtonTextAlign , 22L, 0L);
+    public:
+
+        static void InsertParser(std::map<std::string, mvPythonParser>* parsers);
+        
+        MV_APPITEM_TYPE(mvAppItemType::mvInputInt, "add_input_int")
+
+        MV_CREATE_THEME_CONSTANT(mvThemeCol_InputInt_Text              ,  0L, 0L);
+        MV_CREATE_THEME_CONSTANT(mvThemeCol_InputInt_TextHighlight     , 44L, 0L);
+        MV_CREATE_THEME_CONSTANT(mvThemeCol_InputInt_Bg                ,  7L, 0L);
+        MV_CREATE_THEME_CONSTANT(mvThemeCol_InputInt_ButtonBg          , 21L, 0L);
+        MV_CREATE_THEME_CONSTANT(mvThemeCol_InputInt_ButtonBgHovered   , 22L, 0L);
+        MV_CREATE_THEME_CONSTANT(mvThemeCol_InputInt_ButtonBgActive    , 23L, 0L);
+        MV_CREATE_THEME_CONSTANT(mvThemeCol_InputInt_Border            ,  5L, 0L);
+        MV_CREATE_THEME_CONSTANT(mvThemeCol_InputInt_BorderShadow      ,  6L, 0L);
+
+        MV_CREATE_THEME_CONSTANT(mvThemeStyle_InputInt_Rounding        , 11L, 0L);
+        MV_CREATE_THEME_CONSTANT(mvThemeStyle_InputInt_BorderSize      , 12L, 0L);
+        MV_CREATE_THEME_CONSTANT(mvThemeStyle_InputInt_PaddingX        , 10L, 0L);
+        MV_CREATE_THEME_CONSTANT(mvThemeStyle_InputInt_PaddingY        , 10L, 1L);
+        MV_CREATE_THEME_CONSTANT(mvThemeStyle_InputInt_InnerSpacingX   , 14L, 0L);
+        MV_CREATE_THEME_CONSTANT(mvThemeStyle_InputInt_InnerSpacingY   , 14L, 1L);
+        MV_CREATE_THEME_CONSTANT(mvThemeStyle_InputInt_ButtonTextAlignX, 22L, 0L);
+        MV_CREATE_THEME_CONSTANT(mvThemeStyle_InputInt_ButtonTextAlignY, 22L, 1L);
 
         MV_START_COLOR_CONSTANTS
             MV_CREATE_CONSTANT_PAIR(mvThemeCol_InputInt_Text,               mvColor(255, 255, 255, 255)),
@@ -71,13 +90,14 @@ namespace Marvel {
         MV_END_COLOR_CONSTANTS
 
         MV_START_STYLE_CONSTANTS
-            MV_CREATE_CONSTANT_TUPLE(mvThemeStyle_InputInt_Rounding         , 0, 12),
-            MV_CREATE_CONSTANT_TUPLE(mvThemeStyle_InputInt_BorderSize       , 0,  1),
-            MV_CREATE_CONSTANT_TUPLE(mvThemeStyle_InputInt_PaddingX         , 0, 20),
-            MV_CREATE_CONSTANT_TUPLE(mvThemeStyle_InputInt_PaddingY         , 0, 20),
-            MV_CREATE_CONSTANT_TUPLE(mvThemeStyle_InputInt_InnerSpacingX    , 0, 20),
-            MV_CREATE_CONSTANT_TUPLE(mvThemeStyle_InputInt_InnerSpacingY    , 0, 20),
-            MV_CREATE_CONSTANT_TUPLE(mvThemeStyle_InputInt_ButtonTextAlign  , 0,  1),
+            MV_CREATE_CONSTANT_TUPLE(mvThemeStyle_InputInt_Rounding         , 0,   12),
+            MV_CREATE_CONSTANT_TUPLE(mvThemeStyle_InputInt_BorderSize       , 0,    1),
+            MV_CREATE_CONSTANT_TUPLE(mvThemeStyle_InputInt_PaddingX         , 4,   20),
+            MV_CREATE_CONSTANT_TUPLE(mvThemeStyle_InputInt_PaddingY         , 3,   20),
+            MV_CREATE_CONSTANT_TUPLE(mvThemeStyle_InputInt_InnerSpacingX    , 4,   20),
+            MV_CREATE_CONSTANT_TUPLE(mvThemeStyle_InputInt_InnerSpacingY    , 4,   20),
+            MV_CREATE_CONSTANT_TUPLE(mvThemeStyle_InputInt_ButtonTextAlignX , 0.5, 20),
+            MV_CREATE_CONSTANT_TUPLE(mvThemeStyle_InputInt_ButtonTextAlignY , 0.5, 20),
         MV_END_STYLE_CONSTANTS
 
     public:
@@ -126,22 +146,28 @@ namespace Marvel {
 
     };
 
+    MV_REGISTER_WIDGET(mvInputInt2);
     class mvInputInt2 : public mvInt2PtrBase
     {
 
-        MV_APPITEM_TYPE(mvAppItemType::InputInt2, mvInputInt2, "add_input_int2")
+    public:
 
-        MV_CREATE_THEME_CONSTANT(mvAppItemType::InputInt2, mvThemeCol_InputInt2_Text            ,  0L, 0L);
-        MV_CREATE_THEME_CONSTANT(mvAppItemType::InputInt2, mvThemeCol_InputInt2_TextHighlight   , 44L, 0L);
-        MV_CREATE_THEME_CONSTANT(mvAppItemType::InputInt2, mvThemeCol_InputInt2_Bg              ,  7L, 0L);
-        MV_CREATE_THEME_CONSTANT(mvAppItemType::InputInt2, mvThemeCol_InputInt2_Border          ,  5L, 0L);
-        MV_CREATE_THEME_CONSTANT(mvAppItemType::InputInt2, mvThemeCol_InputInt2_BorderShadow    ,  6L, 0L);
-        MV_CREATE_THEME_CONSTANT(mvAppItemType::InputInt2, mvThemeStyle_InputInt2_Rounding      , 11L, 0L);
-        MV_CREATE_THEME_CONSTANT(mvAppItemType::InputInt2, mvThemeStyle_InputInt2_BorderSize    , 12L, 0L);
-        MV_CREATE_THEME_CONSTANT(mvAppItemType::InputInt2, mvThemeStyle_InputInt2_PaddingX      , 10L, 0L);
-        MV_CREATE_THEME_CONSTANT(mvAppItemType::InputInt2, mvThemeStyle_InputInt2_PaddingY      , 10L, 1L);
-        MV_CREATE_THEME_CONSTANT(mvAppItemType::InputInt2, mvThemeStyle_InputInt2_InnerSpacingX , 14L, 0L);
-        MV_CREATE_THEME_CONSTANT(mvAppItemType::InputInt2, mvThemeStyle_InputInt2_InnerSpacingY , 14L, 1L);
+        static void InsertParser(std::map<std::string, mvPythonParser>* parsers);
+
+        MV_APPITEM_TYPE(mvAppItemType::mvInputInt2, "add_input_int2")
+
+        MV_CREATE_THEME_CONSTANT(mvThemeCol_InputInt2_Text            ,  0L, 0L);
+        MV_CREATE_THEME_CONSTANT(mvThemeCol_InputInt2_TextHighlight   , 44L, 0L);
+        MV_CREATE_THEME_CONSTANT(mvThemeCol_InputInt2_Bg              ,  7L, 0L);
+        MV_CREATE_THEME_CONSTANT(mvThemeCol_InputInt2_Border          ,  5L, 0L);
+        MV_CREATE_THEME_CONSTANT(mvThemeCol_InputInt2_BorderShadow    ,  6L, 0L);
+
+        MV_CREATE_THEME_CONSTANT(mvThemeStyle_InputInt2_Rounding      , 11L, 0L);
+        MV_CREATE_THEME_CONSTANT(mvThemeStyle_InputInt2_BorderSize    , 12L, 0L);
+        MV_CREATE_THEME_CONSTANT(mvThemeStyle_InputInt2_PaddingX      , 10L, 0L);
+        MV_CREATE_THEME_CONSTANT(mvThemeStyle_InputInt2_PaddingY      , 10L, 1L);
+        MV_CREATE_THEME_CONSTANT(mvThemeStyle_InputInt2_InnerSpacingX , 14L, 0L);
+        MV_CREATE_THEME_CONSTANT(mvThemeStyle_InputInt2_InnerSpacingY , 14L, 1L);
 
         MV_START_COLOR_CONSTANTS
             MV_CREATE_CONSTANT_PAIR(mvThemeCol_InputInt2_Text,          mvColor(255, 255, 255, 255)),
@@ -154,10 +180,10 @@ namespace Marvel {
         MV_START_STYLE_CONSTANTS
             MV_CREATE_CONSTANT_TUPLE(mvThemeStyle_InputInt2_Rounding        , 0, 12),
             MV_CREATE_CONSTANT_TUPLE(mvThemeStyle_InputInt2_BorderSize      , 0,  1),
-            MV_CREATE_CONSTANT_TUPLE(mvThemeStyle_InputInt2_PaddingX        , 0, 20),
-            MV_CREATE_CONSTANT_TUPLE(mvThemeStyle_InputInt2_PaddingY        , 0, 20),
-            MV_CREATE_CONSTANT_TUPLE(mvThemeStyle_InputInt2_InnerSpacingX   , 0, 20),
-            MV_CREATE_CONSTANT_TUPLE(mvThemeStyle_InputInt2_InnerSpacingY   , 0, 20),
+            MV_CREATE_CONSTANT_TUPLE(mvThemeStyle_InputInt2_PaddingX        , 4, 20),
+            MV_CREATE_CONSTANT_TUPLE(mvThemeStyle_InputInt2_PaddingY        , 3, 20),
+            MV_CREATE_CONSTANT_TUPLE(mvThemeStyle_InputInt2_InnerSpacingX   , 4, 20),
+            MV_CREATE_CONSTANT_TUPLE(mvThemeStyle_InputInt2_InnerSpacingY   , 4, 20),
         MV_END_STYLE_CONSTANTS
 
     public:
@@ -191,22 +217,28 @@ namespace Marvel {
     //-----------------------------------------------------------------------------
     // mvInputInt3
     //-----------------------------------------------------------------------------
+    MV_REGISTER_WIDGET(mvInputInt3);
     class mvInputInt3 : public mvInt3PtrBase
     {
 
-        MV_APPITEM_TYPE(mvAppItemType::InputInt3, mvInputInt3, "add_input_int3")
+    public:
 
-        MV_CREATE_THEME_CONSTANT(mvAppItemType::InputInt3, mvThemeCol_InputInt3_Text            ,  0L, 0L);
-        MV_CREATE_THEME_CONSTANT(mvAppItemType::InputInt3, mvThemeCol_InputInt3_TextHighlight   , 44L, 0L);
-        MV_CREATE_THEME_CONSTANT(mvAppItemType::InputInt3, mvThemeCol_InputInt3_Bg              ,  7L, 0L);
-        MV_CREATE_THEME_CONSTANT(mvAppItemType::InputInt3, mvThemeCol_InputInt3_Border          ,  5L, 0L);
-        MV_CREATE_THEME_CONSTANT(mvAppItemType::InputInt3, mvThemeCol_InputInt3_BorderShadow    ,  6L, 0L);
-        MV_CREATE_THEME_CONSTANT(mvAppItemType::InputInt3, mvThemeStyle_InputInt3_Rounding      , 11L, 0L);
-        MV_CREATE_THEME_CONSTANT(mvAppItemType::InputInt3, mvThemeStyle_InputInt3_BorderSize    , 12L, 0L);
-        MV_CREATE_THEME_CONSTANT(mvAppItemType::InputInt3, mvThemeStyle_InputInt3_PaddingX      , 10L, 0L);
-        MV_CREATE_THEME_CONSTANT(mvAppItemType::InputInt3, mvThemeStyle_InputInt3_PaddingY      , 10L, 1L);
-        MV_CREATE_THEME_CONSTANT(mvAppItemType::InputInt3, mvThemeStyle_InputInt3_InnerSpacingX , 14L, 0L);
-        MV_CREATE_THEME_CONSTANT(mvAppItemType::InputInt3, mvThemeStyle_InputInt3_InnerSpacingY , 14L, 1L);
+        static void InsertParser(std::map<std::string, mvPythonParser>* parsers);
+
+        MV_APPITEM_TYPE(mvAppItemType::mvInputInt3, "add_input_int3")
+
+        MV_CREATE_THEME_CONSTANT(mvThemeCol_InputInt3_Text            ,  0L, 0L);
+        MV_CREATE_THEME_CONSTANT(mvThemeCol_InputInt3_TextHighlight   , 44L, 0L);
+        MV_CREATE_THEME_CONSTANT(mvThemeCol_InputInt3_Bg              ,  7L, 0L);
+        MV_CREATE_THEME_CONSTANT(mvThemeCol_InputInt3_Border          ,  5L, 0L);
+        MV_CREATE_THEME_CONSTANT(mvThemeCol_InputInt3_BorderShadow    ,  6L, 0L);
+
+        MV_CREATE_THEME_CONSTANT(mvThemeStyle_InputInt3_Rounding      , 11L, 0L);
+        MV_CREATE_THEME_CONSTANT(mvThemeStyle_InputInt3_BorderSize    , 12L, 0L);
+        MV_CREATE_THEME_CONSTANT(mvThemeStyle_InputInt3_PaddingX      , 10L, 0L);
+        MV_CREATE_THEME_CONSTANT(mvThemeStyle_InputInt3_PaddingY      , 10L, 1L);
+        MV_CREATE_THEME_CONSTANT(mvThemeStyle_InputInt3_InnerSpacingX , 14L, 0L);
+        MV_CREATE_THEME_CONSTANT(mvThemeStyle_InputInt3_InnerSpacingY , 14L, 1L);
 
         MV_START_COLOR_CONSTANTS
             MV_CREATE_CONSTANT_PAIR(mvThemeCol_InputInt3_Text,          mvColor(255, 255, 255, 255)),
@@ -219,10 +251,10 @@ namespace Marvel {
         MV_START_STYLE_CONSTANTS
             MV_CREATE_CONSTANT_TUPLE(mvThemeStyle_InputInt3_Rounding        , 0, 12),
             MV_CREATE_CONSTANT_TUPLE(mvThemeStyle_InputInt3_BorderSize      , 0,  1),
-            MV_CREATE_CONSTANT_TUPLE(mvThemeStyle_InputInt3_PaddingX        , 0, 20),
-            MV_CREATE_CONSTANT_TUPLE(mvThemeStyle_InputInt3_PaddingY        , 0, 20),
-            MV_CREATE_CONSTANT_TUPLE(mvThemeStyle_InputInt3_InnerSpacingX   , 0, 20),
-            MV_CREATE_CONSTANT_TUPLE(mvThemeStyle_InputInt3_InnerSpacingY   , 0, 20),
+            MV_CREATE_CONSTANT_TUPLE(mvThemeStyle_InputInt3_PaddingX        , 4, 20),
+            MV_CREATE_CONSTANT_TUPLE(mvThemeStyle_InputInt3_PaddingY        , 3, 20),
+            MV_CREATE_CONSTANT_TUPLE(mvThemeStyle_InputInt3_InnerSpacingX   , 4, 20),
+            MV_CREATE_CONSTANT_TUPLE(mvThemeStyle_InputInt3_InnerSpacingY   , 4, 20),
         MV_END_STYLE_CONSTANTS
 
         
@@ -257,22 +289,28 @@ namespace Marvel {
     //-----------------------------------------------------------------------------
     // mvInputInt4
     //-----------------------------------------------------------------------------
+    MV_REGISTER_WIDGET(mvInputInt4);
     class mvInputInt4 : public mvInt4PtrBase
     {
-    
-        MV_APPITEM_TYPE(mvAppItemType::InputInt4, mvInputInt4, "add_input_int4")
 
-        MV_CREATE_THEME_CONSTANT(mvAppItemType::InputInt4, mvThemeCol_InputInt4_Text            ,  0L, 0L);
-        MV_CREATE_THEME_CONSTANT(mvAppItemType::InputInt4, mvThemeCol_InputInt4_TextHighlight   , 44L, 0L);
-        MV_CREATE_THEME_CONSTANT(mvAppItemType::InputInt4, mvThemeCol_InputInt4_Bg              ,  7L, 0L);
-        MV_CREATE_THEME_CONSTANT(mvAppItemType::InputInt4, mvThemeCol_InputInt4_Border          ,  5L, 0L);
-        MV_CREATE_THEME_CONSTANT(mvAppItemType::InputInt4, mvThemeCol_InputInt4_BorderShadow    ,  6L, 0L);
-        MV_CREATE_THEME_CONSTANT(mvAppItemType::InputInt4, mvThemeStyle_InputInt4_Rounding      , 11L, 0L);
-        MV_CREATE_THEME_CONSTANT(mvAppItemType::InputInt4, mvThemeStyle_InputInt4_BorderSize    , 12L, 0L);
-        MV_CREATE_THEME_CONSTANT(mvAppItemType::InputInt4, mvThemeStyle_InputInt4_PaddingX      , 10L, 0L);
-        MV_CREATE_THEME_CONSTANT(mvAppItemType::InputInt4, mvThemeStyle_InputInt4_PaddingY      , 10L, 1L);
-        MV_CREATE_THEME_CONSTANT(mvAppItemType::InputInt4, mvThemeStyle_InputInt4_InnerSpacingX , 14L, 0L);
-        MV_CREATE_THEME_CONSTANT(mvAppItemType::InputInt4, mvThemeStyle_InputInt4_InnerSpacingY , 14L, 1L);
+    public:
+
+        static void InsertParser(std::map<std::string, mvPythonParser>* parsers);
+    
+        MV_APPITEM_TYPE(mvAppItemType::mvInputInt4, "add_input_int4")
+
+        MV_CREATE_THEME_CONSTANT(mvThemeCol_InputInt4_Text            ,  0L, 0L);
+        MV_CREATE_THEME_CONSTANT(mvThemeCol_InputInt4_TextHighlight   , 44L, 0L);
+        MV_CREATE_THEME_CONSTANT(mvThemeCol_InputInt4_Bg              ,  7L, 0L);
+        MV_CREATE_THEME_CONSTANT(mvThemeCol_InputInt4_Border          ,  5L, 0L);
+        MV_CREATE_THEME_CONSTANT(mvThemeCol_InputInt4_BorderShadow    ,  6L, 0L);
+
+        MV_CREATE_THEME_CONSTANT(mvThemeStyle_InputInt4_Rounding      , 11L, 0L);
+        MV_CREATE_THEME_CONSTANT(mvThemeStyle_InputInt4_BorderSize    , 12L, 0L);
+        MV_CREATE_THEME_CONSTANT(mvThemeStyle_InputInt4_PaddingX      , 10L, 0L);
+        MV_CREATE_THEME_CONSTANT(mvThemeStyle_InputInt4_PaddingY      , 10L, 1L);
+        MV_CREATE_THEME_CONSTANT(mvThemeStyle_InputInt4_InnerSpacingX , 14L, 0L);
+        MV_CREATE_THEME_CONSTANT(mvThemeStyle_InputInt4_InnerSpacingY , 14L, 1L);
 
         MV_START_COLOR_CONSTANTS
             MV_CREATE_CONSTANT_PAIR(mvThemeCol_InputInt4_Text,          mvColor(255, 255, 255, 255)),
@@ -285,10 +323,10 @@ namespace Marvel {
         MV_START_STYLE_CONSTANTS
             MV_CREATE_CONSTANT_TUPLE(mvThemeStyle_InputInt4_Rounding        , 0, 12),
             MV_CREATE_CONSTANT_TUPLE(mvThemeStyle_InputInt4_BorderSize      , 0,  1),
-            MV_CREATE_CONSTANT_TUPLE(mvThemeStyle_InputInt4_PaddingX        , 0, 20),
-            MV_CREATE_CONSTANT_TUPLE(mvThemeStyle_InputInt4_PaddingY        , 0, 20),
-            MV_CREATE_CONSTANT_TUPLE(mvThemeStyle_InputInt4_InnerSpacingX   , 0, 20),
-            MV_CREATE_CONSTANT_TUPLE(mvThemeStyle_InputInt4_InnerSpacingY   , 0, 20),
+            MV_CREATE_CONSTANT_TUPLE(mvThemeStyle_InputInt4_PaddingX        , 4, 20),
+            MV_CREATE_CONSTANT_TUPLE(mvThemeStyle_InputInt4_PaddingY        , 3, 20),
+            MV_CREATE_CONSTANT_TUPLE(mvThemeStyle_InputInt4_InnerSpacingX   , 4, 20),
+            MV_CREATE_CONSTANT_TUPLE(mvThemeStyle_InputInt4_InnerSpacingY   , 4, 20),
         MV_END_STYLE_CONSTANTS
 
     public:
@@ -337,26 +375,33 @@ namespace Marvel {
         bool        readonly        = false;
     };
     
+    MV_REGISTER_WIDGET(mvInputFloat);
     class mvInputFloat : public mvFloatPtrBase
     {
-        
-        MV_APPITEM_TYPE(mvAppItemType::InputFloat, mvInputFloat, "add_input_float")
 
-        MV_CREATE_THEME_CONSTANT(mvAppItemType::InputFloat, mvThemeCol_InputFloat_Text              ,  0L, 0L);
-        MV_CREATE_THEME_CONSTANT(mvAppItemType::InputFloat, mvThemeCol_InputFloat_TextHighlight     , 44L, 0L);
-        MV_CREATE_THEME_CONSTANT(mvAppItemType::InputFloat, mvThemeCol_InputFloat_Bg                ,  7L, 0L);
-        MV_CREATE_THEME_CONSTANT(mvAppItemType::InputFloat, mvThemeCol_InputFloat_ButtonBg          , 21L, 0L);
-        MV_CREATE_THEME_CONSTANT(mvAppItemType::InputFloat, mvThemeCol_InputFloat_ButtonBgHovered   , 22L, 0L);
-        MV_CREATE_THEME_CONSTANT(mvAppItemType::InputFloat, mvThemeCol_InputFloat_ButtonBgActive    , 23L, 0L);
-        MV_CREATE_THEME_CONSTANT(mvAppItemType::InputFloat, mvThemeCol_InputFloat_Border            ,  5L, 0L);
-        MV_CREATE_THEME_CONSTANT(mvAppItemType::InputFloat, mvThemeCol_InputFloat_BorderShadow      ,  6L, 0L);
-        MV_CREATE_THEME_CONSTANT(mvAppItemType::InputFloat, mvThemeStyle_InputFloat_Rounding        , 11L, 0L);
-        MV_CREATE_THEME_CONSTANT(mvAppItemType::InputFloat, mvThemeStyle_InputFloat_BorderSize      , 12L, 0L);
-        MV_CREATE_THEME_CONSTANT(mvAppItemType::InputFloat, mvThemeStyle_InputFloat_PaddingX        , 10L, 0L);
-        MV_CREATE_THEME_CONSTANT(mvAppItemType::InputFloat, mvThemeStyle_InputFloat_PaddingY        , 10L, 1L);
-        MV_CREATE_THEME_CONSTANT(mvAppItemType::InputFloat, mvThemeStyle_InputFloat_InnerSpacingX   , 14L, 0L);
-        MV_CREATE_THEME_CONSTANT(mvAppItemType::InputFloat, mvThemeStyle_InputFloat_InnerSpacingY   , 14L, 1L);
-        MV_CREATE_THEME_CONSTANT(mvAppItemType::InputFloat, mvThemeStyle_InputFloat_ButtonTextAlign , 22L, 0L);
+    public:
+
+        static void InsertParser(std::map<std::string, mvPythonParser>* parsers);
+        
+        MV_APPITEM_TYPE(mvAppItemType::mvInputFloat, "add_input_float")
+
+        MV_CREATE_THEME_CONSTANT(mvThemeCol_InputFloat_Text              ,  0L, 0L);
+        MV_CREATE_THEME_CONSTANT(mvThemeCol_InputFloat_TextHighlight     , 44L, 0L);
+        MV_CREATE_THEME_CONSTANT(mvThemeCol_InputFloat_Bg                ,  7L, 0L);
+        MV_CREATE_THEME_CONSTANT(mvThemeCol_InputFloat_ButtonBg          , 21L, 0L);
+        MV_CREATE_THEME_CONSTANT(mvThemeCol_InputFloat_ButtonBgHovered   , 22L, 0L);
+        MV_CREATE_THEME_CONSTANT(mvThemeCol_InputFloat_ButtonBgActive    , 23L, 0L);
+        MV_CREATE_THEME_CONSTANT(mvThemeCol_InputFloat_Border            ,  5L, 0L);
+        MV_CREATE_THEME_CONSTANT(mvThemeCol_InputFloat_BorderShadow      ,  6L, 0L);
+
+        MV_CREATE_THEME_CONSTANT(mvThemeStyle_InputFloat_Rounding        , 11L, 0L);
+        MV_CREATE_THEME_CONSTANT(mvThemeStyle_InputFloat_BorderSize      , 12L, 0L);
+        MV_CREATE_THEME_CONSTANT(mvThemeStyle_InputFloat_PaddingX        , 10L, 0L);
+        MV_CREATE_THEME_CONSTANT(mvThemeStyle_InputFloat_PaddingY        , 10L, 1L);
+        MV_CREATE_THEME_CONSTANT(mvThemeStyle_InputFloat_InnerSpacingX   , 14L, 0L);
+        MV_CREATE_THEME_CONSTANT(mvThemeStyle_InputFloat_InnerSpacingY   , 14L, 1L);
+        MV_CREATE_THEME_CONSTANT(mvThemeStyle_InputFloat_ButtonTextAlignX, 22L, 0L);
+        MV_CREATE_THEME_CONSTANT(mvThemeStyle_InputFloat_ButtonTextAlignY, 22L, 1L);
 
         MV_START_COLOR_CONSTANTS
             MV_CREATE_CONSTANT_PAIR(mvThemeCol_InputFloat_Text,               mvColor(255, 255, 255, 255)),
@@ -370,13 +415,14 @@ namespace Marvel {
         MV_END_COLOR_CONSTANTS
 
         MV_START_STYLE_CONSTANTS
-            MV_CREATE_CONSTANT_TUPLE(mvThemeStyle_InputFloat_Rounding       , 0, 12),
-            MV_CREATE_CONSTANT_TUPLE(mvThemeStyle_InputFloat_BorderSize     , 0,  1),
-            MV_CREATE_CONSTANT_TUPLE(mvThemeStyle_InputFloat_PaddingX       , 0, 20),
-            MV_CREATE_CONSTANT_TUPLE(mvThemeStyle_InputFloat_PaddingY       , 0, 20),
-            MV_CREATE_CONSTANT_TUPLE(mvThemeStyle_InputFloat_InnerSpacingX  , 0, 20),
-            MV_CREATE_CONSTANT_TUPLE(mvThemeStyle_InputFloat_InnerSpacingY  , 0, 20),
-            MV_CREATE_CONSTANT_TUPLE(mvThemeStyle_InputFloat_ButtonTextAlign, 0,  1),
+            MV_CREATE_CONSTANT_TUPLE(mvThemeStyle_InputFloat_Rounding        , 0,   12),
+            MV_CREATE_CONSTANT_TUPLE(mvThemeStyle_InputFloat_BorderSize      , 0,    1),
+            MV_CREATE_CONSTANT_TUPLE(mvThemeStyle_InputFloat_PaddingX        , 4,   20),
+            MV_CREATE_CONSTANT_TUPLE(mvThemeStyle_InputFloat_PaddingY        , 3,   20),
+            MV_CREATE_CONSTANT_TUPLE(mvThemeStyle_InputFloat_InnerSpacingX   , 4,   20),
+            MV_CREATE_CONSTANT_TUPLE(mvThemeStyle_InputFloat_InnerSpacingY   , 4,   20),
+            MV_CREATE_CONSTANT_TUPLE(mvThemeStyle_InputFloat_ButtonTextAlignX, 0.5, 20),
+            MV_CREATE_CONSTANT_TUPLE(mvThemeStyle_InputFloat_ButtonTextAlignY, 0.5, 20),
         MV_END_STYLE_CONSTANTS
 
     public:
@@ -426,22 +472,28 @@ namespace Marvel {
         bool                    readonly        = false;
     };
     
+    MV_REGISTER_WIDGET(mvInputFloat2);
     class mvInputFloat2: public mvFloat2PtrBase
     {
-    
-        MV_APPITEM_TYPE(mvAppItemType::InputFloat2, mvInputFloat2, "add_input_float2")
 
-        MV_CREATE_THEME_CONSTANT(mvAppItemType::InputFloat2, mvThemeCol_InputFloat2_Text            ,  0L, 0L);
-        MV_CREATE_THEME_CONSTANT(mvAppItemType::InputFloat2, mvThemeCol_InputFloat2_TextHighlight   , 44L, 0L);
-        MV_CREATE_THEME_CONSTANT(mvAppItemType::InputFloat2, mvThemeCol_InputFloat2_Bg              ,  7L, 0L);
-        MV_CREATE_THEME_CONSTANT(mvAppItemType::InputFloat2, mvThemeCol_InputFloat2_Border          ,  5L, 0L);
-        MV_CREATE_THEME_CONSTANT(mvAppItemType::InputFloat2, mvThemeCol_InputFloat2_BorderShadow    ,  6L, 0L);
-        MV_CREATE_THEME_CONSTANT(mvAppItemType::InputFloat2, mvThemeStyle_InputFloat2_Rounding      , 11L, 0L);
-        MV_CREATE_THEME_CONSTANT(mvAppItemType::InputFloat2, mvThemeStyle_InputFloat2_BorderSize    , 12L, 0L);
-        MV_CREATE_THEME_CONSTANT(mvAppItemType::InputFloat2, mvThemeStyle_InputFloat2_PaddingX      , 10L, 0L);
-        MV_CREATE_THEME_CONSTANT(mvAppItemType::InputFloat2, mvThemeStyle_InputFloat2_PaddingY      , 10L, 1L);
-        MV_CREATE_THEME_CONSTANT(mvAppItemType::InputFloat2, mvThemeStyle_InputFloat2_InnerSpacingX , 14L, 0L);
-        MV_CREATE_THEME_CONSTANT(mvAppItemType::InputFloat2, mvThemeStyle_InputFloat2_InnerSpacingY , 14L, 1L);
+    public:
+
+        static void InsertParser(std::map<std::string, mvPythonParser>* parsers);
+    
+        MV_APPITEM_TYPE(mvAppItemType::mvInputFloat2, "add_input_float2")
+
+        MV_CREATE_THEME_CONSTANT(mvThemeCol_InputFloat2_Text            ,  0L, 0L);
+        MV_CREATE_THEME_CONSTANT(mvThemeCol_InputFloat2_TextHighlight   , 44L, 0L);
+        MV_CREATE_THEME_CONSTANT(mvThemeCol_InputFloat2_Bg              ,  7L, 0L);
+        MV_CREATE_THEME_CONSTANT(mvThemeCol_InputFloat2_Border          ,  5L, 0L);
+        MV_CREATE_THEME_CONSTANT(mvThemeCol_InputFloat2_BorderShadow    ,  6L, 0L);
+        MV_CREATE_THEME_CONSTANT(mvThemeStyle_InputFloat2_Rounding      , 11L, 0L);
+
+        MV_CREATE_THEME_CONSTANT(mvThemeStyle_InputFloat2_BorderSize    , 12L, 0L);
+        MV_CREATE_THEME_CONSTANT(mvThemeStyle_InputFloat2_PaddingX      , 10L, 0L);
+        MV_CREATE_THEME_CONSTANT(mvThemeStyle_InputFloat2_PaddingY      , 10L, 1L);
+        MV_CREATE_THEME_CONSTANT(mvThemeStyle_InputFloat2_InnerSpacingX , 14L, 0L);
+        MV_CREATE_THEME_CONSTANT(mvThemeStyle_InputFloat2_InnerSpacingY , 14L, 1L);
 
         MV_START_COLOR_CONSTANTS
             MV_CREATE_CONSTANT_PAIR(mvThemeCol_InputFloat2_Text,          mvColor(255, 255, 255, 255)),
@@ -454,10 +506,10 @@ namespace Marvel {
         MV_START_STYLE_CONSTANTS
             MV_CREATE_CONSTANT_TUPLE(mvThemeStyle_InputFloat2_Rounding      , 0, 12),
             MV_CREATE_CONSTANT_TUPLE(mvThemeStyle_InputFloat2_BorderSize    , 0,  1),
-            MV_CREATE_CONSTANT_TUPLE(mvThemeStyle_InputFloat2_PaddingX      , 0, 20),
-            MV_CREATE_CONSTANT_TUPLE(mvThemeStyle_InputFloat2_PaddingY      , 0, 20),
-            MV_CREATE_CONSTANT_TUPLE(mvThemeStyle_InputFloat2_InnerSpacingX , 0, 20),
-            MV_CREATE_CONSTANT_TUPLE(mvThemeStyle_InputFloat2_InnerSpacingY , 0, 20),
+            MV_CREATE_CONSTANT_TUPLE(mvThemeStyle_InputFloat2_PaddingX      , 4, 20),
+            MV_CREATE_CONSTANT_TUPLE(mvThemeStyle_InputFloat2_PaddingY      , 3, 20),
+            MV_CREATE_CONSTANT_TUPLE(mvThemeStyle_InputFloat2_InnerSpacingX , 4, 20),
+            MV_CREATE_CONSTANT_TUPLE(mvThemeStyle_InputFloat2_InnerSpacingY , 4, 20),
         MV_END_STYLE_CONSTANTS
 
     public:
@@ -492,22 +544,28 @@ namespace Marvel {
     //-----------------------------------------------------------------------------
     // mvInputFloat3
     //-----------------------------------------------------------------------------
+    MV_REGISTER_WIDGET(mvInputFloat3);
     class mvInputFloat3 : public mvFloat3PtrBase
     {
-        
-        MV_APPITEM_TYPE(mvAppItemType::InputFloat3, mvInputFloat3, "add_input_float3")
 
-        MV_CREATE_THEME_CONSTANT(mvAppItemType::InputFloat3, mvThemeCol_InputFloat3_Text            ,  0L, 0L);
-        MV_CREATE_THEME_CONSTANT(mvAppItemType::InputFloat3, mvThemeCol_InputFloat3_TextHighlight   , 44L, 0L);
-        MV_CREATE_THEME_CONSTANT(mvAppItemType::InputFloat3, mvThemeCol_InputFloat3_Bg              ,  7L, 0L);
-        MV_CREATE_THEME_CONSTANT(mvAppItemType::InputFloat3, mvThemeCol_InputFloat3_Border          ,  5L, 0L);
-        MV_CREATE_THEME_CONSTANT(mvAppItemType::InputFloat3, mvThemeCol_InputFloat3_BorderShadow    ,  6L, 0L);
-        MV_CREATE_THEME_CONSTANT(mvAppItemType::InputFloat3, mvThemeStyle_InputFloat3_Rounding      , 11L, 0L);
-        MV_CREATE_THEME_CONSTANT(mvAppItemType::InputFloat3, mvThemeStyle_InputFloat3_BorderSize    , 12L, 0L);
-        MV_CREATE_THEME_CONSTANT(mvAppItemType::InputFloat3, mvThemeStyle_InputFloat3_PaddingX      , 10L, 0L);
-        MV_CREATE_THEME_CONSTANT(mvAppItemType::InputFloat3, mvThemeStyle_InputFloat3_PaddingY      , 10L, 1L);
-        MV_CREATE_THEME_CONSTANT(mvAppItemType::InputFloat3, mvThemeStyle_InputFloat3_InnerSpacingX , 14L, 0L);
-        MV_CREATE_THEME_CONSTANT(mvAppItemType::InputFloat3, mvThemeStyle_InputFloat3_InnerSpacingY , 14L, 1L);
+    public:
+
+        static void InsertParser(std::map<std::string, mvPythonParser>* parsers);
+        
+        MV_APPITEM_TYPE(mvAppItemType::mvInputFloat3, "add_input_float3")
+
+        MV_CREATE_THEME_CONSTANT(mvThemeCol_InputFloat3_Text            ,  0L, 0L);
+        MV_CREATE_THEME_CONSTANT(mvThemeCol_InputFloat3_TextHighlight   , 44L, 0L);
+        MV_CREATE_THEME_CONSTANT(mvThemeCol_InputFloat3_Bg              ,  7L, 0L);
+        MV_CREATE_THEME_CONSTANT(mvThemeCol_InputFloat3_Border          ,  5L, 0L);
+        MV_CREATE_THEME_CONSTANT(mvThemeCol_InputFloat3_BorderShadow    ,  6L, 0L);
+
+        MV_CREATE_THEME_CONSTANT(mvThemeStyle_InputFloat3_Rounding      , 11L, 0L);
+        MV_CREATE_THEME_CONSTANT(mvThemeStyle_InputFloat3_BorderSize    , 12L, 0L);
+        MV_CREATE_THEME_CONSTANT(mvThemeStyle_InputFloat3_PaddingX      , 10L, 0L);
+        MV_CREATE_THEME_CONSTANT(mvThemeStyle_InputFloat3_PaddingY      , 10L, 1L);
+        MV_CREATE_THEME_CONSTANT(mvThemeStyle_InputFloat3_InnerSpacingX , 14L, 0L);
+        MV_CREATE_THEME_CONSTANT(mvThemeStyle_InputFloat3_InnerSpacingY , 14L, 1L);
 
         MV_START_COLOR_CONSTANTS
             MV_CREATE_CONSTANT_PAIR(mvThemeCol_InputFloat3_Text,          mvColor(255, 255, 255, 255)),
@@ -520,10 +578,10 @@ namespace Marvel {
         MV_START_STYLE_CONSTANTS
             MV_CREATE_CONSTANT_TUPLE(mvThemeStyle_InputFloat3_Rounding      , 0, 12),
             MV_CREATE_CONSTANT_TUPLE(mvThemeStyle_InputFloat3_BorderSize    , 0,  1),
-            MV_CREATE_CONSTANT_TUPLE(mvThemeStyle_InputFloat3_PaddingX      , 0, 20),
-            MV_CREATE_CONSTANT_TUPLE(mvThemeStyle_InputFloat3_PaddingY      , 0, 20),
-            MV_CREATE_CONSTANT_TUPLE(mvThemeStyle_InputFloat3_InnerSpacingX , 0, 20),
-            MV_CREATE_CONSTANT_TUPLE(mvThemeStyle_InputFloat3_InnerSpacingY , 0, 20),
+            MV_CREATE_CONSTANT_TUPLE(mvThemeStyle_InputFloat3_PaddingX      , 4, 20),
+            MV_CREATE_CONSTANT_TUPLE(mvThemeStyle_InputFloat3_PaddingY      , 3, 20),
+            MV_CREATE_CONSTANT_TUPLE(mvThemeStyle_InputFloat3_InnerSpacingX , 4, 20),
+            MV_CREATE_CONSTANT_TUPLE(mvThemeStyle_InputFloat3_InnerSpacingY , 4, 20),
         MV_END_STYLE_CONSTANTS
 
 
@@ -558,22 +616,28 @@ namespace Marvel {
     //-----------------------------------------------------------------------------
     // mvInputFloat4
     //-----------------------------------------------------------------------------
+    MV_REGISTER_WIDGET(mvInputFloat4);
     class mvInputFloat4 : public mvFloat4PtrBase
     {
-    
-        MV_APPITEM_TYPE(mvAppItemType::InputFloat4, mvInputFloat3, "add_input_float4")
 
-        MV_CREATE_THEME_CONSTANT(mvAppItemType::InputFloat4, mvThemeCol_InputFloat4_Text            ,  0L, 0L);
-        MV_CREATE_THEME_CONSTANT(mvAppItemType::InputFloat4, mvThemeCol_InputFloat4_TextHighlight   , 44L, 0L);
-        MV_CREATE_THEME_CONSTANT(mvAppItemType::InputFloat4, mvThemeCol_InputFloat4_Bg              ,  7L, 0L);
-        MV_CREATE_THEME_CONSTANT(mvAppItemType::InputFloat4, mvThemeCol_InputFloat4_Border          ,  5L, 0L);
-        MV_CREATE_THEME_CONSTANT(mvAppItemType::InputFloat4, mvThemeCol_InputFloat4_BorderShadow    ,  6L, 0L);
-        MV_CREATE_THEME_CONSTANT(mvAppItemType::InputFloat4, mvThemeStyle_InputFloat4_Rounding      , 11L, 0L);
-        MV_CREATE_THEME_CONSTANT(mvAppItemType::InputFloat4, mvThemeStyle_InputFloat4_BorderSize    , 12L, 0L);
-        MV_CREATE_THEME_CONSTANT(mvAppItemType::InputFloat4, mvThemeStyle_InputFloat4_PaddingX      , 10L, 0L);
-        MV_CREATE_THEME_CONSTANT(mvAppItemType::InputFloat4, mvThemeStyle_InputFloat4_PaddingY      , 10L, 1L);
-        MV_CREATE_THEME_CONSTANT(mvAppItemType::InputFloat4, mvThemeStyle_InputFloat4_InnerSpacingX , 14L, 0L);
-        MV_CREATE_THEME_CONSTANT(mvAppItemType::InputFloat4, mvThemeStyle_InputFloat4_InnerSpacingY , 14L, 1L);
+    public:
+
+        static void InsertParser(std::map<std::string, mvPythonParser>* parsers);
+    
+        MV_APPITEM_TYPE(mvAppItemType::mvInputFloat4, "add_input_float4")
+
+        MV_CREATE_THEME_CONSTANT(mvThemeCol_InputFloat4_Text            ,  0L, 0L);
+        MV_CREATE_THEME_CONSTANT(mvThemeCol_InputFloat4_TextHighlight   , 44L, 0L);
+        MV_CREATE_THEME_CONSTANT(mvThemeCol_InputFloat4_Bg              ,  7L, 0L);
+        MV_CREATE_THEME_CONSTANT(mvThemeCol_InputFloat4_Border          ,  5L, 0L);
+        MV_CREATE_THEME_CONSTANT(mvThemeCol_InputFloat4_BorderShadow    ,  6L, 0L);
+
+        MV_CREATE_THEME_CONSTANT(mvThemeStyle_InputFloat4_Rounding      , 11L, 0L);
+        MV_CREATE_THEME_CONSTANT(mvThemeStyle_InputFloat4_BorderSize    , 12L, 0L);
+        MV_CREATE_THEME_CONSTANT(mvThemeStyle_InputFloat4_PaddingX      , 10L, 0L);
+        MV_CREATE_THEME_CONSTANT(mvThemeStyle_InputFloat4_PaddingY      , 10L, 1L);
+        MV_CREATE_THEME_CONSTANT(mvThemeStyle_InputFloat4_InnerSpacingX , 14L, 0L);
+        MV_CREATE_THEME_CONSTANT(mvThemeStyle_InputFloat4_InnerSpacingY , 14L, 1L);
 
         MV_START_COLOR_CONSTANTS
             MV_CREATE_CONSTANT_PAIR(mvThemeCol_InputFloat4_Text,          mvColor(255, 255, 255, 255)),
@@ -586,10 +650,10 @@ namespace Marvel {
         MV_START_STYLE_CONSTANTS
             MV_CREATE_CONSTANT_TUPLE(mvThemeStyle_InputFloat4_Rounding      , 0, 12),
             MV_CREATE_CONSTANT_TUPLE(mvThemeStyle_InputFloat4_BorderSize    , 0,  1),
-            MV_CREATE_CONSTANT_TUPLE(mvThemeStyle_InputFloat4_PaddingX      , 0, 20),
-            MV_CREATE_CONSTANT_TUPLE(mvThemeStyle_InputFloat4_PaddingY      , 0, 20),
-            MV_CREATE_CONSTANT_TUPLE(mvThemeStyle_InputFloat4_InnerSpacingX , 0, 20),
-            MV_CREATE_CONSTANT_TUPLE(mvThemeStyle_InputFloat4_InnerSpacingY , 0, 20),
+            MV_CREATE_CONSTANT_TUPLE(mvThemeStyle_InputFloat4_PaddingX      , 4, 20),
+            MV_CREATE_CONSTANT_TUPLE(mvThemeStyle_InputFloat4_PaddingY      , 3, 20),
+            MV_CREATE_CONSTANT_TUPLE(mvThemeStyle_InputFloat4_InnerSpacingX , 4, 20),
+            MV_CREATE_CONSTANT_TUPLE(mvThemeStyle_InputFloat4_InnerSpacingY , 4, 20),
         MV_END_STYLE_CONSTANTS
 
     public:

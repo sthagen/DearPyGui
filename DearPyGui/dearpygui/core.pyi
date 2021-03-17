@@ -82,10 +82,6 @@ def add_combo(name: str, *, items: List[str] = (), default_value: str = '', call
 	"""Adds a combo."""
 	...
 
-def add_data(name: str, data: Any) -> None:
-	"""Adds data for later retrieval."""
-	...
-
 def add_date_picker(name: str, *, default_value: dict = {'month_day': 14, 'year':20, 'month':5}, level: int = 0, callback: Callable = None, callback_data: Any = None, parent: str = '', before: str = '', show: bool = True) -> None:
 	"""Adds a data selector widget."""
 	...
@@ -214,7 +210,7 @@ def add_input_text(name: str, *, default_value: str = '', hint: str = '', multil
 	"""Adds input for text values."""
 	...
 
-def add_label_text(name: str, *, default_value: str = '', color: List[float] = (0, 0, 0, -1), parent: str = '', before: str = '', source: str = '', label: str = '', show: bool = True) -> None:
+def add_label_text(name: str, *, default_value: str = '', color: List[float] = (-1, 0, 0, 0), parent: str = '', before: str = '', source: str = '', label: str = '', show: bool = True) -> None:
 	"""Adds text with a label. Useful for output values."""
 	...
 
@@ -382,7 +378,7 @@ def add_table(name: str, headers: List[str], *, callback: Callable = None, callb
 	"""Adds table."""
 	...
 
-def add_text(name: str, *, wrap: int = -1, color: List[float] = (0, 0, 0, -1), bullet: bool = False, parent: str = '', before: str = '', source: str = '', default_value: str = '', show: bool = True) -> None:
+def add_text(name: str, *, wrap: int = -1, color: List[float] = (-1, 0, 0, 0), bullet: bool = False, parent: str = '', before: str = '', source: str = '', default_value: str = '', show: bool = True) -> None:
 	"""Adds text"""
 	...
 
@@ -468,10 +464,6 @@ def delete_annotation(plot: str, name: str) -> None:
 
 def delete_column(table: str, column: int) -> None:
 	"""Delete a column in a table."""
-	...
-
-def delete_data(name: str) -> None:
-	"""Deletes data from storage."""
 	...
 
 def delete_drag_line(plot: str, name: str) -> None:
@@ -564,10 +556,6 @@ def get_active_window() -> str:
 
 def get_all_items() -> List[str]:
 	"""Returns a list of all items."""
-	...
-
-def get_data(name: str) -> object:
-	"""Retrieves data from storage."""
 	...
 
 def get_dearpygui_version() -> str:
@@ -688,34 +676,6 @@ def get_selected_links(node_editor: str) -> List[List[str]]:
 
 def get_selected_nodes(node_editor: str) -> List[str]:
 	"""Returns selected nodes."""
-	...
-
-def get_style_antialiased_fill() -> bool:
-	"""Gets anti-aliasing on filled shapes (rounded rectangles, circles, etc.)."""
-	...
-
-def get_style_antialiased_lines() -> bool:
-	"""Gets anti-aliasing on lines/borders."""
-	...
-
-def get_style_circle_segment_max_error() -> float:
-	"""Gets maximum error (in pixels) allowed when using draw_circle()or drawing rounded corner rectangles with no explicit segment count specified."""
-	...
-
-def get_style_curve_tessellation_tolerance() -> float:
-	"""Gets Tessellation tolerance."""
-	...
-
-def get_style_display_safe_area_padding() -> List[float]:
-	"""Gets safe area padding. Applies to popups/tooltips as well regular windows."""
-	...
-
-def get_style_global_alpha() -> float:
-	"""Gets global alpha applies to everything in Dear PyGui."""
-	...
-
-def get_style_touch_extra_padding() -> List[float]:
-	"""Get touch extra padding."""
 	...
 
 def get_table_data(name: str) -> List[List[str]]:
@@ -906,10 +866,6 @@ def set_accelerator_callback(callback: Any) -> None:
 	"""Callback similar to keypress but used for accelerator keys."""
 	...
 
-def set_color_map(plot: str, map: int) -> None:
-	"""Sets the color map of the plot's series."""
-	...
-
 def set_exit_callback(callback: Any) -> None:
 	"""Callback to run when exiting main window."""
 	...
@@ -1044,34 +1000,6 @@ def set_resize_callback(callback: Callable, *, handler: str = '') -> None:
 
 def set_start_callback(callback: Any) -> None:
 	"""Callback to run when starting main window."""
-	...
-
-def set_style_antialiased_fill(value: bool) -> None:
-	"""Sets anti-aliasing on filled shapes (rounded rectangles, circles, etc.)."""
-	...
-
-def set_style_antialiased_lines(value: bool) -> None:
-	"""Sets anti-aliasing on lines/borders. Disable if you are really tight on CPU/GPU."""
-	...
-
-def set_style_circle_segment_max_error(value: float) -> None:
-	"""Sets maximum error (in pixels) allowed when using draw_circle()or drawing rounded corner rectangles with no explicit segment count specified. Decrease for higher quality but more geometry."""
-	...
-
-def set_style_curve_tessellation_tolerance(value: float) -> None:
-	"""Sets Tessellation tolerance."""
-	...
-
-def set_style_display_safe_area_padding(x: float, y: float) -> None:
-	"""Sets if you cannot see the edges of your screen (e.g. on a TV) increase the safe area padding. Apply to popups/tooltips as well regular windows. NB: Prefer configuring your TV sets correctly!"""
-	...
-
-def set_style_global_alpha(value: float) -> None:
-	"""Sets global alpha applies to everything in Dear PyGui."""
-	...
-
-def set_style_touch_extra_padding(x: float, y: float) -> None:
-	"""Expand reactive bounding box for touch-based system where touch position is not accurate enough. Unfortunately we don't sort widgets so priority on overlap will always be given to the first widget. So don't grow this too much!"""
 	...
 
 def set_table_data(name: str, data: List[List[str]]) -> None:

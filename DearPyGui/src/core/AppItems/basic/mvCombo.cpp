@@ -2,6 +2,7 @@
 #include "mvCombo.h"
 #include "mvApp.h"
 #include "mvItemRegistry.h"
+#include "mvImGuiThemeScope.h"
 
 namespace Marvel {
 
@@ -52,24 +53,23 @@ namespace Marvel {
 	void mvCombo::draw()
 	{
 
-		auto styleManager = m_styleManager.getScopedStyleManager();
 		ScopedID id;
 		mvImGuiThemeScope scope(this);
 
 		static std::vector<std::string> disabled_items{};
 		if (!m_core_config.enabled)
 		{
-			ImVec4 disabled_color = ImVec4(ImGui::GetStyleColorVec4(ImGuiCol_TextDisabled));
-			disabled_color.w = 0.392f;
-			styleManager.addColorStyle(ImGuiCol_FrameBg, disabled_color);
-			styleManager.addColorStyle(ImGuiCol_FrameBgHovered, disabled_color);
-			styleManager.addColorStyle(ImGuiCol_FrameBgActive, disabled_color);
-			styleManager.addColorStyle(ImGuiCol_Button, disabled_color);
-			styleManager.addColorStyle(ImGuiCol_ButtonHovered, disabled_color);
-			styleManager.addColorStyle(ImGuiCol_ButtonActive, disabled_color);
-			styleManager.addColorStyle(ImGuiCol_PopupBg, { 0.0f, 0.0f, 0.0f, 0.0f });
-			styleManager.addColorStyle(ImGuiCol_Border, { 0.0f, 0.0f, 0.0f, 0.0f });
-			styleManager.addColorStyle(ImGuiCol_Text, ImVec4(ImGui::GetStyleColorVec4(ImGuiCol_TextDisabled)));
+			//ImVec4 disabled_color = ImVec4(ImGui::GetStyleColorVec4(ImGuiCol_TextDisabled));
+			//disabled_color.w = 0.392f;
+			//styleManager.addColorStyle(ImGuiCol_FrameBg, disabled_color);
+			//styleManager.addColorStyle(ImGuiCol_FrameBgHovered, disabled_color);
+			//styleManager.addColorStyle(ImGuiCol_FrameBgActive, disabled_color);
+			//styleManager.addColorStyle(ImGuiCol_Button, disabled_color);
+			//styleManager.addColorStyle(ImGuiCol_ButtonHovered, disabled_color);
+			//styleManager.addColorStyle(ImGuiCol_ButtonActive, disabled_color);
+			//styleManager.addColorStyle(ImGuiCol_PopupBg, { 0.0f, 0.0f, 0.0f, 0.0f });
+			//styleManager.addColorStyle(ImGuiCol_Border, { 0.0f, 0.0f, 0.0f, 0.0f });
+			//styleManager.addColorStyle(ImGuiCol_Text, ImVec4(ImGui::GetStyleColorVec4(ImGuiCol_TextDisabled)));
 		}
 
 		// The second parameter is the label previewed before opening the combo.
@@ -229,7 +229,7 @@ namespace Marvel {
 		int no_preview = false;
 
 
-		if (!(*mvApp::GetApp()->getParsers())["add_combo"].parse(args, kwargs, __FUNCTION__, &name, &items,
+		if (!(mvApp::GetApp()->getParsers())["add_combo"].parse(args, kwargs, __FUNCTION__, &name, &items,
 			&default_value, &callback, &callback_data, &parent, &before, &source, &enabled, &width,
 			&label, &show, &popup_align_left, &height_small, &height_regular, &height_large,
 			&height_largest, &no_arrow_button, &no_preview))

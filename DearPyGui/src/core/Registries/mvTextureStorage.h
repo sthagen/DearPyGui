@@ -18,8 +18,17 @@
 #include <vector>
 #include <unordered_map>
 #include "mvEvents.h"
+#include "mvPythonParser.h"
 
 namespace Marvel {
+
+#ifdef MV_CPP
+#else
+	void AddTextureStorageCommands(std::map<std::string, mvPythonParser>* parsers);
+
+	PyObject* add_texture      (PyObject* self, PyObject* args, PyObject* kwargs);
+	PyObject* decrement_texture(PyObject* self, PyObject* args, PyObject* kwargs);
+#endif
 
 	//-----------------------------------------------------------------------------
 	// mvTexture
@@ -58,6 +67,10 @@ namespace Marvel {
 			unsigned height;
 			mvTextureFormat format;
 		};
+
+	public:
+
+		static void InsertConstants(std::vector<std::pair<std::string, long>>& constants);
 
 	public:
 

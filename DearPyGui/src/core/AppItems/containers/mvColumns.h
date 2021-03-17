@@ -20,22 +20,29 @@ namespace Marvel {
 		bool border = true;
 	};
 
-	PyObject* add_managed_columns(PyObject* self, PyObject* args, PyObject* kwargs);
-	PyObject* add_columns        (PyObject* self, PyObject* args, PyObject* kwargs);
-	PyObject* add_next_column    (PyObject* self, PyObject* args, PyObject* kwargs);
+#ifdef MV_CPP
+#else
+	PyObject* add_managed_columns     (PyObject* self, PyObject* args, PyObject* kwargs);
+	PyObject* add_columns             (PyObject* self, PyObject* args, PyObject* kwargs);
+	PyObject* add_next_column         (PyObject* self, PyObject* args, PyObject* kwargs);
+	PyObject* set_managed_column_width(PyObject* self, PyObject* args, PyObject* kwargs);
+	PyObject* get_managed_column_width(PyObject* self, PyObject* args, PyObject* kwargs);
+#endif
 
 	//-----------------------------------------------------------------------------
 	// mvManagedColumns
 	//-----------------------------------------------------------------------------
+	MV_REGISTER_WIDGET(mvManagedColumns);
 	class mvManagedColumns : public mvAppItem
 	{
-		MV_APPITEM_TYPE(mvAppItemType::ManagedColumns, mvManagedColumns, "add_managed_columns")
+		MV_APPITEM_TYPE(mvAppItemType::mvManagedColumns, "add_managed_columns")
 
-		MV_CREATE_THEME_CONSTANT(mvAppItemType::ManagedColumns, mvThemeCol_ManagedColumns_Border		, 27L, 0L);
-		MV_CREATE_THEME_CONSTANT(mvAppItemType::ManagedColumns, mvThemeCol_ManagedColumns_BorderHovered	, 28L, 0L);
-		MV_CREATE_THEME_CONSTANT(mvAppItemType::ManagedColumns, mvThemeCol_ManagedColumns_BorderActive	, 29L, 0L);
-		MV_CREATE_THEME_CONSTANT(mvAppItemType::ManagedColumns, mvThemeStyle_ManagedColumns_ItemSpacingX, 13L, 0L);
-		MV_CREATE_THEME_CONSTANT(mvAppItemType::ManagedColumns, mvThemeStyle_ManagedColumns_ItemSpacingY, 13L, 1L);
+		MV_CREATE_THEME_CONSTANT(mvThemeCol_ManagedColumns_Border		 , 27L, 0L);
+		MV_CREATE_THEME_CONSTANT(mvThemeCol_ManagedColumns_BorderHovered , 28L, 0L);
+		MV_CREATE_THEME_CONSTANT(mvThemeCol_ManagedColumns_BorderActive	 , 29L, 0L);
+
+		MV_CREATE_THEME_CONSTANT(mvThemeStyle_ManagedColumns_ItemSpacingX, 13L, 0L);
+		MV_CREATE_THEME_CONSTANT(mvThemeStyle_ManagedColumns_ItemSpacingY, 13L, 1L);
 
 		MV_START_COLOR_CONSTANTS
 			MV_CREATE_CONSTANT_PAIR(mvThemeCol_ManagedColumns_Border,			mvColor(110, 110, 128, 128)),
@@ -44,8 +51,8 @@ namespace Marvel {
 		MV_END_COLOR_CONSTANTS
 
 		MV_START_STYLE_CONSTANTS
-			MV_CREATE_CONSTANT_TUPLE(mvThemeStyle_ManagedColumns_ItemSpacingX, 0, 20),
-			MV_CREATE_CONSTANT_TUPLE(mvThemeStyle_ManagedColumns_ItemSpacingY, 0, 20),
+			MV_CREATE_CONSTANT_TUPLE(mvThemeStyle_ManagedColumns_ItemSpacingX, 8, 20),
+			MV_CREATE_CONSTANT_TUPLE(mvThemeStyle_ManagedColumns_ItemSpacingY, 4, 20),
 		MV_END_STYLE_CONSTANTS
 
 	public:
@@ -82,7 +89,8 @@ namespace Marvel {
 	//-----------------------------------------------------------------------------
 	struct mvColumnConfig : public mvManagedColumnsConfig {};
 	
-	class mvColumn : public mvAppItem
+	MV_REGISTER_WIDGET(mvColumnSet);
+	class mvColumnSet : public mvAppItem
 	{
 
 	public:
@@ -91,9 +99,15 @@ namespace Marvel {
 
 	public:
 
-		MV_APPITEM_TYPE_OLD_SYSTEM(mvAppItemType::ColumnSet, "add_columns")
+		MV_APPITEM_TYPE(mvAppItemType::mvColumnSet, "add_columns")
 
-		mvColumn(const std::string& name, int columns);
+		MV_START_COLOR_CONSTANTS
+		MV_END_COLOR_CONSTANTS
+
+		MV_START_STYLE_CONSTANTS
+		MV_END_STYLE_CONSTANTS
+
+		mvColumnSet(const std::string& name, int columns);
 
 		void draw              ()               override;
 
@@ -120,6 +134,7 @@ namespace Marvel {
 		}
 	};
 	
+	MV_REGISTER_WIDGET(mvNextColumn);
 	class mvNextColumn : public mvAppItem
 	{
 
@@ -129,7 +144,13 @@ namespace Marvel {
 
 	public:
 
-		MV_APPITEM_TYPE_OLD_SYSTEM(mvAppItemType::NextColumn, "add_next_column")
+		MV_APPITEM_TYPE(mvAppItemType::mvNextColumn, "add_next_column")
+
+		MV_START_COLOR_CONSTANTS
+		MV_END_COLOR_CONSTANTS
+
+		MV_START_STYLE_CONSTANTS
+		MV_END_STYLE_CONSTANTS
 
 		mvNextColumn(const std::string& name);
 

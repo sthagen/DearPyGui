@@ -23,8 +23,57 @@
 #include <atomic>
 #include "mvEvents.h"
 #include <memory>
+#include "mvModule_Core.h"
 
 namespace Marvel {
+
+#ifdef MV_CPP
+#else
+
+    void AddAppCommands(std::map<std::string, mvPythonParser>* parsers);
+
+    // containers
+    PyObject* end                      (PyObject* self, PyObject* args, PyObject* kwargs);
+
+    // app
+	PyObject* is_dearpygui_running     (PyObject* self, PyObject* args, PyObject* kwargs);
+	PyObject* start_dearpygui          (PyObject* self, PyObject* args, PyObject* kwargs);
+	PyObject* stop_dearpygui           (PyObject* self, PyObject* args, PyObject* kwargs);
+	PyObject* set_start_callback       (PyObject* self, PyObject* args, PyObject* kwargs);
+	PyObject* set_exit_callback        (PyObject* self, PyObject* args, PyObject* kwargs);
+	PyObject* set_accelerator_callback (PyObject* self, PyObject* args, PyObject* kwargs);
+	PyObject* setup_dearpygui          (PyObject* self, PyObject* args, PyObject* kwargs);
+	PyObject* render_dearpygui_frame   (PyObject* self, PyObject* args, PyObject* kwargs);
+	PyObject* cleanup_dearpygui        (PyObject* self, PyObject* args, PyObject* kwargs);
+	PyObject* set_vsync                (PyObject* self, PyObject* args, PyObject* kwargs);
+	PyObject* get_dearpygui_version    (PyObject* self, PyObject* args, PyObject* kwargs);
+	PyObject* get_active_window        (PyObject* self, PyObject* args, PyObject* kwargs);
+	PyObject* add_character_remap      (PyObject* self, PyObject* args, PyObject* kwargs);
+
+	// docking
+	PyObject* enable_docking           (PyObject* self, PyObject* args, PyObject* kwargs);
+	
+	// main viewport
+	PyObject* set_main_window_pos      (PyObject* self, PyObject* args, PyObject* kwargs);
+	PyObject* set_main_window_title    (PyObject* self, PyObject* args, PyObject* kwargs);
+	PyObject* set_main_window_resizable(PyObject* self, PyObject* args, PyObject* kwargs);
+	PyObject* get_main_window_size     (PyObject* self, PyObject* args, PyObject* kwargs);
+	PyObject* set_main_window_size     (PyObject* self, PyObject* args, PyObject* kwargs);
+	PyObject* set_primary_window       (PyObject* self, PyObject* args, PyObject* kwargs);
+
+    // timing
+	PyObject* get_total_time           (PyObject* self, PyObject* args, PyObject* kwargs);
+	PyObject* get_delta_time           (PyObject* self, PyObject* args, PyObject* kwargs);
+
+    // global
+    PyObject* set_theme_color(PyObject* self, PyObject* args, PyObject* kwargs);
+    PyObject* set_theme_style(PyObject* self, PyObject* args, PyObject* kwargs);
+
+    // font
+    PyObject* set_global_font_scale(PyObject* self, PyObject* args, PyObject* kwargs);
+    PyObject* get_global_font_scale(PyObject* self, PyObject* args, PyObject* kwargs);
+    PyObject* add_additional_font(PyObject* self, PyObject* args, PyObject* kwargs);
+#endif
 
     //-----------------------------------------------------------------------------
     // Forward Declarations
@@ -127,10 +176,8 @@ namespace Marvel {
         //-----------------------------------------------------------------------------
         // Other
         //-----------------------------------------------------------------------------
-        std::map<std::string, mvPythonParser>* getParsers      () { return m_parsers.get(); }
+        std::map<std::string, mvPythonParser>& getParsers() { return const_cast<std::map<std::string, mvPythonParser>&>(mvModule_Core::GetModuleParsers()); }
         std::mutex& getMutex() const { return m_mutex; }
-        std::unordered_map<mvAppItemType, mvThemeColors>& getColors() { return m_colors; }
-        std::unordered_map<mvAppItemType, mvThemeStyles>& getStyles() { return m_styles; }
             
     private:
 
@@ -152,8 +199,7 @@ namespace Marvel {
         mvOwnedPtr<mvTextureStorage>                   m_textureStorage;
         mvOwnedPtr<mvThemeManager>                     m_themeManager;
         mvOwnedPtr<mvCallbackRegistry>                 m_callbackRegistry;
-        std::unordered_map<mvAppItemType, mvThemeColors> m_colors;
-        std::unordered_map<mvAppItemType, mvThemeStyles> m_styles;
+
                                                      
         // docking                                   
         bool                                         m_docking          = false;
@@ -168,7 +214,6 @@ namespace Marvel {
         int                                          m_mainXPos = 100;
         int                                          m_mainYPos = 100;
         std::string                                  m_title = "DearPyGui";
-        mvRef<std::map<std::string, mvPythonParser>> m_parsers;
         
         // appearance
         float       m_globalFontScale = 1.0f;

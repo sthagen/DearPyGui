@@ -15,16 +15,17 @@ namespace Marvel {
 
 	PyObject* add_tree_node(PyObject* self, PyObject* args, PyObject* kwargs);
 
+	MV_REGISTER_WIDGET(mvTreeNode);
 	class mvTreeNode : public mvBoolPtrBase
 	{
-		MV_APPITEM_TYPE(mvAppItemType::TreeNode, mvTreeNode, "add_tree_node")
+		MV_APPITEM_TYPE(mvAppItemType::mvTreeNode, "add_tree_node")
 
-		MV_CREATE_THEME_CONSTANT(mvAppItemType::TreeNode, mvThemeCol_TreeNode_Text				,  0L, 0L);
-		MV_CREATE_THEME_CONSTANT(mvAppItemType::TreeNode, mvThemeCol_TreeNode_BgHovered			, 25L, 0L);
-		MV_CREATE_THEME_CONSTANT(mvAppItemType::TreeNode, mvThemeCol_TreeNode_BgActive			, 26L, 0L);
-		MV_CREATE_THEME_CONSTANT(mvAppItemType::TreeNode, mvThemeStyle_TreeNode_FramePaddingX	, 10L, 0L);
-		MV_CREATE_THEME_CONSTANT(mvAppItemType::TreeNode, mvThemeStyle_TreeNode_FramePaddingY	, 10L, 1L);
-		MV_CREATE_THEME_CONSTANT(mvAppItemType::TreeNode, mvThemeStyle_TreeNode_IndentSpacing	, 15L, 0L);
+		MV_CREATE_THEME_CONSTANT(mvThemeCol_TreeNode_Text				,  0L, 0L);
+		MV_CREATE_THEME_CONSTANT(mvThemeCol_TreeNode_BgHovered			, 25L, 0L);
+		MV_CREATE_THEME_CONSTANT(mvThemeCol_TreeNode_BgActive			, 26L, 0L);
+		MV_CREATE_THEME_CONSTANT(mvThemeStyle_TreeNode_FramePaddingX	, 10L, 0L);
+		MV_CREATE_THEME_CONSTANT(mvThemeStyle_TreeNode_FramePaddingY	, 10L, 1L);
+		MV_CREATE_THEME_CONSTANT(mvThemeStyle_TreeNode_IndentSpacing	, 15L, 0L);
 
 
 		MV_START_COLOR_CONSTANTS
@@ -34,9 +35,9 @@ namespace Marvel {
 		MV_END_COLOR_CONSTANTS
 
 		MV_START_STYLE_CONSTANTS
-			MV_CREATE_CONSTANT_TUPLE(mvThemeStyle_TreeNode_FramePaddingX, 0, 20),
-			MV_CREATE_CONSTANT_TUPLE(mvThemeStyle_TreeNode_FramePaddingY, 0, 20),
-			MV_CREATE_CONSTANT_TUPLE(mvThemeStyle_TreeNode_IndentSpacing, 0, 30),
+			MV_CREATE_CONSTANT_TUPLE(mvThemeStyle_TreeNode_FramePaddingX, 4, 20),
+			MV_CREATE_CONSTANT_TUPLE(mvThemeStyle_TreeNode_FramePaddingY, 3, 20),
+			MV_CREATE_CONSTANT_TUPLE(mvThemeStyle_TreeNode_IndentSpacing,21, 30),
 		MV_END_STYLE_CONSTANTS
 
 	public:

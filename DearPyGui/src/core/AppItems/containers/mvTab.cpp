@@ -2,6 +2,7 @@
 #include "mvTabBar.h"
 #include "mvApp.h"
 #include "mvItemRegistry.h"
+#include "mvImGuiThemeScope.h"
 
 namespace Marvel {
 	void mvTab::InsertParser(std::map<std::string, mvPythonParser>* parsers)
@@ -29,7 +30,6 @@ namespace Marvel {
 
 	void mvTab::draw()
 	{
-		auto styleManager = m_styleManager.getScopedStyleManager();
 		ScopedID id;
 		mvImGuiThemeScope scope(this);
 
@@ -51,7 +51,7 @@ namespace Marvel {
 			// set other tab's value false
 			for (auto child : parent->m_children)
 			{
-				if (child->getType() == mvAppItemType::TabItem)
+				if (child->getType() == mvAppItemType::mvTab)
 					*((mvTab*)child.get())->m_value = false;
 			}
 
@@ -147,7 +147,7 @@ namespace Marvel {
 		const char* parent = "";
 		const char* before = "";
 
-		if (!(*mvApp::GetApp()->getParsers())["add_tab"].parse(args, kwargs, __FUNCTION__, &name, &closeable,
+		if (!(mvApp::GetApp()->getParsers())["add_tab"].parse(args, kwargs, __FUNCTION__, &name, &closeable,
 			&label, &show, &no_reorder, &leading, &trailing, &no_tooltip, &parent, &before))
 			return ToPyBool(false);
 
@@ -161,7 +161,7 @@ namespace Marvel {
 				return ToPyBool(false);
 			}
 
-			else if (parentItem->getType() == mvAppItemType::TabBar)
+			else if (parentItem->getType() == mvAppItemType::mvTabBar)
 			{
 				auto item = CreateRef<mvTab>(name);
 				item->checkConfigDict(kwargs);
@@ -193,7 +193,7 @@ namespace Marvel {
 				return ToPyBool(false);
 			}
 
-			else if (parentItem->getType() == mvAppItemType::TabBar)
+			else if (parentItem->getType() == mvAppItemType::mvTabBar)
 			{
 				auto item = CreateRef<mvTab>(name);
 				item->checkConfigDict(kwargs);
