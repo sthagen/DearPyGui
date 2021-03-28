@@ -1,6 +1,7 @@
 #include "mvNode.h"
 #include <imnodes.h>
 #include "mvApp.h"
+#include "mvLog.h"
 #include "mvItemRegistry.h"
 #include "mvImNodesThemeScope.h"
 
@@ -26,7 +27,10 @@ namespace Marvel {
 
 		cvalue[size] = '\0';
 
-		return std::string(cvalue);
+		auto result = std::string(cvalue);
+		delete[] cvalue;
+
+		return result;
 	}
 
 	void mvNode::InsertParser(std::map<std::string, mvPythonParser>* parsers)
@@ -54,6 +58,29 @@ namespace Marvel {
         int64_t address = (int64_t)this;
         int64_t reduced_address = address % 2147483648;
         m_id = (int)reduced_address;
+	}
+
+	bool mvNode::isParentCompatible(mvAppItemType type)
+	{
+		if (type == mvAppItemType::mvNodeEditor)
+			return true;
+
+		mvThrowPythonError(1000, "Node parent must be node editor.");
+		MV_ITEM_REGISTRY_ERROR("Node parent must be node editor.");
+		assert(false);
+		return false;
+	}
+
+	bool mvNode::canChildBeAdded(mvAppItemType type)
+	{
+		if(type == mvAppItemType::mvNodeAttribute)
+			return true;
+
+		mvThrowPythonError(1000, "Node children must be node attributes only.");
+		MV_ITEM_REGISTRY_ERROR("Node children must be node attributes only.");
+		assert(false);
+
+		return false;
 	}
 
 	void mvNode::setNodePos(float x, float y)

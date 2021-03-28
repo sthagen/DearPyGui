@@ -50,36 +50,32 @@ def add_collapsing_header(name: str, *, label: str = '', show: bool = True, pare
 	"""Adds a collapsing header to add items to. Must be closed with the end command."""
 	...
 
-def add_color_button(name: str, color: List[float], *, callback: Callable = None, callback_data: Any = None, parent: str = '', before: str = '', width: int = 0, height: int = 0, show: bool = True, no_alpha: bool = False, no_border: bool = False, no_drag_drop: bool = False) -> None:
+def add_color_button(name: str, color: List[float], *, callback: Callable = None, callback_data: Any = None, parent: str = '', before: str = '', width: int = 0, height: int = 0, show: bool = True, no_alpha: bool = False, no_border: bool = False, no_drag_drop: bool = False, enabled: bool = True) -> None:
 	"""Adds a color button."""
 	...
 
-def add_color_edit3(name: str, *, default_value: List[int] = (0, 0, 0, 255), callback: Callable = None, callback_data: Any = None, parent: str = '', before: str = '', source: str = '', width: int = 0, height: int = 0, label: str = '', show: bool = True, no_alpha: bool = False, no_picker: bool = False, no_options: bool = False, no_small_preview: bool = False, no_inputs: bool = False, no_tooltip: bool = False, no_label: bool = False, no_drag_drop: bool = False, alpha_bar: bool = False, alpha_preview: bool = False, alpha_preview_half: bool = False, display_rgb: bool = False, display_hsv: bool = False, display_hex: bool = False, uint8: bool = False, floats: bool = False, input_rgb: bool = False, input_hsv: bool = False) -> None:
+def add_color_edit3(name: str, *, default_value: List[int] = (0, 0, 0, 255), callback: Callable = None, callback_data: Any = None, parent: str = '', before: str = '', source: str = '', width: int = 0, height: int = 0, label: str = '', show: bool = True, enabled: bool = True, no_alpha: bool = False, no_picker: bool = False, no_options: bool = False, no_small_preview: bool = False, no_inputs: bool = False, no_tooltip: bool = False, no_label: bool = False, no_drag_drop: bool = False, alpha_bar: bool = False, alpha_preview: bool = False, alpha_preview_half: bool = False, display_rgb: bool = False, display_hsv: bool = False, display_hex: bool = False, uint8: bool = False, floats: bool = False, input_rgb: bool = False, input_hsv: bool = False) -> None:
 	"""Adds an rgb color editing widget. Click and draging the color square will copy the color to be applied on any other color widget."""
 	...
 
-def add_color_edit4(name: str, *, default_value: List[int] = (0, 0, 0, 255), callback: Callable = None, callback_data: Any = None, parent: str = '', before: str = '', source: str = '', width: int = 0, height: int = 0, label: str = '', show: bool = True, no_alpha: bool = False, no_picker: bool = False, no_options: bool = False, no_small_preview: bool = False, no_inputs: bool = False, no_tooltip: bool = False, no_label: bool = False, no_drag_drop: bool = False, alpha_bar: bool = False, alpha_preview: bool = False, alpha_preview_half: bool = False, display_rgb: bool = False, display_hsv: bool = False, display_hex: bool = False, uint8: bool = False, floats: bool = False, input_rgb: bool = False, input_hsv: bool = False) -> None:
+def add_color_edit4(name: str, *, default_value: List[int] = (0, 0, 0, 255), callback: Callable = None, callback_data: Any = None, parent: str = '', before: str = '', source: str = '', width: int = 0, height: int = 0, label: str = '', show: bool = True, enabled: bool = True, no_alpha: bool = False, no_picker: bool = False, no_options: bool = False, no_small_preview: bool = False, no_inputs: bool = False, no_tooltip: bool = False, no_label: bool = False, no_drag_drop: bool = False, alpha_bar: bool = False, alpha_preview: bool = False, alpha_preview_half: bool = False, display_rgb: bool = False, display_hsv: bool = False, display_hex: bool = False, uint8: bool = False, floats: bool = False, input_rgb: bool = False, input_hsv: bool = False) -> None:
 	"""Adds an rgba color editing widget. Click and draging the color square will copy the color to be applied on any other color widget."""
 	...
 
-def add_color_picker3(name: str, *, default_value: List[int] = (0, 0, 0, 255), callback: Callable = None, callback_data: Any = None, parent: str = '', before: str = '', source: str = '', width: int = 0, height: int = 0, label: str = '', show: bool = True, no_alpha: bool = False, no_small_preview: bool = False, no_inputs: bool = False, no_tooltip: bool = False, no_label: bool = False, no_side_preview: bool = False, alpha_bar: bool = False, alpha_preview: bool = False, alpha_preview_half: bool = False, display_rgb: bool = False, display_hsv: bool = False, display_hex: bool = False, uint8: bool = False, floats: bool = False, picker_hue_bar: bool = False, picker_hue_wheel: bool = False, input_rgb: bool = False, input_hsv: bool = False) -> None:
+def add_color_picker3(name: str, *, default_value: List[int] = (0, 0, 0, 255), callback: Callable = None, callback_data: Any = None, parent: str = '', before: str = '', source: str = '', width: int = 0, height: int = 0, label: str = '', show: bool = True, enabled: bool = True, no_alpha: bool = False, no_small_preview: bool = False, no_inputs: bool = False, no_tooltip: bool = False, no_label: bool = False, no_side_preview: bool = False, alpha_bar: bool = False, alpha_preview: bool = False, alpha_preview_half: bool = False, display_rgb: bool = False, display_hsv: bool = False, display_hex: bool = False, uint8: bool = False, floats: bool = False, picker_hue_bar: bool = False, picker_hue_wheel: bool = False, input_rgb: bool = False, input_hsv: bool = False) -> None:
 	"""Adds an rgb color picking widget. Click and draging the color square will copy the color to be applied on any other color widget. Right Click allows the style of the color picker to be changed."""
 	...
 
-def add_color_picker4(name: str, *, default_value: List[int] = (0, 0, 0, 255), callback: Callable = None, callback_data: Any = None, parent: str = '', before: str = '', source: str = '', width: int = 0, height: int = 0, label: str = '', show: bool = True, no_alpha: bool = False, no_small_preview: bool = False, no_inputs: bool = False, no_tooltip: bool = False, no_label: bool = False, no_side_preview: bool = False, alpha_bar: bool = False, alpha_preview: bool = False, alpha_preview_half: bool = False, display_rgb: bool = False, display_hsv: bool = False, display_hex: bool = False, uint8: bool = False, floats: bool = False, picker_hue_bar: bool = False, picker_hue_wheel: bool = False, input_rgb: bool = False, input_hsv: bool = False) -> None:
+def add_color_picker4(name: str, *, default_value: List[int] = (0, 0, 0, 255), callback: Callable = None, callback_data: Any = None, parent: str = '', before: str = '', source: str = '', width: int = 0, height: int = 0, label: str = '', show: bool = True, enabled: bool = True, no_alpha: bool = False, no_small_preview: bool = False, no_inputs: bool = False, no_tooltip: bool = False, no_label: bool = False, no_side_preview: bool = False, alpha_bar: bool = False, alpha_preview: bool = False, alpha_preview_half: bool = False, display_rgb: bool = False, display_hsv: bool = False, display_hex: bool = False, uint8: bool = False, floats: bool = False, picker_hue_bar: bool = False, picker_hue_wheel: bool = False, input_rgb: bool = False, input_hsv: bool = False) -> None:
 	"""Adds an rgba color picking widget. Click and draging the color square will copy the color to be applied on any other color widget. Right Click allows the style of the color picker to be changed"""
-	...
-
-def add_column(table: str, name: str, column: List[str]) -> None:
-	"""Adds a column to the end of a table."""
-	...
-
-def add_columns(name: str, columns: int, *, border: bool = True, show: bool = True, parent: str = '', before: str = '') -> None:
-	"""Sets columns."""
 	...
 
 def add_combo(name: str, *, items: List[str] = (), default_value: str = '', callback: Callable = None, callback_data: Any = None, parent: str = '', before: str = '', source: str = '', enabled: bool = True, width: int = 0, label: str = '', show: bool = True, popup_align_left: bool = False, height_small: bool = False, height_regular: bool = False, height_large: bool = False, height_largest: bool = False, no_arrow_button: bool = False, no_preview: bool = False) -> None:
 	"""Adds a combo."""
+	...
+
+def add_data_grid(name: str, headers: List[str], *, callback: Callable = None, callback_data: Any = None, parent: str = '', before: str = '', width: int = 0, height: int = 200, hide_headers: bool = False, show: bool = True) -> None:
+	"""Adds data grid."""
 	...
 
 def add_date_picker(name: str, *, default_value: dict = {'month_day': 14, 'year':20, 'month':5}, level: int = 0, callback: Callable = None, callback_data: Any = None, parent: str = '', before: str = '', show: bool = True) -> None:
@@ -146,6 +142,14 @@ def add_error_series(plot: str, name: str, x: List[float], y: List[float], negat
 	"""Adds an error series to a plot."""
 	...
 
+def add_grid_column(data_grid: str, name: str, column: List[str]) -> None:
+	"""Adds a column to the end of a data grid."""
+	...
+
+def add_grid_row(data_grid: str, row: List[str]) -> None:
+	"""Adds a row to the end of a data grid."""
+	...
+
 def add_group(name: str, *, show: bool = True, parent: str = '', before: str = '', width: int = 0, horizontal: bool = False, horizontal_spacing: float = -1) -> None:
 	"""Creates a group that other widgets can belong to. The group allows item commands to be issued for all of its members.				Must be closed with the end command."""
 	...
@@ -162,7 +166,7 @@ def add_image(name: str, value: str, *, tint_color: List[float] = (255, 255, 255
 	"""Adds an image.uv_min and uv_max represent the normalized texture coordinates of the original image that will be shown.Using(0,0)->(1,1) texture coordinates will generally display the entire texture"""
 	...
 
-def add_image_button(name: str, value: str, *, callback: Callable = None, callback_data: Any = None, tint_color: List[float] = (255, 255, 255, 255), background_color: List[float] = (0, 0, 0, 0), parent: str = '', before: str = '', width: int = 0, height: int = 0, frame_padding: int = -1, uv_min: List[float] = (0.0, 0.0), uv_max: List[float] = (1.0, 1.0), show: bool = True) -> None:
+def add_image_button(name: str, value: str, *, callback: Callable = None, callback_data: Any = None, tint_color: List[float] = (255, 255, 255, 255), background_color: List[float] = (0, 0, 0, 0), parent: str = '', before: str = '', width: int = 0, height: int = 0, frame_padding: int = -1, uv_min: List[float] = (0.0, 0.0), uv_max: List[float] = (1.0, 1.0), show: bool = True, enabled: bool = True) -> None:
 	"""Adds an image button.uv_min and uv_max represent the normalized texture coordinates of the original image that will be shown.Using(0,0)->(1,1) texture coordinates will generally display the entire texture"""
 	...
 
@@ -226,10 +230,6 @@ def add_logger(name: str, *, log_level: int = 1, auto_scroll: bool = True, auto_
 	"""Adds a logging widget."""
 	...
 
-def add_managed_columns(name: str, columns: int, *, border: bool = True, show: bool = True, parent: str = '', before: str = '') -> None:
-	"""Adds managed columns."""
-	...
-
 def add_menu(name: str, *, label: str = '', show: bool = True, parent: str = '', before: str = '', enabled: bool = True) -> None:
 	"""Adds a menu to an existing menu bar. Must be followed by a call to end."""
 	...
@@ -244,10 +244,6 @@ def add_menu_item(name: str, *, shortcut: str = '', check: bool = False, callbac
 
 def add_metrics_window(name: str, *, width: int = 700, height: int = 500, x_pos: int = 200, y_pos: int = 200, autosize: bool = False, no_resize: bool = False, no_title_bar: bool = False, no_move: bool = False, no_scrollbar: bool = False, no_collapse: bool = False, horizontal_scrollbar: bool = False, no_focus_on_appearing: bool = False, no_bring_to_front_on_focus: bool = False, no_close: bool = False, no_background: bool = False, label: str = '', show: bool = True) -> None:
 	"""Creates a metrics window."""
-	...
-
-def add_next_column(*, name: str = 'next_collumn', show: bool = True, parent: str = '', before: str = '') -> None:
-	"""Changes to next column."""
 	...
 
 def add_node(name: str, *, show: bool = True, label: str = '', draggable: bool = True, parent: str = '', before: str = '', x_pos: int = 100, y_pos: int = 100) -> None:
@@ -284,10 +280,6 @@ def add_progress_bar(name: str, *, default_value: float = 0.0, overlay: str = ''
 
 def add_radio_button(name: str, *, items: List[str] = (), default_value: int = 0, callback: Callable = None, callback_data: Any = None, parent: str = '', before: str = '', source: str = '', enabled: bool = True, horizontal: bool = False, show: bool = True) -> None:
 	"""Adds a set of radio buttons. If items is empty, nothing will be shown."""
-	...
-
-def add_row(table: str, row: List[str]) -> None:
-	"""Adds a row to the end of a table."""
 	...
 
 def add_same_line(*, name: str = 'sameline', xoffset: float = 0.0, spacing: float = -1.0, parent: str = '', before: str = '', show: bool = True) -> None:
@@ -374,8 +366,16 @@ def add_tab_button(name: str, *, label: str = '', show: bool = True, no_reorder:
 	"""Adds a tab button to a tab bar"""
 	...
 
-def add_table(name: str, headers: List[str], *, callback: Callable = None, callback_data: Any = None, parent: str = '', before: str = '', width: int = 0, height: int = 200, hide_headers: bool = False, show: bool = True) -> None:
-	"""Adds table."""
+def add_table(name: str, *, header_row: bool = True, width: int = 0, height: int = 0, inner_width: int = 0, show: bool = True, parent: str = '', before: str = '', resizable: bool = False, reorderable: bool = False, hideable: bool = False, sortable: bool = False, context_menu_in_body: bool = False, row_background: bool = False, borders_innerH: bool = False, borders_outerH: bool = False, borders_innerV: bool = False, borders_outerV: bool = False, policy: int = 8192, no_host_extendX: bool = False, no_host_extendY: bool = False, no_keep_columns_visible: bool = False, precise_widths: bool = False, no_clip: bool = False, pad_outerX: bool = False, no_pad_outerX: bool = False, no_pad_innerX: bool = False, scrollX: bool = False, scrollY: bool = False) -> None:
+	"""Adds managed columns."""
+	...
+
+def add_table_column(name: str, *, init_width_or_weight: float = 0.0, show: bool = True, parent: str = '', before: str = '', default_hide: bool = False, default_sort: bool = False, width_stretch: bool = False, width_fixed: bool = False, no_resize: bool = False, no_reorder: bool = False, no_hide: bool = False, no_clip: bool = False, no_sort: bool = False, no_sort_ascending: bool = False, no_sort_descending: bool = False, no_header_width: bool = False, prefer_sort_ascending: bool = False, prefer_sort_descending: bool = False, indent_enable: bool = False, indent_disable: bool = False) -> None:
+	"""Changes to next column."""
+	...
+
+def add_table_next_column(*, name: str = 'next_column', show: bool = True, parent: str = '', before: str = '') -> None:
+	"""Changes to next column."""
 	...
 
 def add_text(name: str, *, wrap: int = -1, color: List[float] = (-1, 0, 0, 0), bullet: bool = False, parent: str = '', before: str = '', source: str = '', default_value: str = '', show: bool = True) -> None:
@@ -422,6 +422,10 @@ def cleanup_dearpygui() -> None:
 	"""Cleans up DearPyGui after calling setup_dearpygui."""
 	...
 
+def clear_data_grid(data_grid: str) -> None:
+	"""Clears data in a data grid"""
+	...
+
 def clear_drawing(draw: str) -> None:
 	"""Clears a drawing."""
 	...
@@ -442,10 +446,6 @@ def clear_selected_nodes(node_editor: str) -> None:
 	"""Clears selected nodes."""
 	...
 
-def clear_table(table: str) -> None:
-	"""Clears data in a table"""
-	...
-
 def close_popup(item: str) -> None:
 	"""Closes a popup."""
 	...
@@ -462,10 +462,6 @@ def delete_annotation(plot: str, name: str) -> None:
 	"""Deletes an annotation"""
 	...
 
-def delete_column(table: str, column: int) -> None:
-	"""Delete a column in a table."""
-	...
-
 def delete_drag_line(plot: str, name: str) -> None:
 	"""Deletes a drag line if it exists."""
 	...
@@ -478,16 +474,20 @@ def delete_draw_command(drawing: str, tag: str) -> None:
 	"""Deletes a drawing item."""
 	...
 
+def delete_grid_column(data_grid: str, column: int) -> None:
+	"""Delete a column in a data grid."""
+	...
+
+def delete_grid_row(data_grid: str, row: int) -> None:
+	"""Delete a row in a data grid."""
+	...
+
 def delete_item(item: str, *, children_only: bool = False) -> None:
 	"""Deletes an item if it exists."""
 	...
 
 def delete_node_link(node_editor: str, node_1: str, node_2: str) -> None:
 	"""Deletes a node link if it exist."""
-	...
-
-def delete_row(table: str, row: int) -> None:
-	"""Delete a row in a table."""
 	...
 
 def delete_series(plot: str, series: str) -> None:
@@ -578,6 +578,18 @@ def get_global_font_scale() -> float:
 	"""Returns the global font scale."""
 	...
 
+def get_grid_data(data_grid: str) -> List[List[str]]:
+	"""Gets data grid data."""
+	...
+
+def get_grid_item(data_grid: str, row: int, column: int) -> str:
+	"""Gets a data grid's cell value."""
+	...
+
+def get_grid_selections(data_grid: str) -> List[List[int]]:
+	"""Retrieves data from storage."""
+	...
+
 def get_item_callback(item: str) -> Callable:
 	"""Returns an item' callback"""
 	...
@@ -642,10 +654,6 @@ def get_main_window_size() -> [int, int]:
 	"""Returns the size of the main window."""
 	...
 
-def get_managed_column_width(item: str, column: int) -> Float:
-	"""Returns the width of the ith column."""
-	...
-
 def get_mouse_drag_delta() -> (float, float):
 	"""Returns the current mouse drag delta in pixels"""
 	...
@@ -678,18 +686,6 @@ def get_selected_nodes(node_editor: str) -> List[str]:
 	"""Returns selected nodes."""
 	...
 
-def get_table_data(name: str) -> List[List[str]]:
-	"""Gets table data."""
-	...
-
-def get_table_item(table: str, row: int, column: int) -> str:
-	"""Gets a table's cell value."""
-	...
-
-def get_table_selections(table: str) -> List[List[int]]:
-	"""Retrieves data from storage."""
-	...
-
 def get_total_time() -> float:
 	"""Returns total time since app started."""
 	...
@@ -702,12 +698,12 @@ def get_windows() -> List[str]:
 	"""Returns a list of windows."""
 	...
 
-def insert_column(table: str, column_index: int, name: str, column: List[str]) -> None:
-	"""Inserts a column into a table."""
+def insert_grid_column(data_grid: str, column_index: int, name: str, column: List[str]) -> None:
+	"""Inserts a column into a data grid."""
 	...
 
-def insert_row(table: str, row_index: int, row: List[str]) -> None:
-	"""Inserts a row into a table."""
+def insert_grid_row(data_grid: str, row_index: int, row: List[str]) -> None:
+	"""Inserts a row into a data grid."""
 	...
 
 def is_dearpygui_running() -> bool:
@@ -874,8 +870,20 @@ def set_global_font_scale(scale: float) -> None:
 	"""Changes the global font scale."""
 	...
 
-def set_headers(table: str, headers: List[str]) -> None:
-	"""Sets a tables headers."""
+def set_grid_data(data_grid: str, data: List[List[str]]) -> None:
+	"""Overwrites data grid data."""
+	...
+
+def set_grid_headers(data_grid: str, headers: List[str]) -> None:
+	"""Sets a data grid's headers."""
+	...
+
+def set_grid_item(data_grid: str, row: int, column: int, value: str) -> None:
+	"""Sets a data grid's cell value."""
+	...
+
+def set_grid_selection(data_grid: str, row: int, column: int, value: bool) -> None:
+	"""Sets a data grid's cell selection value."""
 	...
 
 def set_item_callback(item: str, callback: Callable, *, callback_data: Any = None) -> None:
@@ -938,10 +946,6 @@ def set_main_window_title(title: str) -> None:
 	"""Sets the title of the main window."""
 	...
 
-def set_managed_column_width(item: str, column: int, width: float) -> None:
-	"""Sets the width of the ith column."""
-	...
-
 def set_mouse_click_callback(callback: Callable) -> None:
 	"""Sets a callback for a mouse click event."""
 	...
@@ -1000,18 +1004,6 @@ def set_resize_callback(callback: Callable, *, handler: str = '') -> None:
 
 def set_start_callback(callback: Any) -> None:
 	"""Callback to run when starting main window."""
-	...
-
-def set_table_data(name: str, data: List[List[str]]) -> None:
-	"""Overwrites table data."""
-	...
-
-def set_table_item(table: str, row: int, column: int, value: str) -> None:
-	"""Sets a table's cell value."""
-	...
-
-def set_table_selection(table: str, row: int, column: int, value: bool) -> None:
-	"""Sets a table's cell selection value."""
 	...
 
 def set_theme_color(constant: int, color: List[float], item: str = '') -> None:

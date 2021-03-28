@@ -43,12 +43,12 @@ namespace Marvel {
         mvColorPicker3, mvColorPicker4, mvTooltip, mvCollapsingHeader,
         mvSeparator, mvCheckbox, mvListbox, mvText, mvLabelText, mvCombo,
         mvPlot, mvSimplePlot, mvIndent, mvUnindent, mvDrawing, mvWindowAppItem,
-        mvPopup, mvSelectable, mvTreeNode, mvProgressBar, mvTable, mvDummy,
+        mvPopup, mvSelectable, mvTreeNode, mvProgressBar, mvDataGrid, mvDummy,
         mvImageButton, mvTimePicker, mvDatePicker, mvColorButton,
-        mvManagedColumns, mvColumnSet, mvNextColumn, mvLoggerItem,
         mvAboutWindow, mvDocWindow, mvDebugWindow, mvMetricsWindow,
-        mvStyleWindow, mvFileDialog, mvTabButton,
+        mvStyleWindow, mvFileDialog, mvTabButton, mvLoggerItem,
         mvNodeEditor, mvNode, mvNodeAttribute,
+        mvTable, mvTableColumn, mvTableNextColumn,
         ItemTypeCount
     };
 
@@ -98,7 +98,7 @@ namespace Marvel {
         friend class mvPopup;
         friend class mvTreeNode;
         friend class mvWindowAppItem;
-        friend class mvManagedColumns;
+        friend class mvTable;
         friend class mvNodeEditor;
         friend class mvNode;
         friend class mvNodeAttribute;
@@ -128,10 +128,14 @@ namespace Marvel {
         virtual void                        draw         ()       = 0; // actual imgui draw commands
 
         // virtual methods
-        virtual std::string                 getParserCommand     () const { return "no_command_set"; }
+        virtual std::string    getParserCommand     () const { return "no_command_set"; }
         virtual mvValueVariant getValue() { return nullptr; }
         virtual PyObject*      getPyValue() { return GetPyNone(); }
         virtual void           setPyValue(PyObject* value) { }
+
+        // registy helpers
+        virtual bool           isParentCompatible(mvAppItemType type) { return true; }
+        virtual bool           canChildBeAdded   (mvAppItemType type) { return true; }
 
         // configuration get/set
         void                                checkConfigDict(PyObject* dict);
