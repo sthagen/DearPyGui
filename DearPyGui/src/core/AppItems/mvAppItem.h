@@ -160,6 +160,18 @@ namespace Marvel {
         std::unordered_map<mvAppItemType, mvThemeColors>& getColors() { return m_colors; }
         std::unordered_map<mvAppItemType, mvThemeStyles>& getStyles() { return m_styles; }
 
+        // cached theming
+        bool                                      isThemeColorCacheValid() const;
+        bool                                      isThemeStyleCacheValid() const;
+        void                                      inValidateThemeColorCache();
+        void                                      inValidateThemeStyleCache();
+        void                                      setThemeColorCacheValid();
+        void                                      setThemeStyleCacheValid();
+        mvThemeColors&                            getCachedThemeColors();
+        std::unordered_map<ImGuiStyleVar, float>& getCachedThemeStyles();
+        std::unordered_map<ImGuiStyleVar, float>& getCachedThemeStyles1();
+        std::unordered_map<ImGuiStyleVar, float>& getCachedThemeStyles2();
+
 
         //-----------------------------------------------------------------------------
         // cpp interface
@@ -206,6 +218,14 @@ namespace Marvel {
 
         std::unordered_map<mvAppItemType, mvThemeColors> m_colors;
         std::unordered_map<mvAppItemType, mvThemeStyles> m_styles;
+
+        // cached theming
+        bool                                     m_theme_color_dirty = true;
+        bool                                     m_theme_style_dirty = true;
+        mvThemeColors                            m_cached_colors;
+        std::unordered_map<ImGuiStyleVar, float> m_cached_styles;
+        std::unordered_map<ImGuiStyleVar, float> m_cached_styles1;
+        std::unordered_map<ImGuiStyleVar, float> m_cached_styles2;
     };
 
 #ifdef MV_CPP

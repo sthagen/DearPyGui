@@ -449,6 +449,66 @@ namespace Marvel{
 		
 	}
 
+	bool mvAppItem::isThemeColorCacheValid() const
+	{
+		return !m_theme_color_dirty;
+	}
+
+	bool mvAppItem::isThemeStyleCacheValid() const
+	{
+		return !m_theme_style_dirty;
+	}
+
+	void mvAppItem::inValidateThemeColorCache()
+	{
+		m_theme_color_dirty = true;
+		m_cached_colors.clear();
+
+		for (auto& child : m_children)
+			child->inValidateThemeColorCache();
+	}
+
+	void mvAppItem::inValidateThemeStyleCache()
+	{
+		m_theme_style_dirty = true;
+		m_cached_styles.clear();
+		m_cached_styles2.clear();
+
+		for (auto& child : m_children)
+			child->inValidateThemeStyleCache();
+	}
+
+	void mvAppItem::setThemeColorCacheValid()
+	{
+		m_theme_color_dirty = false;
+	}
+
+
+	void mvAppItem::setThemeStyleCacheValid()
+	{
+		m_theme_style_dirty = false;
+	}
+
+	mvThemeColors& mvAppItem::getCachedThemeColors()
+	{
+		return m_cached_colors;
+	}
+
+	std::unordered_map<ImGuiStyleVar, float>& mvAppItem::getCachedThemeStyles()
+	{
+		return m_cached_styles;
+	}
+
+	std::unordered_map<ImGuiStyleVar, float>& mvAppItem::getCachedThemeStyles1()
+	{
+		return m_cached_styles1;
+	}
+
+	std::unordered_map<ImGuiStyleVar, float>& mvAppItem::getCachedThemeStyles2()
+	{
+		return m_cached_styles2;
+	}
+
 #ifndef MV_CPP
 
 	void mvAppItem::checkConfigDict(PyObject* dict)

@@ -179,6 +179,11 @@ namespace Marvel {
 		return *m_textureStorage; 
 	}
 
+	mvThemeManager& mvApp::getThemeManager()
+	{
+		return *m_themeManager;
+	}
+
 	bool mvApp::onEvent(mvEvent& event)
 	{
 		mvEventDispatcher dispatcher(event);
@@ -341,7 +346,14 @@ namespace Marvel {
 			{mvPythonDataType::FloatList, "color"},
 			{mvPythonDataType::Optional},
 			{mvPythonDataType::String, "item", "", "''"}
-		}, "Sets a color of a theme item.", "None", "Themes and Styles") });
+		}, "Sets a color of a theme item for when the item is enabled.", "None", "Themes and Styles") });
+
+		parsers->insert({ "set_theme_color_disabled", mvPythonParser({
+			{mvPythonDataType::Integer, "constant", "mvThemeCol_* constants"},
+			{mvPythonDataType::FloatList, "color"},
+			{mvPythonDataType::Optional},
+			{mvPythonDataType::String, "item", "", "''"}
+		}, "Sets a color of a theme item for when the item is disabled.", "None", "Themes and Styles") });
 
 		parsers->insert({ "set_theme_style", mvPythonParser({
 			{mvPythonDataType::Integer, "constant", "mvThemeStyle_* constants"},
@@ -728,6 +740,36 @@ namespace Marvel {
 
 		Py_XINCREF(color);
 		std::lock_guard<std::mutex> lk(mvApp::GetApp()->getMutex());
+
+		mvEventBus::Publish
+		(
+			mvEVT_CATEGORY_THEMES,
+			SID("color_change"),
+			{
+				CreateEventArgument("WIDGET", std::string(item)),
+				CreateEventArgument("ID", constant),
+				CreateEventArgument("COLOR", ToColor(color)),
+				CreateEventArgument("ENABLED", true)
+			}
+		);
+
+		Py_XDECREF(color);
+
+
+		return GetPyNone();
+	}
+
+	PyObject* set_theme_color_disabled(PyObject* self, PyObject* args, PyObject* kwargs)
+	{
+		long constant;
+		PyObject* color;
+		const char* item = "";
+
+		if (!(mvApp::GetApp()->getParsers())["set_theme_color_disabled"].parse(args, kwargs, __FUNCTION__, &constant, &color, &item))
+			return GetPyNone();
+
+		Py_XINCREF(color);
+		std::lock_guard<std::mutex> lk(mvApp::GetApp()->getMutex());
 		mvApp::GetApp()->getCallbackRegistry().submit([=]()
 			{
 				mvEventBus::Publish
@@ -737,7 +779,8 @@ namespace Marvel {
 					{
 						CreateEventArgument("WIDGET", std::string(item)),
 						CreateEventArgument("ID", constant),
-						CreateEventArgument("COLOR", ToColor(color))
+						CreateEventArgument("COLOR", ToColor(color)),
+						CreateEventArgument("ENABLED", false)
 					}
 				);
 

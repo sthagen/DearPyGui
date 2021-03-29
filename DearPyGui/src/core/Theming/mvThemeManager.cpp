@@ -11,6 +11,30 @@ namespace Marvel {
 	std::unordered_map<mvAppItemType, mvThemeColors>					mvThemeManager::s_colors;
 	std::unordered_map<mvAppItemType, mvThemeStyles>					mvThemeManager::s_styles;
 
+	void mvThemeManager::InValidateColorTheme()
+	{
+		auto& frontWindows = mvApp::GetApp()->getItemRegistry().getFrontWindows();
+		auto& backWindows = mvApp::GetApp()->getItemRegistry().getBackWindows();
+
+		for (auto& window : frontWindows)
+			window->inValidateThemeColorCache();
+
+		for (auto& window : backWindows)
+			window->inValidateThemeColorCache();
+	}
+
+	void mvThemeManager::InValidateStyleTheme()
+	{
+		auto& frontWindows = mvApp::GetApp()->getItemRegistry().getFrontWindows();
+		auto& backWindows = mvApp::GetApp()->getItemRegistry().getBackWindows();
+
+		for (auto& window : frontWindows)
+			window->inValidateThemeStyleCache();
+
+		for (auto& window : backWindows)
+			window->inValidateThemeStyleCache();
+	}
+
 	void mvThemeManager::decodeType(long encoded_constant, mvAppItemType* type)
 	{
 		*type = (mvAppItemType)(encoded_constant / 1000);
@@ -50,24 +74,42 @@ namespace Marvel {
 		decodeType(mvThemeConstant, &type);
 		mvColor color = GetEColor(event, "COLOR");
 		const std::string& widget = GetEString(event, "WIDGET");
+		bool enabled = GetEBool(event, "ENABLED");
 
 		//fills out the app's root theme if no item was given
 		if (widget.empty())
 		{
-			GetColors()[type][mvThemeConstant].first = color;
+			if (enabled) GetColors()[type][mvThemeConstant].first = color;
+			else GetColors()[type][mvThemeConstant].second = color;
+			InValidateColorTheme();
 			return true;
 		}
 
 		//check widget can take color and apply
 		mvRef<mvAppItem> item = mvApp::GetApp()->getItemRegistry().getItem(widget);
-		if (item->getDescription().container || item->getType() == type)
-			item->getColors()[type][mvThemeConstant].first = color;
+		if (item)
+		{
+			if (item->getDescription().container || item->getType() == type)
+			{
+				if (enabled) item->getColors()[type][mvThemeConstant].first = color;
+				else item->getColors()[type][mvThemeConstant].second = color;
+
+				item->inValidateThemeColorCache();
+			}
+			else
+			{
+				mvApp::GetApp()->getCallbackRegistry().submitCallback([=]()
+					{
+						ThrowPythonException("Item type does not except this color constant.");
+					});
+			}
+		}
 		else
 		{
 			mvApp::GetApp()->getCallbackRegistry().submitCallback([=]()
-			{
-				ThrowPythonException("Item type does not except this color constant.");
-			});
+				{
+					ThrowPythonException("Item can not be found");
+				});
 		}
 		return true;
 	}
@@ -84,19 +126,33 @@ namespace Marvel {
 		if (widget.empty())
 		{
 			GetStyles()[type][mvThemeConstant] = style;
+			InValidateStyleTheme();
 			return true;
 		}
 
 		//check widget can take style and apply
 		mvRef<mvAppItem> item = mvApp::GetApp()->getItemRegistry().getItem(widget);
-		if (item->getDescription().container || item->getType() == type)
-			item->getStyles()[type][mvThemeConstant] = style;
+		if (item)
+		{
+			if (item->getDescription().container || item->getType() == type)
+			{
+				item->getStyles()[type][mvThemeConstant] = style;
+				item->inValidateThemeStyleCache();
+			}
+			else
+			{
+				mvApp::GetApp()->getCallbackRegistry().submitCallback([=]()
+					{
+						ThrowPythonException("Item type does not except this style constant.");
+					});
+			}
+		}
 		else
 		{
 			mvApp::GetApp()->getCallbackRegistry().submitCallback([=]()
-			{
-				ThrowPythonException("Item type does not except this style constant.");
-			});
+				{
+					ThrowPythonException("Item can not be found");
+				});
 		}
 		return true;
 	}
