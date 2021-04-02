@@ -3,12 +3,14 @@
 #include "mvApp.h"
 #include "mvItemRegistry.h"
 #include "mvImGuiThemeScope.h"
+#include "mvFontScope.h"
 
 namespace Marvel {
 
 	void mvGroup::InsertParser(std::map<std::string, mvPythonParser>* parsers)
 	{
-		parsers->insert({ "add_group", mvPythonParser({
+		parsers->insert({ s_command, mvPythonParser({
+			{mvPythonDataType::Optional},
 			{mvPythonDataType::String, "name"},
 			{mvPythonDataType::KeywordOnly},
 			{mvPythonDataType::Bool, "show", "Attempt to render", "True"},
@@ -28,32 +30,33 @@ namespace Marvel {
 		m_description.container = true;
 	}
 
-	void mvGroup::draw()
+	void mvGroup::draw(ImDrawList* drawlist, float x, float y)
 	{
 		mvImGuiThemeScope scope(this);
+		mvFontScope fscope(this);
 
-		if (m_core_config.width != 0)
-			ImGui::PushItemWidth((float)m_core_config.width);
+		if (m_width != 0)
+			ImGui::PushItemWidth((float)m_width);
 
 		ImGui::BeginGroup();
 
 		//we do this so that the children dont get the theme
 		scope.cleanup();
 
-		for (auto& item : m_children)
+		for (auto& item : m_children1)
 		{
-			if (m_core_config.width != 0)
-				item->setWidth(m_core_config.width);
+			if (m_width != 0)
+				item->setWidth(m_width);
 
 			// skip item if it's not shown
-			if (!item->m_core_config.show)
+			if (!item->m_show)
 				continue;
 
 			// set item width
-			if (item->m_core_config.width != 0)
-				ImGui::SetNextItemWidth((float)item->m_core_config.width);
+			if (item->m_width != 0)
+				ImGui::SetNextItemWidth((float)item->m_width);
 
-			item->draw();
+			item->draw(drawlist, ImGui::GetCursorPosX(), ImGui::GetCursorPosY());
 
 			if (m_horizontal)
 				ImGui::SameLine(0.0, m_hspacing);
@@ -61,13 +64,11 @@ namespace Marvel {
 			item->getState().update();
 		}
 
-		if (m_core_config.width != 0)
+		if (m_width != 0)
 			ImGui::PopItemWidth();
 
 		ImGui::EndGroup();
 	}
-
-#ifndef MV_CPP
 
 	void mvGroup::setExtraConfigDict(PyObject* dict)
 	{
@@ -87,9 +88,11 @@ namespace Marvel {
 		PyDict_SetItemString(dict, "horizontal_spacing", ToPyFloat(m_hspacing));
 	}
 
-	PyObject* add_group(PyObject* self, PyObject* args, PyObject* kwargs)
+	PyObject* mvGroup::add_group(PyObject* self, PyObject* args, PyObject* kwargs)
 	{
-		const char* name;
+		static int i = 0; i++;
+		std::string sname = std::string(std::string("$$DPG_") + s_internal_id + std::to_string(i));
+		const char* name = sname.c_str();
 		int show = true;
 		const char* parent = "";
 		const char* before = "";
@@ -115,9 +118,7 @@ namespace Marvel {
 
 		}
 
-		return GetPyNone();
+		return ToPyString(name);
 	}
 
-
-#endif
 }

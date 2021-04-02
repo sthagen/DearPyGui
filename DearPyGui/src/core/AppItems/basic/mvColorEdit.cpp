@@ -3,13 +3,15 @@
 #include <array>
 #include "mvItemRegistry.h"
 #include "mvImGuiThemeScope.h"
+#include "mvFontScope.h"
 
 namespace Marvel {
 
 	void mvColorEdit3::InsertParser(std::map<std::string, mvPythonParser>* parsers)
 	{
 
-		parsers->insert({ "add_color_edit3", mvPythonParser({
+		parsers->insert({ s_command, mvPythonParser({
+			{mvPythonDataType::Optional},
 			{mvPythonDataType::String, "name"},
 			{mvPythonDataType::KeywordOnly},
 			{mvPythonDataType::IntList, "default_value", "", "(0, 0, 0, 255)"},
@@ -47,7 +49,8 @@ namespace Marvel {
 
 	void mvColorEdit4::InsertParser(std::map<std::string, mvPythonParser>* parsers)
 	{
-		parsers->insert({ "add_color_edit4", mvPythonParser({
+		parsers->insert({ s_command, mvPythonParser({
+			{mvPythonDataType::Optional},
 			{mvPythonDataType::String, "name"},
 			{mvPythonDataType::KeywordOnly},
 			{mvPythonDataType::IntList, "default_value", "", "(0, 0, 0, 255)"},
@@ -88,51 +91,18 @@ namespace Marvel {
 		mvColorPtrBase(name, color)
 	{
 		m_description.disableAllowed = true;
-		m_config = {};
 	}
 
-	mvColorEdit3::mvColorEdit3(const std::string& name, const mvColorEditConfig& config)
-		:
-		mvColorPtrBase(name, config.default_value.data()),
-		m_config(config)
-	{
-		m_description.disableAllowed = true;
-		m_config.name = name;
-		updateConfig(&m_config);
-	}
-
-	void mvColorEdit3::draw()
+	void mvColorEdit3::draw(ImDrawList* drawlist, float x, float y)
 	{
 		ScopedID id;
 		mvImGuiThemeScope scope(this);
+		mvFontScope fscope(this);
 
-		if (!m_core_config.enabled) std::copy(m_value->data(), m_value->data() + 3, m_disabled_value);
+		if (!m_enabled) std::copy(m_value->data(), m_value->data() + 3, m_disabled_value);
 
-		if (ImGui::ColorEdit3(m_label.c_str(), m_core_config.enabled ? m_value->data() : &m_disabled_value[0], m_flags))
-			mvApp::GetApp()->getCallbackRegistry().addCallback(getCallback(false), m_core_config.name, m_core_config.callback_data);
-	}
-
-	void mvColorEdit3::updateConfig(mvAppItemConfig* config)
-	{
-		auto aconfig = (mvColorEditConfig*)config;
-
-		m_core_config.width = config->width;
-		m_core_config.height = config->height;
-		m_core_config.label = config->label;
-		m_core_config.show = config->show;
-		m_core_config.callback = config->callback;
-		m_core_config.callback_data = config->callback_data;
-		m_core_config.enabled = config->enabled;
-
-		m_config.source = aconfig->source;
-
-		if (config != &m_config)
-			m_config = *aconfig;
-	}
-
-	mvAppItemConfig* mvColorEdit3::getConfig()
-	{
-		return &m_config;
+		if (ImGui::ColorEdit3(m_label.c_str(), m_enabled ? m_value->data() : &m_disabled_value[0], m_flags))
+			mvApp::GetApp()->getCallbackRegistry().addCallback(getCallback(false), m_name, m_callback_data);
 	}
 
 	mvColorEdit4::mvColorEdit4(const std::string& name, float* color, const std::string& dataSource)
@@ -140,67 +110,20 @@ namespace Marvel {
 		mvColorPtrBase(name, color)
 	{
 		m_description.disableAllowed = true;
-		m_config = {};
 	}
 
-	mvColorEdit4::mvColorEdit4(const std::string& name, const mvColorEditConfig& config)
-		:
-		mvColorPtrBase(name, config.default_value.data()),
-		m_config(config)
-	{
-		m_description.disableAllowed = true;
-		m_config.name = name;
-		updateConfig(&m_config);
-	}
-
-	void mvColorEdit4::draw()
+	void mvColorEdit4::draw(ImDrawList* drawlist, float x, float y)
 	{
 		ScopedID id;
 		mvImGuiThemeScope scope(this);
+		mvFontScope fscope(this);
 
-		if (!m_core_config.enabled) std::copy(m_value->data(), m_value->data() + 4, m_disabled_value);
+		if (!m_enabled) std::copy(m_value->data(), m_value->data() + 4, m_disabled_value);
 
-		if (ImGui::ColorEdit4(m_label.c_str(), m_core_config.enabled ? m_value->data() : &m_disabled_value[0], m_flags))
-			mvApp::GetApp()->getCallbackRegistry().addCallback(getCallback(false), m_core_config.name, m_core_config.callback_data);
+		if (ImGui::ColorEdit4(m_label.c_str(), m_enabled ? m_value->data() : &m_disabled_value[0], m_flags))
+			mvApp::GetApp()->getCallbackRegistry().addCallback(getCallback(false), m_name, m_callback_data);
 
 	}
-
-	void mvColorEdit4::updateConfig(mvAppItemConfig* config)
-	{
-		auto aconfig = (mvColorEditConfig*)config;
-
-		m_core_config.width = config->width;
-		m_core_config.height = config->height;
-		m_core_config.label = config->label;
-		m_core_config.show = config->show;
-		m_core_config.callback = config->callback;
-		m_core_config.callback_data = config->callback_data;
-		m_core_config.enabled = config->enabled;
-
-		m_config.source = aconfig->source;
-
-		if (config != &m_config)
-			m_config = *aconfig;
-	}
-
-	mvAppItemConfig* mvColorEdit4::getConfig()
-	{
-		return &m_config;
-	}
-
-#ifdef MV_CPP
-	void add_color_edit3(const std::string& name, const mvColorEditConfig& config)
-	{
-		auto item = CreateRef<mvColorEdit3>(name, config);
-		mvApp::GetApp()->getItemRegistry().addItemWithRuntimeChecks(item, config.parent.c_str(), config.before.c_str());
-	}
-
-	void add_color_edit4(const std::string& name, const mvColorEditConfig& config)
-	{
-		auto item = CreateRef<mvColorEdit4>(name, config);
-		mvApp::GetApp()->getItemRegistry().addItemWithRuntimeChecks(item, config.parent.c_str(), config.before.c_str());
-	}
-#else
 
 	void mvColorEdit3::setExtraConfigDict(PyObject* dict)
 	{
@@ -290,9 +213,11 @@ namespace Marvel {
 		checkbitset("input_hsv", ImGuiColorEditFlags_InputHSV, m_flags);
 	}
 
-	PyObject* add_color_edit3(PyObject* self, PyObject* args, PyObject* kwargs)
+	PyObject* mvColorEdit3::add_color_edit3(PyObject* self, PyObject* args, PyObject* kwargs)
 	{
-		const char* name;
+		static int i = 0; i++;
+		std::string sname = std::string(std::string("$$DPG_") + s_internal_id + std::to_string(i));
+		const char* name = sname.c_str();
 		PyObject* default_value = PyTuple_New(4);
 		PyTuple_SetItem(default_value, 0, PyLong_FromLong(0));
 		PyTuple_SetItem(default_value, 1, PyLong_FromLong(0));
@@ -351,7 +276,7 @@ namespace Marvel {
 
 		mvApp::GetApp()->getItemRegistry().addItemWithRuntimeChecks(item, parent, before);
 
-		return GetPyNone();
+		return ToPyString(name);
 	}
 
 	void mvColorEdit4::setExtraConfigDict(PyObject* dict)
@@ -443,9 +368,11 @@ namespace Marvel {
 		checkbitset("input_hsv", ImGuiColorEditFlags_InputHSV, m_flags);
 	}
 
-	PyObject* add_color_edit4(PyObject* self, PyObject* args, PyObject* kwargs)
+	PyObject* mvColorEdit4::add_color_edit4(PyObject* self, PyObject* args, PyObject* kwargs)
 	{
-		const char* name;
+		static int i = 0; i++;
+		std::string sname = std::string(std::string("$$DPG_") + s_internal_id + std::to_string(i));
+		const char* name = sname.c_str();
 		PyObject* default_value = PyTuple_New(4);
 		PyTuple_SetItem(default_value, 0, PyLong_FromLong(0));
 		PyTuple_SetItem(default_value, 1, PyLong_FromLong(0));
@@ -503,8 +430,7 @@ namespace Marvel {
 
 		mvApp::GetApp()->getItemRegistry().addItemWithRuntimeChecks(item, parent, before);
 
-		return GetPyNone();
+		return ToPyString(name);
 	}
 
-#endif // !MV_CPP
 }

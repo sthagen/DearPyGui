@@ -6,12 +6,14 @@
 #include "mvApp.h"
 #include <string>
 #include "mvItemRegistry.h"
+#include "mvFontScope.h"
 
 namespace Marvel {
 
     void mvAboutWindow::InsertParser(std::map<std::string, mvPythonParser>* parsers)
     {
-        parsers->insert({ "add_about_window", mvPythonParser({
+        parsers->insert({ s_command, mvPythonParser({
+            {mvPythonDataType::Optional},
             {mvPythonDataType::String, "name"},
             {mvPythonDataType::KeywordOnly},
             {mvPythonDataType::Integer, "width", "", "-1"},
@@ -39,10 +41,9 @@ namespace Marvel {
         : mvBaseWindowAppitem(name)
     {
         m_windowflags = ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoSavedSettings;
-        m_description.deleteAllowed = false;
     }
 
-    void mvAboutWindow::draw()
+    void mvAboutWindow::draw(ImDrawList* drawlist, float x, float y)
     {
         if (!prerender())
             return;
@@ -151,20 +152,19 @@ namespace Marvel {
             float y = mousePos.y - ImGui::GetWindowPos().y - titleBarHeight;
             mvInput::setMousePosition(x, y);
 
-            if (mvApp::GetApp()->getItemRegistry().getActiveWindow() != m_core_config.name)
-                mvEventBus::Publish(mvEVT_CATEGORY_ITEM, mvEVT_ACTIVE_WINDOW, { CreateEventArgument("WINDOW", m_core_config.name) });
+            if (mvApp::GetApp()->getItemRegistry().getActiveWindow() != m_name)
+                mvEventBus::Publish(mvEVT_CATEGORY_ITEM, mvEVT_ACTIVE_WINDOW, { CreateEventArgument("WINDOW", m_name) });
         }
 
         ImGui::End();
         
     }
 
-
-#ifdef MV_CPP
-#else
-    PyObject* add_about_window(PyObject* self, PyObject* args, PyObject* kwargs)
+    PyObject* mvAboutWindow::add_about_window(PyObject* self, PyObject* args, PyObject* kwargs)
     {
-        const char* name;
+        static int i = 0; i++;
+        std::string sname = std::string(std::string("$$DPG_") + s_internal_id + std::to_string(i));
+        const char* name = sname.c_str();
         int width = -1;
         int height = -1;
         int x_pos = 200;
@@ -204,8 +204,7 @@ namespace Marvel {
 
         }
 
-        return GetPyNone();
+        return ToPyString(name);
     }
-#endif // 
 
 }

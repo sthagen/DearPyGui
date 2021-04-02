@@ -1,8 +1,10 @@
 #include "mvLogger.h"
 #include <chrono>
 #include "mvInput.h"
+#include "mvCore.h"
 #include "mvGlobalIntepreterLock.h"
 #include "mvItemRegistry.h"
+#include "mvFontScope.h"
 
 typedef std::chrono::high_resolution_clock clock_;
 typedef std::chrono::duration<double, std::ratio<1> > second_;
@@ -11,7 +13,8 @@ namespace Marvel {
 
 	void mvLoggerItem::InsertParser(std::map<std::string, mvPythonParser>* parsers)
 	{
-		parsers->insert({ "add_logger", mvPythonParser({
+		parsers->insert({ s_command, mvPythonParser({
+			{mvPythonDataType::Optional},
 			{mvPythonDataType::String, "name"},
 			{mvPythonDataType::KeywordOnly},
 			{mvPythonDataType::Integer, "log_level", "", "1"},
@@ -86,19 +89,6 @@ namespace Marvel {
 		});
 	}
 
-	void mvLoggerItem::InsertConstants(std::vector<std::pair<std::string, long>>& constants)
-	{
-		//-----------------------------------------------------------------------------
-		// Log Levels
-		//-----------------------------------------------------------------------------
-		constants.emplace_back("mvTRACE"   , 0);
-		constants.emplace_back("mvDEBUG"   , 1);
-		constants.emplace_back("mvINFO"    , 2);
-		constants.emplace_back("mvWARNING" , 3);
-		constants.emplace_back("mvERROR"   , 4);
-		constants.emplace_back("mvOFF"     , 5);
-	}
-
 #if defined (_WIN32)
 	std::chrono::steady_clock::time_point mvLoggerItem::s_start = clock_::now();
 #elif defined(__APPLE__)
@@ -107,8 +97,10 @@ namespace Marvel {
 	std::chrono::system_clock::time_point mvLoggerItem::s_start = clock_::now();
 #endif
 
-	void mvLoggerItem::draw()
+	void mvLoggerItem::draw(ImDrawList* drawlist, float x, float y)
 	{
+		mvFontScope fscope(this);
+
 		ImGui::BeginGroup();
 
 		ImGui::PushID(this);
@@ -137,10 +129,10 @@ namespace Marvel {
 		if (m_filter)
 		{
 			ImGui::NewLine();
-			Filter.Draw("Filter", m_core_config.width-100.0f);
+			Filter.Draw("Filter", m_width-100.0f);
 		}
 
-		ImGui::BeginChild(m_core_config.name.c_str(), ImVec2(m_autosize_x ? 0 : (float)m_core_config.width, m_autosize_y ? 0 : (float)m_core_config.height), true, ImGuiWindowFlags_AlwaysHorizontalScrollbar);
+		ImGui::BeginChild(m_name.c_str(), ImVec2(m_autosize_x ? 0 : (float)m_width, m_autosize_y ? 0 : (float)m_height), true, ImGuiWindowFlags_AlwaysHorizontalScrollbar);
 
 		ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0, 0));
 		const char* buf = Buf.begin();
@@ -228,14 +220,14 @@ namespace Marvel {
 			float y = mousePos.y - ImGui::GetWindowPos().y - titleBarHeight;
 			mvInput::setMousePosition(x, y);
 
-			if (mvApp::GetApp()->getItemRegistry().getActiveWindow() != m_core_config.name)
-				mvEventBus::Publish(mvEVT_CATEGORY_ITEM, mvEVT_ACTIVE_WINDOW, { CreateEventArgument("WINDOW", m_core_config.name) });
+			if (mvApp::GetApp()->getItemRegistry().getActiveWindow() != m_name)
+				mvEventBus::Publish(mvEVT_CATEGORY_ITEM, mvEVT_ACTIVE_WINDOW, { CreateEventArgument("WINDOW", m_name) });
 
 
 		}
 
-		m_core_config.width = (int)ImGui::GetWindowWidth();
-		m_core_config.height = (int)ImGui::GetWindowHeight();
+		m_width = (int)ImGui::GetWindowWidth();
+		m_height = (int)ImGui::GetWindowHeight();
 
 		ImGui::EndChild();
 		ImGui::PopID();
@@ -303,14 +295,11 @@ namespace Marvel {
 		LineOffsets.push_back(0);
 	}
 
-#ifndef MV_CPP
-
 	void mvLoggerItem::setExtraConfigDict(PyObject* dict)
 	{
 		if (dict == nullptr)
 			return;
 		 
-		if (PyObject* item = PyDict_GetItemString(dict, "log_level")) m_loglevel = ToInt(item);
 		if (PyObject* item = PyDict_GetItemString(dict, "auto_scroll")) AutoScroll = ToBool(item);
 		if (PyObject* item = PyDict_GetItemString(dict, "auto_scroll_button")) m_autoScrollButton = ToBool(item);
 		if (PyObject* item = PyDict_GetItemString(dict, "clear_button")) m_clearButton = ToBool(item);
@@ -318,6 +307,13 @@ namespace Marvel {
 		if (PyObject* item = PyDict_GetItemString(dict, "filter")) m_filter = ToBool(item);
 		if (PyObject* item = PyDict_GetItemString(dict, "autosize_x")) m_autosize_x = ToBool(item);
 		if (PyObject* item = PyDict_GetItemString(dict, "autosize_y")) m_autosize_y = ToBool(item);
+
+		if (PyObject* item = PyDict_GetItemString(dict, "log_level"))
+		{
+			m_loglevel = ToInt(item);
+			DecodelibID(m_loglevel, &m_loglevel);
+		}
+		
 
 	}
 
@@ -327,7 +323,7 @@ namespace Marvel {
 			return;
 		 
 
-		PyDict_SetItemString(dict, "log_level", ToPyInt(m_loglevel));
+		PyDict_SetItemString(dict, "log_level", ToPyInt(MV_ENCODE_CONSTANT(m_loglevel, 0)));
 		PyDict_SetItemString(dict, "auto_scroll", ToPyBool(AutoScroll));
 		PyDict_SetItemString(dict, "auto_scroll_button", ToPyBool(m_autoScrollButton));
 		PyDict_SetItemString(dict, "clear_button", ToPyBool(m_clearButton));
@@ -337,9 +333,11 @@ namespace Marvel {
 		PyDict_SetItemString(dict, "autosize_y", ToPyBool(m_autosize_y));
 	}
 
-	PyObject* add_logger(PyObject* self, PyObject* args, PyObject* kwargs)
+	PyObject* mvLoggerItem::add_logger(PyObject* self, PyObject* args, PyObject* kwargs)
 	{
-		const char* name;
+		static int i = 0; i++;
+		std::string sname = std::string(std::string("$$DPG_") + s_internal_id + std::to_string(i));
+		const char* name = sname.c_str();
 		int logLevel = 1;
 		int autoScroll = true;
 		int autoScrollButton = true;
@@ -367,10 +365,10 @@ namespace Marvel {
 
 		mvApp::GetApp()->getItemRegistry().addItemWithRuntimeChecks(item, parent, before);
 
-		return GetPyNone();
+		return ToPyString(name);
 	}
 
-	PyObject* get_log_level(PyObject* self, PyObject* args, PyObject* kwargs)
+	PyObject* mvLoggerItem::get_log_level(PyObject* self, PyObject* args, PyObject* kwargs)
 	{
 		const char* logger = "";
 
@@ -402,7 +400,7 @@ namespace Marvel {
 
 	}
 
-	PyObject* set_log_level(PyObject* self, PyObject* args, PyObject* kwargs)
+	PyObject* mvLoggerItem::set_log_level(PyObject* self, PyObject* args, PyObject* kwargs)
 	{
 		int level;
 		const char* logger = "";
@@ -436,7 +434,7 @@ namespace Marvel {
 		return GetPyNone();
 	}
 
-	PyObject* log(PyObject* self, PyObject* args, PyObject* kwargs)
+	PyObject* mvLoggerItem::log(PyObject* self, PyObject* args, PyObject* kwargs)
 	{
 		PyObject* message;
 		const char* level = "TRACE";
@@ -471,7 +469,7 @@ namespace Marvel {
 		return GetPyNone();
 	}
 
-	PyObject* log_debug(PyObject* self, PyObject* args, PyObject* kwargs)
+	PyObject* mvLoggerItem::log_debug(PyObject* self, PyObject* args, PyObject* kwargs)
 	{
 		PyObject* message;
 		const char* logger = "";
@@ -506,7 +504,7 @@ namespace Marvel {
 		return GetPyNone();
 	}
 
-	PyObject* log_info(PyObject* self, PyObject* args, PyObject* kwargs)
+	PyObject* mvLoggerItem::log_info(PyObject* self, PyObject* args, PyObject* kwargs)
 	{
 		PyObject* message;
 		const char* logger = "";
@@ -541,7 +539,7 @@ namespace Marvel {
 		return GetPyNone();
 	}
 
-	PyObject* log_warning(PyObject* self, PyObject* args, PyObject* kwargs)
+	PyObject* mvLoggerItem::log_warning(PyObject* self, PyObject* args, PyObject* kwargs)
 	{
 		PyObject* message;
 		const char* logger = "";
@@ -575,7 +573,7 @@ namespace Marvel {
 		return GetPyNone();
 	}
 
-	PyObject* log_error(PyObject* self, PyObject* args, PyObject* kwargs)
+	PyObject* mvLoggerItem::log_error(PyObject* self, PyObject* args, PyObject* kwargs)
 	{
 		PyObject* message;
 		const char* logger = "";
@@ -608,7 +606,7 @@ namespace Marvel {
 		return GetPyNone();
 	}
 
-	PyObject* clear_log(PyObject* self, PyObject* args, PyObject* kwargs)
+	PyObject* mvLoggerItem::clear_log(PyObject* self, PyObject* args, PyObject* kwargs)
 	{
 		const char* logger = "";
 
@@ -640,14 +638,14 @@ namespace Marvel {
 		return GetPyNone();
 	}
 
-	PyObject* show_logger(PyObject* self, PyObject* args)
+	PyObject* mvLoggerItem::show_logger(PyObject* self, PyObject* args)
 	{
 		std::lock_guard<std::mutex> lk(mvApp::GetApp()->getMutex());
 		mvAppLog::Show();
 		return GetPyNone();
 	}
 
-	PyObject* set_logger_window_title(PyObject* self, PyObject* args, PyObject* kwargs)
+	PyObject* mvLoggerItem::set_logger_window_title(PyObject* self, PyObject* args, PyObject* kwargs)
 	{
 		const char* title;
 
@@ -660,5 +658,5 @@ namespace Marvel {
 
 		return GetPyNone();
 	}
-#endif
+
 }

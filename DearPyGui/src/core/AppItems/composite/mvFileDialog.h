@@ -5,17 +5,20 @@
 
 namespace Marvel {
 
-#ifdef MV_CPP
-#else
-	PyObject* select_directory_dialog(PyObject* self, PyObject* args, PyObject* kwargs);
-	PyObject* open_file_dialog       (PyObject* self, PyObject* args, PyObject* kwargs);
-#endif
-
 	MV_REGISTER_WIDGET(mvFileDialog);
 	class mvFileDialog : public mvBaseWindowAppitem
 	{
 
-		MV_APPITEM_TYPE(mvAppItemType::mvFileDialog, "no_command_set")
+		MV_APPITEM_TYPE(mvAppItemType::mvFileDialog, open_file_dialog)
+
+		MV_CREATE_EXTRA_COMMAND(select_directory_dialog);
+
+		MV_START_EXTRA_COMMANDS
+			MV_ADD_EXTRA_COMMAND(select_directory_dialog);
+		MV_END_EXTRA_COMMANDS
+
+		MV_START_GENERAL_CONSTANTS
+		MV_END_GENERAL_CONSTANTS
 
 		MV_START_COLOR_CONSTANTS
 		MV_END_COLOR_CONSTANTS
@@ -31,7 +34,7 @@ namespace Marvel {
 
 		mvFileDialog();
 
-		void draw       () override;
+		void draw(ImDrawList* drawlist, float x, float y) override;
 		bool prerender2 ();
 		void setCallback(mvCallable callback);
 

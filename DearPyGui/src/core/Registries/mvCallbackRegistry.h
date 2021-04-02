@@ -8,10 +8,8 @@ namespace Marvel {
 
 	static mvCallable SanitizeCallback(mvCallable callback)
 	{
-#ifndef MV_CPP
 		if (callback == Py_None)
 			return nullptr;
-#endif // !MV_CPP
 
 		return callback;
 	}
@@ -29,6 +27,42 @@ namespace Marvel {
 			PyObject* callback;   // name of function to run
 			PyObject* data;       // any data need by the function
 		};
+
+	public:
+
+		static void InsertParser(std::map<std::string, mvPythonParser>* parsers);
+
+		MV_CREATE_EXTRA_COMMAND(set_start_callback);
+		MV_CREATE_EXTRA_COMMAND(set_accelerator_callback);
+		MV_CREATE_EXTRA_COMMAND(set_exit_callback);
+		MV_CREATE_EXTRA_COMMAND(set_mouse_move_callback);
+		MV_CREATE_EXTRA_COMMAND(set_mouse_drag_callback);
+		MV_CREATE_EXTRA_COMMAND(set_mouse_click_callback);
+		MV_CREATE_EXTRA_COMMAND(set_mouse_down_callback);
+		MV_CREATE_EXTRA_COMMAND(set_mouse_double_click_callback);
+		MV_CREATE_EXTRA_COMMAND(set_key_down_callback);
+		MV_CREATE_EXTRA_COMMAND(set_key_press_callback);
+		MV_CREATE_EXTRA_COMMAND(set_key_release_callback);
+		MV_CREATE_EXTRA_COMMAND(set_mouse_release_callback);
+		MV_CREATE_EXTRA_COMMAND(set_resize_callback);
+		MV_CREATE_EXTRA_COMMAND(set_mouse_wheel_callback);
+
+		MV_START_EXTRA_COMMANDS
+			MV_ADD_EXTRA_COMMAND(set_start_callback);
+			MV_ADD_EXTRA_COMMAND(set_accelerator_callback);
+			MV_ADD_EXTRA_COMMAND(set_exit_callback);
+			MV_ADD_EXTRA_COMMAND(set_mouse_move_callback);
+			MV_ADD_EXTRA_COMMAND(set_mouse_drag_callback);
+			MV_ADD_EXTRA_COMMAND(set_mouse_click_callback);
+			MV_ADD_EXTRA_COMMAND(set_mouse_down_callback);
+			MV_ADD_EXTRA_COMMAND(set_mouse_double_click_callback);
+			MV_ADD_EXTRA_COMMAND(set_key_down_callback);
+			MV_ADD_EXTRA_COMMAND(set_key_press_callback);
+			MV_ADD_EXTRA_COMMAND(set_key_release_callback);
+			MV_ADD_EXTRA_COMMAND(set_mouse_release_callback);
+			MV_ADD_EXTRA_COMMAND(set_resize_callback);
+			MV_ADD_EXTRA_COMMAND(set_mouse_wheel_callback);
+		MV_END_EXTRA_COMMANDS
 
 	public:
 
@@ -128,23 +162,6 @@ namespace Marvel {
 		std::atomic<int> m_callCount = 0;
 
 		// input callbacks
-#ifdef MV_CPP
-		mvCallable m_mouseDownCallback = []() {};
-		mvCallable m_mouseClickCallback = []() {};
-		mvCallable m_mouseReleaseCallback = []() {};
-		mvCallable m_mouseDoubleClickCallback = []() {};
-		mvCallable m_mouseWheelCallback = []() {};
-		mvCallable m_mouseDragCallback = []() {};
-		mvCallable m_keyDownCallback = []() {};
-		mvCallable m_keyPressCallback = []() {};
-		mvCallable m_keyReleaseCallback = []() {};
-		mvCallable m_resizeCallback = []() {};
-		mvCallable m_mouseMoveCallback = []() {};
-		mvCallable m_onCloseCallback = []() {};
-		mvCallable m_onStartCallback = []() {};
-		mvCallable m_acceleratorCallback = []() {}; // basically the same as the key press callback
-
-#else
 		mvCallable m_mouseDownCallback = nullptr;
 		mvCallable m_mouseClickCallback = nullptr;
 		mvCallable m_mouseReleaseCallback = nullptr;
@@ -159,9 +176,6 @@ namespace Marvel {
 		mvCallable m_onCloseCallback = nullptr;
 		mvCallable m_onStartCallback = nullptr;
 		mvCallable m_acceleratorCallback = nullptr; // basically the same as the key press callback
-
-#endif // !MV_CPP
-
 
 	};
 

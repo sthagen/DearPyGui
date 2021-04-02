@@ -12,9 +12,18 @@ namespace Marvel {
 
 	public:
 
-		static void decodeType(long encoded_constant, mvAppItemType* type);
-		static void decodelibID(long encoded_constant, int* libID);
-		static int decodeIndex(long encoded_constant);
+		static void InsertParser(std::map<std::string, mvPythonParser>* parsers);
+
+		MV_CREATE_EXTRA_COMMAND(set_theme_color);
+		MV_CREATE_EXTRA_COMMAND(set_theme_color_disabled);
+		MV_CREATE_EXTRA_COMMAND(set_theme_style);
+
+		MV_START_EXTRA_COMMANDS
+			MV_ADD_EXTRA_COMMAND(set_theme_color);
+			MV_ADD_EXTRA_COMMAND(set_theme_color_disabled);
+			MV_ADD_EXTRA_COMMAND(set_theme_style);
+		MV_END_EXTRA_COMMANDS
+
 		static void InValidateColorTheme();
 		static void InValidateStyleTheme();
 
@@ -110,8 +119,8 @@ namespace Marvel {
 			for (const auto& style : item->getStyles()[item->getType()])
 			{
 				styles_found[style.first] = true;
-				mvThemeManager::decodelibID(style.first, &styleID);
-				if (mvThemeManager::decodeIndex(style.first) > 0)
+				DecodelibID(style.first, &styleID);
+				if (DecodeIndex(style.first) > 0)
 					styles2[styleID] = style.second;
 				else
 					styles1[styleID] = style.second;
@@ -132,8 +141,8 @@ namespace Marvel {
 					if (!styles_found[style.first])
 					{
 						styles_found[style.first] = true;
-						mvThemeManager::decodelibID(style.first, &styleID);
-						if (mvThemeManager::decodeIndex(style.first) > 0)
+						DecodelibID(style.first, &styleID);
+						if (DecodeIndex(style.first) > 0)
 							styles2[styleID] = style.second;
 						else
 							styles1[styleID] = style.second;
@@ -148,8 +157,8 @@ namespace Marvel {
 			if (!styles_found[style.first])
 			{
 				styles_found[style.first] = true;
-				mvThemeManager::decodelibID(style.first, &styleID);
-				if (mvThemeManager::decodeIndex(style.first) > 0)
+				DecodelibID(style.first, &styleID);
+				if (DecodeIndex(style.first) > 0)
 					styles2[styleID] = style.second;
 				else
 					styles1[styleID] = style.second;

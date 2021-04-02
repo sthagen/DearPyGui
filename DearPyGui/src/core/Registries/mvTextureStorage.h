@@ -19,16 +19,10 @@
 #include <unordered_map>
 #include "mvEvents.h"
 #include "mvPythonParser.h"
+#include "cpp.hint"
+#include "mvApp.h"
 
 namespace Marvel {
-
-#ifdef MV_CPP
-#else
-	void AddTextureStorageCommands(std::map<std::string, mvPythonParser>* parsers);
-
-	PyObject* add_texture      (PyObject* self, PyObject* args, PyObject* kwargs);
-	PyObject* decrement_texture(PyObject* self, PyObject* args, PyObject* kwargs);
-#endif
 
 	//-----------------------------------------------------------------------------
 	// mvTexture
@@ -72,6 +66,16 @@ namespace Marvel {
 
 		static void InsertConstants(std::vector<std::pair<std::string, long>>& constants);
 
+		static void InsertParser(std::map<std::string, mvPythonParser>* parsers);
+
+		MV_CREATE_EXTRA_COMMAND(add_texture);
+		MV_CREATE_EXTRA_COMMAND(decrement_texture);
+
+		MV_START_EXTRA_COMMANDS
+			MV_ADD_EXTRA_COMMAND(add_texture);
+			MV_ADD_EXTRA_COMMAND(decrement_texture);
+		MV_END_EXTRA_COMMANDS
+
 	public:
 
 		mvTextureStorage();
@@ -93,11 +97,15 @@ namespace Marvel {
 
 		// new debugger window
 		void show_debugger();
+		void refreshAtlas();
+		void scheduleRefresh() { m_dirty = true; }
+		bool isValid() const { return !m_dirty; }
 
 	private:
 		
 		std::unordered_map<std::string, mvTexture> m_textures;
 		std::vector<CompileTimeTexture>            m_delayedTextures;
+		bool                                       m_dirty = false;
 
 	};
 

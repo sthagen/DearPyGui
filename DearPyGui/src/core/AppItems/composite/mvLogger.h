@@ -6,35 +6,6 @@
 
 namespace Marvel {
 
-	struct mvLoggerItemConfig : public mvAppItemConfig
-	{
-		int log_level = 1;
-		bool auto_scroll = true;
-		bool auto_scroll_button = true;
-		bool clear_button = true;
-		bool copy_button = true;
-		bool filter = true;
-		bool autosize_x = false;
-		bool autosize_y = false;
-	};
-
-	
-
-#ifdef MV_CPP
-#else
-	PyObject* add_logger             (PyObject* self, PyObject* args, PyObject* kwargs);
-	PyObject* get_log_level          (PyObject* self, PyObject* args, PyObject* kwargs);
-	PyObject* set_log_level          (PyObject* self, PyObject* args, PyObject* kwargs);
-	PyObject* log                    (PyObject* self, PyObject* args, PyObject* kwargs);
-	PyObject* log_debug              (PyObject* self, PyObject* args, PyObject* kwargs);
-	PyObject* log_info               (PyObject* self, PyObject* args, PyObject* kwargs);
-	PyObject* log_warning            (PyObject* self, PyObject* args, PyObject* kwargs);
-	PyObject* log_error              (PyObject* self, PyObject* args, PyObject* kwargs);
-	PyObject* clear_log              (PyObject* self, PyObject* args, PyObject* kwargs);
-	PyObject* show_logger            (PyObject* self, PyObject* args);
-	PyObject* set_logger_window_title(PyObject* self, PyObject* args, PyObject* kwargs);
-#endif
-
 	MV_REGISTER_WIDGET(mvLoggerItem);
 	class mvLoggerItem : public mvAppItem
 	{
@@ -42,12 +13,50 @@ namespace Marvel {
 	public:
 
 		static void InsertParser(std::map<std::string, mvPythonParser>* parsers);
-		static void InsertConstants(std::vector<std::pair<std::string, long>>& constants);
 
 	public:
 
+		MV_APPITEM_TYPE(mvAppItemType::mvLoggerItem, add_logger)
 
-		MV_APPITEM_TYPE(mvAppItemType::mvLoggerItem, "add_logger")
+		MV_CREATE_CONSTANT(mvTRACE,   0L, 0L);
+		MV_CREATE_CONSTANT(mvDEBUG,   1L, 0L);
+		MV_CREATE_CONSTANT(mvINFO,    2L, 0L);
+		MV_CREATE_CONSTANT(mvWARNING, 3L, 0L);
+		MV_CREATE_CONSTANT(mvERROR,   4L, 0L);
+		MV_CREATE_CONSTANT(mvOFF,     5L, 0L);
+
+		MV_CREATE_EXTRA_COMMAND(get_log_level);
+		MV_CREATE_EXTRA_COMMAND(set_log_level);
+		MV_CREATE_EXTRA_COMMAND(log);
+		MV_CREATE_EXTRA_COMMAND(log_debug);
+		MV_CREATE_EXTRA_COMMAND(log_info);
+		MV_CREATE_EXTRA_COMMAND(log_warning);
+		MV_CREATE_EXTRA_COMMAND(log_error);
+		MV_CREATE_EXTRA_COMMAND(clear_log);
+		static PyObject* show_logger(PyObject* self, PyObject* args);
+		MV_CREATE_EXTRA_COMMAND(set_logger_window_title);
+
+		MV_START_EXTRA_COMMANDS
+			MV_ADD_EXTRA_COMMAND(get_log_level);
+			MV_ADD_EXTRA_COMMAND(set_log_level);
+			MV_ADD_EXTRA_COMMAND(log);
+			MV_ADD_EXTRA_COMMAND(log_debug);
+			MV_ADD_EXTRA_COMMAND(log_info);
+			MV_ADD_EXTRA_COMMAND(log_warning);
+			MV_ADD_EXTRA_COMMAND(log_error);
+			MV_ADD_EXTRA_COMMAND(clear_log);
+			MV_ADD_EXTRA_COMMAND(show_logger);
+			MV_ADD_EXTRA_COMMAND(set_logger_window_title);
+		MV_END_EXTRA_COMMANDS
+
+		MV_START_GENERAL_CONSTANTS
+			MV_ADD_GENERAL_CONSTANT(mvTRACE),
+			MV_ADD_GENERAL_CONSTANT(mvDEBUG),
+            MV_ADD_GENERAL_CONSTANT(mvINFO),
+            MV_ADD_GENERAL_CONSTANT(mvWARNING),
+            MV_ADD_GENERAL_CONSTANT(mvERROR),
+           MV_ADD_GENERAL_CONSTANT(mvOFF),
+		MV_END_GENERAL_CONSTANTS
 
 		MV_START_COLOR_CONSTANTS
 		MV_END_COLOR_CONSTANTS
@@ -62,11 +71,10 @@ namespace Marvel {
 			m_clearButtonName = "Clear##" + name;
 			m_copyButtonName = "Copy##" + name;
 			ClearLog();
-			LogInfo("[Logger] " + m_core_config.name);
-			m_description.ignoreSizeUpdate = true;
+			LogInfo("[Logger] " + m_name);
 		}
 
-		void draw() override;
+		void draw(ImDrawList* drawlist, float x, float y) override;
 
 		inline void setLogLevel(int level) { m_loglevel = level; }
 		inline int  getLogLevel() const { return m_loglevel; }
@@ -79,10 +87,8 @@ namespace Marvel {
 		void LogError(const std::string& text);
 		void ClearLog();
 
-#ifndef MV_CPP
 		void setExtraConfigDict(PyObject* dict) override;
 		void getExtraConfigDict(PyObject* dict) override;
-#endif
 
 
 	private:

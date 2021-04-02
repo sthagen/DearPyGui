@@ -5,12 +5,14 @@
 #include <misc/cpp/imgui_stdlib.h>
 #include "mvItemRegistry.h"
 #include "mvImGuiThemeScope.h"
+#include "mvFontScope.h"
 
 namespace Marvel {
 
 	void mvDatePicker::InsertParser(std::map<std::string, mvPythonParser>* parsers)
 	{
-		parsers->insert({ "add_date_picker", mvPythonParser({
+		parsers->insert({ s_command, mvPythonParser({
+			{mvPythonDataType::Optional},
 			{mvPythonDataType::String, "name"},
 			{mvPythonDataType::KeywordOnly},
 			{mvPythonDataType::Dict, "default_value", "data dict", "{'month_day': 14, 'year':20, 'month':5}"},
@@ -28,20 +30,19 @@ namespace Marvel {
 	{
 	}
 
-	void mvDatePicker::draw()
+	void mvDatePicker::draw(ImDrawList* drawlist, float x, float y)
 	{
 		ScopedID id;
 		mvImGuiThemeScope scope(this);
+		mvFontScope fscope(this);
 
-		if (ImPlot::ShowDatePicker(m_core_config.name.c_str(), &m_level, m_imvalue.get(), m_imvalue.get()))
+		if (ImPlot::ShowDatePicker(m_name.c_str(), &m_level, m_imvalue.get(), m_imvalue.get()))
 		{
 			ImPlot::GetGmtTime(*m_imvalue, m_value.get());
-			mvApp::GetApp()->getCallbackRegistry().addCallback(m_core_config.callback, m_core_config.name, m_core_config.callback_data);
+			mvApp::GetApp()->getCallbackRegistry().addCallback(m_callback, m_name, m_callback_data);
 		}
 
 	}
-
-#ifndef MV_CPP
 
 	void mvDatePicker::setExtraConfigDict(PyObject* dict)
 	{
@@ -59,9 +60,11 @@ namespace Marvel {
 		PyDict_SetItemString(dict, "level", ToPyInt(m_level));
 	}
 
-	PyObject* add_date_picker(PyObject* self, PyObject* args, PyObject* kwargs)
+	PyObject* mvDatePicker::add_date_picker(PyObject* self, PyObject* args, PyObject* kwargs)
 	{
-		const char* name;
+		static int i = 0; i++;
+		std::string sname = std::string(std::string("$$DPG_") + s_internal_id + std::to_string(i));
+		const char* name = sname.c_str();
 		PyObject* default_value = nullptr;
 		int level = 0;
 		PyObject* callback = nullptr;
@@ -88,8 +91,7 @@ namespace Marvel {
 
 		mvApp::GetApp()->getItemRegistry().addItemWithRuntimeChecks(item, parent, before);
 
-		return GetPyNone();
+		return ToPyString(name);
 	}
 
-#endif // !MV_CPP
 }

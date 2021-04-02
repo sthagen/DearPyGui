@@ -3,14 +3,16 @@
 #include <array>
 #include "mvItemRegistry.h"
 #include "mvImGuiThemeScope.h"
+#include "mvFontScope.h"
 
 namespace Marvel {
 
 	void mvColorButton::InsertParser(std::map<std::string, mvPythonParser>* parsers)
 	{
-		parsers->insert({ "add_color_button", mvPythonParser({
-			{mvPythonDataType::String, "name"},
+		parsers->insert({ s_command, mvPythonParser({
 			{mvPythonDataType::FloatList, "color"},
+			{mvPythonDataType::Optional},
+			{mvPythonDataType::String, "name"},		
 			{mvPythonDataType::KeywordOnly},
 			{mvPythonDataType::Callable, "callback", "Registers a callback", "None"},
 			{mvPythonDataType::Object, "callback_data", "Callback data", "None"},
@@ -32,70 +34,19 @@ namespace Marvel {
 		m_color(color.toVec4())
 	{
 		m_description.disableAllowed = true;
-		m_config.color = color;
 	}
 
-	mvColorButton::mvColorButton(const std::string& name, const mvColorButtonConfig& config)
-		: 
-		mvAppItem(name),
-		m_color(config.color.toVec4()),
-		m_config(config)
-	{
-		m_description.disableAllowed = true;
-		m_config.name = name;
-		updateConfig(&m_config);
-	}
-
-	void mvColorButton::draw()
+	void mvColorButton::draw(ImDrawList* drawlist, float x, float y)
 	{
 		ScopedID id;
 		mvImGuiThemeScope scope(this);
+		mvFontScope fscope(this);
 
-		if (ImGui::ColorButton(m_label.c_str(), m_color, m_flags, ImVec2((float)m_core_config.width, (float)m_core_config.height)))
-			mvApp::GetApp()->getCallbackRegistry().addCallback(getCallback(false), m_core_config.name, m_core_config.callback_data);
+		if (ImGui::ColorButton(m_label.c_str(), m_color, m_flags, ImVec2((float)m_width, (float)m_height)))
+			mvApp::GetApp()->getCallbackRegistry().addCallback(getCallback(false), m_name, m_callback_data);
 
 	}
 
-	void mvColorButton::updateConfig(mvAppItemConfig* config)
-	{
-		auto aconfig = (mvColorButtonConfig*)config;
-
-		m_core_config.width = config->width;
-		m_core_config.height = config->height;
-		m_core_config.label = config->label;
-		m_core_config.show = config->show;
-		m_core_config.callback = config->callback;
-		m_core_config.callback_data = config->callback_data;
-		m_core_config.enabled = config->enabled;
-
-		m_config.source = aconfig->source;
-
-		if (config != &m_config)
-			m_config = *aconfig;
-	}
-
-	mvAppItemConfig* mvColorButton::getConfig()
-	{
-		return &m_config;
-	}
-
-#ifdef MV_CPP
-
-	void add_color_button(const char* name, const mvColorButtonConfig& config)
-	{
-		auto item = CreateRef<mvColorButton>(name, config);
-		mvApp::GetApp()->getItemRegistry().addItemWithRuntimeChecks(item, config.parent.c_str(), config.before.c_str());
-	}
-
-	void add_color_button(const char* name, mvColor color, mvCallable callable)
-	{
-		mvColorButtonConfig config;
-		config.color = color;
-		config.callback = callable;
-		add_color_button(name, config);
-	}
-
-#else
 	void mvColorButton::setExtraConfigDict(PyObject* dict)
 	{
 		if (dict == nullptr)
@@ -131,9 +82,11 @@ namespace Marvel {
 		checkbitset("no_drag_drop", ImGuiColorEditFlags_NoDragDrop, m_flags);
 	}
 
-	PyObject* add_color_button(PyObject* self, PyObject* args, PyObject* kwargs)
+	PyObject* mvColorButton::add_color_button(PyObject* self, PyObject* args, PyObject* kwargs)
 	{
-		const char* name;
+		static int i = 0; i++;
+		std::string sname = std::string(std::string("$$DPG_") + s_internal_id + std::to_string(i));
+		const char* name = sname.c_str();
 		PyObject* color;
 		PyObject* callback = nullptr;
 		PyObject* callback_data = nullptr;
@@ -148,7 +101,7 @@ namespace Marvel {
 		int enabled = true;
 
 		if (!(mvApp::GetApp()->getParsers())["add_color_button"].parse(args, kwargs, __FUNCTION__,
-			&name, &color, &callback, &callback_data, &parent, &before, &width, &height,
+			&color, &name, &callback, &callback_data, &parent, &before, &width, &height,
 			&show, &no_alpha, &no_border, &no_drag_drop, &enabled))
 			return ToPyBool(false);
 
@@ -166,8 +119,6 @@ namespace Marvel {
 
 		mvApp::GetApp()->getItemRegistry().addItemWithRuntimeChecks(item, parent, before);
 
-		return GetPyNone();
+		return ToPyString(name);
 	}
-
-#endif // !MV_CPP
 }

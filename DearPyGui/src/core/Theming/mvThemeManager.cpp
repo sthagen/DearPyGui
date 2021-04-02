@@ -11,6 +11,32 @@ namespace Marvel {
 	std::unordered_map<mvAppItemType, mvThemeColors>					mvThemeManager::s_colors;
 	std::unordered_map<mvAppItemType, mvThemeStyles>					mvThemeManager::s_styles;
 
+	void mvThemeManager::InsertParser(std::map<std::string, mvPythonParser>* parsers)
+	{
+
+		parsers->insert({ "set_theme_color", mvPythonParser({
+			{mvPythonDataType::Integer, "constant", "mvThemeCol_* constants"},
+			{mvPythonDataType::FloatList, "color"},
+			{mvPythonDataType::Optional},
+			{mvPythonDataType::String, "item", "", "''"}
+		}, "Sets a color of a theme item for when the item is enabled.", "None", "Themes and Styles") });
+
+		parsers->insert({ "set_theme_color_disabled", mvPythonParser({
+			{mvPythonDataType::Integer, "constant", "mvThemeCol_* constants"},
+			{mvPythonDataType::FloatList, "color"},
+			{mvPythonDataType::Optional},
+			{mvPythonDataType::String, "item", "", "''"}
+		}, "Sets a color of a theme item for when the item is disabled.", "None", "Themes and Styles") });
+
+		parsers->insert({ "set_theme_style", mvPythonParser({
+			{mvPythonDataType::Integer, "constant", "mvThemeStyle_* constants"},
+			{mvPythonDataType::Float, "style"},
+			{mvPythonDataType::Optional},
+			{mvPythonDataType::String, "item", "", "''"}
+		}, "Sets a style of a theme item.", "None", "Themes and Styles") });
+
+	}
+
 	void mvThemeManager::InValidateColorTheme()
 	{
 		auto& frontWindows = mvApp::GetApp()->getItemRegistry().getFrontWindows();
@@ -33,19 +59,6 @@ namespace Marvel {
 
 		for (auto& window : backWindows)
 			window->inValidateThemeStyleCache();
-	}
-
-	void mvThemeManager::decodeType(long encoded_constant, mvAppItemType* type)
-	{
-		*type = (mvAppItemType)(encoded_constant / 1000);
-	}
-	void mvThemeManager::decodelibID(long encoded_constant, int* libID)
-	{
-		*libID = (int)((encoded_constant / 10) % 100);
-	}
-	int mvThemeManager::decodeIndex(long encoded_constant)
-	{
-		return (int)(encoded_constant % 10);
 	}
 
 	mvThemeManager::mvThemeManager()
@@ -71,7 +84,7 @@ namespace Marvel {
 	{
 		static mvAppItemType type;
 		long mvThemeConstant = GetELong(event, "ID");
-		decodeType(mvThemeConstant, &type);
+		DecodeType(mvThemeConstant, &type);
 		mvColor color = GetEColor(event, "COLOR");
 		const std::string& widget = GetEString(event, "WIDGET");
 		bool enabled = GetEBool(event, "ENABLED");
@@ -118,7 +131,7 @@ namespace Marvel {
 	{
 		static mvAppItemType type;
 		long mvThemeConstant = GetELong(event, "ID");
-		decodeType(mvThemeConstant, &type);
+		DecodeType(mvThemeConstant, &type);
 		float style = GetEFloat(event, "STYLE");
 		const std::string& widget = GetEString(event, "WIDGET");
 
@@ -157,4 +170,96 @@ namespace Marvel {
 		return true;
 	}
 
+	PyObject* mvThemeManager::set_theme_color(PyObject* self, PyObject* args, PyObject* kwargs)
+	{
+		long constant;
+		PyObject* color;
+		const char* item = "";
+
+		if (!(mvApp::GetApp()->getParsers())["set_theme_color"].parse(args, kwargs, __FUNCTION__, &constant, &color, &item))
+			return GetPyNone();
+
+		Py_XINCREF(color);
+		std::lock_guard<std::mutex> lk(mvApp::GetApp()->getMutex());
+
+		mvEventBus::Publish
+		(
+			mvEVT_CATEGORY_THEMES,
+			SID("color_change"),
+			{
+				CreateEventArgument("WIDGET", std::string(item)),
+				CreateEventArgument("ID", constant),
+				CreateEventArgument("COLOR", ToColor(color)),
+				CreateEventArgument("ENABLED", true)
+			}
+		);
+
+		Py_XDECREF(color);
+
+
+		return GetPyNone();
+	}
+
+	PyObject* mvThemeManager::set_theme_color_disabled(PyObject* self, PyObject* args, PyObject* kwargs)
+	{
+		long constant;
+		PyObject* color;
+		const char* item = "";
+
+		if (!(mvApp::GetApp()->getParsers())["set_theme_color_disabled"].parse(args, kwargs, __FUNCTION__, &constant, &color, &item))
+			return GetPyNone();
+
+		Py_XINCREF(color);
+		std::lock_guard<std::mutex> lk(mvApp::GetApp()->getMutex());
+		mvApp::GetApp()->getCallbackRegistry().submit([=]()
+			{
+				mvEventBus::Publish
+				(
+					mvEVT_CATEGORY_THEMES,
+					SID("color_change"),
+					{
+						CreateEventArgument("WIDGET", std::string(item)),
+						CreateEventArgument("ID", constant),
+						CreateEventArgument("COLOR", ToColor(color)),
+						CreateEventArgument("ENABLED", false)
+					}
+				);
+
+				// to ensure the decrement happens on the python thread
+				mvApp::GetApp()->getCallbackRegistry().submitCallback([=]()
+					{
+						Py_XDECREF(color);
+					});
+
+			});
+
+		return GetPyNone();
+	}
+
+	PyObject* mvThemeManager::set_theme_style(PyObject* self, PyObject* args, PyObject* kwargs)
+	{
+		long constant;
+		float style;
+		const char* item = "";
+
+		if (!(mvApp::GetApp()->getParsers())["set_theme_style"].parse(args, kwargs, __FUNCTION__, &constant, &style, &item))
+			return GetPyNone();
+
+		std::lock_guard<std::mutex> lk(mvApp::GetApp()->getMutex());
+		mvApp::GetApp()->getCallbackRegistry().submit([=]()
+			{
+				mvEventBus::Publish
+				(
+					mvEVT_CATEGORY_THEMES,
+					SID("style_change"),
+					{
+						CreateEventArgument("WIDGET", std::string(item)),
+						CreateEventArgument("ID", constant),
+						CreateEventArgument("STYLE", style)
+					}
+				);
+			});
+
+		return GetPyNone();
+	}
 }

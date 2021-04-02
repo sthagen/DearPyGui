@@ -3,12 +3,14 @@
 #include "mvApp.h"
 #include "mvItemRegistry.h"
 #include "mvImGuiThemeScope.h"
+#include "mvFontScope.h"
 
 namespace Marvel {
 
 	void mvCheckbox::InsertParser(std::map<std::string, mvPythonParser>* parsers)
 	{
-		parsers->insert({ "add_checkbox", mvPythonParser({
+		parsers->insert({ s_command, mvPythonParser({
+			{mvPythonDataType::Optional},
 			{mvPythonDataType::String, "name"},
 			{mvPythonDataType::KeywordOnly},
 			{mvPythonDataType::Integer, "default_value", "", "False"},
@@ -30,66 +32,24 @@ namespace Marvel {
 		m_description.disableAllowed = true;
 	}
 
-	mvCheckbox::mvCheckbox(const std::string& name, const mvCheckboxConfig& config)
-		: 
-		mvBoolPtrBase(name, config.default_value), 
-		m_config(config)
-	{
-		m_description.disableAllowed = true;
-
-		m_config.name = name;
-		updateConfig(&m_config);
-	}
-
-	void mvCheckbox::draw()
+	void mvCheckbox::draw(ImDrawList* drawlist, float x, float y)
 	{
 		ScopedID id;
 		mvImGuiThemeScope scope(this);
+		mvFontScope fscope(this);
 
-		if (!m_core_config.enabled) m_disabled_value = *m_value;
+		if (!m_enabled) m_disabled_value = *m_value;
 
-		if (ImGui::Checkbox(m_label.c_str(), m_core_config.enabled ? m_value.get() : &m_disabled_value))
-			mvApp::GetApp()->getCallbackRegistry().addCallback(getCallback(false), m_core_config.name, m_core_config.callback_data);
+		if (ImGui::Checkbox(m_label.c_str(), m_enabled ? m_value.get() : &m_disabled_value))
+			mvApp::GetApp()->getCallbackRegistry().addCallback(getCallback(false), m_name, m_callback_data);
 
 	}
 
-	void mvCheckbox::updateConfig(mvAppItemConfig* config)
+	PyObject* mvCheckbox::add_checkbox(PyObject* self, PyObject* args, PyObject* kwargs)
 	{
-		auto aconfig = (mvCheckboxConfig*)config;
-
-		m_core_config.width = config->width;
-		m_core_config.height = config->height;
-		m_core_config.label = config->label;
-		m_core_config.show = config->show;
-		m_core_config.callback = config->callback;
-		m_core_config.callback_data = config->callback_data;
-		m_core_config.enabled = config->enabled;
-
-		m_config.source = aconfig->source;
-
-		if (config != &m_config)
-			m_config = *aconfig;
-	}
-
-	mvAppItemConfig* mvCheckbox::getConfig()
-	{
-		return &m_config;
-	}
-
-#ifdef MV_CPP
-
-	void add_checkbox(const char* name, const mvCheckboxConfig& config)
-	{
-		auto item = CreateRef<mvCheckbox>(name, config);
-
-		mvApp::GetApp()->getItemRegistry().addItemWithRuntimeChecks(item, config.parent.c_str(), config.before.c_str());
-	}
-
-#else
-
-	PyObject* add_checkbox(PyObject* self, PyObject* args, PyObject* kwargs)
-	{
-		const char* name;
+		static int i = 0; i++;
+		std::string sname = std::string(std::string("$$DPG_") + s_internal_id + std::to_string(i));
+		const char* name = sname.c_str();
 		int default_value = 0;
 		PyObject* callback = nullptr;
 		PyObject* callback_data = nullptr;
@@ -119,7 +79,6 @@ namespace Marvel {
 
 		mvApp::GetApp()->getItemRegistry().addItemWithRuntimeChecks(item, parent, before);
 
-		return GetPyNone();
+		return ToPyString(name);
 	}
-#endif
 }

@@ -4,7 +4,7 @@ project ("DearPyGui")
 
 # various settings
 set(GLFW_BUILD_DOCS OFF)
-add_definitions(-D_USE_MATH_DEFINES)
+add_definitions(-D_USE_MATH_DEFINES -DIMGUI_USER_CONFIG="mvImGuiConfig.h")
 
 # can be set to 36, 37, 38, 39, or 0
 #   * 36 = Python 3.6
@@ -17,14 +17,6 @@ if(MVDPG_VERSION)
     add_definitions(-DMV_SANDBOX_VERSION="${MVDPG_VERSION}")
 else()
     add_definitions(-DMV_SANDBOX_VERSION="master")
-endif()
-
-# when set to "ON", the C++ version will be
-# build instead of the Python version
-set(MV_CPP ${MV_CPP})
-if(MV_CPP)
-    add_definitions(-DMV_CPP)
-    add_subdirectory ("DearSandboxCpp")
 endif()
 
 # when set to "ON", the embedded version
@@ -46,7 +38,7 @@ set(MVDPG_VERSION ${MVDPG_VERSION})
 
 # if this is not a distribution build
 # build development environment
-if(NOT MVDIST_ONLY AND NOT MV_CPP)
+if(NOT MVDIST_ONLY)
     add_subdirectory("Dependencies/spdlog")
     add_subdirectory ("DearSandbox")
 endif()
@@ -57,4 +49,5 @@ else() # Apple and Linux
 	add_subdirectory ("Dependencies/glfw")
 endif()
 
+add_subdirectory("Dependencies/freetype")
 add_subdirectory ("DearPyGui")

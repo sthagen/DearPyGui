@@ -3,12 +3,14 @@
 #include "mvApp.h"
 #include "mvItemRegistry.h"
 #include "mvImGuiThemeScope.h"
+#include "mvFontScope.h"
 
 namespace Marvel {
 
 	void mvChild::InsertParser(std::map<std::string, mvPythonParser>* parsers)
 	{
-		parsers->insert({ "add_child", mvPythonParser({
+		parsers->insert({ s_command, mvPythonParser({
+			{mvPythonDataType::Optional},
 			{mvPythonDataType::String, "name"},
 			{mvPythonDataType::KeywordOnly},
 			{mvPythonDataType::Bool, "show", "Attempt to render", "True"},
@@ -42,27 +44,28 @@ namespace Marvel {
 		m_windowflags &= ~flag;
 	}
 
-	void mvChild::draw()
+	void mvChild::draw(ImDrawList* drawlist, float x, float y)
 	{
 		ScopedID id;
 		mvImGuiThemeScope scope(this);
+		mvFontScope fscope(this);
 
-		ImGui::BeginChild(m_label.c_str(), ImVec2(m_autosize_x ? 0 : (float)m_core_config.width, m_autosize_y ? 0 : (float)m_core_config.height), m_border, m_windowflags);
+		ImGui::BeginChild(m_label.c_str(), ImVec2(m_autosize_x ? 0 : (float)m_width, m_autosize_y ? 0 : (float)m_height), m_border, m_windowflags);
 
 		//we do this so that the children dont get the theme
 		scope.cleanup();
 
-		for (auto item : m_children)
+		for (auto item : m_children1)
 		{
 			// skip item if it's not shown
-			if (!item->m_core_config.show)
+			if (!item->m_show)
 				continue;
 
 			// set item width
-			if (item->m_core_config.width != 0)
-				ImGui::SetNextItemWidth((float)item->m_core_config.width);
+			if (item->m_width != 0)
+				ImGui::SetNextItemWidth((float)item->m_width);
 
-			item->draw();
+			item->draw(drawlist, ImGui::GetCursorPosX(), ImGui::GetCursorPosY());
 
 			item->getState().update();
 		}
@@ -70,13 +73,11 @@ namespace Marvel {
 		// allows this item to have a render callback
 		registerWindowFocusing();
 
-		m_core_config.width = (int)ImGui::GetWindowWidth();
-		m_core_config.height = (int)ImGui::GetWindowHeight();
+		m_width = (int)ImGui::GetWindowWidth();
+		m_height = (int)ImGui::GetWindowHeight();
 
 		ImGui::EndChild();
 	}
-
-#ifndef MV_CPP
 
 	void mvChild::setExtraConfigDict(PyObject* dict)
 	{
@@ -120,9 +121,11 @@ namespace Marvel {
 		checkbitset("menubar", ImGuiWindowFlags_MenuBar, m_windowflags);
 	}
 
-	PyObject* add_child(PyObject* self, PyObject* args, PyObject* kwargs)
+	PyObject* mvChild::add_child(PyObject* self, PyObject* args, PyObject* kwargs)
 	{
-		const char* name;
+		static int i = 0; i++;
+		std::string sname = std::string(std::string("$$DPG_") + s_internal_id + std::to_string(i));
+		const char* name = sname.c_str();
 		int show = true;
 		const char* parent = "";
 		const char* before = "";
@@ -153,9 +156,8 @@ namespace Marvel {
 
 		}
 
-		return GetPyNone();
+		return ToPyString(name);
 
 	}
 
-#endif // !MV_CPP
 }

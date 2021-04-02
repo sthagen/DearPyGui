@@ -16,11 +16,6 @@ set(MARVEL_PY_SOURCES
 
 )
 
-set(MARVEL_CPP_SOURCES
-
-	"src/core/CppUtilities/mvCppTranslator.cpp"
-)
-
 set(MARVEL_SOURCES
 
 	"$<$<PLATFORM_ID:Windows>:src/platform/Windows/mvWindowsWindow.cpp>"
@@ -41,22 +36,10 @@ set(MARVEL_SOURCES
 	"src/core/mvLog.cpp"
 
 	"src/core/Theming/mvThemeManager.cpp"
-
-	"src/core/DrawCommands/mvDrawList.cpp"
-	"src/core/DrawCommands/mvDrawImageCmd.cpp"
-	"src/core/DrawCommands/mvDrawLineCmd.cpp"
-	"src/core/DrawCommands/mvDrawArrowCmd.cpp"
-	"src/core/DrawCommands/mvDrawTriangleCmd.cpp"
-	"src/core/DrawCommands/mvDrawCircleCmd.cpp"
-	"src/core/DrawCommands/mvDrawTextCmd.cpp"
-	"src/core/DrawCommands/mvDrawRectCmd.cpp"
-	"src/core/DrawCommands/mvDrawQuadCmd.cpp"
-	"src/core/DrawCommands/mvDrawPolylineCmd.cpp"
-	"src/core/DrawCommands/mvDrawPolygonCmd.cpp"
-	"src/core/DrawCommands/mvDrawBezierCurveCmd.cpp"
+	"src/core/Theming/mvFontScope.cpp"
+	"src/core/Theming/mvFontManager.cpp"
 
 	"src/core/Registries/mvCallbackRegistry.cpp"
-	
 	"src/core/Registries/mvTextureStorage.cpp"
 
 	"src/core/AppItems/mvAppItemState.cpp"
@@ -101,14 +84,29 @@ set(MARVEL_SOURCES
 	"src/core/AppItems/containers/mvMenu.cpp"
 	"src/core/AppItems/containers/mvMenuBar.cpp"
 	"src/core/AppItems/containers/mvTreeNode.cpp"
-	"src/core/AppItems/containers/mvTable.cpp"
 	"src/core/AppItems/containers/mvWindowAppItem.cpp"
 	"src/core/AppItems/containers/mvPopup.cpp"
 
+	"src/core/AppItems/tables/mvTable.cpp"
+	"src/core/AppItems/tables/mvTableColumn.cpp"
+	"src/core/AppItems/tables/mvTableNextColumn.cpp"
+
 	"src/core/AppItems/custom/mvDatePicker.cpp"
 	"src/core/AppItems/custom/mvTimePicker.cpp"
-	"src/core/AppItems/custom/mvDrawing.cpp"
 	"src/core/AppItems/custom/mvTextEditor.cpp"
+
+	"src/core/AppItems/drawing/mvDrawing.cpp"
+	"src/core/AppItems/drawing/mvDrawLine.cpp"
+	"src/core/AppItems/drawing/mvDrawArrow.cpp"
+	"src/core/AppItems/drawing/mvDrawTriangle.cpp"
+	"src/core/AppItems/drawing/mvDrawCircle.cpp"
+	"src/core/AppItems/drawing/mvDrawBezierCurve.cpp"
+	"src/core/AppItems/drawing/mvDrawQuad.cpp"
+	"src/core/AppItems/drawing/mvDrawRect.cpp"
+	"src/core/AppItems/drawing/mvDrawText.cpp"
+	"src/core/AppItems/drawing/mvDrawPolygon.cpp"
+	"src/core/AppItems/drawing/mvDrawPolyLine.cpp"
+	"src/core/AppItems/drawing/mvDrawImage.cpp"
 	
 	"src/core/AppItems/composite/mvFileDialog.cpp"
 	"src/core/AppItems/composite/mvAboutWindow.cpp"
@@ -138,6 +136,7 @@ set(MARVEL_SOURCES
 	"../Dependencies/ImGuiFileDialog/ImGuiFileDialog/ImGuiFileDialog.cpp"
 
 	# imgui
+	"../Dependencies/imgui/misc/freetype/imgui_freetype.cpp"
 	"../Dependencies/imgui/misc/cpp/imgui_stdlib.cpp"
 	"../Dependencies/imgui/imgui.cpp"
 	"../Dependencies/imgui/imgui_demo.cpp"
@@ -173,6 +172,7 @@ set(MARVEL_INCLUDE_DIR
 	"../Dependencies/glfw/include/"
 	"../Dependencies/glfw/deps/"
 	"../Dependencies/imgui/"
+	"../Dependencies/imgui/misc/freetype/"
 	"../Dependencies/imgui/backends/"
 	"../Dependencies/imgui/examples/libs/gl3w"
 	"../Dependencies/cpython/"

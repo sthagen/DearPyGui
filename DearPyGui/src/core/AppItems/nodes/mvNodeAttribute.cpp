@@ -1,18 +1,22 @@
 #include "mvNodeAttribute.h"
 #include <imnodes.h>
 #include "mvApp.h"
+#include "mvCore.h"
 #include "mvLog.h"
 #include "mvItemRegistry.h"
 #include "mvNodeEditor.h"
 #include "mvImNodesThemeScope.h"
+#include "mvFontScope.h"
 
 namespace Marvel {
 
 	void mvNodeAttribute::InsertParser(std::map<std::string, mvPythonParser>* parsers)
 	{
-		parsers->insert({ "add_node_attribute", mvPythonParser({
+		parsers->insert({ s_command, mvPythonParser({
+			{mvPythonDataType::Optional},
 			{mvPythonDataType::String, "name"},
 			{mvPythonDataType::KeywordOnly},
+			{mvPythonDataType::Integer, "shape", "Pin shape", "1"},
 			{mvPythonDataType::Bool, "output", "Set as output attribute", "False"},
 			{mvPythonDataType::Bool, "static", "Set as static attribute", "False"},
 			{mvPythonDataType::Bool, "show", "Attempt to render", "True"},
@@ -33,9 +37,12 @@ namespace Marvel {
 
 	mvNodeAttribute::~mvNodeAttribute()
 	{
-		if (m_parent)
-			if (m_parent->m_parent)
-				static_cast<mvNodeEditor*>(m_parent->m_parent)->deleteLink(m_core_config.name, m_id, true);
+		if (!m_delete)
+		{
+			if (m_parentPtr)
+				if (m_parentPtr->m_parentPtr)
+					static_cast<mvNodeEditor*>(m_parentPtr->m_parentPtr)->deleteLink(m_name, m_id, true);
+		}
 	}
 
 	bool mvNodeAttribute::isParentCompatible(mvAppItemType type)
@@ -49,32 +56,33 @@ namespace Marvel {
 		return false;
 	}
 
-	void mvNodeAttribute::draw()
+	void mvNodeAttribute::draw(ImDrawList* drawlist, float x, float y)
 	{
 		ScopedID id;
 		mvImNodesThemeScope scope(this);
+		mvFontScope fscope(this);
 
 		if (m_static)
 			imnodes::BeginStaticAttribute((int)m_id);
 		else if(m_output)
-			imnodes::BeginOutputAttribute((int)m_id);
+			imnodes::BeginOutputAttribute((int)m_id, m_shape);
 		else
-			imnodes::BeginInputAttribute((int)m_id);
+			imnodes::BeginInputAttribute((int)m_id, m_shape);
 
 		//we do this so that the children dont get the theme
 		//scope.cleanup();
 
-		for (auto item : m_children)
+		for (auto item : m_children1)
 		{
 			// skip item if it's not shown
-			if (!item->m_core_config.show)
+			if (!item->m_show)
 				continue;
 
 			// set item width
-			if (item->m_core_config.width != 0)
-				ImGui::SetNextItemWidth((float)item->m_core_config.width);
+			if (item->m_width != 0)
+				ImGui::SetNextItemWidth((float)item->m_width);
 
-			item->draw();
+			item->draw(drawlist, x, y);
 
 			item->getState().update();
 		}
@@ -87,9 +95,6 @@ namespace Marvel {
 			imnodes::EndInputAttribute();
 	}
 
-#ifdef MV_CPP
-#else
-
 	void mvNodeAttribute::setExtraConfigDict(PyObject* dict)
 	{
 		if (dict == nullptr)
@@ -97,6 +102,13 @@ namespace Marvel {
 
 		if (PyObject* item = PyDict_GetItemString(dict, "output")) m_output = ToBool(item);
 		if (PyObject* item = PyDict_GetItemString(dict, "static")) m_static = ToBool(item);
+		if (PyObject* item = PyDict_GetItemString(dict, "shape")) m_shape = (imnodes::PinShape)ToInt(item);
+
+		if (PyObject* item = PyDict_GetItemString(dict, "shape"))
+		{
+			m_shape = (imnodes::PinShape)ToInt(item);
+			DecodelibID(m_shape, (int*)&m_shape);
+		}
 	}
 
 	void mvNodeAttribute::getExtraConfigDict(PyObject* dict)
@@ -106,11 +118,15 @@ namespace Marvel {
 
 		PyDict_SetItemString(dict, "output", ToPyBool(m_output));
 		PyDict_SetItemString(dict, "static", ToPyBool(m_static));
+		PyDict_SetItemString(dict, "shape", ToPyInt(MV_ENCODE_CONSTANT((int)m_shape, 0)));
 	}
 
-	PyObject* add_node_attribute(PyObject* self, PyObject* args, PyObject* kwargs)
+	PyObject* mvNodeAttribute::add_node_attribute(PyObject* self, PyObject* args, PyObject* kwargs)
 	{
-		const char* name;
+		static int i = 0; i++;
+		std::string sname = std::string(std::string("$$DPG_") + s_internal_id + std::to_string(i));
+		const char* name = sname.c_str();
+		int shape = 1;
 		int output = false;
 		int kw_static = false;
 		int show = true;
@@ -118,7 +134,7 @@ namespace Marvel {
 		const char* before = "";
 
 		if (!(mvApp::GetApp()->getParsers())["add_node_attribute"].parse(args, kwargs, __FUNCTION__, &name,
-			&output, &kw_static, &show, &parent, &before))
+			&shape, &output, &kw_static, &show, &parent, &before))
 			return ToPyBool(false);
 
 		auto item = CreateRef<mvNodeAttribute>(name);
@@ -144,9 +160,8 @@ namespace Marvel {
 
 		}
 
-		return GetPyNone();
+		return ToPyString(name);
 
 	}
 
-#endif
 }

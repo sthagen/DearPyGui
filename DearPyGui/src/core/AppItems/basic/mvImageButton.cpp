@@ -8,9 +8,10 @@ namespace Marvel {
 
 	void mvImageButton::InsertParser(std::map<std::string, mvPythonParser>* parsers)
 	{
-		parsers->insert({ "add_image_button", mvPythonParser({
-			{mvPythonDataType::String, "name"},
+		parsers->insert({ s_command, mvPythonParser({
 			{mvPythonDataType::String, "value"},
+			{mvPythonDataType::Optional},
+			{mvPythonDataType::String, "name"},
 			{mvPythonDataType::KeywordOnly},
 			{mvPythonDataType::Callable, "callback", "Registers a callback", "None"},
 			{mvPythonDataType::Object, "callback_data", "Callback data", "None"},
@@ -33,7 +34,6 @@ namespace Marvel {
 	mvImageButton::mvImageButton(const std::string& name, std::string  default_value)
 		: mvAppItem(name), m_value(std::move(default_value))
 	{
-		m_description.ignoreSizeUpdate = true;
 		m_description.disableAllowed = true;
 		mvEventBus::Subscribe(this, mvEVT_DELETE_TEXTURE);
 	}
@@ -65,7 +65,7 @@ namespace Marvel {
 		return false;
 	}
 
-	void mvImageButton::draw()
+	void mvImageButton::draw(ImDrawList* drawlist, float x, float y)
 	{
 		mvImGuiThemeScope scope(this);
 
@@ -85,8 +85,8 @@ namespace Marvel {
 					});
 				return;
 			}
-			if (m_core_config.width == 0) m_core_config.width = (int)((float)texture->width * (m_uv_max.x - m_uv_min.x));
-			if (m_core_config.height == 0) m_core_config.height = (int)((float)texture->height * (m_uv_max.y - m_uv_min.y));
+			if (m_width == 0) m_width = (int)((float)texture->width * (m_uv_max.x - m_uv_min.x));
+			if (m_height == 0) m_height = (int)((float)texture->height * (m_uv_max.y - m_uv_min.y));
 
 			m_texture = texture->texture;
 		}
@@ -96,46 +96,23 @@ namespace Marvel {
 			mvTexture* texture = mvApp::GetApp()->getTextureStorage().getTexture(m_value);
 			if (texture)
 			{
-				m_core_config.width = (int)((float)texture->width * (m_uv_max.x - m_uv_min.x));
-				m_core_config.height = (int)((float)texture->height * (m_uv_max.y - m_uv_min.y));
+				m_width = (int)((float)texture->width * (m_uv_max.x - m_uv_min.x));
+				m_height = (int)((float)texture->height * (m_uv_max.y - m_uv_min.y));
 			}
 			m_dirty = false;
 		}
 
 		if (m_texture)
 		{
-			ImGui::PushID(m_core_config.name.c_str());
-			if (ImGui::ImageButton(m_texture, ImVec2((float)m_core_config.width, (float)m_core_config.height),
+			ImGui::PushID(m_name.c_str());
+			if (ImGui::ImageButton(m_texture, ImVec2((float)m_width, (float)m_height),
 				ImVec2(m_uv_min.x, m_uv_min.y), ImVec2(m_uv_max.x, m_uv_max.y), m_framePadding,
 				m_backgroundColor, m_tintColor))
-				mvApp::GetApp()->getCallbackRegistry().addCallback(getCallback(false), m_core_config.name, m_core_config.callback_data);
+				mvApp::GetApp()->getCallbackRegistry().addCallback(getCallback(false), m_name, m_callback_data);
 			ImGui::PopID();
 		}
 
 	}
-
-	void mvImageButton::updateConfig(mvAppItemConfig* config)
-	{
-		auto aconfig = (mvImageButtonConfig*)config;
-
-		m_core_config.width = config->width;
-		m_core_config.height = config->height;
-		m_core_config.show = config->show;
-		m_core_config.callback = config->callback;
-		m_core_config.callback_data = config->callback_data;
-
-		m_config.source = aconfig->source;
-
-		if (config != &m_config)
-			m_config = *aconfig;
-	}
-
-	mvAppItemConfig* mvImageButton::getConfig()
-	{
-		return &m_config;
-	}
-
-#ifndef MV_CPP
 
 	void mvImageButton::setExtraConfigDict(PyObject* dict)
 	{
@@ -169,9 +146,11 @@ namespace Marvel {
 		PyDict_SetItemString(dict, "frame_padding", ToPyInt(m_framePadding));
 	}
 
-	PyObject* add_image_button(PyObject* self, PyObject* args, PyObject* kwargs)
+	PyObject* mvImageButton::add_image_button(PyObject* self, PyObject* args, PyObject* kwargs)
 	{
-		const char* name;
+		static int i = 0; i++;
+		std::string sname = std::string(std::string("$$DPG_") + s_internal_id + std::to_string(i));
+		const char* name = sname.c_str();
 		const char* value;
 		PyObject* callback = nullptr;
 		PyObject* callback_data = nullptr;
@@ -200,7 +179,7 @@ namespace Marvel {
 		int enabled = true;
 
 		if (!(mvApp::GetApp()->getParsers())["add_image_button"].parse(args, kwargs, __FUNCTION__,
-			&name, &value, &callback, &callback_data, &tintcolor, &backgroundColor, &parent,
+			&value, &name, &callback, &callback_data, &tintcolor, &backgroundColor, &parent,
 			&before, &width, &height, &frame_padding, &uv_min, &uv_max, &show, &enabled))
 			return ToPyBool(false);
 
@@ -218,8 +197,7 @@ namespace Marvel {
 
 		mvApp::GetApp()->getItemRegistry().addItemWithRuntimeChecks(item, parent, before);
 
-		return GetPyNone();
+		return ToPyString(name);
 	}
 
-#endif // !MV_CPP
 }

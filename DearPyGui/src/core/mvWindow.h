@@ -14,7 +14,6 @@
 #include "mvApp.h"
 #include "mvAppLog.h"
 #include "mvEvents.h"
-#include "mvDrawList.h"
 
 namespace Marvel {
 
@@ -34,8 +33,7 @@ namespace Marvel {
 		bool onEvent (mvEvent& event) override;
 		bool onRender(mvEvent& event);
 
-		mvRef<mvDrawList> getFrontDrawList() { return m_frontDrawList; }
-		mvRef<mvDrawList> getBackDrawList() { return m_backDrawList; }
+		virtual void invalidateObjects() {}
 
 		virtual void show       () {}
 		virtual void run        () {}
@@ -48,7 +46,6 @@ namespace Marvel {
 		virtual void setWindowText(const std::string& name) {}
 		
 		void stop      () { m_running = false; }
-		void setupFonts();
 
 	protected:
 
@@ -57,8 +54,6 @@ namespace Marvel {
 		bool              m_error   = false;
 		unsigned          m_width;
 		unsigned          m_height;
-		mvRef<mvDrawList> m_frontDrawList;
-		mvRef<mvDrawList> m_backDrawList;
 
 	};
 

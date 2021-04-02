@@ -3,12 +3,14 @@
 #include "mvApp.h"
 #include "mvItemRegistry.h"
 #include "mvImGuiThemeScope.h"
+#include "mvFontScope.h"
 
 namespace Marvel {
 
 	void mvProgressBar::InsertParser(std::map<std::string, mvPythonParser>* parsers)
 	{
-		parsers->insert({ "add_progress_bar", mvPythonParser({
+		parsers->insert({ s_command, mvPythonParser({
+			{mvPythonDataType::Optional},
 			{mvPythonDataType::String, "name"},
 			{mvPythonDataType::KeywordOnly},
 			{mvPythonDataType::Float, "default_value", "value from 0 to 1", "0.0"},
@@ -27,16 +29,15 @@ namespace Marvel {
 	{
 	}
 
-	void mvProgressBar::draw()
+	void mvProgressBar::draw(ImDrawList* drawlist, float x, float y)
 	{
 		ScopedID id;
 		mvImGuiThemeScope scope(this);
+		mvFontScope fscope(this);
 
-		ImGui::ProgressBar(*m_value, ImVec2((float)m_core_config.width, (float)m_core_config.height), m_overlay.c_str());
+		ImGui::ProgressBar(*m_value, ImVec2((float)m_width, (float)m_height), m_overlay.c_str());
 
 	}
-
-#ifndef MV_CPP
 
 	void mvProgressBar::setExtraConfigDict(PyObject* dict)
 	{
@@ -54,9 +55,11 @@ namespace Marvel {
 		PyDict_SetItemString(dict, "overlay", ToPyString(m_overlay));
 	}
 
-	PyObject* add_progress_bar(PyObject* self, PyObject* args, PyObject* kwargs)
+	PyObject* mvProgressBar::add_progress_bar(PyObject* self, PyObject* args, PyObject* kwargs)
 	{
-		const char* name;
+		static int i = 0; i++;
+		std::string sname = std::string(std::string("$$DPG_") + s_internal_id + std::to_string(i));
+		const char* name = sname.c_str();
 		float default_value = 0.0f;
 		const char* overlay = "";
 		const char* parent = "";
@@ -78,8 +81,7 @@ namespace Marvel {
 
 		mvApp::GetApp()->getItemRegistry().addItemWithRuntimeChecks(item, parent, before);
 
-		return GetPyNone();
+		return ToPyString(name);
 	}
 
-#endif
 }

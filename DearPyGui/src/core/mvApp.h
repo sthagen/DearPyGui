@@ -24,56 +24,9 @@
 #include "mvEvents.h"
 #include <memory>
 #include "mvModule_Core.h"
+#include "cpp.hint"
 
 namespace Marvel {
-
-#ifdef MV_CPP
-#else
-
-    void AddAppCommands(std::map<std::string, mvPythonParser>* parsers);
-
-    // containers
-    PyObject* end                      (PyObject* self, PyObject* args, PyObject* kwargs);
-
-    // app
-	PyObject* is_dearpygui_running     (PyObject* self, PyObject* args, PyObject* kwargs);
-	PyObject* stop_dearpygui           (PyObject* self, PyObject* args, PyObject* kwargs);
-	PyObject* set_start_callback       (PyObject* self, PyObject* args, PyObject* kwargs);
-	PyObject* set_exit_callback        (PyObject* self, PyObject* args, PyObject* kwargs);
-	PyObject* set_accelerator_callback (PyObject* self, PyObject* args, PyObject* kwargs);
-	PyObject* setup_dearpygui          (PyObject* self, PyObject* args, PyObject* kwargs);
-	PyObject* render_dearpygui_frame   (PyObject* self, PyObject* args, PyObject* kwargs);
-	PyObject* cleanup_dearpygui        (PyObject* self, PyObject* args, PyObject* kwargs);
-	PyObject* set_vsync                (PyObject* self, PyObject* args, PyObject* kwargs);
-	PyObject* get_dearpygui_version    (PyObject* self, PyObject* args, PyObject* kwargs);
-	PyObject* get_active_window        (PyObject* self, PyObject* args, PyObject* kwargs);
-	PyObject* add_character_remap      (PyObject* self, PyObject* args, PyObject* kwargs);
-
-	// docking
-	PyObject* enable_docking           (PyObject* self, PyObject* args, PyObject* kwargs);
-	
-	// main viewport
-	PyObject* set_main_window_pos      (PyObject* self, PyObject* args, PyObject* kwargs);
-	PyObject* set_main_window_title    (PyObject* self, PyObject* args, PyObject* kwargs);
-	PyObject* set_main_window_resizable(PyObject* self, PyObject* args, PyObject* kwargs);
-	PyObject* get_main_window_size     (PyObject* self, PyObject* args, PyObject* kwargs);
-	PyObject* set_main_window_size     (PyObject* self, PyObject* args, PyObject* kwargs);
-	PyObject* set_primary_window       (PyObject* self, PyObject* args, PyObject* kwargs);
-
-    // timing
-	PyObject* get_total_time           (PyObject* self, PyObject* args, PyObject* kwargs);
-	PyObject* get_delta_time           (PyObject* self, PyObject* args, PyObject* kwargs);
-
-    // global
-    PyObject* set_theme_color(PyObject* self, PyObject* args, PyObject* kwargs);
-    PyObject* set_theme_color_disabled(PyObject* self, PyObject* args, PyObject* kwargs);
-    PyObject* set_theme_style(PyObject* self, PyObject* args, PyObject* kwargs);
-
-    // font
-    PyObject* set_global_font_scale(PyObject* self, PyObject* args, PyObject* kwargs);
-    PyObject* get_global_font_scale(PyObject* self, PyObject* args, PyObject* kwargs);
-    PyObject* add_additional_font(PyObject* self, PyObject* args, PyObject* kwargs);
-#endif
 
     //-----------------------------------------------------------------------------
     // Forward Declarations
@@ -82,6 +35,7 @@ namespace Marvel {
     class mvTextEditor;
     class mvWindow;
     class mvThemeManager;
+    class mvFontManager;
     class mvItemRegistry;
     class mvTextureStorage;
     class mvCallbackRegistry;
@@ -98,6 +52,46 @@ namespace Marvel {
         friend class mvWindowsWindow;
         friend class mvLinuxWindow;
         friend class mvAppleWindow;
+
+    public:
+
+        static void InsertParser(std::map<std::string, mvPythonParser>* parsers);
+
+        MV_CREATE_EXTRA_COMMAND(enable_docking);
+        MV_CREATE_EXTRA_COMMAND(set_viewport_size);
+        MV_CREATE_EXTRA_COMMAND(get_dearpygui_version);
+        MV_CREATE_EXTRA_COMMAND(get_viewport_size);
+        MV_CREATE_EXTRA_COMMAND(setup_dearpygui);
+        MV_CREATE_EXTRA_COMMAND(render_dearpygui_frame);
+        MV_CREATE_EXTRA_COMMAND(cleanup_dearpygui);
+        MV_CREATE_EXTRA_COMMAND(get_delta_time);
+        MV_CREATE_EXTRA_COMMAND(get_total_time);
+        MV_CREATE_EXTRA_COMMAND(set_vsync);
+        MV_CREATE_EXTRA_COMMAND(stop_dearpygui);
+        MV_CREATE_EXTRA_COMMAND(is_dearpygui_running);
+        MV_CREATE_EXTRA_COMMAND(set_viewport_title);
+        MV_CREATE_EXTRA_COMMAND(set_viewport_pos);
+        MV_CREATE_EXTRA_COMMAND(set_viewport_resizable);
+        MV_CREATE_EXTRA_COMMAND(end);
+
+        MV_START_EXTRA_COMMANDS
+            MV_ADD_EXTRA_COMMAND(enable_docking);
+            MV_ADD_EXTRA_COMMAND(set_viewport_size);
+            MV_ADD_EXTRA_COMMAND(get_dearpygui_version);
+            MV_ADD_EXTRA_COMMAND(get_viewport_size);
+            MV_ADD_EXTRA_COMMAND(setup_dearpygui);
+            MV_ADD_EXTRA_COMMAND(render_dearpygui_frame);
+            MV_ADD_EXTRA_COMMAND(cleanup_dearpygui);
+            MV_ADD_EXTRA_COMMAND(get_delta_time);
+            MV_ADD_EXTRA_COMMAND(get_total_time);
+            MV_ADD_EXTRA_COMMAND(set_vsync);
+            MV_ADD_EXTRA_COMMAND(stop_dearpygui);
+            MV_ADD_EXTRA_COMMAND(is_dearpygui_running);
+            MV_ADD_EXTRA_COMMAND(set_viewport_title);
+            MV_ADD_EXTRA_COMMAND(set_viewport_pos);
+            MV_ADD_EXTRA_COMMAND(set_viewport_resizable);
+            MV_ADD_EXTRA_COMMAND(end);
+        MV_END_EXTRA_COMMANDS
 
     public:
 
@@ -137,24 +131,18 @@ namespace Marvel {
         mvTextureStorage&        getTextureStorage  ();
         mvCallbackRegistry&      getCallbackRegistry();
         mvThemeManager&          getThemeManager    ();
+        mvFontManager&           getFontManager     ();
         
         //-----------------------------------------------------------------------------
         // App Settings
         //-----------------------------------------------------------------------------
         void                     turnOnDocking     (bool shiftOnly, bool dockSpace);
-        void                     addRemapChar      (int dst, int src) { m_charRemaps.emplace_back( dst, src ); }
         void                     setVSync          (bool value) { m_vsync = value; }
         void                     setResizable      (bool value) { m_resizable = value; }			
         void                     setMainPos        (int x, int y);			
-        void                     setGlobalFontScale(float scale);
         void                     setViewport       (mvWindow* viewport) { m_viewport = viewport; }
         void                     setTitle          (const std::string& title) { m_title = title; }
-        void                     setFont(const std::string& file, float size = 13.0f, const std::string& glyphRange = "",
-                                    std::vector<std::array<ImWchar, 3>> customRanges = {},
-                                    std::vector<ImWchar> chars= {});
         
-        
-        float&                   getGlobalFontScale()       { return m_globalFontScale; }
         int                      getActualWidth    () const { return m_actualWidth; }
         int                      getActualHeight   () const { return m_actualHeight; }
         int                      getClientWidth    () const { return m_clientWidth; }
@@ -200,6 +188,7 @@ namespace Marvel {
         mvOwnedPtr<mvItemRegistry>                     m_itemRegistry;
         mvOwnedPtr<mvTextureStorage>                   m_textureStorage;
         mvOwnedPtr<mvThemeManager>                     m_themeManager;
+        mvOwnedPtr<mvFontManager>                      m_fontManager;
         mvOwnedPtr<mvCallbackRegistry>                 m_callbackRegistry;
 
                                                      
@@ -218,17 +207,8 @@ namespace Marvel {
         std::string                                  m_title = "DearPyGui";
         
         // appearance
-        float       m_globalFontScale = 1.0f;
         bool        m_vsync = true;
         bool        m_resizable = true;
-
-        // fonts
-        std::string                         m_fontFile;
-        std::string                         m_fontGlyphRange;
-        float                               m_fontSize = 13.0f;
-        std::vector<std::array<ImWchar, 3>> m_fontGlyphRangeCustom;
-        std::vector<ImWchar>                m_fontGlyphChars;
-        std::vector<std::pair<int, int>>    m_charRemaps;
 
         // timing
         float                        m_deltaTime = 0.0f; // time since last frame

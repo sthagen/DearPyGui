@@ -4,12 +4,14 @@
 #include "mvModule_Core.h"
 #include "mvInput.h"
 #include "mvItemRegistry.h"
+#include "mvFontScope.h"
 
 namespace Marvel {
 
 	void mvDocWindow::InsertParser(std::map<std::string, mvPythonParser>* parsers)
 	{
-		parsers->insert({ "add_doc_window", mvPythonParser({
+		parsers->insert({ s_command, mvPythonParser({
+			{mvPythonDataType::Optional},
 			{mvPythonDataType::String, "name"},
 			{mvPythonDataType::KeywordOnly},
 			{mvPythonDataType::Integer, "width", "", "-1"},
@@ -56,9 +58,8 @@ namespace Marvel {
 	mvDocWindow::mvDocWindow(const std::string& name)
 		: mvBaseWindowAppitem(name)
 	{
-		m_core_config.width = 700;
-		m_core_config.height = 500;
-		m_description.deleteAllowed = false;
+		m_width = 700;
+		m_height = 500;
 		setup();
 	}
 
@@ -148,8 +149,9 @@ namespace Marvel {
 
 	}
 
-	void mvDocWindow::draw()
+	void mvDocWindow::draw(ImDrawList* drawlist, float x, float y)
 	{
+		mvFontScope fscope(this);
 
 		if (!prerender())
 			return;
@@ -652,11 +654,11 @@ namespace Marvel {
 		ImGui::End();
 	}
 
-#ifndef MV_CPP
-
-	PyObject* add_doc_window(PyObject* self, PyObject* args, PyObject* kwargs)
+	PyObject* mvDocWindow::add_doc_window(PyObject* self, PyObject* args, PyObject* kwargs)
 	{
-		const char* name;
+		static int i = 0; i++;
+		std::string sname = std::string(std::string("$$DPG_") + s_internal_id + std::to_string(i));
+		const char* name = sname.c_str();
 		int width = -1;
 		int height = -1;
 		int x_pos = 200;
@@ -695,8 +697,7 @@ namespace Marvel {
 				item->hide();
 					
 		}
-		return GetPyNone();
+		return ToPyString(name);
 	}
 
-#endif
 }

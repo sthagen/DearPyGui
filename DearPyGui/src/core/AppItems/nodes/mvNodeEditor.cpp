@@ -7,12 +7,14 @@
 #include "mvImGuiThemeScope.h"
 #include "mvImNodesThemeScope.h"
 #include "mvLog.h"
+#include "mvFontScope.h"
 
 namespace Marvel {
 
 	void mvNodeEditor::InsertParser(std::map<std::string, mvPythonParser>* parsers)
 	{
-		parsers->insert({ "add_node_editor", mvPythonParser({
+		parsers->insert({ s_command, mvPythonParser({
+			{mvPythonDataType::Optional},
 			{mvPythonDataType::String, "name"},
 			{mvPythonDataType::KeywordOnly},
 			{mvPythonDataType::Bool, "show", "Attempt to render", "True"},
@@ -73,6 +75,15 @@ namespace Marvel {
 	mvNodeEditor::~mvNodeEditor()
 	{
 		m_delinkCallback = nullptr;
+		for (auto& child : m_children1)
+		{
+			for (auto& grandchild : child->m_children1)
+			{
+				((mvNodeAttribute*)grandchild.get())->markForDeletion();
+				deleteLink(grandchild->m_name, ((mvNodeAttribute*)grandchild.get())->getId(), true);
+			}
+
+		}
 	}
 
 	bool mvNodeEditor::canChildBeAdded(mvAppItemType type)
@@ -91,13 +102,13 @@ namespace Marvel {
 		int64_t node1_id = 0;
         int64_t node2_id = 0;
 
-		for (const auto& node : m_children)
+		for (const auto& node : m_children1)
 		{
-			for (const auto& attr : node->m_children)
+			for (const auto& attr : node->m_children1)
 			{
-				if (attr->getCoreConfig().name == node1)
+				if (attr->m_name == node1)
 					node1_id = static_cast<mvNodeAttribute*>(attr.get())->getId();
-				if (attr->getCoreConfig().name == node2)
+				if (attr->m_name == node2)
 					node2_id = static_cast<mvNodeAttribute*>(attr.get())->getId();
 			}
 		}
@@ -121,7 +132,7 @@ namespace Marvel {
 				PyObject* link = PyTuple_New(2);
 				PyTuple_SetItem(link, 0, ToPyString(node1));
 				PyTuple_SetItem(link, 1, ToPyString(node2));
-				mvApp::GetApp()->getCallbackRegistry().addCallback(m_linkCallback, m_core_config.name, link);
+				mvApp::GetApp()->getCallbackRegistry().addCallback(m_linkCallback, m_name, link);
 				});
 
 	}
@@ -152,7 +163,7 @@ namespace Marvel {
 			mvApp::GetApp()->getCallbackRegistry().submitCallback([=]() {
 				PyObject* link = PyTuple_New(1);
 				PyTuple_SetItem(link, 0, ToPyString(node));
-				mvApp::GetApp()->getCallbackRegistry().addCallback(m_delinkCallback, m_core_config.name, link);
+				mvApp::GetApp()->getCallbackRegistry().addCallback(m_delinkCallback, m_name, link);
 				});
 
 	}
@@ -162,13 +173,13 @@ namespace Marvel {
 		int node1_id = 0;
 		int node2_id = 0;
 
-		for (const auto& node : m_children)
+		for (const auto& node : m_children1)
 		{
-			for (const auto& attr : node->m_children)
+			for (const auto& attr : node->m_children1)
 			{
-				if (attr->getCoreConfig().name == node1)
+				if (attr->m_name == node1)
 					node1_id = static_cast<mvNodeAttribute*>(attr.get())->getId();
-				if (attr->getCoreConfig().name == node2)
+				if (attr->m_name == node2)
 					node2_id = static_cast<mvNodeAttribute*>(attr.get())->getId();
 			}
 		}
@@ -191,7 +202,7 @@ namespace Marvel {
 			PyObject* link = PyTuple_New(2);
 			PyTuple_SetItem(link, 0, ToPyString(node1));
 			PyTuple_SetItem(link, 1, ToPyString(node2));
-			mvApp::GetApp()->getCallbackRegistry().addCallback(m_delinkCallback, m_core_config.name, link);
+			mvApp::GetApp()->getCallbackRegistry().addCallback(m_delinkCallback, m_name, link);
 				});
 
 	}
@@ -225,25 +236,26 @@ namespace Marvel {
 		std::vector<std::string> result;
 		for (const auto& item : m_selectedNodes)
 		{
-			for (const auto& child : m_children)
+			for (const auto& child : m_children1)
 			{
 			    int i1 = item;
 			    int i2 = static_cast<mvNode*>(child.get())->getId();
 			    int i3 = i1 + i2;
 				//if (static_cast<mvNode*>(child.get())->getId() == item)
 				if (i1 == i2)
-					result.push_back(child->getCoreConfig().name);
+					result.push_back(child->m_name);
 			}
 		}
 
 		return result;
 	}
 
-	void mvNodeEditor::draw()
+	void mvNodeEditor::draw(ImDrawList* drawlist, float x, float y)
 	{
 		ScopedID id;
 		imnodes::StyleColorsClassic();
 		mvImNodesThemeScope scope(this);
+		mvFontScope fscope(this);
 
 		imnodes::PushAttributeFlag(imnodes::AttributeFlags_EnableLinkDetachWithDragClick);
 
@@ -271,17 +283,17 @@ namespace Marvel {
 		//we do this so that the children dont get the theme
 		//scope.cleanup();
 
-		for (auto item : m_children)
+		for (auto item : m_children1)
 		{
 			// skip item if it's not shown
-			if (!item->m_core_config.show)
+			if (!item->m_show)
 				continue;
 
 			// set item width
-			if (item->m_core_config.width != 0)
-				ImGui::SetNextItemWidth((float)item->m_core_config.width);
+			if (item->m_width != 0)
+				ImGui::SetNextItemWidth((float)item->m_width);
 
-			item->draw();
+			item->draw(drawlist, x, y);
 
 			item->getState().update();
 		}
@@ -291,7 +303,7 @@ namespace Marvel {
 		
 
 		static int hovered_node_id;
-		for (auto& child : m_children)
+		for (auto& child : m_children1)
 		{
 			child->getState().setHovered(false);
 
@@ -303,7 +315,7 @@ namespace Marvel {
 
 		if (imnodes::IsNodeHovered(&hovered_node_id))
 		{
-			for (auto& child : m_children)
+			for (auto& child : m_children1)
 			{
 				if (static_cast<mvNode*>(child.get())->getId() == hovered_node_id)
 					child->getState().setHovered(true);
@@ -336,15 +348,15 @@ namespace Marvel {
 		if (imnodes::IsLinkCreated(&start_attr, &end_attr))
 		{
 			std::string node1, node2;
-			for (const auto& child : m_children)
+			for (const auto& child : m_children1)
 			{
-				for (const auto& grandchild : child->m_children)
+				for (const auto& grandchild : child->m_children1)
 				{
 					if (static_cast<mvNodeAttribute*>(grandchild.get())->getId()== start_attr)
-						node1 = grandchild->getCoreConfig().name;
+						node1 = grandchild->m_name;
 
 					if (static_cast<mvNodeAttribute*>(grandchild.get())->getId() == end_attr)
-						node2 = grandchild->getCoreConfig().name;
+						node2 = grandchild->m_name;
 				}
 			}
 			addLink(node1, node2);
@@ -362,12 +374,11 @@ namespace Marvel {
 		
 	}
 
-#ifdef MV_CPP
-#else
-
-	PyObject* add_node_editor(PyObject* self, PyObject* args, PyObject* kwargs)
+	PyObject* mvNodeEditor::add_node_editor(PyObject* self, PyObject* args, PyObject* kwargs)
 	{
-		const char* name;
+		static int i = 0; i++;
+		std::string sname = std::string(std::string("$$DPG_") + s_internal_id + std::to_string(i));
+		const char* name = sname.c_str();
 		int show = true;
 		const char* parent = "";
 		const char* before = "";
@@ -404,11 +415,11 @@ namespace Marvel {
 
 		}
 
-		return GetPyNone();
+		return ToPyString(name);
 
 	}
 
-	PyObject* add_node_link(PyObject* self, PyObject* args, PyObject* kwargs)
+	PyObject* mvNodeEditor::add_node_link(PyObject* self, PyObject* args, PyObject* kwargs)
 	{
 		const char* node_editor;
 		const char* node_1;
@@ -443,7 +454,7 @@ namespace Marvel {
 
 	}
 
-	PyObject* delete_node_link(PyObject* self, PyObject* args, PyObject* kwargs)
+	PyObject* mvNodeEditor::delete_node_link(PyObject* self, PyObject* args, PyObject* kwargs)
 	{
 		const char* node_editor;
 		const char* node_1;
@@ -478,7 +489,7 @@ namespace Marvel {
 
 	}
 
-	PyObject* get_selected_nodes(PyObject* self, PyObject* args, PyObject* kwargs)
+	PyObject* mvNodeEditor::get_selected_nodes(PyObject* self, PyObject* args, PyObject* kwargs)
 	{
 		const char* node_editor;
 
@@ -510,7 +521,7 @@ namespace Marvel {
 
 	}
 
-	PyObject* get_selected_links(PyObject* self, PyObject* args, PyObject* kwargs)
+	PyObject* mvNodeEditor::get_selected_links(PyObject* self, PyObject* args, PyObject* kwargs)
 	{
 		const char* node_editor;
 
@@ -546,7 +557,7 @@ namespace Marvel {
 
 	}
 
-	PyObject* get_links(PyObject* self, PyObject* args, PyObject* kwargs)
+	PyObject* mvNodeEditor::get_links(PyObject* self, PyObject* args, PyObject* kwargs)
 	{
 		const char* node_editor;
 
@@ -577,7 +588,7 @@ namespace Marvel {
 
 	}
 
-	PyObject* clear_selected_links(PyObject* self, PyObject* args, PyObject* kwargs)
+	PyObject* mvNodeEditor::clear_selected_links(PyObject* self, PyObject* args, PyObject* kwargs)
 	{
 		const char* node_editor;
 
@@ -607,7 +618,7 @@ namespace Marvel {
 
 	}
 
-	PyObject* clear_selected_nodes(PyObject* self, PyObject* args, PyObject* kwargs)
+	PyObject* mvNodeEditor::clear_selected_nodes(PyObject* self, PyObject* args, PyObject* kwargs)
 	{
 		const char* node_editor;
 
@@ -637,5 +648,4 @@ namespace Marvel {
 
 	}
 
-#endif
 }

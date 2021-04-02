@@ -3,12 +3,14 @@
 #include "mvItemRegistry.h"
 #include "mvImGuiThemeScope.h"
 #include "mvTab.h"
+#include "mvFontScope.h"
 
 namespace Marvel {
 
 	void mvTabBar::InsertParser(std::map<std::string, mvPythonParser>* parsers)
 	{
-		parsers->insert({ "add_tab_bar", mvPythonParser({
+		parsers->insert({ s_command, mvPythonParser({
+			{mvPythonDataType::Optional},
 			{mvPythonDataType::String, "name"},
 			{mvPythonDataType::KeywordOnly},
 			{mvPythonDataType::Bool, "reorderable", "allows for moveable tabs", "False"},
@@ -37,32 +39,33 @@ namespace Marvel {
 		m_uiValue = value;
 	}
 
-	void mvTabBar::draw()
+	void mvTabBar::draw(ImDrawList* drawlist, float x, float y)
 	{
 		ScopedID id;
 		mvImGuiThemeScope scope(this);
+		mvFontScope fscope(this);
 		ImGui::BeginGroup();
 
 		if (ImGui::BeginTabBar(m_label.c_str(), m_flags))
 		{
 			//we do this so that the children dont get the theme
 			scope.cleanup();
-			for (auto& item : m_children)
+			for (auto& item : m_children1)
 			{
 				// skip item if it's not shown
-				if (!item->m_core_config.show)
+				if (!item->m_show)
 					continue;
 
 				// set item width
-				if (item->m_core_config.width != 0)
-					ImGui::SetNextItemWidth((float)item->m_core_config.width);
+				if (item->m_width != 0)
+					ImGui::SetNextItemWidth((float)item->m_width);
 
-				if (*m_value == item->getCoreConfig().name && m_lastValue != *m_value)
+				if (*m_value == item->m_name && m_lastValue != *m_value)
 					static_cast<mvTab*>(item.get())->addFlag(ImGuiTabItemFlags_SetSelected);
 
-				item->draw();
+				item->draw(drawlist, ImGui::GetCursorPosX(), ImGui::GetCursorPosY());
 
-				if (*m_value == item->getCoreConfig().name)
+				if (*m_value == item->m_name)
 					static_cast<mvTab*>(item.get())->removeFlag(ImGuiTabItemFlags_SetSelected);
 
 				item->getState().update();
@@ -76,8 +79,6 @@ namespace Marvel {
 		*m_value = m_uiValue;
 		m_lastValue = *m_value;
 	}
-
-#ifndef MV_CPP
 
 	void mvTabBar::setExtraConfigDict(PyObject* dict)
 	{
@@ -112,9 +113,11 @@ namespace Marvel {
 		checkbitset("reorderable", ImGuiTabBarFlags_Reorderable, m_flags);
 	}
 
-	PyObject* add_tab_bar(PyObject* self, PyObject* args, PyObject* kwargs)
+	PyObject* mvTabBar::add_tab_bar(PyObject* self, PyObject* args, PyObject* kwargs)
 	{
-		const char* name;
+		static int i = 0; i++;
+		std::string sname = std::string(std::string("$$DPG_") + s_internal_id + std::to_string(i));
+		const char* name = sname.c_str();
 		int reorderable = false;
 		PyObject* callback = nullptr;
 		PyObject* callback_data = nullptr;
@@ -148,8 +151,7 @@ namespace Marvel {
 				item->hide();
 		}
 
-		return GetPyNone();
+		return ToPyString(name);
 	}
 
-#endif
 }

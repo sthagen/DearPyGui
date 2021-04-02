@@ -2,16 +2,18 @@
 #include "mvApp.h"
 #include "mvItemRegistry.h"
 #include "mvImGuiThemeScope.h"
+#include "mvFontScope.h"
 
 namespace Marvel {
 
 	void mvMenuItem::InsertParser(std::map<std::string, mvPythonParser>* parsers)
 	{
-		parsers->insert({ "add_menu_item", mvPythonParser({
+		parsers->insert({ s_command, mvPythonParser({
+			{mvPythonDataType::Optional},
 			{mvPythonDataType::String, "name"},
 			{mvPythonDataType::KeywordOnly},
 			{mvPythonDataType::String, "shortcut", "Adds a shortcut", "''"},
-			{mvPythonDataType::Bool, "check", "Makes menu with checkmarks.", "False"},
+			{mvPythonDataType::Bool, "check", "Makes menu item with checkmark. Only one menu item per container can be checked at a time.", "False"},
 			{mvPythonDataType::Callable, "callback", "Registers a callback", "None"},
 			{mvPythonDataType::Object, "callback_data", "Callback data", "None"},
 			{mvPythonDataType::String, "label", "", "''"},
@@ -28,52 +30,26 @@ namespace Marvel {
 		m_description.disableAllowed = true;
 	}
 
-	void mvMenuItem::draw()
+	void mvMenuItem::draw(ImDrawList* drawlist, float x, float y)
 	{
 		ScopedID id;
 		mvImGuiThemeScope scope(this);
+		mvFontScope fscope(this);
 
-		// create menuitem and see if its selected
-		if (ImGui::MenuItem(m_label.c_str(), m_shortcut.c_str(), m_check ? m_value.get() : nullptr, m_core_config.enabled))
+		// This is ugly and goes against our style system but its the only widget that ImGui chooses to push teh disable color for us
+		// so we have to map our text disable color to the system text disable color, or we can create a new constant which goes agains our 
+		// constants. 
+		ImGui::PushStyleColor(ImGuiCol_TextDisabled, ImGui::GetStyleColorVec4(ImGuiCol_Text));
+
+		// create menu item and see if its selected
+		if (ImGui::MenuItem(m_label.c_str(), m_shortcut.c_str(), m_check ? m_value.get() : nullptr, m_enabled))
 		{
-			// set other menuitems's value false on same level
-			for (auto sibling : m_parent->m_children)
-			{
-				// ensure sibling
-				if (sibling->getType() == mvAppItemType::mvMenuItem)
-					*((mvMenuItem*)sibling.get())->m_value = false;
-			}
-
-			*m_value = true;
-
-			mvApp::GetApp()->getCallbackRegistry().addCallback(m_core_config.callback, m_core_config.name, m_core_config.callback_data);
-
+			mvApp::GetApp()->getCallbackRegistry().addCallback(m_callback, m_name, m_callback_data);
 		}
 
+		ImGui::PopStyleColor();
+
 	}
-
-	void mvMenuItem::updateConfig(mvAppItemConfig* config)
-	{
-		auto aconfig = (mvMenuItemConfig*)config;
-
-		m_core_config.label = config->label;
-		m_core_config.show = config->show;
-		m_core_config.enabled = config->enabled;
-		m_core_config.callback = config->callback;
-		m_core_config.callback_data = config->callback_data;
-
-		m_config.source = aconfig->source;
-
-		if (config != &m_config)
-			m_config = *aconfig;
-	}
-
-	mvAppItemConfig* mvMenuItem::getConfig()
-	{
-		return &m_config;
-	}
-
-#ifndef MV_CPP
 
 	void mvMenuItem::setExtraConfigDict(PyObject* dict)
 	{
@@ -94,9 +70,11 @@ namespace Marvel {
 		PyDict_SetItemString(dict, "check", ToPyBool(m_check));
 	}
 
-	PyObject* add_menu_item(PyObject* self, PyObject* args, PyObject* kwargs)
+	PyObject* mvMenuItem::add_menu_item(PyObject* self, PyObject* args, PyObject* kwargs)
 	{
-		const char* name;
+		static int i = 0; i++;
+		std::string sname = std::string(std::string("$$DPG_") + s_internal_id + std::to_string(i));
+		const char* name = sname.c_str();
 		const char* shortcut = "";
 		int check = false;
 		PyObject* callback = nullptr;
@@ -118,14 +96,13 @@ namespace Marvel {
 		if (callback_data)
 			Py_XINCREF(callback_data);
 		item->setCallbackData(callback_data);
-		item->setConfigDict(kwargs);
+		item->checkConfigDict(kwargs);
 		item->setConfigDict(kwargs);
 		item->setExtraConfigDict(kwargs);
 
 		mvApp::GetApp()->getItemRegistry().addItemWithRuntimeChecks(item, parent, before);
 
-		return GetPyNone();
+		return ToPyString(name);
 	}
 
-#endif // !MV_CPP
 }

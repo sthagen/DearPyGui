@@ -37,11 +37,11 @@ namespace Marvel {
 			// decode and push colors to ImGui
 			libIDCount = colors.size();
 			static ImGuiCol imColorID;
-			if (item->getCoreConfig().enabled)
+			if (item->isEnabled())
 			{
 				for (const auto& color : colors)
 				{
-					mvThemeManager::decodelibID(color.first, &imColorID);
+					DecodelibID(color.first, &imColorID);
 					ImGui::PushStyleColor(imColorID, color.second.first.toVec4());
 				}
 			}
@@ -49,7 +49,7 @@ namespace Marvel {
 			{
 				for (const auto& color : colors)
 				{
-					mvThemeManager::decodelibID(color.first, &imColorID);
+					DecodelibID(color.first, &imColorID);
 					ImGui::PushStyleColor(imColorID, color.second.second.toVec4());
 				}
 			}

@@ -2,13 +2,15 @@
 #include "mvApp.h"
 #include "mvItemRegistry.h"
 #include "mvImGuiThemeScope.h"
+#include "mvFontScope.h"
 
 namespace Marvel {
 
 	void mvTooltip::InsertParser(std::map<std::string, mvPythonParser>* parsers)
 	{
-		parsers->insert({ "add_tooltip", mvPythonParser({
+		parsers->insert({ s_command, mvPythonParser({
 			{mvPythonDataType::String, "tipparent", "Sets the item's tool tip to be the same as the named item's tool tip"},
+			{mvPythonDataType::Optional},
 			{mvPythonDataType::String, "name"},
 			{mvPythonDataType::KeywordOnly},
 			{mvPythonDataType::String, "parent", "Parent to add this item to. (runtime adding)", "''"},
@@ -25,33 +27,34 @@ namespace Marvel {
 
 		// has to be showed that way it can check for hovering
 		// otherwise it will never show
-		m_core_config.show = true;
+		m_show = true;
 		m_description.container = true;
 		m_description.addAfterRequired = true;
 		
 	}
 
-	void mvTooltip::draw()
+	void mvTooltip::draw(ImDrawList* drawlist, float x, float y)
 	{
 		if (ImGui::IsItemHovered())
 		{
 			mvImGuiThemeScope scope(this);
+			mvFontScope fscope(this);
 			ImGui::BeginTooltip();
 
 			//we do this so that the children dont get the theme
 			scope.cleanup();
 
-			for (auto& item : m_children)
+			for (auto& item : m_children1)
 			{
 				// skip item if it's not shown
-				if (!item->m_core_config.show)
+				if (!item->m_show)
 					continue;
 
 				// set item width
-				if (item->m_core_config.width != 0)
-					ImGui::SetNextItemWidth((float)item->m_core_config.width);
+				if (item->m_width != 0)
+					ImGui::SetNextItemWidth((float)item->m_width);
 
-				item->draw();
+				item->draw(drawlist, ImGui::GetCursorPosX(), ImGui::GetCursorPosY());
 
 				item->getState().update();
 			}
@@ -61,12 +64,12 @@ namespace Marvel {
 
 	}
 
-#ifndef MV_CPP
-
-	PyObject* add_tooltip(PyObject* self, PyObject* args, PyObject* kwargs)
+	PyObject* mvTooltip::add_tooltip(PyObject* self, PyObject* args, PyObject* kwargs)
 	{
 		const char* tipparent;
-		const char* name;
+		static int i = 0; i++;
+		std::string sname = std::string(std::string("$$DPG_") + s_internal_id + std::to_string(i));
+		const char* name = sname.c_str();
 		const char* parent = "";
 		const char* before = "";
 		int show = true;
@@ -89,9 +92,8 @@ namespace Marvel {
 
 		}
 
-		return GetPyNone();
+		return ToPyString(name);
 
 	}
 
-#endif
 }

@@ -3,11 +3,13 @@
 #include "mvApp.h"
 #include "mvItemRegistry.h"
 #include "mvImGuiThemeScope.h"
+#include "mvFontScope.h"
 
 namespace Marvel {
 	void mvRadioButton::InsertParser(std::map<std::string, mvPythonParser>* parsers)
 	{
-		parsers->insert({ "add_radio_button", mvPythonParser({
+		parsers->insert({ s_command, mvPythonParser({
+			{mvPythonDataType::Optional},
 			{mvPythonDataType::String, "name"},
 			{mvPythonDataType::KeywordOnly},
 			{mvPythonDataType::StringList, "items", "", "()"},
@@ -29,49 +31,28 @@ namespace Marvel {
 		m_description.disableAllowed = true;
 	}
 
-	void mvRadioButton::draw()
+	void mvRadioButton::draw(ImDrawList* drawlist, float x, float y)
 	{
 
 		ImGui::BeginGroup();
 
 		ScopedID id;
 		mvImGuiThemeScope scope(this);
+		mvFontScope fscope(this);
 
-		if (!m_core_config.enabled) m_disabled_value = *m_value;
+		if (!m_enabled) m_disabled_value = *m_value;
 
 		for (size_t i = 0; i < m_itemnames.size(); i++)
 		{
 			if (m_horizontal && i != 0)
 				ImGui::SameLine();
 
-			if (ImGui::RadioButton((m_itemnames[i] + "##" + m_core_config.name).c_str(), m_core_config.enabled ? m_value.get() : &m_disabled_value, (int)i))
-				mvApp::GetApp()->getCallbackRegistry().addCallback(getCallback(false), m_core_config.name, m_core_config.callback_data);
+			if (ImGui::RadioButton((m_itemnames[i] + "##" + m_name).c_str(), m_enabled ? m_value.get() : &m_disabled_value, (int)i))
+				mvApp::GetApp()->getCallbackRegistry().addCallback(getCallback(false), m_name, m_callback_data);
 		}
 
 		ImGui::EndGroup();
 	}
-
-	void mvRadioButton::updateConfig(mvAppItemConfig* config)
-	{
-		auto aconfig = (mvRadioButtonConfig*)config;
-
-		m_core_config.show = config->show;
-		m_core_config.enabled = config->enabled;
-		m_core_config.callback = config->callback;
-		m_core_config.callback_data = config->callback_data;
-
-		m_config.source = aconfig->source;
-
-		if (config != &m_config)
-			m_config = *aconfig;
-	}
-
-	mvAppItemConfig* mvRadioButton::getConfig()
-	{
-		return &m_config;
-	}
-
-#ifndef MV_CPP
 
 	void mvRadioButton::setExtraConfigDict(PyObject* dict)
 	{
@@ -91,9 +72,11 @@ namespace Marvel {
 		PyDict_SetItemString(dict, "horizontal", ToPyBool(m_horizontal));
 	}
 
-	PyObject* add_radio_button(PyObject* self, PyObject* args, PyObject* kwargs)
+	PyObject* mvRadioButton::add_radio_button(PyObject* self, PyObject* args, PyObject* kwargs)
 	{
-		const char* name;
+		static int i = 0; i++;
+		std::string sname = std::string(std::string("$$DPG_") + s_internal_id + std::to_string(i));
+		const char* name = sname.c_str();
 		PyObject* items;
 		int default_value = 0;
 		PyObject* callback = nullptr;
@@ -123,8 +106,7 @@ namespace Marvel {
 
 		mvApp::GetApp()->getItemRegistry().addItemWithRuntimeChecks(item, parent, before);
 
-		return GetPyNone();
+		return ToPyString(name);
 	}
 
-#endif
 }

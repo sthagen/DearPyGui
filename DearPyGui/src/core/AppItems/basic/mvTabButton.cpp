@@ -2,12 +2,14 @@
 #include "mvApp.h"
 #include "mvItemRegistry.h"
 #include "mvImGuiThemeScope.h"
+#include "mvFontScope.h"
 
 namespace Marvel {
 
 	void mvTabButton::InsertParser(std::map<std::string, mvPythonParser>* parsers)
 	{
-		parsers->insert({ "add_tab_button", mvPythonParser({
+		parsers->insert({ s_command, mvPythonParser({
+			{mvPythonDataType::Optional},
 			{mvPythonDataType::String, "name"},
 			{mvPythonDataType::KeywordOnly},
 			{mvPythonDataType::String, "label", "", "''"},
@@ -29,37 +31,16 @@ namespace Marvel {
 	{
 	}
 
-	void mvTabButton::draw()
+	void mvTabButton::draw(ImDrawList* drawlist, float x, float y)
 	{
 		ScopedID id;
 		mvImGuiThemeScope scope(this);
+		mvFontScope fscope(this);
 
 		if (ImGui::TabItemButton(m_label.c_str(), m_flags))
-			mvApp::GetApp()->getCallbackRegistry().addCallback(getCallback(false), m_core_config.name, m_core_config.callback_data);
+			mvApp::GetApp()->getCallbackRegistry().addCallback(getCallback(false), m_name, m_callback_data);
 
 	}
-
-	void mvTabButton::updateConfig(mvAppItemConfig* config)
-	{
-		auto aconfig = (mvTabButtonConfig*)config;
-
-		m_core_config.label = config->label;
-		m_core_config.show = config->show;
-		m_core_config.callback = config->callback;
-		m_core_config.callback_data = config->callback_data;
-
-		m_config.source = aconfig->source;
-
-		if (config != &m_config)
-			m_config = *aconfig;
-	}
-
-	mvAppItemConfig* mvTabButton::getConfig()
-	{
-		return &m_config;
-	}
-
-#ifndef MV_CPP
 
 	void mvTabButton::setExtraConfigDict(PyObject* dict)
 	{
@@ -104,9 +85,11 @@ namespace Marvel {
 
 	}
 
-	PyObject* add_tab_button(PyObject* self, PyObject* args, PyObject* kwargs)
+	PyObject* mvTabButton::add_tab_button(PyObject* self, PyObject* args, PyObject* kwargs)
 	{
-		const char* name;
+		static int i = 0; i++;
+		std::string sname = std::string(std::string("$$DPG_") + s_internal_id + std::to_string(i));
+		const char* name = sname.c_str();
 		const char* label = "";
 		int show = true;
 		int no_reorder = false;
@@ -149,7 +132,7 @@ namespace Marvel {
 
 				mvApp::GetApp()->getItemRegistry().addItemWithRuntimeChecks(item, parent, before);
 
-				return GetPyNone();
+				return ToPyString(name);
 
 			}
 
@@ -182,7 +165,7 @@ namespace Marvel {
 
 				mvApp::GetApp()->getItemRegistry().addItemWithRuntimeChecks(item, parent, before);
 
-				return GetPyNone();
+				return ToPyString(name);
 			}
 
 			else
@@ -195,5 +178,4 @@ namespace Marvel {
 		return ToPyBool(false);
 	}
 
-#endif // !MV_CPP
 }

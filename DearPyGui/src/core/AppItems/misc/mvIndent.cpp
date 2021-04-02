@@ -7,7 +7,7 @@ namespace Marvel {
 
 	void mvIndent::InsertParser(std::map<std::string, mvPythonParser>* parsers)
 	{
-		parsers->insert({ "add_indent", mvPythonParser({
+		parsers->insert({ s_command, mvPythonParser({
 			{mvPythonDataType::KeywordOnly},
 			{mvPythonDataType::String, "name", "", "'indent'"},
 			{mvPythonDataType::Float, "offset", "", "0.0"},
@@ -21,21 +21,17 @@ namespace Marvel {
 	mvIndent::mvIndent(const std::string& name, float default_value)
 		: mvFloatPtrBase(name, default_value)
 	{
-		m_description.duplicatesAllowed = true;
 	}
 
-	void mvIndent::draw()
+	void mvIndent::draw(ImDrawList* drawlist, float x, float y)
 	{
 		ImGui::Indent(*m_value);
 	}
 
-
-#ifdef MV_CPP
-#else
-	PyObject* add_indent(PyObject* self, PyObject* args, PyObject* kwargs)
+	PyObject* mvIndent::add_indent(PyObject* self, PyObject* args, PyObject* kwargs)
 	{
 		static int i = 0; i++;
-		std::string sname = std::string("indent" + std::to_string(i));
+		std::string sname = std::string(std::string("$$DPG_") + s_internal_id + std::to_string(i));
 		const char* name = sname.c_str();
 		float offset = 0.0f;
 		const char* before = "";
@@ -54,8 +50,7 @@ namespace Marvel {
 
 		mvApp::GetApp()->getItemRegistry().addItemWithRuntimeChecks(item, parent, before);
 
-		return GetPyNone();
+		return ToPyString(name);
 	}
-#endif
 
 }

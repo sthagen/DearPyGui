@@ -16,6 +16,7 @@
 #include "mvTextureStorage.h"
 #include "mvItemRegistry.h"
 #include "mvLog.h"
+#include "mvFontManager.h"
 
 namespace Marvel {
 
@@ -105,7 +106,7 @@ namespace Marvel {
 			// reset other windows
 			for (auto window : m_itemRegistry->getFrontWindows())
 			{
-				if (window->m_core_config.name != primaryWindow)
+				if (window->m_name != primaryWindow)
                     dynamic_cast<mvWindowAppItem*>(window.get())->setWindowAsMainStatus(false);
 			}
 
@@ -124,13 +125,9 @@ namespace Marvel {
 	void mvApp::cleanup()
 	{
 		getCallbackRegistry().stop();
-		#ifdef MV_CPP
-		        getCallbackRegistry().addCallback([]() {}, "null", nullptr);
-		#else
-		        getCallbackRegistry().addCallback(nullptr, "null", nullptr);
-		#endif // !MV_CPP
-		
-		        
+
+		getCallbackRegistry().addCallback(nullptr, "null", nullptr);
+      
 		m_future.get();
 		delete m_viewport;
 		s_started = false;
@@ -144,10 +141,7 @@ namespace Marvel {
         mvAppLog::Clear();
 		mvAppLog::AddLog("[DearPyGui Version] %0s\n", mvApp::GetVersion());
 		mvAppLog::AddLog("[DearImGui Version] %0s\n", IMGUI_VERSION);
-
-#ifndef MV_CPP
         mvAppLog::AddLog("[Python Version] %0s\n", PY_VERSION);
-#endif // !MV_CPP
 
 
 		m_mainThreadID = std::this_thread::get_id();
@@ -161,6 +155,7 @@ namespace Marvel {
 		m_textureStorage = CreateOwnedPtr<mvTextureStorage>();
 		m_themeManager = CreateOwnedPtr<mvThemeManager>();
         m_callbackRegistry = CreateOwnedPtr<mvCallbackRegistry>();
+        m_fontManager = CreateOwnedPtr<mvFontManager>();
 
 	}
 
@@ -182,6 +177,11 @@ namespace Marvel {
 	mvThemeManager& mvApp::getThemeManager()
 	{
 		return *m_themeManager;
+	}
+
+	mvFontManager& mvApp::getFontManager()
+	{
+		return *m_fontManager;
 	}
 
 	bool mvApp::onEvent(mvEvent& event)
@@ -230,7 +230,7 @@ namespace Marvel {
 		// update timing
 		m_deltaTime = ImGui::GetIO().DeltaTime;
 		m_time = ImGui::GetTime();
-		ImGui::GetIO().FontGlobalScale = m_globalFontScale;
+		ImGui::GetIO().FontGlobalScale = m_fontManager->getGlobalFontScale();
 
 		if (m_dockingViewport)
 			ImGui::DockSpaceOverViewport();
@@ -243,6 +243,7 @@ namespace Marvel {
 		mvInput::CheckInputs();
 
 		m_textureStorage->show_debugger();
+		m_fontManager->show_debugger();
 
         std::lock_guard<std::mutex> lk(m_mutex);
 		mvEventBus::Publish(mvEVT_CATEGORY_APP, mvEVT_PRE_RENDER);
@@ -261,21 +262,6 @@ namespace Marvel {
 
 		m_mainXPos = x;
 		m_mainYPos = y;
-	}
-
-	void mvApp::setGlobalFontScale(float scale)
-	{
-		m_globalFontScale = scale;
-	}
-
-	void mvApp::setFont(const std::string& file, float size, const std::string& glyphRange,
-		std::vector<std::array<ImWchar, 3>> customRanges, std::vector<ImWchar> chars)
-	{
-		m_fontFile = file;
-		m_fontGlyphRange = glyphRange;
-		m_fontSize = size;
-		m_fontGlyphRangeCustom = std::move(customRanges);
-		m_fontGlyphChars = std::move(chars);
 	}
 
 	bool mvApp::checkIfMainThread() const
@@ -326,41 +312,8 @@ namespace Marvel {
 
 	}
 
-#ifdef MV_CPP
-#else
-
-	void AddAppCommands(std::map<std::string, mvPythonParser>* parsers)
+	void mvApp::InsertParser(std::map<std::string, mvPythonParser>* parsers)
 	{
-		parsers->insert({ "add_additional_font", mvPythonParser({
-			{mvPythonDataType::String, "file", "ttf or otf file"},
-			{mvPythonDataType::Optional},
-			{mvPythonDataType::Float, "size", "", "13.0"},
-			{mvPythonDataType::String, "glyph_ranges", "options: korean, japanese, chinese_full, chinese_simplified_common, cryillic, thai, vietnamese", "''"},
-			{mvPythonDataType::KeywordOnly},
-			{mvPythonDataType::IntList, "custom_glyph_chars", "", "()"},
-			{mvPythonDataType::Object, "custom_glyph_ranges", "list of ranges", "List[List[int]]"},
-		}, "Adds additional font.", "None", "Themes and Styles") });
-
-		parsers->insert({ "set_theme_color", mvPythonParser({
-			{mvPythonDataType::Integer, "constant", "mvThemeCol_* constants"},
-			{mvPythonDataType::FloatList, "color"},
-			{mvPythonDataType::Optional},
-			{mvPythonDataType::String, "item", "", "''"}
-		}, "Sets a color of a theme item for when the item is enabled.", "None", "Themes and Styles") });
-
-		parsers->insert({ "set_theme_color_disabled", mvPythonParser({
-			{mvPythonDataType::Integer, "constant", "mvThemeCol_* constants"},
-			{mvPythonDataType::FloatList, "color"},
-			{mvPythonDataType::Optional},
-			{mvPythonDataType::String, "item", "", "''"}
-		}, "Sets a color of a theme item for when the item is disabled.", "None", "Themes and Styles") });
-
-		parsers->insert({ "set_theme_style", mvPythonParser({
-			{mvPythonDataType::Integer, "constant", "mvThemeStyle_* constants"},
-			{mvPythonDataType::Float, "style"},
-			{mvPythonDataType::Optional},
-			{mvPythonDataType::String, "item", "", "''"}
-		}, "Sets a style of a theme item.", "None", "Themes and Styles") });
 
 		parsers->insert({ "end", mvPythonParser({
 		}, "Ends a container.", "None", "Containers") });
@@ -371,18 +324,6 @@ namespace Marvel {
 			{mvPythonDataType::Bool, "dock_space", "add explicit dockspace over viewport", "False"},
 		}, "Decrements a texture.") });
 
-		parsers->insert({ "set_start_callback", mvPythonParser({
-			{mvPythonDataType::Object, "callback"},
-		}, "Callback to run when starting main window.") });
-
-		parsers->insert({ "set_exit_callback", mvPythonParser({
-			{mvPythonDataType::Object, "callback"},
-		}, "Callback to run when exiting main window.") });
-
-		parsers->insert({ "set_accelerator_callback", mvPythonParser({
-			{mvPythonDataType::Object, "callback"},
-		}, "Callback similar to keypress but used for accelerator keys.") });
-
 		parsers->insert({ "set_vsync", mvPythonParser({
 			{mvPythonDataType::Bool, "value"},
 		}, "Sets vsync on or off.") });
@@ -390,23 +331,18 @@ namespace Marvel {
 		parsers->insert({ "is_dearpygui_running", mvPythonParser({
 		}, "Checks if dearpygui is still running", "bool") });
 
-		parsers->insert({ "set_main_window_title", mvPythonParser({
+		parsers->insert({ "set_viewport_title", mvPythonParser({
 			{mvPythonDataType::String, "title"}
-		}, "Sets the title of the main window.") });
+		}, "Sets the title of the viewport.") });
 
-		parsers->insert({ "set_main_window_resizable", mvPythonParser({
+		parsers->insert({ "set_viewport_resizable", mvPythonParser({
 			{mvPythonDataType::Bool, "resizable"}
-		}, "Sets the main window to be resizable.") });
+		}, "Sets the viewport to be resizable.") });
 
-		parsers->insert({ "set_main_window_pos", mvPythonParser({
+		parsers->insert({ "set_viewport_pos", mvPythonParser({
 			{mvPythonDataType::Integer, "x"},
 			{mvPythonDataType::Integer, "y"},
-		}, "Sets the main window position.") });
-
-		parsers->insert({ "add_character_remap", mvPythonParser({
-			{mvPythonDataType::Integer, "destination"},
-			{mvPythonDataType::Integer, "source"},
-		}, "Remaps characters.") });
+		}, "Sets the viewport position.") });
 
 		parsers->insert({ "setup_dearpygui", mvPythonParser({
 		}, "Sets up DearPyGui for user controlled rendering. Only call once and you must call cleanup_deapygui when finished.") });
@@ -417,20 +353,8 @@ namespace Marvel {
 		parsers->insert({ "cleanup_dearpygui", mvPythonParser({
 		}, "Cleans up DearPyGui after calling setup_dearpygui.") });
 
-		parsers->insert({ "start_dearpygui", mvPythonParser({
-			{mvPythonDataType::KeywordOnly},
-			{mvPythonDataType::String, "primary_window", "Window that will expand into viewport.", "''"},
-		}, "Starts DearPyGui.") });
-
 		parsers->insert({ "stop_dearpygui", mvPythonParser({
 		}, "Stops DearPyGui.") });
-
-		parsers->insert({ "set_global_font_scale", mvPythonParser({
-			{mvPythonDataType::Float, "scale", "default is 1.0"}
-		}, "Changes the global font scale.") });
-
-		parsers->insert({ "get_global_font_scale", mvPythonParser({
-		}, "Returns the global font scale.", "float") });
 
 		parsers->insert({ "get_total_time", mvPythonParser({
 		}, "Returns total time since app started.", "float") });
@@ -438,34 +362,27 @@ namespace Marvel {
 		parsers->insert({ "get_delta_time", mvPythonParser({
 		}, "Returns time since last frame.", "float") });
 
-		parsers->insert({ "get_main_window_size", mvPythonParser({
-		}, "Returns the size of the main window.", "[int, int]") });
-
-		parsers->insert({ "get_active_window", mvPythonParser({
-		}, "Returns the active window name.", "str") });
+		parsers->insert({ "get_viewport_size", mvPythonParser({
+		}, "Returns the size of the viewport.", "[int, int]") });
 
 		parsers->insert({ "get_dearpygui_version", mvPythonParser({
 		}, "Returns the current version of Dear PyGui.", "str") });
 
-		parsers->insert({ "set_main_window_size", mvPythonParser({
+		parsers->insert({ "set_viewport_size", mvPythonParser({
 			{mvPythonDataType::Integer, "width"},
 			{mvPythonDataType::Integer, "height"}
-		}, "Sets the main window size.") });
+		}, "Sets the viewport size.") });
 
-		parsers->insert({ "set_primary_window", mvPythonParser({
-			{mvPythonDataType::String, "window"},
-			{mvPythonDataType::Bool, "value"},
-		}, "Sets the primary window to fill the viewport.") });
 	}
 
-	PyObject* end(PyObject* self, PyObject* args, PyObject* kwargs)
+	PyObject* mvApp::end(PyObject* self, PyObject* args, PyObject* kwargs)
 	{
 		std::lock_guard<std::mutex> lk(mvApp::GetApp()->getMutex());
 		mvApp::GetApp()->getItemRegistry().popParent();
 		return GetPyNone();
 	}
 
-	PyObject* enable_docking(PyObject* self, PyObject* args, PyObject* kwargs)
+	PyObject* mvApp::enable_docking(PyObject* self, PyObject* args, PyObject* kwargs)
 	{
 		int shift_only = true;
 		int dockspace = false;
@@ -482,16 +399,16 @@ namespace Marvel {
 		return GetPyNone();
 	}
 
-	PyObject* is_dearpygui_running(PyObject* self, PyObject* args, PyObject* kwargs)
+	PyObject* mvApp::is_dearpygui_running(PyObject* self, PyObject* args, PyObject* kwargs)
 	{
 		return ToPyBool(mvApp::IsAppStarted());
 	}
 
-	PyObject* set_main_window_title(PyObject* self, PyObject* args, PyObject* kwargs)
+	PyObject* mvApp::set_viewport_title(PyObject* self, PyObject* args, PyObject* kwargs)
 	{
 		const char* title;
 
-		if (!(mvApp::GetApp()->getParsers())["set_main_window_title"].parse(args, kwargs, __FUNCTION__,
+		if (!(mvApp::GetApp()->getParsers())["set_viewport_title"].parse(args, kwargs, __FUNCTION__,
 			&title))
 			return GetPyNone();
 
@@ -506,12 +423,12 @@ namespace Marvel {
 		return GetPyNone();
 	}
 
-	PyObject* set_main_window_pos(PyObject* self, PyObject* args, PyObject* kwargs)
+	PyObject* mvApp::set_viewport_pos(PyObject* self, PyObject* args, PyObject* kwargs)
 	{
 		int x;
 		int y;
 
-		if (!(mvApp::GetApp()->getParsers())["set_main_window_pos"].parse(args, kwargs, __FUNCTION__,
+		if (!(mvApp::GetApp()->getParsers())["set_viewport_pos"].parse(args, kwargs, __FUNCTION__,
 			&x, &y))
 			return GetPyNone();
 
@@ -521,28 +438,11 @@ namespace Marvel {
 		return GetPyNone();
 	}
 
-	PyObject* add_character_remap(PyObject* self, PyObject* args, PyObject* kwargs)
-	{
-		int destination;
-		int source;
-
-		if (!(mvApp::GetApp()->getParsers())["add_character_remap"].parse(args, kwargs, __FUNCTION__,
-			&destination, &source))
-			return GetPyNone();
-
-		mvApp::GetApp()->getCallbackRegistry().submit([=]()
-			{
-				mvApp::GetApp()->addRemapChar(destination, source);
-			});
-
-		return GetPyNone();
-	}
-
-	PyObject* set_main_window_resizable(PyObject* self, PyObject* args, PyObject* kwargs)
+	PyObject* mvApp::set_viewport_resizable(PyObject* self, PyObject* args, PyObject* kwargs)
 	{
 		int resizable = true;
 
-		if (!(mvApp::GetApp()->getParsers())["set_main_window_resizable"].parse(args, kwargs, __FUNCTION__,
+		if (!(mvApp::GetApp()->getParsers())["set_viewport_resizable"].parse(args, kwargs, __FUNCTION__,
 			&resizable))
 			return GetPyNone();
 
@@ -552,7 +452,7 @@ namespace Marvel {
 		return GetPyNone();
 	}
 
-	PyObject* set_vsync(PyObject* self, PyObject* args, PyObject* kwargs)
+	PyObject* mvApp::set_vsync(PyObject* self, PyObject* args, PyObject* kwargs)
 	{
 		int value;
 
@@ -568,7 +468,7 @@ namespace Marvel {
 		return GetPyNone();
 	}
 
-	PyObject* setup_dearpygui(PyObject* self, PyObject* args, PyObject* kwargs)
+	PyObject* mvApp::setup_dearpygui(PyObject* self, PyObject* args, PyObject* kwargs)
 	{
 		Py_BEGIN_ALLOW_THREADS;
 		mvLog::Init();
@@ -587,7 +487,7 @@ namespace Marvel {
 		return GetPyNone();
 	}
 
-	PyObject* render_dearpygui_frame(PyObject* self, PyObject* args, PyObject* kwargs)
+	PyObject* mvApp::render_dearpygui_frame(PyObject* self, PyObject* args, PyObject* kwargs)
 	{
 
 		Py_BEGIN_ALLOW_THREADS;
@@ -598,7 +498,7 @@ namespace Marvel {
 		return GetPyNone();
 	}
 
-	PyObject* cleanup_dearpygui(PyObject* self, PyObject* args, PyObject* kwargs)
+	PyObject* mvApp::cleanup_dearpygui(PyObject* self, PyObject* args, PyObject* kwargs)
 	{
 		Py_BEGIN_ALLOW_THREADS;
 		mvApp::GetApp()->cleanup();
@@ -610,53 +510,7 @@ namespace Marvel {
 		return GetPyNone();
 	}
 
-	PyObject* set_start_callback(PyObject* self, PyObject* args, PyObject* kwargs)
-	{
-		PyObject* callback;
-
-		if (!(mvApp::GetApp()->getParsers())["set_start_callback"].parse(args, kwargs, __FUNCTION__, &callback))
-			return GetPyNone();
-
-		Py_XINCREF(callback);
-		mvApp::GetApp()->getCallbackRegistry().submit([=]()
-			{
-				mvApp::GetApp()->getCallbackRegistry().setOnStartCallback(callback);
-			});
-
-		return GetPyNone();
-	}
-
-	PyObject* set_exit_callback(PyObject* self, PyObject* args, PyObject* kwargs)
-	{
-		PyObject* callback;
-
-		if (!(mvApp::GetApp()->getParsers())["set_exit_callback"].parse(args, kwargs, __FUNCTION__, &callback))
-			return GetPyNone();
-
-		Py_XINCREF(callback);
-		mvApp::GetApp()->getCallbackRegistry().submit([=]()
-			{
-				mvApp::GetApp()->getCallbackRegistry().setOnCloseCallback(callback);
-			});
-		return GetPyNone();
-	}
-
-	PyObject* set_accelerator_callback(PyObject* self, PyObject* args, PyObject* kwargs)
-	{
-		PyObject* callback;
-
-		if (!(mvApp::GetApp()->getParsers())["set_accelerator_callback"].parse(args, kwargs, __FUNCTION__, &callback))
-			return GetPyNone();
-
-		Py_XINCREF(callback);
-		mvApp::GetApp()->getCallbackRegistry().submit([=]()
-			{
-				mvApp::GetApp()->getCallbackRegistry().setAcceleratorCallback(callback);
-			});
-		return GetPyNone();
-	}
-
-	PyObject* stop_dearpygui(PyObject* self, PyObject* args, PyObject* kwargs)
+	PyObject* mvApp::stop_dearpygui(PyObject* self, PyObject* args, PyObject* kwargs)
 	{
 		mvApp::StopApp();
 		auto viewport = mvApp::GetApp()->getViewport();
@@ -665,42 +519,36 @@ namespace Marvel {
 		return GetPyNone();
 	}
 
-	PyObject* get_total_time(PyObject* self, PyObject* args, PyObject* kwargs)
+	PyObject* mvApp::get_total_time(PyObject* self, PyObject* args, PyObject* kwargs)
 	{
 		std::lock_guard<std::mutex> lk(mvApp::GetApp()->getMutex());
 		return ToPyFloat((float)mvApp::GetApp()->getTotalTime());
 	}
 
-	PyObject* get_delta_time(PyObject* self, PyObject* args, PyObject* kwargs)
+	PyObject* mvApp::get_delta_time(PyObject* self, PyObject* args, PyObject* kwargs)
 	{
 		std::lock_guard<std::mutex> lk(mvApp::GetApp()->getMutex());
 		return ToPyFloat(mvApp::GetApp()->getDeltaTime());
 
 	}
 
-	PyObject* get_main_window_size(PyObject* self, PyObject* args, PyObject* kwargs)
+	PyObject* mvApp::get_viewport_size(PyObject* self, PyObject* args, PyObject* kwargs)
 	{
 		std::lock_guard<std::mutex> lk(mvApp::GetApp()->getMutex());
 		return ToPyPairII(mvApp::GetApp()->getActualWidth(), mvApp::GetApp()->getActualHeight());
 	}
 
-	PyObject* get_active_window(PyObject* self, PyObject* args, PyObject* kwargs)
-	{
-		std::lock_guard<std::mutex> lk(mvApp::GetApp()->getMutex());
-		return ToPyString(mvApp::GetApp()->getItemRegistry().getActiveWindow());
-	}
-
-	PyObject* get_dearpygui_version(PyObject* self, PyObject* args, PyObject* kwargs)
+	PyObject* mvApp::get_dearpygui_version(PyObject* self, PyObject* args, PyObject* kwargs)
 	{
 		return ToPyString(mvApp::GetApp()->GetVersion());
 	}
 
-	PyObject* set_main_window_size(PyObject* self, PyObject* args, PyObject* kwargs)
+	PyObject* mvApp::set_viewport_size(PyObject* self, PyObject* args, PyObject* kwargs)
 	{
 		int width;
 		int height;
 
-		if (!(mvApp::GetApp()->getParsers())["set_main_window_size"].parse(args, kwargs, __FUNCTION__, &width, &height))
+		if (!(mvApp::GetApp()->getParsers())["set_viewport_size"].parse(args, kwargs, __FUNCTION__, &width, &height))
 			return GetPyNone();
 
 
@@ -714,162 +562,5 @@ namespace Marvel {
 
 		return GetPyNone();
 	}
-
-	PyObject* set_primary_window(PyObject* self, PyObject* args, PyObject* kwargs)
-	{
-		const char* item;
-		int value;
-
-		if (!(mvApp::GetApp()->getParsers())["set_primary_window"].parse(args, kwargs, __FUNCTION__, &item, &value))
-			return GetPyNone();
-
-		std::lock_guard<std::mutex> lk(mvApp::GetApp()->getMutex());
-		mvApp::GetApp()->getItemRegistry().setPrimaryWindow(item, value);
-
-		return GetPyNone();
-	}
-
-	PyObject* set_theme_color(PyObject* self, PyObject* args, PyObject* kwargs)
-	{
-		long constant;
-		PyObject* color;
-		const char* item = "";
-
-		if (!(mvApp::GetApp()->getParsers())["set_theme_color"].parse(args, kwargs, __FUNCTION__, &constant, &color, &item))
-			return GetPyNone();
-
-		Py_XINCREF(color);
-		std::lock_guard<std::mutex> lk(mvApp::GetApp()->getMutex());
-
-		mvEventBus::Publish
-		(
-			mvEVT_CATEGORY_THEMES,
-			SID("color_change"),
-			{
-				CreateEventArgument("WIDGET", std::string(item)),
-				CreateEventArgument("ID", constant),
-				CreateEventArgument("COLOR", ToColor(color)),
-				CreateEventArgument("ENABLED", true)
-			}
-		);
-
-		Py_XDECREF(color);
-
-
-		return GetPyNone();
-	}
-
-	PyObject* set_theme_color_disabled(PyObject* self, PyObject* args, PyObject* kwargs)
-	{
-		long constant;
-		PyObject* color;
-		const char* item = "";
-
-		if (!(mvApp::GetApp()->getParsers())["set_theme_color_disabled"].parse(args, kwargs, __FUNCTION__, &constant, &color, &item))
-			return GetPyNone();
-
-		Py_XINCREF(color);
-		std::lock_guard<std::mutex> lk(mvApp::GetApp()->getMutex());
-		mvApp::GetApp()->getCallbackRegistry().submit([=]()
-			{
-				mvEventBus::Publish
-				(
-					mvEVT_CATEGORY_THEMES,
-					SID("color_change"),
-					{
-						CreateEventArgument("WIDGET", std::string(item)),
-						CreateEventArgument("ID", constant),
-						CreateEventArgument("COLOR", ToColor(color)),
-						CreateEventArgument("ENABLED", false)
-					}
-				);
-
-				// to ensure the decrement happens on the python thread
-				mvApp::GetApp()->getCallbackRegistry().submitCallback([=]()
-					{
-						Py_XDECREF(color);
-					});
-
-			});
-
-		return GetPyNone();
-	}
-
-	PyObject* set_theme_style(PyObject* self, PyObject* args, PyObject* kwargs)
-	{
-		long constant;
-		float style;
-		const char* item = "";
-
-		if (!(mvApp::GetApp()->getParsers())["set_theme_style"].parse(args, kwargs, __FUNCTION__, &constant, &style, &item))
-			return GetPyNone();
-
-		std::lock_guard<std::mutex> lk(mvApp::GetApp()->getMutex());
-		mvApp::GetApp()->getCallbackRegistry().submit([=]()
-			{
-				mvEventBus::Publish
-				(
-					mvEVT_CATEGORY_THEMES,
-					SID("style_change"),
-					{
-						CreateEventArgument("WIDGET", std::string(item)),
-						CreateEventArgument("ID", constant),
-						CreateEventArgument("STYLE", style)
-					}
-				);
-			});
-
-		return GetPyNone();
-	}
-
-	PyObject* set_global_font_scale(PyObject* self, PyObject* args, PyObject* kwargs)
-	{
-		float scale;
-
-		if (!(mvApp::GetApp()->getParsers())["set_global_font_scale"].parse(args, kwargs, __FUNCTION__, &scale))
-			return GetPyNone();
-
-		std::lock_guard<std::mutex> lk(mvApp::GetApp()->getMutex());
-		mvApp::GetApp()->setGlobalFontScale(scale);
-
-		return GetPyNone();
-	}
-
-	PyObject* get_global_font_scale(PyObject* self, PyObject* args, PyObject* kwargs)
-	{
-		return ToPyFloat(mvApp::GetApp()->getGlobalFontScale());
-	}
-
-	PyObject* add_additional_font(PyObject* self, PyObject* args, PyObject* kwargs)
-	{
-		const char* file;
-		float size = 13.0f;
-		const char* glyph_ranges = "";
-		PyObject* custom_glyph_ranges = nullptr;
-		PyObject* custom_glyph_chars = nullptr;
-
-
-		if (!(mvApp::GetApp()->getParsers())["add_additional_font"].parse(args, kwargs, __FUNCTION__,
-			&file, &size, &glyph_ranges, &custom_glyph_chars, &custom_glyph_ranges))
-			return GetPyNone();
-
-		std::vector<int> custom_chars = ToIntVect(custom_glyph_chars);
-		std::vector<std::pair<int, int>> custom_ranges = ToVectInt2(custom_glyph_ranges);
-		std::vector<std::array<ImWchar, 3>> imgui_custom_ranges;
-		std::vector<ImWchar> imgui_custom_chars;
-
-		for (auto& item : custom_ranges)
-			imgui_custom_ranges.push_back({ (ImWchar)item.first, (ImWchar)item.second, 0 });
-		for (auto& item : custom_chars)
-			imgui_custom_chars.push_back((ImWchar)item);
-
-		mvApp::GetApp()->getCallbackRegistry().submit([=]()
-			{
-				mvApp::GetApp()->setFont(file, size, glyph_ranges, imgui_custom_ranges, imgui_custom_chars);
-			});
-
-		return GetPyNone();
-	}
-#endif
 
 }

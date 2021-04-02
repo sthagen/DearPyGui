@@ -4,29 +4,23 @@
 
 namespace Marvel {
 
-	struct mvTreeNodeConfig : public mvAppItemConfig
-	{
-		bool default_open = false;
-		bool open_on_double_click = false;
-		bool open_on_arrow = false;
-		bool leaf = false;
-		bool bullet = false;
-	};
-
-	PyObject* add_tree_node(PyObject* self, PyObject* args, PyObject* kwargs);
-
 	MV_REGISTER_WIDGET(mvTreeNode);
 	class mvTreeNode : public mvBoolPtrBase
 	{
-		MV_APPITEM_TYPE(mvAppItemType::mvTreeNode, "add_tree_node")
+		MV_APPITEM_TYPE(mvAppItemType::mvTreeNode, add_tree_node)
 
-		MV_CREATE_THEME_CONSTANT(mvThemeCol_TreeNode_Text				,  0L, 0L);
-		MV_CREATE_THEME_CONSTANT(mvThemeCol_TreeNode_BgHovered			, 25L, 0L);
-		MV_CREATE_THEME_CONSTANT(mvThemeCol_TreeNode_BgActive			, 26L, 0L);
-		MV_CREATE_THEME_CONSTANT(mvThemeStyle_TreeNode_FramePaddingX	, 10L, 0L);
-		MV_CREATE_THEME_CONSTANT(mvThemeStyle_TreeNode_FramePaddingY	, 10L, 1L);
-		MV_CREATE_THEME_CONSTANT(mvThemeStyle_TreeNode_IndentSpacing	, 15L, 0L);
+		MV_CREATE_CONSTANT(mvThemeCol_TreeNode_Text				,  0L, 0L);
+		MV_CREATE_CONSTANT(mvThemeCol_TreeNode_BgHovered			, 25L, 0L);
+		MV_CREATE_CONSTANT(mvThemeCol_TreeNode_BgActive			, 26L, 0L);
+		MV_CREATE_CONSTANT(mvThemeStyle_TreeNode_FramePaddingX	, 10L, 0L);
+		MV_CREATE_CONSTANT(mvThemeStyle_TreeNode_FramePaddingY	, 10L, 1L);
+		MV_CREATE_CONSTANT(mvThemeStyle_TreeNode_IndentSpacing	, 15L, 0L);
 
+		MV_START_EXTRA_COMMANDS
+		MV_END_EXTRA_COMMANDS
+
+		MV_START_GENERAL_CONSTANTS
+		MV_END_GENERAL_CONSTANTS
 
 		MV_START_COLOR_CONSTANTS
 			MV_CREATE_CONSTANT_PAIR(mvThemeCol_TreeNode_Text,		mvColor(255, 255, 255, 255)),
@@ -35,9 +29,9 @@ namespace Marvel {
 		MV_END_COLOR_CONSTANTS
 
 		MV_START_STYLE_CONSTANTS
-			MV_CREATE_CONSTANT_TUPLE(mvThemeStyle_TreeNode_FramePaddingX, 4, 20),
-			MV_CREATE_CONSTANT_TUPLE(mvThemeStyle_TreeNode_FramePaddingY, 3, 20),
-			MV_CREATE_CONSTANT_TUPLE(mvThemeStyle_TreeNode_IndentSpacing,21, 30),
+			MV_ADD_CONSTANT(mvThemeStyle_TreeNode_FramePaddingX, 4, 20),
+			MV_ADD_CONSTANT(mvThemeStyle_TreeNode_FramePaddingY, 3, 20),
+			MV_ADD_CONSTANT(mvThemeStyle_TreeNode_IndentSpacing,21, 30),
 		MV_END_STYLE_CONSTANTS
 
 	public:
@@ -48,12 +42,10 @@ namespace Marvel {
 
 		mvTreeNode(const std::string& name);
 
-		void draw              ()               override;
+		void draw(ImDrawList* drawlist, float x, float y) override;
 
-#ifndef MV_CPP
 		void setExtraConfigDict(PyObject* dict) override;
 		void getExtraConfigDict(PyObject* dict) override;
-#endif // !MV_CPP
 
 	private:
 

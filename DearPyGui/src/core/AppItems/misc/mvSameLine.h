@@ -4,11 +4,6 @@
 
 namespace Marvel {
 
-#ifdef MV_CPP
-#else
-	PyObject* add_same_line(PyObject* self, PyObject* args, PyObject* kwargs);
-#endif
-
 	MV_REGISTER_WIDGET(mvSameLine);
 	class mvSameLine : public mvAppItem
 	{
@@ -17,9 +12,13 @@ namespace Marvel {
 
 		static void InsertParser(std::map<std::string, mvPythonParser>* parsers);
 
-	public:
+		MV_APPITEM_TYPE(mvAppItemType::mvSameLine, add_same_line)
 
-		MV_APPITEM_TYPE(mvAppItemType::mvSameLine, "add_same_line")
+		MV_START_EXTRA_COMMANDS
+		MV_END_EXTRA_COMMANDS
+
+		MV_START_GENERAL_CONSTANTS
+		MV_END_GENERAL_CONSTANTS
 
 		MV_START_COLOR_CONSTANTS
 		MV_END_COLOR_CONSTANTS
@@ -29,12 +28,10 @@ namespace Marvel {
 
 		mvSameLine(const std::string& name);
 
-		void draw() override;
+		void draw(ImDrawList* drawlist, float x, float y) override;
 
-#ifndef MV_CPP
 		void setExtraConfigDict(PyObject* dict) override;
 		void getExtraConfigDict(PyObject* dict) override;
-#endif
 
 	private:
 

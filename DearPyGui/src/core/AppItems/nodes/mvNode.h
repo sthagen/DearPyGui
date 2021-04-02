@@ -4,27 +4,31 @@
 
 namespace Marvel {
 
-	PyObject* add_node(PyObject* self, PyObject* args, PyObject* kwargs);
-
 	MV_REGISTER_WIDGET(mvNode);
 	class mvNode : public mvAppItem
 	{
 
 		friend class mvNodeEditor;
 
-		MV_APPITEM_TYPE(mvAppItemType::mvNode, "add_node")
+		MV_APPITEM_TYPE(mvAppItemType::mvNode, add_node)
 
-		MV_CREATE_THEME_CONSTANT(mvThemeCol_Node_Background,				 0L, 0L);
-		MV_CREATE_THEME_CONSTANT(mvThemeCol_Node_BackgroundHovered,			 1L, 0L);
-		MV_CREATE_THEME_CONSTANT(mvThemeCol_Node_BackgroundSelected,		 2L, 0L);
-		MV_CREATE_THEME_CONSTANT(mvThemeCol_Node_Outline,					 3L, 0L);
-		MV_CREATE_THEME_CONSTANT(mvThemeCol_Node_TitleBar,					 4L, 0L);
-		MV_CREATE_THEME_CONSTANT(mvThemeCol_Node_TitleBarHovered,			 5L, 0L);
-		MV_CREATE_THEME_CONSTANT(mvThemeCol_Node_TitleBarSelected,			 6L, 0L);
-		MV_CREATE_THEME_CONSTANT(mvThemeStyle_Node_CornerRounding,			 1L, 0L);
-		MV_CREATE_THEME_CONSTANT(mvThemeStyle_Node_PaddingHorizontal,		 2L, 0L);
-		MV_CREATE_THEME_CONSTANT(mvThemeStyle_Node_PaddingVertical,			 3L, 0L);
-		MV_CREATE_THEME_CONSTANT(mvThemeStyle_Node_BorderThickness,			 4L, 0L);
+		MV_CREATE_CONSTANT(mvThemeCol_Node_Background,				 0L, 0L);
+		MV_CREATE_CONSTANT(mvThemeCol_Node_BackgroundHovered,			 1L, 0L);
+		MV_CREATE_CONSTANT(mvThemeCol_Node_BackgroundSelected,		 2L, 0L);
+		MV_CREATE_CONSTANT(mvThemeCol_Node_Outline,					 3L, 0L);
+		MV_CREATE_CONSTANT(mvThemeCol_Node_TitleBar,					 4L, 0L);
+		MV_CREATE_CONSTANT(mvThemeCol_Node_TitleBarHovered,			 5L, 0L);
+		MV_CREATE_CONSTANT(mvThemeCol_Node_TitleBarSelected,			 6L, 0L);
+		MV_CREATE_CONSTANT(mvThemeStyle_Node_CornerRounding,			 1L, 0L);
+		MV_CREATE_CONSTANT(mvThemeStyle_Node_PaddingHorizontal,		 2L, 0L);
+		MV_CREATE_CONSTANT(mvThemeStyle_Node_PaddingVertical,			 3L, 0L);
+		MV_CREATE_CONSTANT(mvThemeStyle_Node_BorderThickness,			 4L, 0L);
+
+		MV_START_EXTRA_COMMANDS
+		MV_END_EXTRA_COMMANDS
+
+		MV_START_GENERAL_CONSTANTS
+		MV_END_GENERAL_CONSTANTS
 
 		MV_START_COLOR_CONSTANTS
 			MV_CREATE_CONSTANT_PAIR(mvThemeCol_Node_Background,         mvColor( 50,  50,  50, 255)),
@@ -37,10 +41,10 @@ namespace Marvel {
 		MV_END_COLOR_CONSTANTS
 
 		MV_START_STYLE_CONSTANTS
-			MV_CREATE_CONSTANT_TUPLE(mvThemeStyle_Node_CornerRounding,		5, 20),
-			MV_CREATE_CONSTANT_TUPLE(mvThemeStyle_Node_PaddingHorizontal,	8, 20),
-			MV_CREATE_CONSTANT_TUPLE(mvThemeStyle_Node_PaddingVertical,		8, 20),
-			MV_CREATE_CONSTANT_TUPLE(mvThemeStyle_Node_BorderThickness,		1, 20),
+			MV_ADD_CONSTANT(mvThemeStyle_Node_CornerRounding,		5, 20),
+			MV_ADD_CONSTANT(mvThemeStyle_Node_PaddingHorizontal,	8, 20),
+			MV_ADD_CONSTANT(mvThemeStyle_Node_PaddingVertical,		8, 20),
+			MV_ADD_CONSTANT(mvThemeStyle_Node_BorderThickness,		1, 20),
 
 		MV_END_STYLE_CONSTANTS
 
@@ -54,16 +58,14 @@ namespace Marvel {
 
 		void setNodePos(float x, float y);
 
-		void draw() override;
+		void draw(ImDrawList* drawlist, float x, float y) override;
 		bool isParentCompatible(mvAppItemType type) override;
 		bool canChildBeAdded(mvAppItemType type) override;
 
 		int getId() const {return m_id;}
 
-#ifndef MV_CPP
 		void setExtraConfigDict(PyObject* dict) override;
 		void getExtraConfigDict(PyObject* dict) override;
-#endif // !MV_CPP
 
 	private:
 

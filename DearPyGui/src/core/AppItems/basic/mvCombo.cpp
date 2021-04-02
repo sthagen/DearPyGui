@@ -3,12 +3,14 @@
 #include "mvApp.h"
 #include "mvItemRegistry.h"
 #include "mvImGuiThemeScope.h"
+#include "mvFontScope.h"
 
 namespace Marvel {
 
 	void mvCombo::InsertParser(std::map<std::string, mvPythonParser>* parsers)
 	{
-		parsers->insert({ "add_combo", mvPythonParser({
+		parsers->insert({ s_command, mvPythonParser({
+			{mvPythonDataType::Optional},
 			{mvPythonDataType::String, "name"},
 			{mvPythonDataType::KeywordOnly},
 			{mvPythonDataType::StringList, "items", "", "()"},
@@ -39,35 +41,25 @@ namespace Marvel {
 		m_description.disableAllowed = true;
 	}
 
-	mvCombo::mvCombo(const std::string& name, const mvComboConfig& config)
-		:
-		mvStringPtrBase(name, config.default_value),
-		m_config(config)
-	{
-		m_description.disableAllowed = true;
-
-		m_config.name = name;
-		updateConfig(&m_config);
-	}
-
-	void mvCombo::draw()
+	void mvCombo::draw(ImDrawList* drawlist, float x, float y)
 	{
 
 		ScopedID id;
 		mvImGuiThemeScope scope(this);
+		mvFontScope fscope(this);
 
 		static std::vector<std::string> disabled_items{};
 
 		// The second parameter is the label previewed before opening the combo.
 		if (ImGui::BeginCombo(m_label.c_str(), m_value->c_str(), m_flags)) 
 		{
-			for (const auto& name : m_core_config.enabled ? m_config.items : disabled_items)
+			for (const auto& name : m_enabled ? m_items : disabled_items)
 			{
 				bool is_selected = (*m_value == name);
 				if (ImGui::Selectable((name).c_str(), is_selected))
 				{
-					if (m_core_config.enabled) { *m_value = name; }
-					mvApp::GetApp()->getCallbackRegistry().addCallback(m_core_config.callback, m_core_config.name, m_core_config.callback_data);
+					if (m_enabled) { *m_value = name; }
+					mvApp::GetApp()->getCallbackRegistry().addCallback(m_callback, m_name, m_callback_data);
 
 				}
 
@@ -81,52 +73,12 @@ namespace Marvel {
 
 	}
 
-	void mvCombo::updateConfig(mvAppItemConfig* config)
-	{
-		auto aconfig = (mvComboConfig*)config;
-
-		m_core_config.width = config->width;
-		m_core_config.height = config->height;
-		m_core_config.label = config->label;
-		m_core_config.show = config->show;
-		m_core_config.callback = config->callback;
-		m_core_config.callback_data = config->callback_data;
-		m_core_config.enabled = config->enabled;
-
-		m_config.source = aconfig->source;
-
-		if (config != &m_config)
-			m_config = *aconfig;
-	}
-
-	mvAppItemConfig* mvCombo::getConfig()
-	{
-		return &m_config;
-	}
-
-#ifdef MV_CPP
-	void add_combo(const char* name, const mvComboConfig& config)
-	{
-		auto item = CreateRef<mvCombo>(name, config);
-
-		mvApp::GetApp()->getItemRegistry().addItemWithRuntimeChecks(item, config.parent.c_str(), config.before.c_str());
-	}
-
-	void add_combo(const char* name, const std::vector<std::string>& items, mvCallable callable)
-	{
-		mvComboConfig config;
-		config.items = items;
-		config.callback = callable;
-		add_combo(name, config);
-	}
-#else
-
 	void mvCombo::setExtraConfigDict(PyObject* dict)
 	{
 		if (dict == nullptr)
 			return;
 
-		if (PyObject* item = PyDict_GetItemString(dict, "items")) m_config.items = ToStringVect(item);
+		if (PyObject* item = PyDict_GetItemString(dict, "items")) m_items = ToStringVect(item);
 
 		// helpers for bit flipping
 		auto flagop = [dict](const char* keyword, int flag, int& flags)
@@ -176,7 +128,7 @@ namespace Marvel {
 		if (dict == nullptr)
 			return;
 
-		PyDict_SetItemString(dict, "items", ToPyList(m_config.items));
+		PyDict_SetItemString(dict, "items", ToPyList(m_items));
 
 		// helper to check and set bit
 		auto checkbitset = [dict](const char* keyword, int flag, const int& flags)
@@ -192,9 +144,11 @@ namespace Marvel {
 		checkbitset("no_preview", ImGuiComboFlags_NoPreview, m_flags);
 	}
 
-	PyObject* add_combo(PyObject* self, PyObject* args, PyObject* kwargs)
+	PyObject* mvCombo::add_combo(PyObject* self, PyObject* args, PyObject* kwargs)
 	{
-		const char* name;
+		static int i = 0; i++;
+		std::string sname = std::string(std::string("$$DPG_") + s_internal_id + std::to_string(i));
+		const char* name = sname.c_str();
 		const char* default_value = "";
 		PyObject* items;
 		PyObject* callback = nullptr;
@@ -235,8 +189,7 @@ namespace Marvel {
 
 		mvApp::GetApp()->getItemRegistry().addItemWithRuntimeChecks(item, parent, before);
 
-		return GetPyNone();
+		return ToPyString(name);
 	}
 
-#endif
 }

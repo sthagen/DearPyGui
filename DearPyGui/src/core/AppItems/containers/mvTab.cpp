@@ -3,11 +3,13 @@
 #include "mvApp.h"
 #include "mvItemRegistry.h"
 #include "mvImGuiThemeScope.h"
+#include "mvFontScope.h"
 
 namespace Marvel {
 	void mvTab::InsertParser(std::map<std::string, mvPythonParser>* parsers)
 	{
-		parsers->insert({ "add_tab", mvPythonParser({
+		parsers->insert({ s_command, mvPythonParser({
+			{mvPythonDataType::Optional},
 			{mvPythonDataType::String, "name"},
 			{mvPythonDataType::KeywordOnly},
 			{mvPythonDataType::Bool, "closable", "creates a button on the tab that can hide the tab", "False"},
@@ -38,28 +40,29 @@ namespace Marvel {
 		m_flags &= ~flag;
 	}
 
-	void mvTab::draw()
+	void mvTab::draw(ImDrawList* drawlist, float x, float y)
 	{
 		ScopedID id;
 		mvImGuiThemeScope scope(this);
+		mvFontScope fscope(this);
 
 		// cast parent to mvTabBar
-		auto parent = (mvTabBar*)m_parent;
+		auto parent = (mvTabBar*)m_parentPtr;
 
 		// check if this is first tab
 		if (parent->getSpecificValue().empty())
 		{
 			// set mvTabBar value to the first tab name
-			parent->setValue(m_core_config.name);
+			parent->setValue(m_name);
 			*m_value = true;
 		}
 
 		// create tab item and see if it is selected
-		if (ImGui::BeginTabItem(m_label.c_str(), m_closable ? &m_core_config.show : nullptr, m_flags))
+		if (ImGui::BeginTabItem(m_label.c_str(), m_closable ? &m_show : nullptr, m_flags))
 		{
 
 			// set other tab's value false
-			for (auto child : parent->m_children)
+			for (auto child : parent->m_children1)
 			{
 				if (child->getType() == mvAppItemType::mvTab)
 					*((mvTab*)child.get())->m_value = false;
@@ -69,25 +72,25 @@ namespace Marvel {
 			*m_value = true;
 
 			// run call back if it exists
-			if (parent->getSpecificValue() != m_core_config.name)
-				mvApp::GetApp()->getCallbackRegistry().addCallback(parent->getCallback(), m_core_config.name, parent->getCallbackData());
+			if (parent->getSpecificValue() != m_name)
+				mvApp::GetApp()->getCallbackRegistry().addCallback(parent->getCallback(), m_name, parent->getCallbackData());
 
-			parent->setValue(m_core_config.name);
+			parent->setValue(m_name);
 
 			//we do this so that the children dont get the theme
 			scope.cleanup();
 
-			for (auto& item : m_children)
+			for (auto& item : m_children1)
 			{
 				// skip item if it's not shown
-				if (!item->m_core_config.show)
+				if (!item->m_show)
 					continue;
 
 				// set item width
-				if (item->m_core_config.width != 0)
-					ImGui::SetNextItemWidth((float)item->m_core_config.width);
+				if (item->m_width != 0)
+					ImGui::SetNextItemWidth((float)item->m_width);
 
-				item->draw();
+				item->draw(drawlist, ImGui::GetCursorPosX(), ImGui::GetCursorPosY());
 
 				item->getState().update();
 			}
@@ -96,8 +99,6 @@ namespace Marvel {
 		}
 
 	}
-
-#ifndef MV_CPP
 
 	void mvTab::setExtraConfigDict(PyObject* dict)
 	{
@@ -144,9 +145,11 @@ namespace Marvel {
 
 	}
 
-	PyObject* add_tab(PyObject* self, PyObject* args, PyObject* kwargs)
+	PyObject* mvTab::add_tab(PyObject* self, PyObject* args, PyObject* kwargs)
 	{
-		const char* name;
+		static int i = 0; i++;
+		std::string sname = std::string(std::string("$$DPG_") + s_internal_id + std::to_string(i));
+		const char* name = sname.c_str();
 		int closeable = false;
 		const char* label = "";
 		int show = true;
@@ -186,7 +189,7 @@ namespace Marvel {
 
 				}
 
-				return GetPyNone();
+				return ToPyString(name);
 			}
 
 			else
@@ -218,7 +221,7 @@ namespace Marvel {
 
 				}
 
-				return GetPyNone();
+				return ToPyString(name);
 			}
 
 			else
@@ -231,6 +234,4 @@ namespace Marvel {
 		return ToPyBool(false);
 	}
 
-
-#endif
 }

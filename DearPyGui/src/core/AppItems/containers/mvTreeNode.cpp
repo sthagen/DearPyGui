@@ -3,11 +3,13 @@
 #include "mvApp.h"
 #include "mvItemRegistry.h"
 #include "mvImGuiThemeScope.h"
+#include "mvFontScope.h"
 
 namespace Marvel {
 	void mvTreeNode::InsertParser(std::map<std::string, mvPythonParser>* parsers)
 	{
-		parsers->insert({ "add_tree_node", mvPythonParser({
+		parsers->insert({ s_command, mvPythonParser({
+			{mvPythonDataType::Optional},
 			{mvPythonDataType::String, "name"},
 			{mvPythonDataType::KeywordOnly},
 			{mvPythonDataType::String, "label", "", "''"},
@@ -28,10 +30,11 @@ namespace Marvel {
 		m_description.container = true;
 	}
 
-	void mvTreeNode::draw()
+	void mvTreeNode::draw(ImDrawList* drawlist, float x, float y)
 	{
 		ScopedID id;
 		mvImGuiThemeScope scope(this);
+		mvFontScope fscope(this);
 
 		ImGui::BeginGroup();
 		if (ImGui::TreeNodeEx(m_label.c_str(), m_flags))
@@ -39,17 +42,17 @@ namespace Marvel {
 			//we do this so that the children dont get the theme
 			scope.cleanup();
 
-			for (auto& item : m_children)
+			for (auto& item : m_children1)
 			{
 				// skip item if it's not shown
-				if (!item->m_core_config.show)
+				if (!item->m_show)
 					continue;
 
 				// set item width
-				if (item->m_core_config.width != 0)
-					ImGui::SetNextItemWidth((float)item->m_core_config.width);
+				if (item->m_width != 0)
+					ImGui::SetNextItemWidth((float)item->m_width);
 
-				item->draw();
+				item->draw(drawlist, ImGui::GetCursorPosX(), ImGui::GetCursorPosY());
 
 				item->getState().update();
 			}
@@ -58,8 +61,6 @@ namespace Marvel {
 
 		ImGui::EndGroup();
 	}
-
-#ifndef MV_CPP
 
 	void mvTreeNode::setExtraConfigDict(PyObject* dict)
 	{
@@ -102,9 +103,11 @@ namespace Marvel {
 
 	}
 
-	PyObject* add_tree_node(PyObject* self, PyObject* args, PyObject* kwargs)
+	PyObject* mvTreeNode::add_tree_node(PyObject* self, PyObject* args, PyObject* kwargs)
 	{
-		const char* name;
+		static int i = 0; i++;
+		std::string sname = std::string(std::string("$$DPG_") + s_internal_id + std::to_string(i));
+		const char* name = sname.c_str();
 		const char* label = "";
 		int show = false;
 		const char* parent = "";
@@ -132,8 +135,7 @@ namespace Marvel {
 
 		}
 
-		return GetPyNone();
+		return ToPyString(name);
 	}
 
-#endif
 }

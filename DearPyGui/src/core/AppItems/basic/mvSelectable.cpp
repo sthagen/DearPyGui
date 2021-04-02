@@ -3,17 +3,21 @@
 #include "mvApp.h"
 #include "mvItemRegistry.h"
 #include "mvImGuiThemeScope.h"
+#include "mvFontScope.h"
 
 namespace Marvel {
 
 	void mvSelectable::InsertParser(std::map<std::string, mvPythonParser>* parsers)
 	{
-		parsers->insert({ "add_selectable", mvPythonParser({
+		parsers->insert({ s_command, mvPythonParser({
+			{mvPythonDataType::Optional},
 			{mvPythonDataType::String, "name"},
 			{mvPythonDataType::KeywordOnly},
 			{mvPythonDataType::Bool, "default_value", "", "False"},
 			{mvPythonDataType::Callable, "callback", "Registers a callback", "None"},
 			{mvPythonDataType::Object, "callback_data", "Callback data", "None"},
+			{mvPythonDataType::Integer, "width","", "0"},
+			{mvPythonDataType::Integer, "height", "", "0"},
 			{mvPythonDataType::String, "parent", "Parent this item will be added to. (runtime adding)", "''"},
 			{mvPythonDataType::String, "before", "This item will be displayed before the specified item in the parent. (runtime adding)", "''"},
 			{mvPythonDataType::String, "source", "", "''"},
@@ -32,7 +36,7 @@ namespace Marvel {
 
 	void mvSelectable::setEnabled(bool value)
 	{
-		if (value == m_core_config.enabled)
+		if (value == m_enabled)
 			return;
 
 		if (value)
@@ -41,42 +45,20 @@ namespace Marvel {
 		else
 			m_flags |= ImGuiSelectableFlags_Disabled;
 
-		m_core_config.enabled = value;
+		m_enabled = value;
 	}
 
-	void mvSelectable::draw()
+	void mvSelectable::draw(ImDrawList* drawlist, float x, float y)
 	{
 
 		ScopedID id;
 		mvImGuiThemeScope scope(this);
+		mvFontScope fscope(this);
 
-		if (ImGui::Selectable(m_label.c_str(), m_value.get(), m_flags))
-			mvApp::GetApp()->getCallbackRegistry().addCallback(m_core_config.callback, m_core_config.name, m_core_config.callback_data);
+		if (ImGui::Selectable(m_label.c_str(), m_value.get(), m_flags, ImVec2((float)m_width, (float)m_height)))
+			mvApp::GetApp()->getCallbackRegistry().addCallback(m_callback, m_name, m_callback_data);
 
 	}
-
-	void mvSelectable::updateConfig(mvAppItemConfig* config)
-	{
-		auto aconfig = (mvSelectableConfig*)config;
-
-		m_core_config.label = config->label;
-		m_core_config.show = config->show;
-		m_core_config.enabled = config->enabled;
-		m_core_config.callback = config->callback;
-		m_core_config.callback_data = config->callback_data;
-
-		m_config.source = aconfig->source;
-
-		if (config != &m_config)
-			m_config = *aconfig;
-	}
-
-	mvAppItemConfig* mvSelectable::getConfig()
-	{
-		return &m_config;
-	}
-
-#ifndef MV_CPP
 
 	void mvSelectable::setExtraConfigDict(PyObject* dict)
 	{
@@ -111,12 +93,16 @@ namespace Marvel {
 		checkbitset("span_columns", ImGuiSelectableFlags_SpanAllColumns, m_flags, false);
 	}
 
-	PyObject* add_selectable(PyObject* self, PyObject* args, PyObject* kwargs)
+	PyObject* mvSelectable::add_selectable(PyObject* self, PyObject* args, PyObject* kwargs)
 	{
-		const char* name;
+		static int i = 0; i++;
+		std::string sname = std::string(std::string("$$DPG_") + s_internal_id + std::to_string(i));
+		const char* name = sname.c_str();
 		int default_value = false;
 		PyObject* callback = nullptr;
 		PyObject* callback_data = nullptr;
+		int width = 0;
+		int height = 0;
 		const char* before = "";
 		const char* parent = "";
 		const char* source = "";
@@ -128,7 +114,7 @@ namespace Marvel {
 		//ImGuiSelectableFlags flags = ImGuiSelectableFlags_None;
 
 		if (!(mvApp::GetApp()->getParsers())["add_selectable"].parse(args, kwargs, __FUNCTION__, &name,
-			&default_value, &callback, &callback_data, &parent, &before, &source, &enabled,
+			&default_value, &callback, &callback_data, &width, &height, &before, &parent, &source, &enabled,
 			&label, &show, &span_columns))
 			return ToPyBool(false);
 
@@ -146,9 +132,7 @@ namespace Marvel {
 
 		mvApp::GetApp()->getItemRegistry().addItemWithRuntimeChecks(item, parent, before);
 
-		return GetPyNone();
+		return ToPyString(name);
 	}
-
-#endif // !MV_CPP
 
 }

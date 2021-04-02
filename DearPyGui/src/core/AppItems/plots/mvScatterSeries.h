@@ -1,6 +1,7 @@
 #pragma once
 
 #include "mvPlot.h"
+#include "mvThemeManager.h"
 
 namespace Marvel {
 
@@ -20,11 +21,12 @@ namespace Marvel {
 			m_markerOutlineColor(markerOutlineColor),
 			m_markerFillColor(markerFillColor)
 		{
+			DecodelibID(m_marker, (int*)&m_marker);
 		}
 
 		mvSeriesType getSeriesType() override { return mvSeriesType::Scatter; }
 
-		void draw() override
+		void draw(ImDrawList* drawlist, float x, float y) override
 		{
 			ImPlot::PushStyleColor(ImPlotCol_MarkerOutline, m_markerOutlineColor.toVec4());
 			ImPlot::PushStyleColor(ImPlotCol_MarkerFill, m_markerFillColor.toVec4());

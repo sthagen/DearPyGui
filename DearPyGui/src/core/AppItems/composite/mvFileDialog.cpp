@@ -1,5 +1,6 @@
 #include "mvFileDialog.h"
 #include "mvItemRegistry.h"
+#include "mvFontScope.h"
 
 namespace Marvel {
 
@@ -11,7 +12,7 @@ namespace Marvel {
 			{mvPythonDataType::String, "extensions", "filters items with extensions i.e '.*, .py'", "''"},
 		}, "Opens an 'open file' dialog.") });
 
-		parsers->insert({ "select_directory_dialog", mvPythonParser({
+		parsers->insert({ s_command, mvPythonParser({
 			{mvPythonDataType::Optional},
 			{mvPythonDataType::Callable, "callback", "function to call on completion", "None"},
 		}, "Opens a select directory dialog.") });
@@ -19,7 +20,6 @@ namespace Marvel {
 
 	mvFileDialog::mvFileDialog() : mvBaseWindowAppitem("filedialog")
 	{
-		m_description.deleteAllowed = false;
 	}
 
 	bool mvFileDialog::prerender2() 
@@ -32,10 +32,12 @@ namespace Marvel {
 		m_callback2 = callback; 
 	}
 
-	void mvFileDialog::draw()
+	void mvFileDialog::draw(ImDrawList* drawlist, float x, float y)
 	{
 		if (!prerender2())
 			return;
+
+		mvFontScope fscope(this);
 
 		// display
 		if (ImGuiFileDialog::Instance()->Display("ChooseFileDlgKey", ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoSavedSettings, ImVec2(500, 600)))
@@ -58,13 +60,11 @@ namespace Marvel {
 			}
 			// close
 			ImGuiFileDialog::Instance()->Close();
-			m_core_config.show = false;
+			m_show = false;
 		}
 	}
 
-#ifdef MV_CPP
-#else
-	PyObject* select_directory_dialog(PyObject* self, PyObject* args, PyObject* kwargs)
+	PyObject* mvFileDialog::select_directory_dialog(PyObject* self, PyObject* args, PyObject* kwargs)
 	{
 		PyObject* callback = nullptr;
 
@@ -86,7 +86,7 @@ namespace Marvel {
 		return GetPyNone();
 	}
 
-	PyObject* open_file_dialog(PyObject* self, PyObject* args, PyObject* kwargs)
+	PyObject* mvFileDialog::open_file_dialog(PyObject* self, PyObject* args, PyObject* kwargs)
 	{
 		PyObject* callback = nullptr;
 		const char* extensions = ".*";
@@ -110,7 +110,5 @@ namespace Marvel {
 
 		return GetPyNone();
 	}
-#endif // 
-
 
 }

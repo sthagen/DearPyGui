@@ -4,11 +4,6 @@
 
 namespace Marvel {
 
-#ifdef MV_CPP
-#else
-	PyObject* add_dummy(PyObject* self, PyObject* args, PyObject* kwargs);
-#endif
-
 	MV_REGISTER_WIDGET(mvDummy);
 	class mvDummy : public mvAppItem
 	{
@@ -19,7 +14,13 @@ namespace Marvel {
 
 	public:
 
-		MV_APPITEM_TYPE(mvAppItemType::mvDummy, "add_dummy")
+		MV_APPITEM_TYPE(mvAppItemType::mvDummy, add_dummy)
+
+		MV_START_EXTRA_COMMANDS
+		MV_END_EXTRA_COMMANDS
+
+		MV_START_GENERAL_CONSTANTS
+		MV_END_GENERAL_CONSTANTS
 
 		MV_START_COLOR_CONSTANTS
 		MV_END_COLOR_CONSTANTS
@@ -29,7 +30,7 @@ namespace Marvel {
 
 		mvDummy(const std::string& name);
 
-		void draw() override;
+		void draw(ImDrawList* drawlist, float x, float y) override;
 
 	};
 

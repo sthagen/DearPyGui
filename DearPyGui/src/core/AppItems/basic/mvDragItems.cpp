@@ -6,12 +6,14 @@
 #include <string>
 #include "mvItemRegistry.h"
 #include "mvImGuiThemeScope.h"
+#include "mvFontScope.h"
 
 namespace Marvel {
 
     void mvDragFloat::InsertParser(std::map<std::string, mvPythonParser>* parsers)
     {
-        parsers->insert({ "add_drag_float", mvPythonParser({
+        parsers->insert({ s_command, mvPythonParser({
+            {mvPythonDataType::Optional},
             {mvPythonDataType::String, "name"},
             {mvPythonDataType::KeywordOnly},
             {mvPythonDataType::Float, "default_value", "", "0.0"},
@@ -35,7 +37,8 @@ namespace Marvel {
 
     void mvDragFloat2::InsertParser(std::map<std::string, mvPythonParser>* parsers)
     {
-        parsers->insert({ "add_drag_float2", mvPythonParser({
+        parsers->insert({ s_command, mvPythonParser({
+            {mvPythonDataType::Optional},
             {mvPythonDataType::String, "name"},
             {mvPythonDataType::KeywordOnly},
             {mvPythonDataType::FloatList, "default_value", "", "(0.0, 0.0)"},
@@ -59,7 +62,8 @@ namespace Marvel {
 
     void mvDragFloat3::InsertParser(std::map<std::string, mvPythonParser>* parsers)
     {
-        parsers->insert({ "add_drag_float3", mvPythonParser({
+        parsers->insert({ s_command, mvPythonParser({
+            {mvPythonDataType::Optional},
             {mvPythonDataType::String, "name"},
             {mvPythonDataType::KeywordOnly},
             {mvPythonDataType::FloatList, "default_value", "", "(0.0, 0.0, 0.0)"},
@@ -83,7 +87,7 @@ namespace Marvel {
 
     void mvDragFloat4::InsertParser(std::map<std::string, mvPythonParser>* parsers)
     {
-        parsers->insert({ "add_drag_float4", mvPythonParser({
+        parsers->insert({ s_command, mvPythonParser({
             {mvPythonDataType::String, "name"},
             {mvPythonDataType::KeywordOnly},
             {mvPythonDataType::FloatList, "default_value", "", "(0.0, 0.0, 0.0, 0.0)"},
@@ -107,7 +111,8 @@ namespace Marvel {
 
     void mvDragInt::InsertParser(std::map<std::string, mvPythonParser>* parsers)
     {
-        parsers->insert({ "add_drag_int", mvPythonParser({
+        parsers->insert({ s_command, mvPythonParser({
+            {mvPythonDataType::Optional},
             {mvPythonDataType::String, "name"},
             {mvPythonDataType::KeywordOnly},
             {mvPythonDataType::Integer, "default_value", "", "0"},
@@ -131,7 +136,8 @@ namespace Marvel {
 
     void mvDragInt2::InsertParser(std::map<std::string, mvPythonParser>* parsers)
     {
-        parsers->insert({ "add_drag_int2", mvPythonParser({
+        parsers->insert({ s_command, mvPythonParser({
+            {mvPythonDataType::Optional},
             {mvPythonDataType::String, "name"},
             {mvPythonDataType::KeywordOnly},
             {mvPythonDataType::IntList, "default_value", "", "(0, 0)"},
@@ -157,7 +163,8 @@ namespace Marvel {
 
     void mvDragInt3::InsertParser(std::map<std::string, mvPythonParser>* parsers)
     {
-        parsers->insert({ "add_drag_int3", mvPythonParser({
+        parsers->insert({ s_command, mvPythonParser({
+            {mvPythonDataType::Optional},
             {mvPythonDataType::String, "name"},
             {mvPythonDataType::KeywordOnly},
             {mvPythonDataType::IntList, "default_value", "", "(0, 0, 0)"},
@@ -181,7 +188,8 @@ namespace Marvel {
 
     void mvDragInt4::InsertParser(std::map<std::string, mvPythonParser>* parsers)
     {
-        parsers->insert({ "add_drag_int4", mvPythonParser({
+        parsers->insert({ s_command, mvPythonParser({
+            {mvPythonDataType::Optional},
             {mvPythonDataType::String, "name"},
             {mvPythonDataType::KeywordOnly},
             {mvPythonDataType::IntList, "default_value", "", "(0, 0, 0, 0)"},
@@ -211,7 +219,7 @@ namespace Marvel {
 
     void mvDragFloat::setEnabled(bool value)
     {
-        if (value == m_core_config.enabled)
+        if (value == m_enabled)
             return;
 
         if (value)
@@ -224,41 +232,20 @@ namespace Marvel {
             m_flags |= ImGuiSliderFlags_NoInput;
         }
 
-        m_core_config.enabled = value;
+        m_enabled = value;
     }
 
-    void mvDragFloat::draw()
+    void mvDragFloat::draw(ImDrawList* drawlist, float x, float y)
     {
         ScopedID id;
         mvImGuiThemeScope scope(this);
+        mvFontScope fscope(this);
 
-        if (!m_core_config.enabled) m_disabled_value = *m_value;
+        if (!m_enabled) m_disabled_value = *m_value;
 
-        if (ImGui::DragFloat(m_label.c_str(), m_core_config.enabled ? m_value.get() : &m_disabled_value, m_speed, m_min, m_max, m_format.c_str(), m_flags))
-            mvApp::GetApp()->getCallbackRegistry().addCallback(getCallback(false), m_core_config.name, m_core_config.callback_data);
+        if (ImGui::DragFloat(m_label.c_str(), m_enabled ? m_value.get() : &m_disabled_value, m_speed, m_min, m_max, m_format.c_str(), m_flags))
+            mvApp::GetApp()->getCallbackRegistry().addCallback(getCallback(false), m_name, m_callback_data);
 
-    }
-
-    void mvDragFloat::updateConfig(mvAppItemConfig* config)
-    {
-        auto aconfig = (mvDragFloatConfig*)config;
-
-        m_core_config.width = config->width;
-        m_core_config.label = config->label;
-        m_core_config.show = config->show;
-        m_core_config.callback = config->callback;
-        m_core_config.callback_data = config->callback_data;
-        m_core_config.enabled = config->enabled;
-
-        m_config.source = aconfig->source;
-
-        if (config != &m_config)
-            m_config = *aconfig;
-    }
-
-    mvAppItemConfig* mvDragFloat::getConfig()
-    {
-        return &m_config;
     }
 
     mvDragFloat2::mvDragFloat2(const std::string& name, float* default_value, const std::string& dataSource)
@@ -269,7 +256,7 @@ namespace Marvel {
 
     void mvDragFloat2::setEnabled(bool value)
     {
-        if (value == m_core_config.enabled)
+        if (value == m_enabled)
             return;
 
         if (value)
@@ -282,40 +269,19 @@ namespace Marvel {
             m_flags |= ImGuiSliderFlags_NoInput;
         }
 
-        m_core_config.enabled = value;
+        m_enabled = value;
     }
 
-    void mvDragFloat2::draw()
+    void mvDragFloat2::draw(ImDrawList* drawlist, float x, float y)
     {
         ScopedID id;
         mvImGuiThemeScope scope(this);
+        mvFontScope fscope(this);
 
-        if (!m_core_config.enabled) std::copy(m_value->data(), m_value->data() + 2, m_disabled_value);
+        if (!m_enabled) std::copy(m_value->data(), m_value->data() + 2, m_disabled_value);
 
-        if (ImGui::DragFloat2(m_label.c_str(), m_core_config.enabled ? m_value->data() : &m_disabled_value[0], m_speed, m_min, m_max, m_format.c_str(), m_flags))
-            mvApp::GetApp()->getCallbackRegistry().addCallback(getCallback(false), m_core_config.name, m_core_config.callback_data);
-    }
-
-    void mvDragFloat2::updateConfig(mvAppItemConfig* config)
-    {
-        auto aconfig = (mvDragFloatsConfig*)config;
-
-        m_core_config.width = config->width;
-        m_core_config.label = config->label;
-        m_core_config.show = config->show;
-        m_core_config.callback = config->callback;
-        m_core_config.callback_data = config->callback_data;
-        m_core_config.enabled = config->enabled;
-
-        m_config.source = aconfig->source;
-
-        if (config != &m_config)
-            m_config = *aconfig;
-    }
-
-    mvAppItemConfig* mvDragFloat2::getConfig()
-    {
-        return &m_config;
+        if (ImGui::DragFloat2(m_label.c_str(), m_enabled ? m_value->data() : &m_disabled_value[0], m_speed, m_min, m_max, m_format.c_str(), m_flags))
+            mvApp::GetApp()->getCallbackRegistry().addCallback(getCallback(false), m_name, m_callback_data);
     }
 
     mvDragFloat3::mvDragFloat3(const std::string& name, float* default_value, const std::string& dataSource)
@@ -326,7 +292,7 @@ namespace Marvel {
 
     void mvDragFloat3::setEnabled(bool value)
     {
-        if (value == m_core_config.enabled)
+        if (value == m_enabled)
             return;
 
         if (value)
@@ -338,40 +304,19 @@ namespace Marvel {
             m_flags |= ImGuiSliderFlags_NoInput;
         }
 
-        m_core_config.enabled = value;
+        m_enabled = value;
     }
 
-    void mvDragFloat3::draw()
+    void mvDragFloat3::draw(ImDrawList* drawlist, float x, float y)
     {
         ScopedID id;
         mvImGuiThemeScope scope(this);
+        mvFontScope fscope(this);
 
-        if (!m_core_config.enabled) std::copy(m_value->data(), m_value->data() + 3, m_disabled_value);
+        if (!m_enabled) std::copy(m_value->data(), m_value->data() + 3, m_disabled_value);
 
-        if (ImGui::DragFloat3(m_label.c_str(), m_core_config.enabled ? m_value->data() : &m_disabled_value[0], m_speed, m_min, m_max, m_format.c_str(), m_flags))
-            mvApp::GetApp()->getCallbackRegistry().addCallback(getCallback(false), m_core_config.name, m_core_config.callback_data);
-    }
-
-    void mvDragFloat3::updateConfig(mvAppItemConfig* config)
-    {
-        auto aconfig = (mvDragFloatsConfig*)config;
-
-        m_core_config.width = config->width;
-        m_core_config.label = config->label;
-        m_core_config.show = config->show;
-        m_core_config.callback = config->callback;
-        m_core_config.callback_data = config->callback_data;
-        m_core_config.enabled = config->enabled;
-
-        m_config.source = aconfig->source;
-
-        if (config != &m_config)
-            m_config = *aconfig;
-    }
-
-    mvAppItemConfig* mvDragFloat3::getConfig()
-    {
-        return &m_config;
+        if (ImGui::DragFloat3(m_label.c_str(), m_enabled ? m_value->data() : &m_disabled_value[0], m_speed, m_min, m_max, m_format.c_str(), m_flags))
+            mvApp::GetApp()->getCallbackRegistry().addCallback(getCallback(false), m_name, m_callback_data);
     }
 
     mvDragFloat4::mvDragFloat4(const std::string& name, float* default_value, const std::string& dataSource)
@@ -382,7 +327,7 @@ namespace Marvel {
 
     void mvDragFloat4::setEnabled(bool value)
     {
-        if (value == m_core_config.enabled)
+        if (value == m_enabled)
             return;
 
         if (value)
@@ -394,40 +339,19 @@ namespace Marvel {
             m_flags |= ImGuiSliderFlags_NoInput;
         }
 
-        m_core_config.enabled = value;
+        m_enabled = value;
     }
 
-    void mvDragFloat4::draw()
+    void mvDragFloat4::draw(ImDrawList* drawlist, float x, float y)
     {
         ScopedID id;
         mvImGuiThemeScope scope(this);
+        mvFontScope fscope(this);
 
-        if (!m_core_config.enabled) std::copy(m_value->data(), m_value->data() + 4, m_disabled_value);
+        if (!m_enabled) std::copy(m_value->data(), m_value->data() + 4, m_disabled_value);
 
-        if (ImGui::DragFloat4(m_label.c_str(), m_core_config.enabled ? m_value->data() : &m_disabled_value[0], m_speed, m_min, m_max, m_format.c_str(), m_flags))
-            mvApp::GetApp()->getCallbackRegistry().addCallback(getCallback(false), m_core_config.name, m_core_config.callback_data);
-    }
-
-    void mvDragFloat4::updateConfig(mvAppItemConfig* config)
-    {
-        auto aconfig = (mvDragFloatsConfig*)config;
-
-        m_core_config.width = config->width;
-        m_core_config.label = config->label;
-        m_core_config.show = config->show;
-        m_core_config.callback = config->callback;
-        m_core_config.callback_data = config->callback_data;
-        m_core_config.enabled = config->enabled;
-
-        m_config.source = aconfig->source;
-
-        if (config != &m_config)
-            m_config = *aconfig;
-    }
-
-    mvAppItemConfig* mvDragFloat4::getConfig()
-    {
-        return &m_config;
+        if (ImGui::DragFloat4(m_label.c_str(), m_enabled ? m_value->data() : &m_disabled_value[0], m_speed, m_min, m_max, m_format.c_str(), m_flags))
+            mvApp::GetApp()->getCallbackRegistry().addCallback(getCallback(false), m_name, m_callback_data);
     }
 
     mvDragInt::mvDragInt(const std::string& name, int default_value, const std::string& dataSource)
@@ -438,7 +362,7 @@ namespace Marvel {
 
     void mvDragInt::setEnabled(bool value)
     {
-        if (value == m_core_config.enabled)
+        if (value == m_enabled)
             return;
 
         if (value)
@@ -450,40 +374,19 @@ namespace Marvel {
             m_flags |= ImGuiSliderFlags_NoInput;
         }
 
-        m_core_config.enabled = value;
+        m_enabled = value;
     }
 
-    void mvDragInt::draw()
+    void mvDragInt::draw(ImDrawList* drawlist, float x, float y)
     {
         ScopedID id;
         mvImGuiThemeScope scope(this);
+        mvFontScope fscope(this);
 
-        if (!m_core_config.enabled) m_disabled_value = *m_value;
+        if (!m_enabled) m_disabled_value = *m_value;
 
-        if (ImGui::DragInt(m_label.c_str(), m_core_config.enabled ? m_value.get() : &m_disabled_value, m_speed, m_min, m_max, m_format.c_str(), m_flags))
-            mvApp::GetApp()->getCallbackRegistry().addCallback(getCallback(false), m_core_config.name, m_core_config.callback_data);
-    }
-
-    void mvDragInt::updateConfig(mvAppItemConfig* config)
-    {
-        auto aconfig = (mvDragIntConfig*)config;
-
-        m_core_config.width = config->width;
-        m_core_config.label = config->label;
-        m_core_config.show = config->show;
-        m_core_config.callback = config->callback;
-        m_core_config.callback_data = config->callback_data;
-        m_core_config.enabled = config->enabled;
-
-        m_config.source = aconfig->source;
-
-        if (config != &m_config)
-            m_config = *aconfig;
-    }
-
-    mvAppItemConfig* mvDragInt::getConfig()
-    {
-        return &m_config;
+        if (ImGui::DragInt(m_label.c_str(), m_enabled ? m_value.get() : &m_disabled_value, m_speed, m_min, m_max, m_format.c_str(), m_flags))
+            mvApp::GetApp()->getCallbackRegistry().addCallback(getCallback(false), m_name, m_callback_data);
     }
 
     mvDragInt2::mvDragInt2(const std::string& name, int* default_value, const std::string& dataSource)
@@ -494,7 +397,7 @@ namespace Marvel {
 
     void mvDragInt2::setEnabled(bool value)
     {
-        if (value == m_core_config.enabled)
+        if (value == m_enabled)
             return;
 
         if (value)
@@ -506,40 +409,19 @@ namespace Marvel {
             m_flags |= ImGuiSliderFlags_NoInput;
         }
 
-        m_core_config.enabled = value;
+        m_enabled = value;
     }
 
-    void mvDragInt2::draw()
+    void mvDragInt2::draw(ImDrawList* drawlist, float x, float y)
     {
         ScopedID id;
         mvImGuiThemeScope scope(this);
+        mvFontScope fscope(this);
 
-        if (!m_core_config.enabled) std::copy(m_value->data(), m_value->data() + 2, m_disabled_value);
+        if (!m_enabled) std::copy(m_value->data(), m_value->data() + 2, m_disabled_value);
 
-        if (ImGui::DragInt2(m_label.c_str(), m_core_config.enabled ? m_value->data() : &m_disabled_value[0], m_speed, m_min, m_max, m_format.c_str(), m_flags))
-            mvApp::GetApp()->getCallbackRegistry().addCallback(getCallback(false), m_core_config.name, m_core_config.callback_data);
-    }
-
-    void mvDragInt2::updateConfig(mvAppItemConfig* config)
-    {
-        auto aconfig = (mvDragIntsConfig*)config;
-
-        m_core_config.width = config->width;
-        m_core_config.label = config->label;
-        m_core_config.show = config->show;
-        m_core_config.callback = config->callback;
-        m_core_config.callback_data = config->callback_data;
-        m_core_config.enabled = config->enabled;
-
-        m_config.source = aconfig->source;
-
-        if (config != &m_config)
-            m_config = *aconfig;
-    }
-
-    mvAppItemConfig* mvDragInt2::getConfig()
-    {
-        return &m_config;
+        if (ImGui::DragInt2(m_label.c_str(), m_enabled ? m_value->data() : &m_disabled_value[0], m_speed, m_min, m_max, m_format.c_str(), m_flags))
+            mvApp::GetApp()->getCallbackRegistry().addCallback(getCallback(false), m_name, m_callback_data);
     }
 
     mvDragInt3::mvDragInt3(const std::string& name, int* default_value, const std::string& dataSource)
@@ -550,7 +432,7 @@ namespace Marvel {
 
     void mvDragInt3::setEnabled(bool value)
     {
-        if (value == m_core_config.enabled)
+        if (value == m_enabled)
             return;
 
         if (value)
@@ -562,40 +444,19 @@ namespace Marvel {
             m_flags |= ImGuiSliderFlags_NoInput;
         }
 
-        m_core_config.enabled = value;
+        m_enabled = value;
     }
 
-    void mvDragInt3::draw()
+    void mvDragInt3::draw(ImDrawList* drawlist, float x, float y)
     {
         ScopedID id;
         mvImGuiThemeScope scope(this);
+        mvFontScope fscope(this);
 
-        if (!m_core_config.enabled) std::copy(m_value->data(), m_value->data() + 3, m_disabled_value);
+        if (!m_enabled) std::copy(m_value->data(), m_value->data() + 3, m_disabled_value);
 
-        if (ImGui::DragInt3(m_label.c_str(), m_core_config.enabled ? m_value->data() : &m_disabled_value[0], m_speed, m_min, m_max, m_format.c_str(), m_flags))
-            mvApp::GetApp()->getCallbackRegistry().addCallback(getCallback(false), m_core_config.name, m_core_config.callback_data);
-    }
-
-    void mvDragInt3::updateConfig(mvAppItemConfig* config)
-    {
-        auto aconfig = (mvDragIntsConfig*)config;
-
-        m_core_config.width = config->width;
-        m_core_config.label = config->label;
-        m_core_config.show = config->show;
-        m_core_config.callback = config->callback;
-        m_core_config.callback_data = config->callback_data;
-        m_core_config.enabled = config->enabled;
-
-        m_config.source = aconfig->source;
-
-        if (config != &m_config)
-            m_config = *aconfig;
-    }
-
-    mvAppItemConfig* mvDragInt3::getConfig()
-    {
-        return &m_config;
+        if (ImGui::DragInt3(m_label.c_str(), m_enabled ? m_value->data() : &m_disabled_value[0], m_speed, m_min, m_max, m_format.c_str(), m_flags))
+            mvApp::GetApp()->getCallbackRegistry().addCallback(getCallback(false), m_name, m_callback_data);
     }
 
     mvDragInt4::mvDragInt4(const std::string& name, int* default_value, const std::string& dataSource)
@@ -606,7 +467,7 @@ namespace Marvel {
 
     void mvDragInt4::setEnabled(bool value)
     {
-        if (value == m_core_config.enabled)
+        if (value == m_enabled)
             return;
 
         if (value)
@@ -618,44 +479,20 @@ namespace Marvel {
             m_flags |= ImGuiSliderFlags_NoInput;
         }
 
-        m_core_config.enabled = value;
+        m_enabled = value;
     }
 
-    void mvDragInt4::draw()
+    void mvDragInt4::draw(ImDrawList* drawlist, float x, float y)
     {
         ScopedID id;
         mvImGuiThemeScope scope(this);
+        mvFontScope fscope(this);
 
-        if (!m_core_config.enabled) std::copy(m_value->data(), m_value->data() + 4, m_disabled_value);
+        if (!m_enabled) std::copy(m_value->data(), m_value->data() + 4, m_disabled_value);
 
-        if (ImGui::DragInt4(m_label.c_str(), m_core_config.enabled ? m_value->data() : &m_disabled_value[0], m_speed, m_min, m_max, m_format.c_str(), m_flags))
-            mvApp::GetApp()->getCallbackRegistry().addCallback(getCallback(false), m_core_config.name, m_core_config.callback_data);
+        if (ImGui::DragInt4(m_label.c_str(), m_enabled ? m_value->data() : &m_disabled_value[0], m_speed, m_min, m_max, m_format.c_str(), m_flags))
+            mvApp::GetApp()->getCallbackRegistry().addCallback(getCallback(false), m_name, m_callback_data);
     }
-
-    void mvDragInt4::updateConfig(mvAppItemConfig* config)
-    {
-        auto aconfig = (mvDragIntsConfig*)config;
-
-        m_core_config.width = config->width;
-        m_core_config.label = config->label;
-        m_core_config.show = config->show;
-        m_core_config.callback = config->callback;
-        m_core_config.callback_data = config->callback_data;
-        m_core_config.enabled = config->enabled;
-
-        m_config.source = aconfig->source;
-
-        if (config != &m_config)
-            m_config = *aconfig;
-    }
-
-    mvAppItemConfig* mvDragInt4::getConfig()
-    {
-        return &m_config;
-    }
-
-#ifdef MV_CPP
-#else
 
     void mvDragFloat::setExtraConfigDict(PyObject* dict)
     {
@@ -1024,9 +861,11 @@ namespace Marvel {
 
     }
 
-    PyObject* add_drag_float(PyObject* self, PyObject* args, PyObject* kwargs)
+    PyObject* mvDragFloat::add_drag_float(PyObject* self, PyObject* args, PyObject* kwargs)
     {
-        const char* name;
+        static int i = 0; i++;
+        std::string sname = std::string(std::string("$$DPG_") + s_internal_id + std::to_string(i));
+        const char* name = sname.c_str();
         float default_value = 0.0f;
         float speed = 1.0f;
         float min_value = 0.0f;
@@ -1063,12 +902,14 @@ namespace Marvel {
 
         mvApp::GetApp()->getItemRegistry().addItemWithRuntimeChecks(item, parent, before);
 
-        return GetPyNone();
+        return ToPyString(name);
     }
 
-    PyObject* add_drag_float2(PyObject* self, PyObject* args, PyObject* kwargs)
+    PyObject* mvDragFloat2::add_drag_float2(PyObject* self, PyObject* args, PyObject* kwargs)
     {
-        const char* name;
+        static int i = 0; i++;
+        std::string sname = std::string(std::string("$$DPG_") + s_internal_id + std::to_string(i));
+        const char* name = sname.c_str();
         PyObject* default_value = PyTuple_New(2);
         PyTuple_SetItem(default_value, 0, PyFloat_FromDouble(0.0));
         PyTuple_SetItem(default_value, 1, PyFloat_FromDouble(0.0));
@@ -1108,12 +949,14 @@ namespace Marvel {
 
         mvApp::GetApp()->getItemRegistry().addItemWithRuntimeChecks(item, parent, before);
 
-        return GetPyNone();
+        return ToPyString(name);
     }
 
-    PyObject* add_drag_float3(PyObject* self, PyObject* args, PyObject* kwargs)
+    PyObject* mvDragFloat3::add_drag_float3(PyObject* self, PyObject* args, PyObject* kwargs)
     {
-        const char* name;
+        static int i = 0; i++;
+        std::string sname = std::string(std::string("$$DPG_") + s_internal_id + std::to_string(i));
+        const char* name = sname.c_str();
         PyObject* default_value = PyTuple_New(3);
         PyTuple_SetItem(default_value, 0, PyFloat_FromDouble(0.0));
         PyTuple_SetItem(default_value, 1, PyFloat_FromDouble(0.0));
@@ -1154,12 +997,14 @@ namespace Marvel {
 
         mvApp::GetApp()->getItemRegistry().addItemWithRuntimeChecks(item, parent, before);
 
-        return GetPyNone();
+        return ToPyString(name);
     }
 
-    PyObject* add_drag_float4(PyObject* self, PyObject* args, PyObject* kwargs)
+    PyObject* mvDragFloat4::add_drag_float4(PyObject* self, PyObject* args, PyObject* kwargs)
     {
-        const char* name;
+        static int i = 0; i++;
+        std::string sname = std::string(std::string("$$DPG_") + s_internal_id + std::to_string(i));
+        const char* name = sname.c_str();
         PyObject* default_value = PyTuple_New(4);
         PyTuple_SetItem(default_value, 0, PyFloat_FromDouble(0.0));
         PyTuple_SetItem(default_value, 1, PyFloat_FromDouble(0.0));
@@ -1202,12 +1047,14 @@ namespace Marvel {
 
         mvApp::GetApp()->getItemRegistry().addItemWithRuntimeChecks(item, parent, before);
 
-        return GetPyNone();
+        return ToPyString(name);
     }
 
-    PyObject* add_drag_int(PyObject* self, PyObject* args, PyObject* kwargs)
+    PyObject* mvDragInt::add_drag_int(PyObject* self, PyObject* args, PyObject* kwargs)
     {
-        const char* name;
+        static int i = 0; i++;
+        std::string sname = std::string(std::string("$$DPG_") + s_internal_id + std::to_string(i));
+        const char* name = sname.c_str();
         int default_value = 0;
         float speed = 1.0f;
         int min_value = 0;
@@ -1245,12 +1092,14 @@ namespace Marvel {
 
         mvApp::GetApp()->getItemRegistry().addItemWithRuntimeChecks(item, parent, before);
 
-        return GetPyNone();
+        return ToPyString(name);
     }
 
-    PyObject* add_drag_int2(PyObject* self, PyObject* args, PyObject* kwargs)
+    PyObject* mvDragInt2::add_drag_int2(PyObject* self, PyObject* args, PyObject* kwargs)
     {
-        const char* name;
+        static int i = 0; i++;
+        std::string sname = std::string(std::string("$$DPG_") + s_internal_id + std::to_string(i));
+        const char* name = sname.c_str();
         PyObject* default_value = PyTuple_New(2);
         PyTuple_SetItem(default_value, 0, PyLong_FromLong(0));
         PyTuple_SetItem(default_value, 1, PyLong_FromLong(0));
@@ -1290,12 +1139,14 @@ namespace Marvel {
 
         mvApp::GetApp()->getItemRegistry().addItemWithRuntimeChecks(item, parent, before);
 
-        return GetPyNone();
+        return ToPyString(name);
     }
 
-    PyObject* add_drag_int3(PyObject* self, PyObject* args, PyObject* kwargs)
+    PyObject* mvDragInt3::add_drag_int3(PyObject* self, PyObject* args, PyObject* kwargs)
     {
-        const char* name;
+        static int i = 0; i++;
+        std::string sname = std::string(std::string("$$DPG_") + s_internal_id + std::to_string(i));
+        const char* name = sname.c_str();
         PyObject* default_value = PyTuple_New(3);
         PyTuple_SetItem(default_value, 0, PyLong_FromLong(0));
         PyTuple_SetItem(default_value, 1, PyLong_FromLong(0));
@@ -1336,12 +1187,14 @@ namespace Marvel {
 
         mvApp::GetApp()->getItemRegistry().addItemWithRuntimeChecks(item, parent, before);
 
-        return GetPyNone();
+        return ToPyString(name);
     }
 
-    PyObject* add_drag_int4(PyObject* self, PyObject* args, PyObject* kwargs)
+    PyObject* mvDragInt4::add_drag_int4(PyObject* self, PyObject* args, PyObject* kwargs)
     {
-        const char* name;
+        static int i = 0; i++;
+        std::string sname = std::string(std::string("$$DPG_") + s_internal_id + std::to_string(i));
+        const char* name = sname.c_str();
         PyObject* default_value = PyTuple_New(4);
         PyTuple_SetItem(default_value, 0, PyLong_FromLong(0));
         PyTuple_SetItem(default_value, 1, PyLong_FromLong(0));
@@ -1383,8 +1236,7 @@ namespace Marvel {
 
         mvApp::GetApp()->getItemRegistry().addItemWithRuntimeChecks(item, parent, before);
 
-        return GetPyNone();
+        return ToPyString(name);
     }
 
-#endif
 }

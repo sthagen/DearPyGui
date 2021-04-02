@@ -3,12 +3,14 @@
 #include "mvAppLog.h"
 #include "mvItemRegistry.h"
 #include "mvImGuiThemeScope.h"
+#include "mvFontScope.h"
 
 namespace Marvel {
 
 	void mvDataGrid::InsertParser(std::map<std::string, mvPythonParser>* parsers)
 	{
-		parsers->insert({ "add_data_grid", mvPythonParser({
+		parsers->insert({ s_command, mvPythonParser({
+			{mvPythonDataType::Optional},
 			{mvPythonDataType::String, "name"},
 			{mvPythonDataType::StringList, "headers"},
 			{mvPythonDataType::KeywordOnly},
@@ -102,7 +104,7 @@ namespace Marvel {
 	mvDataGrid::mvDataGrid(const std::string& name, const std::vector<std::string>& headers)
 		: mvAppItem(name)
 	{
-		m_core_config.height = 200;
+		m_height = 200;
 		m_headers = headers;
 		m_columns = headers.size();
 		m_hide_headers = false;
@@ -150,10 +152,10 @@ namespace Marvel {
 		for (size_t i = 0; i < m_hashValues.size(); i++)
 		{
 			for (size_t j = 0; j < m_hashValues[i].size(); j++)
-				m_hashValues[i][j] = m_hashValues[i][j] + "##" + m_core_config.name + "-" + std::to_string(i) + "-" + std::to_string(j);
+				m_hashValues[i][j] = m_hashValues[i][j] + "##" + m_name + "-" + std::to_string(i) + "-" + std::to_string(j);
 
 			for (size_t j = m_hashValues[i].size(); j < m_columns; j++)
-				m_hashValues[i].push_back("##" + m_core_config.name + "-" + std::to_string(i) + "-" + std::to_string(j));
+				m_hashValues[i].push_back("##" + m_name + "-" + std::to_string(i) + "-" + std::to_string(j));
 		}
 	}
 
@@ -163,7 +165,7 @@ namespace Marvel {
 			return;
 
 		m_values[row][column] = value;
-		m_hashValues[row][column] = value + "##" + m_core_config.name + "-" + std::to_string(row) + "-" + std::to_string(column);
+		m_hashValues[row][column] = value + "##" + m_name + "-" + std::to_string(row) + "-" + std::to_string(column);
 
 	}
 
@@ -185,7 +187,7 @@ namespace Marvel {
 
 	void mvDataGrid::setPyValue(PyObject* value)
 	{
-		auto values = ToVectVectString(value, m_core_config.name + " requires a list/tuple or list/tuple of strings.");
+		auto values = ToVectVectString(value, m_name + " requires a list/tuple or list/tuple of strings.");
 
 		m_values = std::move(values);
 
@@ -593,11 +595,13 @@ namespace Marvel {
 		m_values.clear();
 	}
 
-	void mvDataGrid::draw()
+	void mvDataGrid::draw(ImDrawList* drawlist, float x, float y)
 	{
-		//mvImGuiThemeScope scope(this);
+		ScopedID id;
+		mvImGuiThemeScope scope(this);
+		mvFontScope fscope(this);
 
-		if (ImGui::BeginTable(m_core_config.name.c_str(), m_columns,
+		if (ImGui::BeginTable(m_name.c_str(), m_columns,
 			ImGuiTableFlags_Hideable | ImGuiTableFlags_Resizable | ImGuiTableFlags_RowBg | ImGuiTableFlags_Borders))
 		{
 			if (!m_hide_headers)
@@ -617,8 +621,8 @@ namespace Marvel {
 					if (ImGui::Selectable(m_hashValues[i][j].c_str(), m_selections[{i, j}]))
 					{
 						m_selections[{i, j}] = !m_selections[{i, j}];
-						mvApp::GetApp()->getCallbackRegistry().addCallback(m_core_config.callback, 
-							m_core_config.name, m_core_config.callback_data);
+						mvApp::GetApp()->getCallbackRegistry().addCallback(m_callback, 
+							m_name, m_callback_data);
 					}
 				}
 
@@ -630,12 +634,11 @@ namespace Marvel {
 
 	}
 
-#ifdef MV_CPP
-#else
-
-	PyObject* add_data_grid(PyObject* self, PyObject* args, PyObject* kwargs)
+	PyObject* mvDataGrid::add_data_grid(PyObject* self, PyObject* args, PyObject* kwargs)
 	{
-		const char* name;
+		static int i = 0; i++;
+		std::string sname = std::string(std::string("$$DPG_") + s_internal_id + std::to_string(i));
+		const char* name = sname.c_str();
 		PyObject* headers;
 		PyObject* callback = nullptr;
 		PyObject* callback_data = nullptr;
@@ -665,10 +668,10 @@ namespace Marvel {
 
 		mvApp::GetApp()->getItemRegistry().addItemWithRuntimeChecks(item, parent, before);
 
-		return GetPyNone();
+		return ToPyString(name);
 	}
 
-	PyObject* get_grid_data(PyObject* self, PyObject* args, PyObject* kwargs)
+	PyObject* mvDataGrid::get_grid_data(PyObject* self, PyObject* args, PyObject* kwargs)
 	{
 		const char* grid;
 
@@ -695,7 +698,7 @@ namespace Marvel {
 		return static_cast<mvDataGrid*>(item.get())->getPyValue();
 	}
 
-	PyObject* set_grid_data(PyObject* self, PyObject* args, PyObject* kwargs)
+	PyObject* mvDataGrid::set_grid_data(PyObject* self, PyObject* args, PyObject* kwargs)
 	{
 		const char* grid;
 		PyObject* value;
@@ -725,7 +728,7 @@ namespace Marvel {
 		return GetPyNone();
 	}
 
-	PyObject* set_grid_headers(PyObject* self, PyObject* args, PyObject* kwargs)
+	PyObject* mvDataGrid::set_grid_headers(PyObject* self, PyObject* args, PyObject* kwargs)
 	{
 		const char* grid;
 		PyObject* headers;
@@ -750,7 +753,7 @@ namespace Marvel {
 		return GetPyNone();
 	}
 
-	PyObject* clear_data_grid(PyObject* self, PyObject* args, PyObject* kwargs)
+	PyObject* mvDataGrid::clear_data_grid(PyObject* self, PyObject* args, PyObject* kwargs)
 	{
 		const char* grid;
 
@@ -778,7 +781,7 @@ namespace Marvel {
 		Py_RETURN_NONE;
 	}
 
-	PyObject* get_grid_item(PyObject* self, PyObject* args, PyObject* kwargs)
+	PyObject* mvDataGrid::get_grid_item(PyObject* self, PyObject* args, PyObject* kwargs)
 	{
 		const char* grid;
 		int row;
@@ -809,7 +812,7 @@ namespace Marvel {
 
 	}
 
-	PyObject* set_grid_item(PyObject* self, PyObject* args, PyObject* kwargs)
+	PyObject* mvDataGrid::set_grid_item(PyObject* self, PyObject* args, PyObject* kwargs)
 	{
 		const char* grid;
 		int row;
@@ -842,7 +845,7 @@ namespace Marvel {
 		return GetPyNone();
 	}
 
-	PyObject* get_grid_selections(PyObject* self, PyObject* args, PyObject* kwargs)
+	PyObject* mvDataGrid::get_grid_selections(PyObject* self, PyObject* args, PyObject* kwargs)
 	{
 		const char* grid;
 
@@ -869,7 +872,7 @@ namespace Marvel {
 		return atable->getSelections();
 	}
 
-	PyObject* set_grid_selection(PyObject* self, PyObject* args, PyObject* kwargs)
+	PyObject* mvDataGrid::set_grid_selection(PyObject* self, PyObject* args, PyObject* kwargs)
 	{
 		const char* grid;
 		int row;
@@ -902,7 +905,7 @@ namespace Marvel {
 		return GetPyNone();
 	}
 
-	PyObject* add_grid_column(PyObject* self, PyObject* args, PyObject* kwargs)
+	PyObject* mvDataGrid::add_grid_column(PyObject* self, PyObject* args, PyObject* kwargs)
 	{
 		const char* grid;
 		const char* name;
@@ -935,7 +938,7 @@ namespace Marvel {
 		return GetPyNone();
 	}
 
-	PyObject* insert_grid_column(PyObject* self, PyObject* args, PyObject* kwargs)
+	PyObject* mvDataGrid::insert_grid_column(PyObject* self, PyObject* args, PyObject* kwargs)
 	{
 		const char* grid;
 		int column_index;
@@ -969,7 +972,7 @@ namespace Marvel {
 		return GetPyNone();
 	}
 
-	PyObject* delete_grid_column(PyObject* self, PyObject* args, PyObject* kwargs)
+	PyObject* mvDataGrid::delete_grid_column(PyObject* self, PyObject* args, PyObject* kwargs)
 	{
 		const char* grid;
 		int column;
@@ -999,7 +1002,7 @@ namespace Marvel {
 		return GetPyNone();
 	}
 
-	PyObject* add_grid_row(PyObject* self, PyObject* args, PyObject* kwargs)
+	PyObject* mvDataGrid::add_grid_row(PyObject* self, PyObject* args, PyObject* kwargs)
 	{
 		const char* grid;
 		PyObject* row;
@@ -1037,7 +1040,7 @@ namespace Marvel {
 		return GetPyNone();
 	}
 
-	PyObject* insert_grid_row(PyObject* self, PyObject* args, PyObject* kwargs)
+	PyObject* mvDataGrid::insert_grid_row(PyObject* self, PyObject* args, PyObject* kwargs)
 	{
 		const char* grid;
 		int row_index;
@@ -1076,7 +1079,7 @@ namespace Marvel {
 		return GetPyNone();
 	}
 
-	PyObject* delete_grid_row(PyObject* self, PyObject* args, PyObject* kwargs)
+	PyObject* mvDataGrid::delete_grid_row(PyObject* self, PyObject* args, PyObject* kwargs)
 	{
 		const char* grid;
 		int row;
@@ -1106,5 +1109,4 @@ namespace Marvel {
 		return GetPyNone();
 	}
 
-#endif // !MV_CPP
 }

@@ -5,13 +5,15 @@
 #include "mvApp.h"
 #include "mvItemRegistry.h"
 #include "mvImGuiThemeScope.h"
+#include "mvFontScope.h"
 
 namespace Marvel {
 
 	void mvTimePicker::InsertParser(std::map<std::string, mvPythonParser>* parsers)
 	{
 
-		parsers->insert({ "add_time_picker", mvPythonParser({
+		parsers->insert({ s_command, mvPythonParser({
+			{mvPythonDataType::Optional},
 			{mvPythonDataType::String, "name"},
 			{mvPythonDataType::KeywordOnly},
 			{mvPythonDataType::Dict, "default_value", "time dict", "{'hour': 14, 'min': 32, 'sec': 23}"},
@@ -30,22 +32,21 @@ namespace Marvel {
 	{
 	}
 
-	void mvTimePicker::draw()
+	void mvTimePicker::draw(ImDrawList* drawlist, float x, float y)
 	{
 		ScopedID id;
 		mvImGuiThemeScope scope(this);
+		mvFontScope fscope(this);
 
 		ImPlot::GetStyle().Use24HourClock = m_hour24;
 
-		if (ImPlot::ShowTimePicker(m_core_config.name.c_str(), m_imvalue.get()))
+		if (ImPlot::ShowTimePicker(m_name.c_str(), m_imvalue.get()))
 		{
 			ImPlot::GetGmtTime(*m_imvalue, m_value.get());
-			mvApp::GetApp()->getCallbackRegistry().addCallback(m_core_config.callback, m_core_config.name, m_core_config.callback_data);
+			mvApp::GetApp()->getCallbackRegistry().addCallback(m_callback, m_name, m_callback_data);
 		}
 
 	}
-
-#ifndef MV_CPP
 
 	void mvTimePicker::setExtraConfigDict(PyObject* dict)
 	{
@@ -63,9 +64,11 @@ namespace Marvel {
 		PyDict_SetItemString(dict, "hour24", ToPyBool(m_hour24));
 	}
 
-	PyObject* add_time_picker(PyObject* self, PyObject* args, PyObject* kwargs)
+	PyObject* mvTimePicker::add_time_picker(PyObject* self, PyObject* args, PyObject* kwargs)
 	{
-		const char* name;
+		static int i = 0; i++;
+		std::string sname = std::string(std::string("$$DPG_") + s_internal_id + std::to_string(i));
+		const char* name = sname.c_str();
 		PyObject* default_value = nullptr;
 		int hour24 = false;
 		PyObject* callback = nullptr;
@@ -92,9 +95,7 @@ namespace Marvel {
 
 		mvApp::GetApp()->getItemRegistry().addItemWithRuntimeChecks(item, parent, before);
 
-		return GetPyNone();
+		return ToPyString(name);
 	}
-
-#endif
 
 }

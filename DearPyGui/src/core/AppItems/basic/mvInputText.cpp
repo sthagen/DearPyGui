@@ -3,12 +3,14 @@
 #include <utility>
 #include "mvItemRegistry.h"
 #include "mvImGuiThemeScope.h"
+#include "mvFontScope.h"
 
 namespace Marvel {
 
 	void mvInputText::InsertParser(std::map<std::string, mvPythonParser>* parsers)
 	{
-		parsers->insert({ "add_input_text", mvPythonParser({
+		parsers->insert({ s_command, mvPythonParser({
+			{mvPythonDataType::Optional},
 			{mvPythonDataType::String, "name"},
 			{mvPythonDataType::KeywordOnly},
 			{mvPythonDataType::String, "default_value", "", "''"},
@@ -55,13 +57,14 @@ namespace Marvel {
 			m_flags &= ~ImGuiInputTextFlags_EnterReturnsTrue;
 		}
 
-		m_core_config.enabled = value;
+		m_enabled = value;
 	}
 
-	void mvInputText::draw()
+	void mvInputText::draw(ImDrawList* drawlist, float x, float y)
 	{
 		ScopedID id;
 		mvImGuiThemeScope scope(this);
+		mvFontScope fscope(this);
 
 		if (m_multiline)
 			m_hint = "";
@@ -70,49 +73,23 @@ namespace Marvel {
 		{
 			if (m_multiline)
 			{
-				if (ImGui::InputTextMultiline(m_label.c_str(), m_value.get(), ImVec2((float)m_core_config.width, (float)m_core_config.height), m_flags))
-					mvApp::GetApp()->getCallbackRegistry().addCallback(m_core_config.callback, m_core_config.name, m_core_config.callback_data);
+				if (ImGui::InputTextMultiline(m_label.c_str(), m_value.get(), ImVec2((float)m_width, (float)m_height), m_flags))
+					mvApp::GetApp()->getCallbackRegistry().addCallback(m_callback, m_name, m_callback_data);
 			}
 			else
 			{
 				if (ImGui::InputText(m_label.c_str(), m_value.get(), m_flags))
-					mvApp::GetApp()->getCallbackRegistry().addCallback(m_core_config.callback, m_core_config.name, m_core_config.callback_data);
+					mvApp::GetApp()->getCallbackRegistry().addCallback(m_callback, m_name, m_callback_data);
 			}
 		}
 
 		else
 		{
 			if (ImGui::InputTextWithHint(m_label.c_str(), m_hint.c_str(), m_value.get(), m_flags))
-				mvApp::GetApp()->getCallbackRegistry().addCallback(m_core_config.callback, m_core_config.name, m_core_config.callback_data);
+				mvApp::GetApp()->getCallbackRegistry().addCallback(m_callback, m_name, m_callback_data);
 		}
 
 	}
-
-	void mvInputText::updateConfig(mvAppItemConfig* config)
-	{
-		auto aconfig = (mvInputTextConfig*)config;
-
-		m_core_config.label = config->label;
-		m_core_config.width = config->width;
-		m_core_config.height = config->height;
-		m_core_config.show = config->show;
-		m_core_config.enabled = config->enabled;
-		m_core_config.callback = config->callback;
-		m_core_config.callback_data = config->callback_data;
-
-		m_config.source = aconfig->source;
-
-		if (config != &m_config)
-			m_config = *aconfig;
-	}
-
-	mvAppItemConfig* mvInputText::getConfig()
-	{
-		return &m_config;
-	}
-
-
-#ifndef MV_CPP
 
 	void mvInputText::setExtraConfigDict(PyObject* dict)
 	{
@@ -166,9 +143,11 @@ namespace Marvel {
 		checkbitset("tab_input", ImGuiInputTextFlags_AllowTabInput, m_flags);
 	}
 
-	PyObject* add_input_text(PyObject* self, PyObject* args, PyObject* kwargs)
+	PyObject* mvInputText::add_input_text(PyObject* self, PyObject* args, PyObject* kwargs)
 	{
-		const char* name;
+		static int i = 0; i++;
+		std::string sname = std::string(std::string("$$DPG_") + s_internal_id + std::to_string(i));
+		const char* name = sname.c_str();
 		const char* default_value = "";
 		const char* hint = "";
 		int multiline = 0;
@@ -216,8 +195,7 @@ namespace Marvel {
 
 		mvApp::GetApp()->getItemRegistry().addItemWithRuntimeChecks(item, parent, before);
 
-		return GetPyNone();
+		return ToPyString(name);
 	}
 
-#endif // !MV_CPP
 }

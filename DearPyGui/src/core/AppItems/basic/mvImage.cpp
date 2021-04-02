@@ -8,9 +8,10 @@ namespace Marvel {
 
 	void mvImage::InsertParser(std::map<std::string, mvPythonParser>* parsers)
 	{
-		parsers->insert({ "add_image", mvPythonParser({
-			{mvPythonDataType::String, "name"},
+		parsers->insert({ s_command, mvPythonParser({
 			{mvPythonDataType::String, "value"},
+			{mvPythonDataType::Optional},
+			{mvPythonDataType::String, "name"},
 			{mvPythonDataType::KeywordOnly},
 			{mvPythonDataType::FloatList, "tint_color", "", "(255, 255, 255, 255)"},
 			{mvPythonDataType::FloatList, "border_color", "", "(0, 0, 0, 0)"},
@@ -30,7 +31,6 @@ namespace Marvel {
 	mvImage::mvImage(const std::string& name, std::string default_value)
 		: mvAppItem(name), m_value(std::move(default_value))
 	{
-		m_description.ignoreSizeUpdate = true;
 		mvEventBus::Subscribe(this, mvEVT_DELETE_TEXTURE);
 	}
 
@@ -61,7 +61,7 @@ namespace Marvel {
 		return false;
 	}
 
-	void mvImage::draw()
+	void mvImage::draw(ImDrawList* drawlist, float x, float y)
 	{
 
 		if (m_texture == nullptr && !m_value.empty())
@@ -83,8 +83,8 @@ namespace Marvel {
 			
 			m_texture = texture->texture;
 
-			if (m_core_config.width == 0) m_core_config.width = (int)((float)texture->width * (m_uv_max.x - m_uv_min.x));
-			if (m_core_config.height == 0) m_core_config.height = (int)((float)texture->height * (m_uv_max.y - m_uv_min.y));
+			if (m_width == 0) m_width = (int)((float)texture->width * (m_uv_max.x - m_uv_min.x));
+			if (m_height == 0) m_height = (int)((float)texture->height * (m_uv_max.y - m_uv_min.y));
 
 		}
 
@@ -94,15 +94,15 @@ namespace Marvel {
 			if (texture)
 			{
 				m_texture = texture->texture;
-				m_core_config.width = (int)((float)texture->width * (m_uv_max.x - m_uv_min.x));
-				m_core_config.height = (int)((float)texture->height * (m_uv_max.y - m_uv_min.y));
+				m_width = (int)((float)texture->width * (m_uv_max.x - m_uv_min.x));
+				m_height = (int)((float)texture->height * (m_uv_max.y - m_uv_min.y));
 			}
 			m_dirty = false;
 		}
 
 		if (m_texture)
 		{
-			ImGui::Image(m_texture, ImVec2((float)m_core_config.width, (float)m_core_config.height), ImVec2(m_uv_min.x, m_uv_min.y), ImVec2(m_uv_max.x, m_uv_max.y),
+			ImGui::Image(m_texture, ImVec2((float)m_width, (float)m_height), ImVec2(m_uv_min.x, m_uv_min.y), ImVec2(m_uv_max.x, m_uv_max.y),
 				ImVec4((float)m_tintColor.r, (float)m_tintColor.g, (float)m_tintColor.b, (float)m_tintColor.a),
 				ImVec4((float)m_borderColor.r, (float)m_borderColor.g, (float)m_borderColor.b, (float)m_borderColor.a));
 
@@ -119,27 +119,6 @@ namespace Marvel {
 	{ 
 		return m_value; 
 	}
-
-	void mvImage::updateConfig(mvAppItemConfig* config)
-	{
-		auto aconfig = (mvImageConfig*)config;
-
-		m_core_config.width = config->width;
-		m_core_config.height = config->height;
-		m_core_config.show = config->show;
-
-		m_config.source = aconfig->source;
-
-		if (config != &m_config)
-			m_config = *aconfig;
-	}
-
-	mvAppItemConfig* mvImage::getConfig()
-	{
-		return &m_config;
-	}
-
-#ifndef MV_CPP
 
 	void mvImage::setExtraConfigDict(PyObject* dict)
 	{
@@ -171,9 +150,11 @@ namespace Marvel {
 		PyDict_SetItemString(dict, "border_color", ToPyColor(m_borderColor));
 	}
 
-	PyObject* add_image(PyObject* self, PyObject* args, PyObject* kwargs)
+	PyObject* mvImage::add_image(PyObject* self, PyObject* args, PyObject* kwargs)
 	{
-		const char* name;
+		static int i = 0; i++;
+		std::string sname = std::string(std::string("$$DPG_") + s_internal_id + std::to_string(i));
+		const char* name = sname.c_str();
 		const char* value;
 		PyObject* tintcolor = PyTuple_New(4);
 		PyTuple_SetItem(tintcolor, 0, PyFloat_FromDouble(1.0));
@@ -198,8 +179,8 @@ namespace Marvel {
 		PyTuple_SetItem(uv_max, 1, PyFloat_FromDouble(1));
 		int show = true;
 
-		if (!(mvApp::GetApp()->getParsers())["add_image"].parse(args, kwargs, __FUNCTION__, &name,
-			&value, &tintcolor, &bordercolor, &parent, &before, &source, &width,
+		if (!(mvApp::GetApp()->getParsers())["add_image"].parse(args, kwargs, __FUNCTION__, &value,
+			&name, &tintcolor, &bordercolor, &parent, &before, &source, &width,
 			&height, &uv_min, &uv_max, &show))
 			return ToPyBool(false);
 
@@ -211,8 +192,7 @@ namespace Marvel {
 
 		mvApp::GetApp()->getItemRegistry().addItemWithRuntimeChecks(item, parent, before);
 
-		return GetPyNone();
+		return ToPyString(name);
 	}
 
-#endif // !MV_CPP
 }

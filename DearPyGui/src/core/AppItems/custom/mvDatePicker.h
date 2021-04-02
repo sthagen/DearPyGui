@@ -4,26 +4,29 @@
 
 namespace Marvel {
 
-	PyObject* add_date_picker(PyObject* self, PyObject* args, PyObject* kwargs);
-
 	MV_REGISTER_WIDGET(mvDatePicker);
 	class mvDatePicker : public mvTimePtrBase
 	{
 
-		MV_APPITEM_TYPE(mvAppItemType::mvDatePicker, "add_date_picker")
+		MV_APPITEM_TYPE(mvAppItemType::mvDatePicker, add_date_picker)
 
-		MV_CREATE_THEME_CONSTANT(mvThemeCol_DatePicker_Date			,  0L, 0L);
-		MV_CREATE_THEME_CONSTANT(mvThemeCol_DatePicker_DateBg		, 21L, 0L);
-		MV_CREATE_THEME_CONSTANT(mvThemeCol_DatePicker_DateDisabled	,  1L, 0L);
-		MV_CREATE_THEME_CONSTANT(mvThemeCol_DatePicker_DateHovered	, 22L, 0L);
-		MV_CREATE_THEME_CONSTANT(mvThemeCol_DatePicker_DateActive	, 23L, 0L);
-		MV_CREATE_THEME_CONSTANT(mvThemeCol_DatePicker_Border		,  5L, 0L);
-		MV_CREATE_THEME_CONSTANT(mvThemeCol_DatePicker_BorderShadow	,  6L, 0L);
-		MV_CREATE_THEME_CONSTANT(mvThemeStyle_DatePicker_Rounding	, 11L, 0L);
-		MV_CREATE_THEME_CONSTANT(mvThemeStyle_DatePicker_BorderSize	, 12L, 0L);
-		MV_CREATE_THEME_CONSTANT(mvThemeStyle_DatePicker_PaddingX	, 10L, 0L);
-		MV_CREATE_THEME_CONSTANT(mvThemeStyle_DatePicker_PaddingY	, 10L, 1L);
+		MV_CREATE_CONSTANT(mvThemeCol_DatePicker_Date			,  0L, 0L);
+		MV_CREATE_CONSTANT(mvThemeCol_DatePicker_DateBg		, 21L, 0L);
+		MV_CREATE_CONSTANT(mvThemeCol_DatePicker_DateDisabled	,  1L, 0L);
+		MV_CREATE_CONSTANT(mvThemeCol_DatePicker_DateHovered	, 22L, 0L);
+		MV_CREATE_CONSTANT(mvThemeCol_DatePicker_DateActive	, 23L, 0L);
+		MV_CREATE_CONSTANT(mvThemeCol_DatePicker_Border		,  5L, 0L);
+		MV_CREATE_CONSTANT(mvThemeCol_DatePicker_BorderShadow	,  6L, 0L);
+		MV_CREATE_CONSTANT(mvThemeStyle_DatePicker_Rounding	, 11L, 0L);
+		MV_CREATE_CONSTANT(mvThemeStyle_DatePicker_BorderSize	, 12L, 0L);
+		MV_CREATE_CONSTANT(mvThemeStyle_DatePicker_PaddingX	, 10L, 0L);
+		MV_CREATE_CONSTANT(mvThemeStyle_DatePicker_PaddingY	, 10L, 1L);
 
+		MV_START_EXTRA_COMMANDS
+		MV_END_EXTRA_COMMANDS
+
+		MV_START_GENERAL_CONSTANTS
+		MV_END_GENERAL_CONSTANTS
 
 		MV_START_COLOR_CONSTANTS
 			MV_CREATE_CONSTANT_PAIR(mvThemeCol_DatePicker_Date,			mvColor(255, 255, 255, 255)),
@@ -36,10 +39,10 @@ namespace Marvel {
 		MV_END_COLOR_CONSTANTS
 
 			MV_START_STYLE_CONSTANTS
-			MV_CREATE_CONSTANT_TUPLE(mvThemeStyle_DatePicker_Rounding	, 0, 12),
-			MV_CREATE_CONSTANT_TUPLE(mvThemeStyle_DatePicker_BorderSize	, 0,  1),
-			MV_CREATE_CONSTANT_TUPLE(mvThemeStyle_DatePicker_PaddingX	, 4, 20),
-			MV_CREATE_CONSTANT_TUPLE(mvThemeStyle_DatePicker_PaddingY	, 3, 20),
+			MV_ADD_CONSTANT(mvThemeStyle_DatePicker_Rounding	, 0, 12),
+			MV_ADD_CONSTANT(mvThemeStyle_DatePicker_BorderSize	, 0,  1),
+			MV_ADD_CONSTANT(mvThemeStyle_DatePicker_PaddingX	, 4, 20),
+			MV_ADD_CONSTANT(mvThemeStyle_DatePicker_PaddingY	, 3, 20),
 			MV_END_STYLE_CONSTANTS
 
 	public:
@@ -50,12 +53,10 @@ namespace Marvel {
 
 		mvDatePicker(const std::string& name, tm default_value);
 
-		void draw              ()               override;
+		void draw(ImDrawList* drawlist, float x, float y) override;
 
-#ifndef MV_CPP
 		void setExtraConfigDict(PyObject* dict) override;
 		void getExtraConfigDict(PyObject* dict) override;
-#endif // !MV_CPP
 
 	private:
 

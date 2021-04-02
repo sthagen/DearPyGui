@@ -3,12 +3,14 @@
 #include "mvApp.h"
 #include "mvItemRegistry.h"
 #include "mvImGuiThemeScope.h"
+#include "mvFontScope.h"
 
 namespace Marvel {
 
 	void mvListbox::InsertParser(std::map<std::string, mvPythonParser>* parsers)
 	{
-		parsers->insert({ "add_listbox", mvPythonParser({
+		parsers->insert({ s_command, mvPythonParser({
+			{mvPythonDataType::Optional},
 			{mvPythonDataType::String, "name", "Name of the listbox"},
 			{mvPythonDataType::KeywordOnly},
 			{mvPythonDataType::StringList, "items", "", "()"},
@@ -32,41 +34,17 @@ namespace Marvel {
 		m_description.disableAllowed = true;
 	}
 
-	void mvListbox::draw()
+	void mvListbox::draw(ImDrawList* drawlist, float x, float y)
 	{
 		ScopedID id;
 		mvImGuiThemeScope scope(this);
+		mvFontScope fscope(this);
 
-		if (!m_core_config.enabled) m_disabled_value = *m_value;
+		if (!m_enabled) m_disabled_value = *m_value;
 
-		if (ImGui::ListBox(m_label.c_str(), m_core_config.enabled ? m_value.get() : &m_disabled_value, m_charNames.data(), (int)m_names.size(), m_itemsHeight))
-			mvApp::GetApp()->getCallbackRegistry().addCallback(getCallback(false), m_core_config.name, m_core_config.callback_data);
+		if (ImGui::ListBox(m_label.c_str(), m_enabled ? m_value.get() : &m_disabled_value, m_charNames.data(), (int)m_names.size(), m_itemsHeight))
+			mvApp::GetApp()->getCallbackRegistry().addCallback(getCallback(false), m_name, m_callback_data);
 	}
-
-	void mvListbox::updateConfig(mvAppItemConfig* config)
-	{
-		auto aconfig = (mvListboxConfig*)config;
-
-		m_core_config.label = config->label;
-		m_core_config.width = config->width;
-		m_core_config.show = config->show;
-		m_core_config.enabled = config->enabled;
-		m_core_config.callback = config->callback;
-		m_core_config.callback_data = config->callback_data;
-
-		m_config.source = aconfig->source;
-
-		if (config != &m_config)
-			m_config = *aconfig;
-	}
-
-	mvAppItemConfig* mvListbox::getConfig()
-	{
-		return &m_config;
-	}
-
-
-#ifndef MV_CPP
 
 	void mvListbox::setExtraConfigDict(PyObject* dict)
 	{
@@ -92,9 +70,11 @@ namespace Marvel {
 		PyDict_SetItemString(dict, "num_items", ToPyInt(m_itemsHeight));
 	}
 
-	PyObject* add_listbox(PyObject* self, PyObject* args, PyObject* kwargs)
+	PyObject* mvListbox::add_listbox(PyObject* self, PyObject* args, PyObject* kwargs)
 	{
-		const char* name;
+		static int i = 0; i++;
+		std::string sname = std::string(std::string("$$DPG_") + s_internal_id + std::to_string(i));
+		const char* name = sname.c_str();
 		PyObject* items;
 		int default_value = 0;
 		PyObject* callback = nullptr;
@@ -127,8 +107,7 @@ namespace Marvel {
 
 		mvApp::GetApp()->getItemRegistry().addItemWithRuntimeChecks(item, parent, before);
 
-		return GetPyNone();
+		return ToPyString(name);
 	}
 
-#endif
 }

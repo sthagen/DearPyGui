@@ -2,7 +2,6 @@
 #include "mvPlot.h"
 #include "mvApp.h"
 #include "mvInput.h"
-#include "mvDrawList.h"
 #include "mvItemRegistry.h"
 #include "mvAreaSeries.h"
 #include "mvBarSeries.h"
@@ -19,12 +18,14 @@
 #include "mvStairSeries.h"
 #include "mvStemSeries.h"
 #include "mvImPlotThemeScope.h"
+#include "mvFontScope.h"
 
 namespace Marvel {
 
 	void mvPlot::InsertParser(std::map<std::string, mvPythonParser>* parsers)
 	{
-		parsers->insert({ "add_plot", mvPythonParser({
+		parsers->insert({ s_command, mvPythonParser({
+			{mvPythonDataType::Optional},
 			{mvPythonDataType::String, "name"},
 			{mvPythonDataType::KeywordOnly},
 			{mvPythonDataType::String, "x_axis_name", "", "''"},
@@ -531,9 +532,8 @@ namespace Marvel {
 	mvPlot::mvPlot(const std::string& name, mvCallable queryCallback)
 		: mvAppItem(name), m_queryCallback(queryCallback)
 	{
-		m_drawList = CreateRef<mvDrawList>();
-		m_core_config.width = -1;
-		m_core_config.height = -1;
+		m_width = -1;
+		m_height = -1;
 	}
 
 	void mvPlot::addDragPoint(const std::string& name, bool show_label, const mvColor& color, float radius, mvCallable callback, const double* dummyValue, const std::string& source)
@@ -957,11 +957,11 @@ namespace Marvel {
 
 	}
 
-	void mvPlot::draw()
+	void mvPlot::draw(ImDrawList* drawlist, float x, float y)
 	{
 		if (m_colormapscale)
 		{
-			ImPlot::ColormapScale(std::string(m_core_config.name + "##colorscale").c_str(), m_scale_min, m_scale_max, ImVec2(0, m_scale_height));
+			ImPlot::ColormapScale(std::string(m_name + "##colorscale").c_str(), m_scale_min, m_scale_max, ImVec2(0, m_scale_height));
 			ImGui::SameLine();
 		}
 
@@ -994,9 +994,10 @@ namespace Marvel {
 		}
 
 		mvImPlotThemeScope scope(this);
+		mvFontScope fscope(this);
 
 		if (ImPlot::BeginPlot(m_label.c_str(), m_xaxisName.empty() ? nullptr : m_xaxisName.c_str(), m_yaxisName.empty() ? nullptr : m_yaxisName.c_str(),
-			ImVec2((float)m_core_config.width, (float)m_core_config.height), m_flags,
+			ImVec2((float)m_width, (float)m_height), m_flags,
 			m_xflags, m_yflags, m_y2flags, m_y3flags))
 		{
 			ImPlot::PushColormap(m_colormap);
@@ -1018,7 +1019,7 @@ namespace Marvel {
 				default:
 					break;
 				}
-				series->draw();
+				series->draw(drawlist, x, y);
 			}
 
 			// annotations
@@ -1092,7 +1093,7 @@ namespace Marvel {
 					PyTuple_SetItem(area, 1, PyFloat_FromDouble(m_queryArea[1]));
 					PyTuple_SetItem(area, 2, PyFloat_FromDouble(m_queryArea[2]));
 					PyTuple_SetItem(area, 3, PyFloat_FromDouble(m_queryArea[3]));
-					mvApp::GetApp()->getCallbackRegistry().addCallback(m_queryCallback, m_core_config.name, area);
+					mvApp::GetApp()->getCallbackRegistry().addCallback(m_queryCallback, m_name, area);
 					});
 			}
 
@@ -1111,7 +1112,7 @@ namespace Marvel {
 
 			ImPlot::PushPlotClipRect();
 			auto topleft = ImPlot::GetPlotPos();
-			m_drawList->draw(ImPlot::GetPlotDrawList(), topleft.x, topleft.y);
+			//m_drawList->draw(ImPlot::GetPlotDrawList(), topleft.x, topleft.y);
 			ImPlot::PopPlotClipRect();
 
 			ImPlot::EndPlot();
@@ -1173,9 +1174,6 @@ namespace Marvel {
 	{
 		return m_queryArea;
 	}
-
-#ifdef MV_CPP
-#else
 
 	void mvPlot::setExtraConfigDict(PyObject* dict)
 	{
@@ -1328,9 +1326,11 @@ namespace Marvel {
 		checkbitset("y3axis_lock_max",       ImPlotAxisFlags_LockMax,      m_y3flags);
 	}
 
-	PyObject* add_plot(PyObject* self, PyObject* args, PyObject* kwargs)
+	PyObject* mvPlot::add_plot(PyObject* self, PyObject* args, PyObject* kwargs)
 	{
-		const char* name;
+		static int i = 0; i++;
+		std::string sname = std::string(std::string("$$DPG_") + s_internal_id + std::to_string(i));
+		const char* name = sname.c_str();
 		const char* xAxisName = "";
 		const char* yAxisName = "";
 
@@ -1450,10 +1450,10 @@ namespace Marvel {
 
 		mvApp::GetApp()->getItemRegistry().addItemWithRuntimeChecks(item, parent, before);
 		
-		return GetPyNone();
+		return ToPyString(name);
 	}
 
-	PyObject* add_drag_line(PyObject* self, PyObject* args, PyObject* kwargs)
+	PyObject* mvPlot::add_drag_line(PyObject* self, PyObject* args, PyObject* kwargs)
 	{
 		const char* plot;
 		const char* name;
@@ -1499,7 +1499,7 @@ namespace Marvel {
 		return GetPyNone();
 	}
 
-	PyObject* delete_drag_line(PyObject* self, PyObject* args, PyObject* kwargs)
+	PyObject* mvPlot::delete_drag_line(PyObject* self, PyObject* args, PyObject* kwargs)
 	{
 		const char* plot;
 		const char* name;
@@ -1531,7 +1531,7 @@ namespace Marvel {
 		return GetPyNone();
 	}
 
-	PyObject* add_drag_point(PyObject* self, PyObject* args, PyObject* kwargs)
+	PyObject* mvPlot::add_drag_point(PyObject* self, PyObject* args, PyObject* kwargs)
 	{
 		const char* plot;
 		const char* name;
@@ -1578,7 +1578,7 @@ namespace Marvel {
 		return GetPyNone();
 	}
 
-	PyObject* delete_drag_point(PyObject* self, PyObject* args, PyObject* kwargs)
+	PyObject* mvPlot::delete_drag_point(PyObject* self, PyObject* args, PyObject* kwargs)
 	{
 		const char* plot;
 		const char* name;
@@ -1610,7 +1610,7 @@ namespace Marvel {
 		return GetPyNone();
 	}
 
-	PyObject* add_annotation(PyObject* self, PyObject* args, PyObject* kwargs)
+	PyObject* mvPlot::add_annotation(PyObject* self, PyObject* args, PyObject* kwargs)
 	{
 		const char* plot;
 		const char* text;
@@ -1653,7 +1653,7 @@ namespace Marvel {
 		return GetPyNone();
 	}
 
-	PyObject* delete_annotation(PyObject* self, PyObject* args, PyObject* kwargs)
+	PyObject* mvPlot::delete_annotation(PyObject* self, PyObject* args, PyObject* kwargs)
 	{
 		const char* plot;
 		const char* name;
@@ -1685,7 +1685,7 @@ namespace Marvel {
 		return GetPyNone();
 	}
 
-	PyObject* clear_plot(PyObject* self, PyObject* args, PyObject* kwargs)
+	PyObject* mvPlot::clear_plot(PyObject* self, PyObject* args, PyObject* kwargs)
 	{
 		const char* plot;
 
@@ -1715,7 +1715,7 @@ namespace Marvel {
 		return GetPyNone();
 	}
 
-	PyObject* reset_xticks(PyObject* self, PyObject* args, PyObject* kwargs)
+	PyObject* mvPlot::reset_xticks(PyObject* self, PyObject* args, PyObject* kwargs)
 	{
 		const char* plot;
 
@@ -1745,7 +1745,7 @@ namespace Marvel {
 		return GetPyNone();
 	}
 
-	PyObject* reset_yticks(PyObject* self, PyObject* args, PyObject* kwargs)
+	PyObject* mvPlot::reset_yticks(PyObject* self, PyObject* args, PyObject* kwargs)
 	{
 		const char* plot;
 
@@ -1775,7 +1775,7 @@ namespace Marvel {
 		return GetPyNone();
 	}
 
-	PyObject* set_xticks(PyObject* self, PyObject* args, PyObject* kwargs)
+	PyObject* mvPlot::set_xticks(PyObject* self, PyObject* args, PyObject* kwargs)
 	{
 		const char* plot;
 		PyObject* label_pairs;
@@ -1817,7 +1817,7 @@ namespace Marvel {
 		return GetPyNone();
 	}
 
-	PyObject* set_yticks(PyObject* self, PyObject* args, PyObject* kwargs)
+	PyObject* mvPlot::set_yticks(PyObject* self, PyObject* args, PyObject* kwargs)
 	{
 		const char* plot;
 		PyObject* label_pairs;
@@ -1858,7 +1858,7 @@ namespace Marvel {
 		return GetPyNone();
 	}
 
-	PyObject* set_plot_xlimits_auto(PyObject* self, PyObject* args, PyObject* kwargs)
+	PyObject* mvPlot::set_plot_xlimits_auto(PyObject* self, PyObject* args, PyObject* kwargs)
 	{
 		const char* plot;
 
@@ -1888,7 +1888,7 @@ namespace Marvel {
 		return GetPyNone();
 	}
 
-	PyObject* set_plot_ylimits_auto(PyObject* self, PyObject* args, PyObject* kwargs)
+	PyObject* mvPlot::set_plot_ylimits_auto(PyObject* self, PyObject* args, PyObject* kwargs)
 	{
 		const char* plot;
 
@@ -1918,7 +1918,7 @@ namespace Marvel {
 		return GetPyNone();
 	}
 
-	PyObject* set_plot_xlimits(PyObject* self, PyObject* args, PyObject* kwargs)
+	PyObject* mvPlot::set_plot_xlimits(PyObject* self, PyObject* args, PyObject* kwargs)
 	{
 		const char* plot;
 		float xmin;
@@ -1950,7 +1950,7 @@ namespace Marvel {
 		return GetPyNone();
 	}
 
-	PyObject* set_plot_ylimits(PyObject* self, PyObject* args, PyObject* kwargs)
+	PyObject* mvPlot::set_plot_ylimits(PyObject* self, PyObject* args, PyObject* kwargs)
 	{
 		const char* plot;
 		float ymin;
@@ -1982,7 +1982,7 @@ namespace Marvel {
 		return GetPyNone();
 	}
 
-	PyObject* is_plot_queried(PyObject* self, PyObject* args, PyObject* kwargs)
+	PyObject* mvPlot::is_plot_queried(PyObject* self, PyObject* args, PyObject* kwargs)
 	{
 		const char* plot;
 
@@ -2010,7 +2010,7 @@ namespace Marvel {
 		return ToPyBool(graph->isPlotQueried());
 	}
 
-	PyObject* get_plot_xlimits(PyObject* self, PyObject* args, PyObject* kwargs)
+	PyObject* mvPlot::get_plot_xlimits(PyObject* self, PyObject* args, PyObject* kwargs)
 	{
 		const char* plot;
 
@@ -2039,7 +2039,7 @@ namespace Marvel {
 		return ToPyPair(lim.x, lim.y);
 	}
 
-	PyObject* get_plot_ylimits(PyObject* self, PyObject* args, PyObject* kwargs)
+	PyObject* mvPlot::get_plot_ylimits(PyObject* self, PyObject* args, PyObject* kwargs)
 	{
 		const char* plot;
 
@@ -2068,7 +2068,7 @@ namespace Marvel {
 		return ToPyPair(lim.x, lim.y);
 	}
 
-	PyObject* get_plot_query_area(PyObject* self, PyObject* args, PyObject* kwargs)
+	PyObject* mvPlot::get_plot_query_area(PyObject* self, PyObject* args, PyObject* kwargs)
 	{
 		const char* plot;
 
@@ -2097,7 +2097,7 @@ namespace Marvel {
 		return Py_BuildValue("(ffff)", result[0], result[1], result[2], result[3]);
 	}
 
-	PyObject* delete_series(PyObject* self, PyObject* args, PyObject* kwargs)
+	PyObject* mvPlot::delete_series(PyObject* self, PyObject* args, PyObject* kwargs)
 	{
 		const char* plot;
 		const char* series;
@@ -2128,7 +2128,7 @@ namespace Marvel {
 		return GetPyNone();
 	}
 
-	PyObject* add_image_series(PyObject* self, PyObject* args, PyObject* kwargs)
+	PyObject* mvPlot::add_image_series(PyObject* self, PyObject* args, PyObject* kwargs)
 	{
 		const char* plot;
 		const char* name;
@@ -2191,7 +2191,7 @@ namespace Marvel {
 		return GetPyNone();
 	}
 
-	PyObject* add_pie_series(PyObject* self, PyObject* args, PyObject* kwargs)
+	PyObject* mvPlot::add_pie_series(PyObject* self, PyObject* args, PyObject* kwargs)
 	{
 		const char* plot;
 		const char* name;
@@ -2248,7 +2248,7 @@ namespace Marvel {
 		return GetPyNone();
 	}
 
-	PyObject* add_line_series(PyObject* self, PyObject* args, PyObject* kwargs)
+	PyObject* mvPlot::add_line_series(PyObject* self, PyObject* args, PyObject* kwargs)
 	{
 		const char* plot;
 		const char* name;
@@ -2302,7 +2302,7 @@ namespace Marvel {
 		return GetPyNone();
 	}
 
-	PyObject* add_stair_series(PyObject* self, PyObject* args, PyObject* kwargs)
+	PyObject* mvPlot::add_stair_series(PyObject* self, PyObject* args, PyObject* kwargs)
 	{
 		const char* plot;
 		const char* name;
@@ -2357,7 +2357,7 @@ namespace Marvel {
 		return GetPyNone();
 	}
 
-	PyObject* add_bar_series(PyObject* self, PyObject* args, PyObject* kwargs)
+	PyObject* mvPlot::add_bar_series(PyObject* self, PyObject* args, PyObject* kwargs)
 	{
 		const char* plot;
 		const char* name;
@@ -2409,7 +2409,7 @@ namespace Marvel {
 		return GetPyNone();
 	}
 
-	PyObject* add_shade_series(PyObject* self, PyObject* args, PyObject* kwargs)
+	PyObject* mvPlot::add_shade_series(PyObject* self, PyObject* args, PyObject* kwargs)
 	{
 		const char* plot;
 		const char* name;
@@ -2483,7 +2483,7 @@ namespace Marvel {
 		return GetPyNone();
 	}
 
-	PyObject* add_candle_series(PyObject* self, PyObject* args, PyObject* kwargs)
+	PyObject* mvPlot::add_candle_series(PyObject* self, PyObject* args, PyObject* kwargs)
 	{
 		const char* plot;
 		const char* name;
@@ -2561,7 +2561,7 @@ namespace Marvel {
 		return GetPyNone();
 	}
 
-	PyObject* add_scatter_series(PyObject* self, PyObject* args, PyObject* kwargs)
+	PyObject* mvPlot::add_scatter_series(PyObject* self, PyObject* args, PyObject* kwargs)
 	{
 		const char* plot;
 		const char* name;
@@ -2624,7 +2624,7 @@ namespace Marvel {
 		return GetPyNone();
 	}
 
-	PyObject* add_stem_series(PyObject* self, PyObject* args, PyObject* kwargs)
+	PyObject* mvPlot::add_stem_series(PyObject* self, PyObject* args, PyObject* kwargs)
 	{
 		const char* plot;
 		const char* name;
@@ -2688,7 +2688,7 @@ namespace Marvel {
 		return GetPyNone();
 	}
 
-	PyObject* add_text_point(PyObject* self, PyObject* args, PyObject* kwargs)
+	PyObject* mvPlot::add_text_point(PyObject* self, PyObject* args, PyObject* kwargs)
 	{
 		const char* plot;
 		const char* name;
@@ -2730,7 +2730,7 @@ namespace Marvel {
 		return GetPyNone();
 	}
 
-	PyObject* add_area_series(PyObject* self, PyObject* args, PyObject* kwargs)
+	PyObject* mvPlot::add_area_series(PyObject* self, PyObject* args, PyObject* kwargs)
 	{
 		const char* plot;
 		const char* name;
@@ -2789,7 +2789,7 @@ namespace Marvel {
 		return GetPyNone();
 	}
 
-	PyObject* add_error_series(PyObject* self, PyObject* args, PyObject* kwargs)
+	PyObject* mvPlot::add_error_series(PyObject* self, PyObject* args, PyObject* kwargs)
 	{
 		const char* plot;
 		const char* name;
@@ -2851,7 +2851,7 @@ namespace Marvel {
 		return GetPyNone();
 	}
 
-	PyObject* add_heat_series(PyObject* self, PyObject* args, PyObject* kwargs)
+	PyObject* mvPlot::add_heat_series(PyObject* self, PyObject* args, PyObject* kwargs)
 	{
 		const char* plot;
 		const char* name;
@@ -2922,7 +2922,7 @@ namespace Marvel {
 		return GetPyNone();
 	}
 
-	PyObject* add_vline_series(PyObject* self, PyObject* args, PyObject* kwargs)
+	PyObject* mvPlot::add_vline_series(PyObject* self, PyObject* args, PyObject* kwargs)
 	{
 		const char* plot;
 		const char* name;
@@ -2971,7 +2971,7 @@ namespace Marvel {
 		return GetPyNone();
 	}
 
-	PyObject* add_hline_series(PyObject* self, PyObject* args, PyObject* kwargs)
+	PyObject* mvPlot::add_hline_series(PyObject* self, PyObject* args, PyObject* kwargs)
 	{
 		const char* plot;
 		const char* name;
@@ -3020,57 +3020,4 @@ namespace Marvel {
 		return GetPyNone();
 	}
 
-#endif
-
-	void mvPlot::InsertConstants(std::vector<std::pair<std::string, long>>& constants)
-	{
-		//-----------------------------------------------------------------------------
-		// Plot Colors
-		//-----------------------------------------------------------------------------
-		constants.emplace_back("mvPlotCol_Line"          , 0); // plot line/outline color (defaults to a rotating color set)
-		constants.emplace_back("mvPlotCol_Fill"         , 1); // plot fill color for bars (defaults to the current line color)
-		constants.emplace_back("mvPlotCol_MarkerOutline", 2); // marker outline color (defaults to the current line color)
-		constants.emplace_back("mvPlotCol_MarkerFill"   , 3); // marker fill color (defaults to the current line color)
-		constants.emplace_back("mvPlotCol_ErrorBar"     , 4); // error bar color (defaults to ImGuiCol_Text)
-		constants.emplace_back("mvPlotCol_FrameBg"      , 5); // plot frame background color (defaults to ImGuiCol_FrameBg)
-		constants.emplace_back("mvPlotCol_PlotBg"       , 6); // plot area background color (defaults to ImGuiCol_WindowBg)
-		constants.emplace_back("mvPlotCol_PlotBorder"   , 7); // plot area border color (defaults to ImGuiCol_Text)
-		constants.emplace_back("mvPlotCol_XAxis"        , 8); // x-axis grid/label color (defaults to 25% ImGuiCol_Text)
-		constants.emplace_back("mvPlotCol_YAxis"        , 9); // y-axis grid/label color (defaults to 25% ImGuiCol_Text)
-		constants.emplace_back("mvPlotCol_YAxis2"       ,10); // 2nd y-axis grid/label color (defaults to 25% ImGuiCol_Text)
-		constants.emplace_back("mvPlotCol_YAxis3"       ,11); // 3rd y-axis grid/label color (defaults to 25% ImGuiCol_Text)
-		constants.emplace_back("mvPlotCol_Selection"    ,12); // box-selection color (defaults to yellow)
-		constants.emplace_back("mvPlotCol_Query"        ,13); // box-query color (defaults to green)
-		constants.emplace_back("mvPlotCol_COUNT"        ,14);
-
-		//-----------------------------------------------------------------------------
-		// Plot Marker Specifications
-		//-----------------------------------------------------------------------------
-		constants.emplace_back("mvPlotMarker_None"    , -1);  // no marker
-		constants.emplace_back("mvPlotMarker_Circle"  ,  0);  // a circle marker will be rendered at each point
-		constants.emplace_back("mvPlotMarker_Square"  ,  1);  // a square maker will be rendered at each point
-		constants.emplace_back("mvPlotMarker_Diamond" ,  2);  // a diamond marker will be rendered at each point
-		constants.emplace_back("mvPlotMarker_Up"      ,  3);  // an upward-pointing triangle marker will up rendered at each point
-		constants.emplace_back("mvPlotMarker_Down"    ,  4);  // an downward-pointing triangle marker will up rendered at each point
-		constants.emplace_back("mvPlotMarker_Left"    ,  5);  // an leftward-pointing triangle marker will up rendered at each point
-		constants.emplace_back("mvPlotMarker_Right"   ,  6);  // an rightward-pointing triangle marker will up rendered at each point
-		constants.emplace_back("mvPlotMarker_Cross"   ,  7);  // a cross marker will be rendered at each point (not filled)
-		constants.emplace_back("mvPlotMarker_Plus"    ,  8);  // a plus marker will be rendered at each point (not filled)
-		constants.emplace_back("mvPlotMarker_Asterisk",  9); // a asterisk marker will be rendered at each point (not filled)
-
-		//-----------------------------------------------------------------------------
-		// Built-in ImPlot Color maps
-		//-----------------------------------------------------------------------------
-		constants.emplace_back("mvPlotColormap_Default",   0); // ImPlot default colormap         (n=10)
-		constants.emplace_back("mvPlotColormap_Deep"   ,   1); // a.k.a. matplotlib "Set1"        (n=9)
-		constants.emplace_back("mvPlotColormap_Dark"   ,   2); // a.k.a. matplotlib "Set1"        (n=9)
-		constants.emplace_back("mvPlotColormap_Pastel" ,   3); // a.k.a. matplotlib "Pastel1"     (n=9)
-		constants.emplace_back("mvPlotColormap_Paired" ,   4); // a.k.a. matplotlib "Paired"      (n=12)
-		constants.emplace_back("mvPlotColormap_Viridis",   5); // a.k.a. matplotlib "viridis"     (n=11)
-		constants.emplace_back("mvPlotColormap_Plasma" ,   6); // a.k.a. matplotlib "plasma"      (n=11)
-		constants.emplace_back("mvPlotColormap_Hot"    ,   7); // a.k.a. matplotlib/MATLAB "hot"  (n=11)
-		constants.emplace_back("mvPlotColormap_Cool"   ,   8); // a.k.a. matplotlib/MATLAB "cool" (n=11)
-		constants.emplace_back("mvPlotColormap_Pink"   ,   9); // a.k.a. matplotlib/MATLAB "pink" (n=11)
-		constants.emplace_back("mvPlotColormap_Jet"    ,  10); // a.k.a. MATLAB "jet"             (n=11)
-	}
 }

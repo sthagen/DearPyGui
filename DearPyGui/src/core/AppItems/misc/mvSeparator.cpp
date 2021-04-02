@@ -7,7 +7,7 @@ namespace Marvel {
 
 	void mvSeparator::InsertParser(std::map<std::string, mvPythonParser>* parsers)
 	{
-		parsers->insert({ "add_separator", mvPythonParser({
+		parsers->insert({ s_command, mvPythonParser({
 			{mvPythonDataType::KeywordOnly},
 			{mvPythonDataType::String, "name", "", "'separator'"},
 			{mvPythonDataType::String, "parent", "Parent this item will be added to. (runtime adding)", "''"},
@@ -19,10 +19,9 @@ namespace Marvel {
 	mvSeparator::mvSeparator(const std::string& name)
 		: mvAppItem(name)
 	{
-		m_description.duplicatesAllowed = true;
 	}
 
-	void mvSeparator::draw()
+	void mvSeparator::draw(ImDrawList* drawlist, float x, float y)
 	{
 		mvImGuiThemeScope scope(this);
 
@@ -30,13 +29,10 @@ namespace Marvel {
 
 	}
 
-
-#ifdef MV_CPP
-#else
-	PyObject* add_separator(PyObject* self, PyObject* args, PyObject* kwargs)
+	PyObject* mvSeparator::add_separator(PyObject* self, PyObject* args, PyObject* kwargs)
 	{
 		static int i = 0; i++;
-		std::string sname = std::string("separator" + std::to_string(i));
+		std::string sname = std::string(std::string("$$DPG_") + s_internal_id + std::to_string(i));
 		const char* name = sname.c_str();
 		const char* parent = "";
 		const char* before = "";
@@ -51,8 +47,7 @@ namespace Marvel {
 
 		mvApp::GetApp()->getItemRegistry().addItemWithRuntimeChecks(item, parent, before);
 
-		return GetPyNone();
+		return ToPyString(name);
 	}
-#endif
 
 }

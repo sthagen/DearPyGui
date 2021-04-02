@@ -11,9 +11,8 @@ namespace Marvel {
 	mvDebugWindow::mvDebugWindow(const std::string& name)
 		: mvBaseWindowAppitem(name)
 	{
-		m_core_config.width = 700;
-		m_core_config.height = 500;
-		m_description.deleteAllowed = false;
+		m_width = 700;
+		m_height = 500;
 
 		for (const auto& item : mvModule_Core::GetModuleParsers())
 			m_commands.emplace_back(item.first, item.second.getDocumentation());
@@ -21,7 +20,8 @@ namespace Marvel {
 
 	void mvDebugWindow::InsertParser(std::map<std::string, mvPythonParser>* parsers)
 	{
-		parsers->insert({ "add_debug_window", mvPythonParser({
+		parsers->insert({ s_command, mvPythonParser({
+			{mvPythonDataType::Optional},
 			{mvPythonDataType::String, "name"},
 			{mvPythonDataType::KeywordOnly},
 			{mvPythonDataType::Integer, "width", "", "700"},
@@ -72,37 +72,37 @@ namespace Marvel {
 
 		if (item->getDescription().container)
 		{
-			std::string container = item->m_core_config.name + "*";
+			std::string container = item->m_name + "*";
 
 			ImGui::PushID(item);
 			if (ImGui::TreeNodeEx(container.c_str()))
 			{
 				
-				auto stringPos = item->m_core_config.name.find_first_not_of("###");
+				auto stringPos = item->m_name.find_first_not_of("###");
 				if (stringPos != std::string::npos && stringPos > 0)
 				{
 					ImGui::PushID(item);
-					if (ImGui::Selectable(item->m_core_config.name.substr().erase(0, 2).c_str(),
-						item->m_core_config.name == m_selectedItem && ImGui::GetID(item->m_core_config.name.substr().erase(0, 2).c_str()) == m_selectedID))
+					if (ImGui::Selectable(item->m_name.substr().erase(0, 2).c_str(),
+						item->m_name == m_selectedItem && ImGui::GetID(item->m_name.substr().erase(0, 2).c_str()) == m_selectedID))
 					{
-						m_selectedItem = item->m_core_config.name;
-						m_selectedID = ImGui::GetID(item->m_core_config.name.substr().erase(0, 2).c_str());
+						m_selectedItem = item->m_name;
+						m_selectedID = ImGui::GetID(item->m_name.substr().erase(0, 2).c_str());
 					}
 					ImGui::PopID();
 				}
 				else
 				{
 					ImGui::PushID(item);
-					if (ImGui::Selectable(item->m_core_config.name.c_str(),
-						item->m_core_config.name == m_selectedItem && ImGui::GetID(item->m_core_config.name.c_str()) == m_selectedID))
+					if (ImGui::Selectable(item->m_name.c_str(),
+						item->m_name == m_selectedItem && ImGui::GetID(item->m_name.c_str()) == m_selectedID))
 					{
-						m_selectedItem = item->m_core_config.name;
-						m_selectedID = ImGui::GetID(item->m_core_config.name.c_str());
+						m_selectedItem = item->m_name;
+						m_selectedID = ImGui::GetID(item->m_name.c_str());
 					}
 					ImGui::PopID();
 				}			
 
-				for (auto child : item->m_children)
+				for (auto child : item->m_children1)
 					renderItem(child.get());
 
 				ImGui::TreePop();
@@ -111,26 +111,26 @@ namespace Marvel {
 		}
 		else
 		{
-			auto stringPos = item->m_core_config.name.find_first_not_of("###");
+			auto stringPos = item->m_name.find_first_not_of("###");
 			if (stringPos != std::string::npos && stringPos > 0)
 			{
 				ImGui::PushID(item);
-				if (ImGui::Selectable(item->m_core_config.name.substr().erase(0, 2).c_str(),
-					item->m_core_config.name == m_selectedItem && ImGui::GetID(item->m_core_config.name.substr().erase(0, 2).c_str()) == m_selectedID))
+				if (ImGui::Selectable(item->m_name.substr().erase(0, 2).c_str(),
+					item->m_name == m_selectedItem && ImGui::GetID(item->m_name.substr().erase(0, 2).c_str()) == m_selectedID))
 				{
-					m_selectedItem = item->m_core_config.name;
-					m_selectedID = ImGui::GetID(item->m_core_config.name.substr().erase(0, 2).c_str());
+					m_selectedItem = item->m_name;
+					m_selectedID = ImGui::GetID(item->m_name.substr().erase(0, 2).c_str());
 				}
 				ImGui::PopID();
 			}
 			else
 			{
 				ImGui::PushID(item);
-				if (ImGui::Selectable(item->m_core_config.name.c_str(),
-					item->m_core_config.name == m_selectedItem && ImGui::GetID(item->m_core_config.name.c_str()) == m_selectedID))
+				if (ImGui::Selectable(item->m_name.c_str(),
+					item->m_name == m_selectedItem && ImGui::GetID(item->m_name.c_str()) == m_selectedID))
 				{
-					m_selectedItem = item->m_core_config.name;
-					m_selectedID = ImGui::GetID(item->m_core_config.name.c_str());
+					m_selectedItem = item->m_name;
+					m_selectedID = ImGui::GetID(item->m_name.c_str());
 				}
 				ImGui::PopID();
 			}
@@ -140,7 +140,7 @@ namespace Marvel {
 		
 	}
 
-	void mvDebugWindow::draw()
+	void mvDebugWindow::draw(ImDrawList* drawlist, float x, float y)
 	{
 		if (!prerender())
 			return;
@@ -165,7 +165,6 @@ namespace Marvel {
 				ImGui::Text("%d active allocations", io.MetricsActiveAllocations);
 				DebugItem("DearPyGui Version: ", mvApp::GetVersion());
 				DebugItem("ImGui Version: ", IMGUI_VERSION);
-				DebugItem("Stored Textures: ", std::to_string(mvApp::GetApp()->getTextureStorage().getTextureCount()).c_str());
 
 
 				ImGui::EndGroup();
@@ -219,11 +218,11 @@ namespace Marvel {
 				if (selectedItem == nullptr)
 					selectedItem = mvApp::GetApp()->getItemRegistry().getBackWindows()[0];
 				
-				if (selectedItem->m_parent)
-					parentName = selectedItem->m_parent->m_core_config.name;
+				if (selectedItem->m_parentPtr)
+					parentName = selectedItem->m_parentPtr->m_name;
 
-				std::string width = std::to_string(selectedItem->m_core_config.width);
-				std::string height = std::to_string(selectedItem->m_core_config.height);
+				std::string width = std::to_string(selectedItem->m_width);
+				std::string height = std::to_string(selectedItem->m_height);
 				
 				std::string sizex = std::to_string(selectedItem->getState().getItemRectSize().x);
 				std::string sizey = std::to_string(selectedItem->getState().getItemRectSize().y);
@@ -260,14 +259,14 @@ namespace Marvel {
 
                 ImGui::PushItemWidth(200);
                 DebugItem("Item Name:", m_selectedItem.c_str());
-                DebugItem("Item Type:", selectedItem->getStringType().c_str());
+                //DebugItem("Item Type:", selectedItem->getStringType().c_str());
                 DebugItem("Container:", selectedItem->getDescription().container ? ts : fs);
                 DebugItem("Item Parent:", parentName.c_str());
                 DebugItem("Item Width:", width.c_str());
                 DebugItem("Item Height:", height.c_str());
                 DebugItem("Item Size x:", sizex.c_str());
                 DebugItem("Item Size y:", sizey.c_str());
-                DebugItem("Item Show:", selectedItem->m_core_config.show ? ts : fs);
+                DebugItem("Item Show:", selectedItem->m_show ? ts : fs);
                 DebugItem("Item Visible:", selectedItem->getState().isItemVisible() ? ts : fs);
                 DebugItem("Item Hovered:", selectedItem->getState().isItemHovered() ? ts : fs);
                 DebugItem("Item Active:", selectedItem->getState().isItemActive() ? ts : fs);
@@ -324,8 +323,6 @@ namespace Marvel {
 				ImGui::PopTextWrapPos();
 				ImGui::EndChild();
 
-#ifndef MV_CPP
-
 				ImGui::InputTextMultiline("Command##debug", &commandstring, ImVec2(-1, -50));
 				ImGui::PopItemWidth();
 				if (ImGui::Button("Run##debug"))
@@ -336,7 +333,6 @@ namespace Marvel {
 						});
 
 				}
-#endif // !MV_CPP
 
 				ImGui::EndTabItem();
 			}
@@ -364,11 +360,11 @@ namespace Marvel {
 
 	}
 
-#ifndef MV_CPP
-
-	PyObject* add_debug_window(PyObject* self, PyObject* args, PyObject* kwargs)
+	PyObject* mvDebugWindow::add_debug_window(PyObject* self, PyObject* args, PyObject* kwargs)
 	{
-		const char* name;
+		static int i = 0; i++;
+		std::string sname = std::string(std::string("$$DPG_") + s_internal_id + std::to_string(i));
+		const char* name = sname.c_str();
 		int width = 700;
 		int height = 500;
 		int x_pos = 200;
@@ -408,8 +404,7 @@ namespace Marvel {
 					
 		}
 
-		return GetPyNone();
+		return ToPyString(name);
 	}
 
-#endif
 }

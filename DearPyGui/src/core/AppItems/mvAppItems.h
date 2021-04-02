@@ -36,11 +36,26 @@
 #include "containers/mvMenu.h"
 #include "containers/mvMenuBar.h"
 #include "containers/mvTooltip.h"
-#include "containers/mvTable.h"
 #include "containers/mvWindowAppItem.h"
 #include "containers/mvPopup.h"
 
-#include "custom/mvDrawing.h"
+#include "tables/mvTable.h"
+#include "tables/mvTableColumn.h"
+#include "tables/mvTableNextColumn.h"
+
+#include "drawing/mvDrawing.h"
+#include "drawing/mvDrawLine.h"
+#include "drawing/mvDrawArrow.h"
+#include "drawing/mvDrawTriangle.h"
+#include "drawing/mvDrawCircle.h"
+#include "drawing/mvDrawBezierCurve.h"
+#include "drawing/mvDrawQuad.h"
+#include "drawing/mvDrawRect.h"
+#include "drawing/mvDrawText.h"
+#include "drawing/mvDrawPolygon.h"
+#include "drawing/mvDrawPolyline.h"
+#include "drawing/mvDrawImage.h"
+
 #include "custom/mvTimePicker.h"
 #include "custom/mvDatePicker.h"
 

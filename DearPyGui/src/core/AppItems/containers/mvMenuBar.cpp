@@ -4,12 +4,14 @@
 #include "mvImGuiThemeScope.h"
 #include "containers/mvWindowAppItem.h"
 #include "containers/mvChild.h"
+#include "mvFontScope.h"
 
 namespace Marvel {
 
 	void mvMenuBar::InsertParser(std::map<std::string, mvPythonParser>* parsers)
 	{
-		parsers->insert({ "add_menu_bar", mvPythonParser({
+		parsers->insert({ s_command, mvPythonParser({
+			{mvPythonDataType::Optional},
 			{mvPythonDataType::String, "name"},
 			{mvPythonDataType::KeywordOnly},
 			{mvPythonDataType::Bool, "show", "Attempt to render", "True"},
@@ -27,29 +29,30 @@ namespace Marvel {
 			//float FontSize = ImGui::GetFontSize(); // = Base Font Size * Current Window Scale
 			//ImGuiStyle currentStyle = ImGui::GetStyle(); // = Padding for the Top and Bottom
 			//m_height = int(currentStyle.FramePadding.y * 2 + FontSize);
-			m_core_config.height = 21;
+			m_height = 21;
 		}
 
-	void mvMenuBar::draw()
+	void mvMenuBar::draw(ImDrawList* drawlist, float x, float y)
 	{
 		mvImGuiThemeScope scope(this);
+		mvFontScope fscope(this);
 
 		if (ImGui::BeginMenuBar())
 		{
 			//we do this so that the children dont get the theme
 			scope.cleanup();
 
-			for (auto& item : m_children)
+			for (auto& item : m_children1)
 			{
 				// skip item if it's not shown
-				if (!item->m_core_config.show)
+				if (!item->m_show)
 					continue;
 
 				// set item width
-				if (item->m_core_config.width != 0)
-					ImGui::SetNextItemWidth((float)item->m_core_config.width);
+				if (item->m_width != 0)
+					ImGui::SetNextItemWidth((float)item->m_width);
 
-				item->draw();
+				item->draw(drawlist, ImGui::GetCursorPosX(), ImGui::GetCursorPosY());
 
 				item->getState().update();
 			}
@@ -57,11 +60,11 @@ namespace Marvel {
 		}
 	}
 
-#ifndef MV_CPP
-
-	PyObject* add_menu_bar(PyObject* self, PyObject* args, PyObject* kwargs)
+	PyObject* mvMenuBar::add_menu_bar(PyObject* self, PyObject* args, PyObject* kwargs)
 	{
-		const char* name;
+		static int i = 0; i++;
+		std::string sname = std::string(std::string("$$DPG_") + s_internal_id + std::to_string(i));
+		const char* name = sname.c_str();
 		int show = true;
 		const char* parent = "";
 		const char* before = "";
@@ -123,9 +126,7 @@ namespace Marvel {
 			return GetPyNone();
 		}
 
-		return ToPyBool(false);
+		return ToPyString(name);
 	}
 
-
-#endif
 }

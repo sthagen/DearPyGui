@@ -6,12 +6,14 @@
 #include <string>
 #include "mvItemRegistry.h"
 #include "mvImGuiThemeScope.h"
+#include "mvFontScope.h"
 
 namespace Marvel {
 
     void mvInputInt::InsertParser(std::map<std::string, mvPythonParser>* parsers)
     {
-        parsers->insert({ "add_input_int", mvPythonParser({
+        parsers->insert({ s_command, mvPythonParser({
+            {mvPythonDataType::Optional},
             {mvPythonDataType::String, "name"},
             {mvPythonDataType::KeywordOnly},
             {mvPythonDataType::Integer, "default_value", "", "0"},
@@ -38,7 +40,8 @@ namespace Marvel {
     void mvInputInt2::InsertParser(std::map<std::string, mvPythonParser>* parsers)
     {
 
-        parsers->insert({ "add_input_int2", mvPythonParser({
+        parsers->insert({ s_command, mvPythonParser({
+            {mvPythonDataType::Optional},
             {mvPythonDataType::String, "name"},
             {mvPythonDataType::KeywordOnly},
             {mvPythonDataType::IntList, "default_value", "", "(0, 0)"},
@@ -62,7 +65,8 @@ namespace Marvel {
 
     void mvInputInt3::InsertParser(std::map<std::string, mvPythonParser>* parsers)
     {
-        parsers->insert({ "add_input_int3", mvPythonParser({
+        parsers->insert({ s_command, mvPythonParser({
+            {mvPythonDataType::Optional},
             {mvPythonDataType::String, "name"},
             {mvPythonDataType::KeywordOnly},
             {mvPythonDataType::IntList, "default_value", "", "(0, 0, 0)"},
@@ -86,7 +90,8 @@ namespace Marvel {
 
     void mvInputInt4::InsertParser(std::map<std::string, mvPythonParser>* parsers)
     {
-        parsers->insert({ "add_input_int4", mvPythonParser({
+        parsers->insert({ s_command, mvPythonParser({
+            {mvPythonDataType::Optional},
             {mvPythonDataType::String, "name"},
             {mvPythonDataType::KeywordOnly},
             {mvPythonDataType::IntList, "default_value", "", "(0, 0, 0, 0)"},
@@ -110,7 +115,8 @@ namespace Marvel {
 
     void mvInputFloat::InsertParser(std::map<std::string, mvPythonParser>* parsers)
     {
-        parsers->insert({ "add_input_float", mvPythonParser({
+        parsers->insert({ s_command, mvPythonParser({
+            {mvPythonDataType::Optional},
             {mvPythonDataType::String, "name"},
             {mvPythonDataType::KeywordOnly},
             {mvPythonDataType::Float, "default_value", "", "0.0"},
@@ -137,7 +143,8 @@ namespace Marvel {
 
     void mvInputFloat2::InsertParser(std::map<std::string, mvPythonParser>* parsers)
     {
-        parsers->insert({ "add_input_float2", mvPythonParser({
+        parsers->insert({ s_command, mvPythonParser({
+            {mvPythonDataType::Optional},
             {mvPythonDataType::String, "name"},
             {mvPythonDataType::KeywordOnly},
             {mvPythonDataType::FloatList, "default_value", "", "(0.0, 0.0)"},
@@ -162,7 +169,8 @@ namespace Marvel {
 
     void mvInputFloat3::InsertParser(std::map<std::string, mvPythonParser>* parsers)
     {
-        parsers->insert({ "add_input_float3", mvPythonParser({
+        parsers->insert({ s_command, mvPythonParser({
+            {mvPythonDataType::Optional},
             {mvPythonDataType::String, "name"},
             {mvPythonDataType::KeywordOnly},
             {mvPythonDataType::FloatList, "default_value", "", "(0.0, 0.0, 0.0)"},
@@ -187,7 +195,8 @@ namespace Marvel {
 
     void mvInputFloat4::InsertParser(std::map<std::string, mvPythonParser>* parsers)
     {
-        parsers->insert({ "add_input_float4", mvPythonParser({
+        parsers->insert({ s_command, mvPythonParser({
+            {mvPythonDataType::Optional},
             {mvPythonDataType::String, "name"},
             {mvPythonDataType::KeywordOnly},
             {mvPythonDataType::FloatList, "default_value", "", "(0.0, 0.0, 0.0, 0.0)"},
@@ -219,7 +228,7 @@ namespace Marvel {
     
     void mvInputInt::setEnabled(bool value)
     {
-        if (value == m_core_config.enabled)
+        if (value == m_enabled)
             return;
 
         if (value)
@@ -232,13 +241,14 @@ namespace Marvel {
             m_flags &= ~ImGuiInputTextFlags_EnterReturnsTrue;
         }
 
-        m_core_config.enabled = value;
+        m_enabled = value;
     }
 
-    void mvInputInt::draw()
+    void mvInputInt::draw(ImDrawList* drawlist, float x, float y)
     {
         ScopedID id;
         mvImGuiThemeScope scope(this);
+        mvFontScope fscope(this);
 
         if (ImGui::InputInt(m_label.c_str(), m_value.get(), m_step, m_step_fast, m_flags))
         {
@@ -264,32 +274,10 @@ namespace Marvel {
             if (m_last_value != *m_value)
             {
                 m_last_value = *m_value;
-                mvApp::GetApp()->getCallbackRegistry().addCallback(m_core_config.callback, m_core_config.name, m_core_config.callback_data);
+                mvApp::GetApp()->getCallbackRegistry().addCallback(m_callback, m_name, m_callback_data);
             }
         }
 
-    }
-
-    void mvInputInt::updateConfig(mvAppItemConfig* config)
-    {
-        auto aconfig = (mvInputIntConfig*)config;
-
-        m_core_config.width = config->width;
-        m_core_config.label = config->label;
-        m_core_config.show = config->show;
-        m_core_config.callback = config->callback;
-        m_core_config.callback_data = config->callback_data;
-        m_core_config.enabled = config->enabled;
-
-        m_config.source = aconfig->source;
-
-        if (config != &m_config)
-            m_config = *aconfig;
-    }
-
-    mvAppItemConfig* mvInputInt::getConfig()
-    {
-        return &m_config;
     }
 
     mvInputInt2::mvInputInt2(const std::string& name, int* default_value, const std::string& dataSource)
@@ -301,7 +289,7 @@ namespace Marvel {
 
     void mvInputInt2::setEnabled(bool value)
     {
-        if (value == m_core_config.enabled)
+        if (value == m_enabled)
             return;
 
         if (value)
@@ -314,13 +302,14 @@ namespace Marvel {
             m_flags &= ~ImGuiInputTextFlags_EnterReturnsTrue;
         }
 
-        m_core_config.enabled = value;
+        m_enabled = value;
     }
 
-    void mvInputInt2::draw()
+    void mvInputInt2::draw(ImDrawList* drawlist, float x, float y)
     {
         ScopedID id;
         mvImGuiThemeScope scope(this);
+        mvFontScope fscope(this);
 
         if (ImGui::InputInt2(m_label.c_str(), m_value->data(), m_flags))
         {
@@ -355,31 +344,9 @@ namespace Marvel {
             if (m_last_value != *m_value)
             {
                 m_last_value = *m_value;
-                mvApp::GetApp()->getCallbackRegistry().addCallback(m_core_config.callback, m_core_config.name, m_core_config.callback_data);
+                mvApp::GetApp()->getCallbackRegistry().addCallback(m_callback, m_name, m_callback_data);
             }
         }
-    }
-
-    void mvInputInt2::updateConfig(mvAppItemConfig* config)
-    {
-        auto aconfig = (mvInputIntsConfig*)config;
-
-        m_core_config.width = config->width;
-        m_core_config.label = config->label;
-        m_core_config.show = config->show;
-        m_core_config.callback = config->callback;
-        m_core_config.callback_data = config->callback_data;
-        m_core_config.enabled = config->enabled;
-
-        m_config.source = aconfig->source;
-
-        if (config != &m_config)
-            m_config = *aconfig;
-    }
-
-    mvAppItemConfig* mvInputInt2::getConfig()
-    {
-        return &m_config;
     }
 
     mvInputInt3::mvInputInt3(const std::string& name, int* default_value, const std::string& dataSource)
@@ -391,7 +358,7 @@ namespace Marvel {
 
     void mvInputInt3::setEnabled(bool value)
     {
-        if (value == m_core_config.enabled)
+        if (value == m_enabled)
             return;
 
         if (value)
@@ -404,13 +371,14 @@ namespace Marvel {
             m_flags &= ~ImGuiInputTextFlags_EnterReturnsTrue;
         }
 
-        m_core_config.enabled = value;
+        m_enabled = value;
     }
 
-    void mvInputInt3::draw()
+    void mvInputInt3::draw(ImDrawList* drawlist, float x, float y)
     {
         ScopedID id;
         mvImGuiThemeScope scope(this);
+        mvFontScope fscope(this);
 
         if (ImGui::InputInt3(m_label.c_str(), m_value->data(), m_flags))
         {
@@ -446,31 +414,9 @@ namespace Marvel {
             if (m_last_value != *m_value)
             {
                 m_last_value = *m_value;
-                mvApp::GetApp()->getCallbackRegistry().addCallback(m_core_config.callback, m_core_config.name, m_core_config.callback_data);
+                mvApp::GetApp()->getCallbackRegistry().addCallback(m_callback, m_name, m_callback_data);
             }
         }
-    }
-
-    void mvInputInt3::updateConfig(mvAppItemConfig* config)
-    {
-        auto aconfig = (mvInputIntsConfig*)config;
-
-        m_core_config.width = config->width;
-        m_core_config.label = config->label;
-        m_core_config.show = config->show;
-        m_core_config.callback = config->callback;
-        m_core_config.callback_data = config->callback_data;
-        m_core_config.enabled = config->enabled;
-
-        m_config.source = aconfig->source;
-
-        if (config != &m_config)
-            m_config = *aconfig;
-    }
-
-    mvAppItemConfig* mvInputInt3::getConfig()
-    {
-        return &m_config;
     }
 
     mvInputInt4::mvInputInt4(const std::string& name, int* default_value, const std::string& dataSource)
@@ -482,7 +428,7 @@ namespace Marvel {
 
     void mvInputInt4::setEnabled(bool value)
     {
-        if (value == m_core_config.enabled)
+        if (value == m_enabled)
             return;
 
         if (value)
@@ -495,13 +441,14 @@ namespace Marvel {
             m_flags &= ~ImGuiInputTextFlags_EnterReturnsTrue;
         }
 
-        m_core_config.enabled = value;
+        m_enabled = value;
     }
 
-    void mvInputInt4::draw()
+    void mvInputInt4::draw(ImDrawList* drawlist, float x, float y)
     {
         ScopedID id;
         mvImGuiThemeScope scope(this);
+        mvFontScope fscope(this);
 
         if (ImGui::InputInt4(m_label.c_str(), m_value->data(), m_flags))
         {
@@ -537,31 +484,9 @@ namespace Marvel {
             if (m_last_value != *m_value)
             {
                 m_last_value = *m_value;
-                mvApp::GetApp()->getCallbackRegistry().addCallback(m_core_config.callback, m_core_config.name, m_core_config.callback_data);
+                mvApp::GetApp()->getCallbackRegistry().addCallback(m_callback, m_name, m_callback_data);
             }
         }
-    }
-
-    void mvInputInt4::updateConfig(mvAppItemConfig* config)
-    {
-        auto aconfig = (mvInputIntsConfig*)config;
-
-        m_core_config.width = config->width;
-        m_core_config.label = config->label;
-        m_core_config.show = config->show;
-        m_core_config.callback = config->callback;
-        m_core_config.callback_data = config->callback_data;
-        m_core_config.enabled = config->enabled;
-
-        m_config.source = aconfig->source;
-
-        if (config != &m_config)
-            m_config = *aconfig;
-    }
-
-    mvAppItemConfig* mvInputInt4::getConfig()
-    {
-        return &m_config;
     }
 
     mvInputFloat::mvInputFloat(const std::string& name, float default_value, const std::string& dataSource)
@@ -573,7 +498,7 @@ namespace Marvel {
 
     void mvInputFloat::setEnabled(bool value)
     {
-        if (value == m_core_config.enabled)
+        if (value == m_enabled)
             return;
 
         if (value)
@@ -586,13 +511,14 @@ namespace Marvel {
             m_flags &= ~ImGuiInputTextFlags_EnterReturnsTrue;
         }
 
-        m_core_config.enabled = value;
+        m_enabled = value;
     }
 
-    void mvInputFloat::draw()
+    void mvInputFloat::draw(ImDrawList* drawlist, float x, float y)
     {
         ScopedID id;
         mvImGuiThemeScope scope(this);
+        mvFontScope fscope(this);
 
         if (ImGui::InputFloat(m_label.c_str(), m_value.get(), m_step, m_step_fast, m_format.c_str(), m_flags))
         {
@@ -619,31 +545,9 @@ namespace Marvel {
             if (m_last_value != *m_value)
             {
                 m_last_value = *m_value;
-                mvApp::GetApp()->getCallbackRegistry().addCallback(m_core_config.callback, m_core_config.name, m_core_config.callback_data);
+                mvApp::GetApp()->getCallbackRegistry().addCallback(m_callback, m_name, m_callback_data);
             }
         }
-    }
-
-    void mvInputFloat::updateConfig(mvAppItemConfig* config)
-    {
-        auto aconfig = (mvInputFloatConfig*)config;
-
-        m_core_config.width = config->width;
-        m_core_config.label = config->label;
-        m_core_config.show = config->show;
-        m_core_config.callback = config->callback;
-        m_core_config.callback_data = config->callback_data;
-        m_core_config.enabled = config->enabled;
-
-        m_config.source = aconfig->source;
-
-        if (config != &m_config)
-            m_config = *aconfig;
-    }
-
-    mvAppItemConfig* mvInputFloat::getConfig()
-    {
-        return &m_config;
     }
 
     mvInputFloat2::mvInputFloat2(const std::string& name, float* default_value, const std::string& dataSource)
@@ -655,7 +559,7 @@ namespace Marvel {
 
     void mvInputFloat2::setEnabled(bool value)
     {
-        if (value == m_core_config.enabled)
+        if (value == m_enabled)
             return;
 
         if (value)
@@ -668,13 +572,14 @@ namespace Marvel {
             m_flags &= ~ImGuiInputTextFlags_EnterReturnsTrue;
         }
 
-        m_core_config.enabled = value;
+        m_enabled = value;
     }
 
-    void mvInputFloat2::draw()
+    void mvInputFloat2::draw(ImDrawList* drawlist, float x, float y)
     {
         ScopedID id;
         mvImGuiThemeScope scope(this);
+        mvFontScope fscope(this);
 
         if (ImGui::InputFloat2(m_label.c_str(), m_value->data(), m_format.c_str(), m_flags))
         {
@@ -710,31 +615,9 @@ namespace Marvel {
             if (m_last_value != *m_value)
             {
                 m_last_value = *m_value;
-                mvApp::GetApp()->getCallbackRegistry().addCallback(m_core_config.callback, m_core_config.name, m_core_config.callback_data);
+                mvApp::GetApp()->getCallbackRegistry().addCallback(m_callback, m_name, m_callback_data);
             }
         }
-    }
-
-    void mvInputFloat2::updateConfig(mvAppItemConfig* config)
-    {
-        auto aconfig = (mvInputFloatsConfig*)config;
-
-        m_core_config.width = config->width;
-        m_core_config.label = config->label;
-        m_core_config.show = config->show;
-        m_core_config.callback = config->callback;
-        m_core_config.callback_data = config->callback_data;
-        m_core_config.enabled = config->enabled;
-
-        m_config.source = aconfig->source;
-
-        if (config != &m_config)
-            m_config = *aconfig;
-    }
-
-    mvAppItemConfig* mvInputFloat2::getConfig()
-    {
-        return &m_config;
     }
 
     mvInputFloat3::mvInputFloat3(const std::string& name, float* default_value, const std::string& dataSource)
@@ -746,7 +629,7 @@ namespace Marvel {
 
     void mvInputFloat3::setEnabled(bool value)
     {
-        if (value == m_core_config.enabled)
+        if (value == m_enabled)
             return;
 
         if (value)
@@ -759,13 +642,14 @@ namespace Marvel {
             m_flags &= ~ImGuiInputTextFlags_EnterReturnsTrue;
         }
 
-        m_core_config.enabled = value;
+        m_enabled = value;
     }
 
-    void mvInputFloat3::draw()
+    void mvInputFloat3::draw(ImDrawList* drawlist, float x, float y)
     {
         ScopedID id;
         mvImGuiThemeScope scope(this);
+        mvFontScope fscope(this);
 
         if (ImGui::InputFloat3(m_label.c_str(), m_value->data(), m_format.c_str(), m_flags))
         {
@@ -801,31 +685,9 @@ namespace Marvel {
             if (m_last_value != *m_value)
             {
                 m_last_value = *m_value;
-                mvApp::GetApp()->getCallbackRegistry().addCallback(m_core_config.callback, m_core_config.name, m_core_config.callback_data);
+                mvApp::GetApp()->getCallbackRegistry().addCallback(m_callback, m_name, m_callback_data);
             }
         }
-    }
-
-    void mvInputFloat3::updateConfig(mvAppItemConfig* config)
-    {
-        auto aconfig = (mvInputFloatsConfig*)config;
-
-        m_core_config.width = config->width;
-        m_core_config.label = config->label;
-        m_core_config.show = config->show;
-        m_core_config.callback = config->callback;
-        m_core_config.callback_data = config->callback_data;
-        m_core_config.enabled = config->enabled;
-
-        m_config.source = aconfig->source;
-
-        if (config != &m_config)
-            m_config = *aconfig;
-    }
-
-    mvAppItemConfig* mvInputFloat3::getConfig()
-    {
-        return &m_config;
     }
 
     mvInputFloat4::mvInputFloat4(const std::string& name, float* default_value, const std::string& dataSource)
@@ -837,7 +699,7 @@ namespace Marvel {
 
     void mvInputFloat4::setEnabled(bool value)
     {
-        if (value == m_core_config.enabled)
+        if (value == m_enabled)
             return;
 
         if (value)
@@ -850,13 +712,14 @@ namespace Marvel {
             m_flags &= ~ImGuiInputTextFlags_EnterReturnsTrue;
         }
 
-        m_core_config.enabled = value;
+        m_enabled = value;
     }
 
-    void mvInputFloat4::draw()
+    void mvInputFloat4::draw(ImDrawList* drawlist, float x, float y)
     {
         ScopedID id;
         mvImGuiThemeScope scope(this);
+        mvFontScope fscope(this);
 
         if (ImGui::InputFloat4(m_label.c_str(), m_value->data(), m_format.c_str(), m_flags))
         {
@@ -892,34 +755,10 @@ namespace Marvel {
             if (m_last_value != *m_value)
             {
                 m_last_value = *m_value;
-                mvApp::GetApp()->getCallbackRegistry().addCallback(m_core_config.callback, m_core_config.name, m_core_config.callback_data);
+                mvApp::GetApp()->getCallbackRegistry().addCallback(m_callback, m_name, m_callback_data);
             }
         }
     }
-
-    void mvInputFloat4::updateConfig(mvAppItemConfig* config)
-    {
-        auto aconfig = (mvInputFloatsConfig*)config;
-
-        m_core_config.width = config->width;
-        m_core_config.label = config->label;
-        m_core_config.show = config->show;
-        m_core_config.callback = config->callback;
-        m_core_config.callback_data = config->callback_data;
-        m_core_config.enabled = config->enabled;
-
-        m_config.source = aconfig->source;
-
-        if (config != &m_config)
-            m_config = *aconfig;
-    }
-
-    mvAppItemConfig* mvInputFloat4::getConfig()
-    {
-        return &m_config;
-    }
-
-#ifndef MV_CPP
 
     void mvInputInt::setExtraConfigDict(PyObject* dict)
     {
@@ -1234,9 +1073,11 @@ namespace Marvel {
         checkbitset("readonly", ImGuiInputTextFlags_ReadOnly, m_flags);
     }
 
-    PyObject* add_input_int(PyObject* self, PyObject* args, PyObject* kwargs)
+    PyObject* mvInputInt::add_input_int(PyObject* self, PyObject* args, PyObject* kwargs)
     {
-        const char* name;
+        static int i = 0; i++;
+        std::string sname = std::string(std::string("$$DPG_") + s_internal_id + std::to_string(i));
+        const char* name = sname.c_str();
         int default_value = 0;
         int min_value = 0;
         int max_value = 100;
@@ -1275,12 +1116,14 @@ namespace Marvel {
 
         mvApp::GetApp()->getItemRegistry().addItemWithRuntimeChecks(item, parent, before);
 
-        return GetPyNone();
+        return ToPyString(name);
     }
 
-    PyObject* add_input_int2(PyObject* self, PyObject* args, PyObject* kwargs)
+    PyObject* mvInputInt2::add_input_int2(PyObject* self, PyObject* args, PyObject* kwargs)
     {
-        const char* name;
+        static int i = 0; i++;
+        std::string sname = std::string(std::string("$$DPG_") + s_internal_id + std::to_string(i));
+        const char* name = sname.c_str();
         PyObject* default_value = PyTuple_New(2);
         PyTuple_SetItem(default_value, 0, PyLong_FromLong(0));
         PyTuple_SetItem(default_value, 1, PyLong_FromLong(0));
@@ -1321,12 +1164,14 @@ namespace Marvel {
 
         mvApp::GetApp()->getItemRegistry().addItemWithRuntimeChecks(item, parent, before);
 
-        return GetPyNone();
+        return ToPyString(name);
     }
 
-    PyObject* add_input_int3(PyObject* self, PyObject* args, PyObject* kwargs)
+    PyObject* mvInputInt3::add_input_int3(PyObject* self, PyObject* args, PyObject* kwargs)
     {
-        const char* name;
+        static int i = 0; i++;
+        std::string sname = std::string(std::string("$$DPG_") + s_internal_id + std::to_string(i));
+        const char* name = sname.c_str();
         PyObject* default_value = PyTuple_New(3);
         PyTuple_SetItem(default_value, 0, PyLong_FromLong(0));
         PyTuple_SetItem(default_value, 1, PyLong_FromLong(0));
@@ -1369,12 +1214,14 @@ namespace Marvel {
 
         mvApp::GetApp()->getItemRegistry().addItemWithRuntimeChecks(item, parent, before);
 
-        return GetPyNone();
+        return ToPyString(name);
     }
 
-    PyObject* add_input_int4(PyObject* self, PyObject* args, PyObject* kwargs)
+    PyObject* mvInputInt4::add_input_int4(PyObject* self, PyObject* args, PyObject* kwargs)
     {
-        const char* name;
+        static int i = 0; i++;
+        std::string sname = std::string(std::string("$$DPG_") + s_internal_id + std::to_string(i));
+        const char* name = sname.c_str();
         PyObject* default_value = PyTuple_New(4);
         PyTuple_SetItem(default_value, 0, PyLong_FromLong(0));
         PyTuple_SetItem(default_value, 1, PyLong_FromLong(0));
@@ -1416,12 +1263,14 @@ namespace Marvel {
 
         mvApp::GetApp()->getItemRegistry().addItemWithRuntimeChecks(item, parent, before);
 
-        return GetPyNone();
+        return ToPyString(name);
     }
 
-    PyObject* add_input_float(PyObject* self, PyObject* args, PyObject* kwargs)
+    PyObject* mvInputFloat::add_input_float(PyObject* self, PyObject* args, PyObject* kwargs)
     {
-        const char* name;
+        static int i = 0; i++;
+        std::string sname = std::string(std::string("$$DPG_") + s_internal_id + std::to_string(i));
+        const char* name = sname.c_str();
         float default_value = 0.0f;
         float min_value = 0.0f;
         float max_value = 100.0f;
@@ -1462,12 +1311,14 @@ namespace Marvel {
 
         mvApp::GetApp()->getItemRegistry().addItemWithRuntimeChecks(item, parent, before);
 
-        return GetPyNone();
+        return ToPyString(name);
     }
 
-    PyObject* add_input_float2(PyObject* self, PyObject* args, PyObject* kwargs)
+    PyObject* mvInputFloat2::add_input_float2(PyObject* self, PyObject* args, PyObject* kwargs)
     {
-        const char* name;
+        static int i = 0; i++;
+        std::string sname = std::string(std::string("$$DPG_") + s_internal_id + std::to_string(i));
+        const char* name = sname.c_str();
         PyObject* default_value = PyTuple_New(2);
         PyTuple_SetItem(default_value, 0, PyLong_FromLong(0));
         PyTuple_SetItem(default_value, 1, PyLong_FromLong(0));
@@ -1509,12 +1360,14 @@ namespace Marvel {
 
         mvApp::GetApp()->getItemRegistry().addItemWithRuntimeChecks(item, parent, before);
 
-        return GetPyNone();
+        return ToPyString(name);
     }
 
-    PyObject* add_input_float3(PyObject* self, PyObject* args, PyObject* kwargs)
+    PyObject* mvInputFloat3::add_input_float3(PyObject* self, PyObject* args, PyObject* kwargs)
     {
-        const char* name;
+        static int i = 0; i++;
+        std::string sname = std::string(std::string("$$DPG_") + s_internal_id + std::to_string(i));
+        const char* name = sname.c_str();
         PyObject* default_value = PyTuple_New(3);
         PyTuple_SetItem(default_value, 0, PyLong_FromLong(0));
         PyTuple_SetItem(default_value, 1, PyLong_FromLong(0));
@@ -1558,12 +1411,14 @@ namespace Marvel {
 
         mvApp::GetApp()->getItemRegistry().addItemWithRuntimeChecks(item, parent, before);
 
-        return GetPyNone();
+        return ToPyString(name);
     }
 
-    PyObject* add_input_float4(PyObject* self, PyObject* args, PyObject* kwargs)
+    PyObject* mvInputFloat4::add_input_float4(PyObject* self, PyObject* args, PyObject* kwargs)
     {
-        const char* name;
+        static int i = 0; i++;
+        std::string sname = std::string(std::string("$$DPG_") + s_internal_id + std::to_string(i));
+        const char* name = sname.c_str();
         PyObject* default_value = PyTuple_New(4);
         PyTuple_SetItem(default_value, 0, PyLong_FromLong(0));
         PyTuple_SetItem(default_value, 1, PyLong_FromLong(0));
@@ -1608,8 +1463,7 @@ namespace Marvel {
 
         mvApp::GetApp()->getItemRegistry().addItemWithRuntimeChecks(item, parent, before);
 
-        return GetPyNone();
+        return ToPyString(name);
     }
 
-#endif // !MV_CPP
 }

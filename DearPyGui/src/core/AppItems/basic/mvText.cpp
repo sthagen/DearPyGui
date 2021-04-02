@@ -2,12 +2,14 @@
 #include "mvApp.h"
 #include "mvItemRegistry.h"
 #include "mvImGuiThemeScope.h"
+#include "mvFontScope.h"
 
 namespace Marvel {
 
 	void mvText::InsertParser(std::map<std::string, mvPythonParser>* parsers)
 	{
-		parsers->insert({ "add_text", mvPythonParser({
+		parsers->insert({ s_command, mvPythonParser({
+			{mvPythonDataType::Optional},
 			{mvPythonDataType::String, "name"},
 			{mvPythonDataType::KeywordOnly},
 			{mvPythonDataType::Integer, "wrap", "number of characters until wraping", "-1"},
@@ -23,7 +25,7 @@ namespace Marvel {
 
 	void mvLabelText::InsertParser(std::map<std::string, mvPythonParser>* parsers)
 	{
-		parsers->insert({ "add_label_text", mvPythonParser({
+		parsers->insert({ s_command, mvPythonParser({
 			{mvPythonDataType::String, "name"},
 			{mvPythonDataType::KeywordOnly},
 			{mvPythonDataType::String, "default_value", "", "''"},
@@ -65,13 +67,13 @@ namespace Marvel {
 		: 
 		mvStringPtrBase(name, default_value.empty() ? name : default_value)
 	{
-		m_description.duplicatesAllowed = true;
 	}
 
-	void mvText::draw()
+	void mvText::draw(ImDrawList* drawlist, float x, float y)
 	{
 		ScopedID id;
 		mvImGuiThemeScope scope(this);
+		mvFontScope fscope(this);
 
 		if (m_color.r > 0.0f)
 			ImGui::PushStyleColor(ImGuiCol_Text, m_color.toVec4());
@@ -97,10 +99,10 @@ namespace Marvel {
 		: 
 		mvStringPtrBase(name, value)
 	{
-		m_label = FindRenderedTextEnd(m_core_config.name.c_str());
+		m_label = FindRenderedTextEnd(m_name.c_str());
 	}
 
-	void mvLabelText::draw()
+	void mvLabelText::draw(ImDrawList* drawlist, float x, float y)
 	{
 
 		if (m_color.r > 0.0f)
@@ -124,43 +126,6 @@ namespace Marvel {
 		}
 
 	}
-
-	void mvText::updateConfig(mvAppItemConfig* config)
-	{
-		auto aconfig = (mvTextConfig*)config;
-
-		m_core_config.show = config->show;
-
-		m_config.source = aconfig->source;
-
-		if (config != &m_config)
-			m_config = *aconfig;
-	}
-
-	mvAppItemConfig* mvText::getConfig()
-	{
-		return &m_config;
-	}
-
-	void mvLabelText::updateConfig(mvAppItemConfig* config)
-	{
-		auto aconfig = (mvLabelTextConfig*)config;
-
-		m_core_config.show = config->show;
-		m_core_config.label = config->label;
-
-		m_config.source = aconfig->source;
-
-		if (config != &m_config)
-			m_config = *aconfig;
-	}
-
-	mvAppItemConfig* mvLabelText::getConfig()
-	{
-		return &m_config;
-	}
-
-#ifndef MV_CPP
 
 	void mvText::setExtraConfigDict(PyObject* dict)
 	{
@@ -199,9 +164,11 @@ namespace Marvel {
 		PyDict_SetItemString(dict, "color", ToPyColor(m_color));
 	}
 
-	PyObject* add_text(PyObject* self, PyObject* args, PyObject* kwargs)
+	PyObject* mvText::add_text(PyObject* self, PyObject* args, PyObject* kwargs)
 	{
-		const char* name;
+		static int i = 0; i++;
+		std::string sname = std::string(std::string("$$DPG_") + s_internal_id + std::to_string(i));
+		const char* name = sname.c_str();
 		int wrap = -1;
 		int bullet = false;
 		PyObject* color = PyTuple_New(4);
@@ -228,12 +195,14 @@ namespace Marvel {
 
 		mvApp::GetApp()->getItemRegistry().addItemWithRuntimeChecks(item, parent, before);
 
-		return GetPyNone();
+		return ToPyString(name);
 	}
 
-	PyObject* add_label_text(PyObject* self, PyObject* args, PyObject* kwargs)
+	PyObject* mvLabelText::add_label_text(PyObject* self, PyObject* args, PyObject* kwargs)
 	{
-		const char* name;
+		static int i = 0; i++;
+		std::string sname = std::string(std::string("$$DPG_") + s_internal_id + std::to_string(i));
+		const char* name = sname.c_str();
 		const char* value = "";
 		PyObject* color = PyTuple_New(4);
 		PyTuple_SetItem(color, 0, PyLong_FromLong(-255));
@@ -260,8 +229,7 @@ namespace Marvel {
 
 		mvApp::GetApp()->getItemRegistry().addItemWithRuntimeChecks(item, parent, before);
 
-		return GetPyNone();
+		return ToPyString(name);
 	}
 
-#endif // !MV_CPP
 }

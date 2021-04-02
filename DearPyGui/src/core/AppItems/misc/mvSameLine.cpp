@@ -6,7 +6,7 @@ namespace Marvel {
 
 	void mvSameLine::InsertParser(std::map<std::string, mvPythonParser>* parsers)
 	{
-		parsers->insert({ "add_same_line", mvPythonParser({
+		parsers->insert({ s_command, mvPythonParser({
 			{mvPythonDataType::KeywordOnly},
 			{mvPythonDataType::String, "name", "", "'sameline'"},
 			{mvPythonDataType::Float, "xoffset", "offset from containing window", "0.0"},
@@ -22,47 +22,36 @@ namespace Marvel {
 	mvSameLine::mvSameLine(const std::string& name)
 		: mvAppItem(name)
 	{
-		m_description.duplicatesAllowed = true;
 	}
 
-	void mvSameLine::draw()
+	void mvSameLine::draw(ImDrawList* drawlist, float x, float y)
 	{
 		ImGui::SameLine(m_xoffset, m_spacing);
 	}
 
-#ifndef MV_CPP
+	void mvSameLine::setExtraConfigDict(PyObject* dict)
+	{
+		if (dict == nullptr)
+			return;
 
+		if (PyObject* item = PyDict_GetItemString(dict, "xoffset")) m_xoffset = ToFloat(item);
+		if (PyObject* item = PyDict_GetItemString(dict, "spacing")) m_spacing = ToFloat(item);
 
+	}
 
-#endif
+	void mvSameLine::getExtraConfigDict(PyObject* dict)
+	{
+		if (dict == nullptr)
+			return;
 
+		PyDict_SetItemString(dict, "xoffset", ToPyFloat(m_xoffset));
+		PyDict_SetItemString(dict, "spacing", ToPyFloat(m_spacing));
+	}
 
-#ifdef MV_CPP
-#else
-
-		void mvSameLine::setExtraConfigDict(PyObject* dict)
-		{
-			if (dict == nullptr)
-				return;
-
-			if (PyObject* item = PyDict_GetItemString(dict, "xoffset")) m_xoffset = ToFloat(item);
-			if (PyObject* item = PyDict_GetItemString(dict, "spacing")) m_spacing = ToFloat(item);
-
-		}
-
-		void mvSameLine::getExtraConfigDict(PyObject* dict)
-		{
-			if (dict == nullptr)
-				return;
-
-			PyDict_SetItemString(dict, "xoffset", ToPyFloat(m_xoffset));
-			PyDict_SetItemString(dict, "spacing", ToPyFloat(m_spacing));
-		}
-
-	PyObject* add_same_line(PyObject* self, PyObject* args, PyObject* kwargs)
+	PyObject* mvSameLine::add_same_line(PyObject* self, PyObject* args, PyObject* kwargs)
 	{
 		static int i = 0; i++;
-		std::string sname = std::string("sameline" + std::to_string(i));
+		std::string sname = std::string(std::string("$$DPG_") + s_internal_id + std::to_string(i));
 		const char* name = sname.c_str();
 		float xoffset = 0.0f;
 		float spacing = -1.0f;
@@ -82,8 +71,7 @@ namespace Marvel {
 
 		mvApp::GetApp()->getItemRegistry().addItemWithRuntimeChecks(item, parent, before);
 
-		return GetPyNone();
+		return ToPyString(name);
 	}
-#endif
 
 }

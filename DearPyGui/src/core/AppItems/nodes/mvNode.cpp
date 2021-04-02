@@ -4,6 +4,7 @@
 #include "mvLog.h"
 #include "mvItemRegistry.h"
 #include "mvImNodesThemeScope.h"
+#include "mvFontScope.h"
 
 namespace Marvel {
 
@@ -35,7 +36,8 @@ namespace Marvel {
 
 	void mvNode::InsertParser(std::map<std::string, mvPythonParser>* parsers)
 	{
-		parsers->insert({ "add_node", mvPythonParser({
+		parsers->insert({ s_command, mvPythonParser({
+			{mvPythonDataType::Optional},
 			{mvPythonDataType::String, "name"},
 			{mvPythonDataType::KeywordOnly},
 			{mvPythonDataType::Bool, "show", "Attempt to render", "True"},
@@ -53,8 +55,8 @@ namespace Marvel {
 		: mvAppItem(name)
 	{
 		m_description.container = true;
-		m_core_config.label = FindRenderedTextEnd(m_core_config.name.c_str());
-		m_label = m_core_config.label;
+		m_label = FindRenderedTextEnd(m_name.c_str());
+		m_label = m_label;
         int64_t address = (int64_t)this;
         int64_t reduced_address = address % 2147483648;
         m_id = (int)reduced_address;
@@ -90,10 +92,11 @@ namespace Marvel {
 		m_dirty_pos = true;
 	}
 
-	void mvNode::draw()
+	void mvNode::draw(ImDrawList* drawlist, float x, float y)
 	{
 		ScopedID id;
 		mvImNodesThemeScope scope(this);
+		mvFontScope fscope(this);
 
 		if (m_dirty_pos)
 		{
@@ -112,17 +115,17 @@ namespace Marvel {
 		//we do this so that the children dont get the theme
 		scope.cleanup();
 
-		for (auto item : m_children)
+		for (auto item : m_children1)
 		{
 			// skip item if it's not shown
-			if (!item->m_core_config.show)
+			if (!item->m_show)
 				continue;
 
 			// set item width
-			if (item->m_core_config.width != 0)
-				ImGui::SetNextItemWidth((float)item->m_core_config.width);
+			if (item->m_width != 0)
+				ImGui::SetNextItemWidth((float)item->m_width);
 
-			item->draw();
+			item->draw(drawlist, x, y);
 
 			auto& state = item->getState();
 			state.setActive(imnodes::IsAttributeActive());
@@ -135,9 +138,6 @@ namespace Marvel {
 		m_xpos = pos.x;
 		m_ypos = pos.y;
 	}
-
-#ifdef MV_CPP
-#else
 
 	void mvNode::setExtraConfigDict(PyObject* dict)
 	{
@@ -160,9 +160,11 @@ namespace Marvel {
 		PyDict_SetItemString(dict, "draggable", ToPyBool(m_draggable));	
 	}
 
-	PyObject* add_node(PyObject* self, PyObject* args, PyObject* kwargs)
+	PyObject* mvNode::add_node(PyObject* self, PyObject* args, PyObject* kwargs)
 	{
-		const char* name;
+		static int i = 0; i++;
+		std::string sname = std::string(std::string("$$DPG_") + s_internal_id + std::to_string(i));
+		const char* name = sname.c_str();
 		int show = true;
 		const char* label = "";
 		int draggable = true;
@@ -198,9 +200,7 @@ namespace Marvel {
 
 		}
 
-		return GetPyNone();
+		return ToPyString(name);
 
 	}
-
-#endif
 }

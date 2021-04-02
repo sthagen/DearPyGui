@@ -5,7 +5,7 @@ namespace Marvel {
 
 	void mvSpacing::InsertParser(std::map<std::string, mvPythonParser>* parsers)
 	{
-		parsers->insert({ "add_spacing", mvPythonParser({
+		parsers->insert({ s_command, mvPythonParser({
 			{mvPythonDataType::KeywordOnly},
 			{mvPythonDataType::String, "name", "", "'spacing'"},
 			{mvPythonDataType::Integer, "count", "", "1"},
@@ -19,22 +19,18 @@ namespace Marvel {
 	mvSpacing::mvSpacing(const std::string& name, int count)
 		: mvIntPtrBase(name, count)
 	{
-		m_description.duplicatesAllowed = true;
 	}
 
-	void mvSpacing::draw()
+	void mvSpacing::draw(ImDrawList* drawlist, float x, float y)
 	{
 		for (int i = 0; i < *m_value; i++)
 			ImGui::Spacing();
 	}
 
-
-#ifdef MV_CPP
-#else
-	PyObject* add_spacing(PyObject* self, PyObject* args, PyObject* kwargs)
+	PyObject* mvSpacing::add_spacing(PyObject* self, PyObject* args, PyObject* kwargs)
 	{
 		static int i = 0; i++;
-		std::string sname = std::string("spacing" + std::to_string(i));
+		std::string sname = std::string(std::string("$$DPG_") + s_internal_id + std::to_string(i));
 		const char* name = sname.c_str();
 		int count = 1;
 		const char* before = "";
@@ -53,8 +49,7 @@ namespace Marvel {
 
 		mvApp::GetApp()->getItemRegistry().addItemWithRuntimeChecks(item, parent, before);
 
-		return GetPyNone();
+		return ToPyString(name);
 	}
-#endif
 
 }

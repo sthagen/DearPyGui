@@ -1,13 +1,15 @@
 #include "mvPopup.h"
 #include "mvItemRegistry.h"
 #include "mvImGuiThemeScope.h"
+#include "mvFontScope.h"
 
 namespace Marvel {
 
 	void mvPopup::InsertParser(std::map<std::string, mvPythonParser>* parsers)
 	{
-		parsers->insert({ "add_popup", mvPythonParser({
+		parsers->insert({ s_command, mvPythonParser({
 			{mvPythonDataType::String, "popupparent", "Parent that the popup will be assigned to."},
+			{mvPythonDataType::Optional},
 			{mvPythonDataType::String, "name"},
 			{mvPythonDataType::KeywordOnly},
 			{mvPythonDataType::Integer, "mousebutton", "The mouse code that will trigger the popup.", "1"},
@@ -37,18 +39,19 @@ namespace Marvel {
 		m_close = true;
 	}
 
-	void mvPopup::draw()
+	void mvPopup::draw(ImDrawList* drawlist, float x, float y)
 	{
 
 		ScopedID id(m_parentAddress);
 		mvImGuiThemeScope scope(this);
+		mvFontScope fscope(this);
 
 		if (m_modal)
 		{
 			if (ImGui::IsItemHovered() && ImGui::IsMouseReleased(m_button))
-				ImGui::OpenPopup(m_core_config.name.c_str());
+				ImGui::OpenPopup(m_name.c_str());
 
-			if (ImGui::BeginPopupModal(m_core_config.name.c_str(), nullptr, ImGuiWindowFlags_AlwaysAutoResize))
+			if (ImGui::BeginPopupModal(m_name.c_str(), nullptr, ImGuiWindowFlags_AlwaysAutoResize))
 			{
 
 				if (m_close)
@@ -60,17 +63,17 @@ namespace Marvel {
 				//we do this so that the children dont get the theme
 				scope.cleanup();
 
-				for (mvRef<mvAppItem> item : m_children)
+				for (mvRef<mvAppItem> item : m_children1)
 				{
 					// skip item if it's not shown
-					if (!item->m_core_config.show)
+					if (!item->m_show)
 						continue;
 
 					// set item width
-					if (item->m_core_config.width != 0)
-						ImGui::SetNextItemWidth((float)item->m_core_config.width);
+					if (item->m_width != 0)
+						ImGui::SetNextItemWidth((float)item->m_width);
 
-					item->draw();
+					item->draw(drawlist, ImGui::GetCursorPosX(), ImGui::GetCursorPosY());
 
 					item->getState().update();
 				}
@@ -81,23 +84,23 @@ namespace Marvel {
 
 		else
 		{
-			if (ImGui::BeginPopupContextItem(m_core_config.name.c_str(), m_button))
+			if (ImGui::BeginPopupContextItem(m_name.c_str(), m_button))
 			{
 
 				//we do this so that the children dont get the theme
 				scope.cleanup();
 
-				for (mvRef<mvAppItem> item : m_children)
+				for (mvRef<mvAppItem> item : m_children1)
 				{
 					// skip item if it's not shown
-					if (!item->m_core_config.show)
+					if (!item->m_show)
 						continue;
 
 					// set item width
-					if (item->m_core_config.width > 0)
-						ImGui::SetNextItemWidth((float)item->m_core_config.width);
+					if (item->m_width > 0)
+						ImGui::SetNextItemWidth((float)item->m_width);
 
-					item->draw();
+					item->draw(drawlist, x, y);
 
 					item->getState().update();
 				}
@@ -109,8 +112,6 @@ namespace Marvel {
 			}
 		}
 	}
-
-#ifndef MV_CPP
 
 	void mvPopup::setExtraConfigDict(PyObject* dict)
 	{
@@ -131,10 +132,12 @@ namespace Marvel {
 		PyDict_SetItemString(dict, "mousebutton", ToPyInt(m_button));
 	}
 
-	PyObject* add_popup(PyObject* self, PyObject* args, PyObject* kwargs)
+	PyObject* mvPopup::add_popup(PyObject* self, PyObject* args, PyObject* kwargs)
 	{
 		const char* popupparent;
-		const char* name;
+		static int i = 0; i++;
+		std::string sname = std::string(std::string("$$DPG_") + s_internal_id + std::to_string(i));
+		const char* name = sname.c_str();
 		int mousebutton = 1;
 		int modal = false;
 		const char* parent = "";
@@ -163,10 +166,10 @@ namespace Marvel {
 
 		}
 
-		return GetPyNone();
+		return ToPyString(name);
 	}
 
-	PyObject* close_popup(PyObject* self, PyObject* args, PyObject* kwargs)
+	PyObject* mvPopup::close_popup(PyObject* self, PyObject* args, PyObject* kwargs)
 	{
 		const char* popup;
 
@@ -198,5 +201,4 @@ namespace Marvel {
 		return GetPyNone();
 	}
 
-#endif
 }
