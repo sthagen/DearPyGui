@@ -5,9 +5,13 @@
 
 namespace Marvel {
 
-	MV_REGISTER_WIDGET(mvMenuItem);
+	MV_REGISTER_WIDGET(mvMenuItem, MV_ITEM_DESC_DEFAULT, StorageValueTypes::Bool, 1);
 	class mvMenuItem : public mvBoolPtrBase
 	{
+
+	public:
+
+		static void InsertParser(std::map<std::string, mvPythonParser>* parsers);
 
 		MV_APPITEM_TYPE(mvAppItemType::mvMenuItem, add_menu_item)
 
@@ -35,11 +39,7 @@ namespace Marvel {
 
 	public:
 
-		static void InsertParser(std::map<std::string, mvPythonParser>* parsers);
-
-	public:
-
-		explicit mvMenuItem(const std::string& name);
+		explicit mvMenuItem(const std::string& name, bool default_value, const std::string& dataSource);
 
 		void draw(ImDrawList* drawlist, float x, float y) override;
 
@@ -49,7 +49,9 @@ namespace Marvel {
 	private:
 
 		std::string m_shortcut;
+		bool        m_default_value = false;
 		bool        m_check = false;
+		std::string m_source = "";
 
 	};
 
