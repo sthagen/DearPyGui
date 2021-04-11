@@ -3,6 +3,7 @@
 #include <utility>
 #include <array>
 #include "mvAppItem.h"
+#include "mvItemRegistry.h"
 
 namespace Marvel {
 
@@ -14,7 +15,7 @@ namespace Marvel {
 
 		static void InsertParser(std::map<std::string, mvPythonParser>* parsers);
 
-		MV_APPITEM_TYPE(mvAppItemType::mvImage, add_image)
+		MV_APPLY_WIDGET_REGISTRATION(mvAppItemType::mvImage, add_image)
 
 		MV_START_EXTRA_COMMANDS
 		MV_END_EXTRA_COMMANDS
@@ -28,7 +29,7 @@ namespace Marvel {
 		MV_START_STYLE_CONSTANTS
 		MV_END_STYLE_CONSTANTS
 
-		mvImage(const std::string& name, std::string default_value);
+		mvImage(const std::string& name);
 
 		bool onEvent(mvEvent& event) override;
 		bool onTextureDeleted(mvEvent& event);

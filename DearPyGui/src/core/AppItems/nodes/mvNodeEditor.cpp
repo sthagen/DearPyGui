@@ -66,22 +66,46 @@ namespace Marvel {
 		"None", "Containers") });
 	}
 
-	mvNodeEditor::mvNodeEditor(const std::string& name, mvCallable linkCallback, mvCallable delinkCallback)
-		: mvAppItem(name), m_linkCallback(linkCallback), m_delinkCallback(delinkCallback)
+	mvNodeEditor::mvNodeEditor(const std::string& name)
+		: mvAppItem(name)
 	{
 	}
 
 	mvNodeEditor::~mvNodeEditor()
 	{
 		m_delinkCallback = nullptr;
-		for (auto& child : m_children1)
+		for (auto& child : m_children[1])
 		{
-			for (auto& grandchild : child->m_children1)
+			for (auto& grandchild : child->m_children[1])
 			{
 				((mvNodeAttribute*)grandchild.get())->markForDeletion();
 				deleteLink(grandchild->m_name, ((mvNodeAttribute*)grandchild.get())->getId(), true);
 			}
 
+		}
+	}
+
+	void mvNodeEditor::setExtraConfigDict(PyObject* dict)
+	{
+		if (dict == nullptr)
+			return;
+
+		if (PyObject* item = PyDict_GetItemString(dict, "link_callback"))
+		{
+			if (m_linkCallback)
+				Py_XDECREF(m_linkCallback);
+			if (item)
+				Py_XINCREF(item);
+			m_linkCallback = item;
+		}
+
+		if (PyObject* item = PyDict_GetItemString(dict, "delink_callback"))
+		{
+			if (m_delinkCallback)
+				Py_XDECREF(m_delinkCallback);
+			if (item)
+				Py_XINCREF(item);
+			m_delinkCallback = item;
 		}
 	}
 
@@ -101,9 +125,9 @@ namespace Marvel {
 		int64_t node1_id = 0;
         int64_t node2_id = 0;
 
-		for (const auto& node : m_children1)
+		for (const auto& node : m_children[1])
 		{
-			for (const auto& attr : node->m_children1)
+			for (const auto& attr : node->m_children[1])
 			{
 				if (attr->m_name == node1)
 					node1_id = static_cast<mvNodeAttribute*>(attr.get())->getId();
@@ -172,9 +196,9 @@ namespace Marvel {
 		int node1_id = 0;
 		int node2_id = 0;
 
-		for (const auto& node : m_children1)
+		for (const auto& node : m_children[1])
 		{
-			for (const auto& attr : node->m_children1)
+			for (const auto& attr : node->m_children[1])
 			{
 				if (attr->m_name == node1)
 					node1_id = static_cast<mvNodeAttribute*>(attr.get())->getId();
@@ -235,7 +259,7 @@ namespace Marvel {
 		std::vector<std::string> result;
 		for (const auto& item : m_selectedNodes)
 		{
-			for (const auto& child : m_children1)
+			for (const auto& child : m_children[1])
 			{
 			    int i1 = item;
 			    int i2 = static_cast<mvNode*>(child.get())->getId();
@@ -282,7 +306,7 @@ namespace Marvel {
 		//we do this so that the children dont get the theme
 		//scope.cleanup();
 
-		for (auto item : m_children1)
+		for (auto item : m_children[1])
 		{
 			// skip item if it's not shown
 			if (!item->m_show)
@@ -302,7 +326,7 @@ namespace Marvel {
 		
 
 		static int hovered_node_id;
-		for (auto& child : m_children1)
+		for (auto& child : m_children[1])
 		{
 			child->getState().setHovered(false);
 
@@ -314,7 +338,7 @@ namespace Marvel {
 
 		if (imnodes::IsNodeHovered(&hovered_node_id))
 		{
-			for (auto& child : m_children1)
+			for (auto& child : m_children[1])
 			{
 				if (static_cast<mvNode*>(child.get())->getId() == hovered_node_id)
 					child->getState().setHovered(true);
@@ -347,9 +371,9 @@ namespace Marvel {
 		if (imnodes::IsLinkCreated(&start_attr, &end_attr))
 		{
 			std::string node1, node2;
-			for (const auto& child : m_children1)
+			for (const auto& child : m_children[1])
 			{
-				for (const auto& grandchild : child->m_children1)
+				for (const auto& grandchild : child->m_children[1])
 				{
 					if (static_cast<mvNodeAttribute*>(grandchild.get())->getId()== start_attr)
 						node1 = grandchild->m_name;
@@ -371,51 +395,6 @@ namespace Marvel {
 		m_state.setHovered(imnodes::IsEditorHovered());
 
 		
-	}
-
-	PyObject* mvNodeEditor::add_node_editor(PyObject* self, PyObject* args, PyObject* kwargs)
-	{
-		static int i = 0; i++;
-		std::string sname = std::string(std::string("$$DPG_") + s_internal_id + std::to_string(i));
-		const char* name = sname.c_str();
-		int show = true;
-		const char* parent = "";
-		const char* before = "";
-		PyObject* link_callback = nullptr;
-		PyObject* delink_callback = nullptr;
-
-
-		if (!(mvApp::GetApp()->getParsers())["add_node_editor"].parse(args, kwargs, __FUNCTION__, &name,
-			&show, &parent, &before, &link_callback, &delink_callback))
-			return ToPyBool(false);
-
-		if (link_callback)
-			Py_XINCREF(link_callback);
-
-		if (delink_callback)
-			Py_XINCREF(delink_callback);
-
-		if (link_callback == Py_None)
-			link_callback = nullptr;
-
-		if (delink_callback == Py_None)
-			delink_callback = nullptr;
-
-		auto item = CreateRef<mvNodeEditor>(name, link_callback, delink_callback);
-		item->checkConfigDict(kwargs);
-		item->setConfigDict(kwargs);
-		item->setExtraConfigDict(kwargs);
-
-		if (mvApp::GetApp()->getItemRegistry().addItemWithRuntimeChecks(item, parent, before))
-		{
-			mvApp::GetApp()->getItemRegistry().pushParent(item);
-			if (!show)
-				item->hide();
-
-		}
-
-		return ToPyString(name);
-
 	}
 
 	PyObject* mvNodeEditor::add_node_link(PyObject* self, PyObject* args, PyObject* kwargs)

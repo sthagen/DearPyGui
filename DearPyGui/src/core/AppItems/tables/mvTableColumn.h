@@ -13,7 +13,7 @@ namespace Marvel {
 
 		static void InsertParser(std::map<std::string, mvPythonParser>* parsers);
 
-		MV_APPITEM_TYPE(mvAppItemType::mvTableColumn, add_table_column)
+		MV_APPLY_WIDGET_REGISTRATION(mvAppItemType::mvTableColumn, add_table_column)
 
 		MV_START_EXTRA_COMMANDS
 		MV_END_EXTRA_COMMANDS
@@ -27,8 +27,7 @@ namespace Marvel {
 		MV_START_STYLE_CONSTANTS
 		MV_END_STYLE_CONSTANTS
 
-		mvTableColumn(const std::string& name, float init_width_or_weight);
-		~mvTableColumn();
+		mvTableColumn(const std::string& name);
 
 		void draw(ImDrawList* drawlist, float x, float y) override;
 		bool isParentCompatible(mvAppItemType type) override;

@@ -26,21 +26,21 @@ namespace Marvel {
 
         static void InsertParser(std::map<std::string, mvPythonParser>* parsers);
 
-        MV_APPITEM_TYPE(mvAppItemType::mvDragFloat, add_drag_float)
+        MV_APPLY_WIDGET_REGISTRATION(mvAppItemType::mvDragFloat, add_drag_float)
 
-        MV_CREATE_CONSTANT(mvThemeCol_DragFloat_Text,         0L, 0L);
-        MV_CREATE_CONSTANT(mvThemeCol_DragFloat_Bg,           7L, 0L);
-        MV_CREATE_CONSTANT(mvThemeCol_DragFloat_BgHovered,    8L, 0L);
-        MV_CREATE_CONSTANT(mvThemeCol_DragFloat_BgActive,     9L, 0L);
-        MV_CREATE_CONSTANT(mvThemeCol_DragFloat_Border,       5L, 0L);
-        MV_CREATE_CONSTANT(mvThemeCol_DragFloat_BorderShadow, 6L, 0L);
+        MV_CREATE_CONSTANT(mvThemeCol_DragFloat_Text,           ImGuiCol_Text,              0L);
+        MV_CREATE_CONSTANT(mvThemeCol_DragFloat_Bg,             ImGuiCol_FrameBg,           0L);
+        MV_CREATE_CONSTANT(mvThemeCol_DragFloat_BgHovered,      ImGuiCol_FrameBgHovered,    0L);
+        MV_CREATE_CONSTANT(mvThemeCol_DragFloat_BgActive,       ImGuiCol_FrameBgActive,     0L);
+        MV_CREATE_CONSTANT(mvThemeCol_DragFloat_Border,         ImGuiCol_Border,            0L);
+        MV_CREATE_CONSTANT(mvThemeCol_DragFloat_BorderShadow,   ImGuiCol_BorderShadow,      0L);
 
-        MV_CREATE_CONSTANT(mvThemeStyle_DragFloat_Rounding,      11L, 0L);
-        MV_CREATE_CONSTANT(mvThemeStyle_DragFloat_BorderSize,    12L, 0L);
-        MV_CREATE_CONSTANT(mvThemeStyle_DragFloat_PaddingX,      10L, 0L);
-        MV_CREATE_CONSTANT(mvThemeStyle_DragFloat_PaddingY,      10L, 1L);
-        MV_CREATE_CONSTANT(mvThemeStyle_DragFloat_InnerSpacingX, 14L, 0L);
-        MV_CREATE_CONSTANT(mvThemeStyle_DragFloat_InnerSpacingY, 14L, 1L);
+        MV_CREATE_CONSTANT(mvThemeStyle_DragFloat_Rounding,         ImGuiStyleVar_FrameRounding,    0L);
+        MV_CREATE_CONSTANT(mvThemeStyle_DragFloat_BorderSize,       ImGuiStyleVar_FrameBorderSize,  0L);
+        MV_CREATE_CONSTANT(mvThemeStyle_DragFloat_PaddingX,         ImGuiStyleVar_FramePadding,     0L);
+        MV_CREATE_CONSTANT(mvThemeStyle_DragFloat_PaddingY,         ImGuiStyleVar_FramePadding,     1L);
+        MV_CREATE_CONSTANT(mvThemeStyle_DragFloat_InnerSpacingX,    ImGuiStyleVar_ItemInnerSpacing, 0L);
+        MV_CREATE_CONSTANT(mvThemeStyle_DragFloat_InnerSpacingY,    ImGuiStyleVar_ItemInnerSpacing, 1L);
 
         MV_START_EXTRA_COMMANDS
         MV_END_EXTRA_COMMANDS
@@ -68,7 +68,7 @@ namespace Marvel {
 
     public:
 
-        mvDragFloat(const std::string& name, float default_value, const std::string& dataSource);
+        mvDragFloat(const std::string& name);
 
         void setEnabled(bool value) override;
 
@@ -99,7 +99,7 @@ namespace Marvel {
 
         static void InsertParser(std::map<std::string, mvPythonParser>* parsers);
 
-        MV_APPITEM_TYPE(mvAppItemType::mvDragInt, add_drag_int)
+        MV_APPLY_WIDGET_REGISTRATION(mvAppItemType::mvDragInt, add_drag_int)
 
         MV_CREATE_CONSTANT(mvThemeCol_DragInt_Text,         0L, 0L);
         MV_CREATE_CONSTANT(mvThemeCol_DragInt_Bg,           7L, 0L);
@@ -141,7 +141,7 @@ namespace Marvel {
 
     public:
 
-        mvDragInt(const std::string& name, int default_value, const std::string& dataSource);
+        mvDragInt(const std::string& name);
 
         void setEnabled(bool value) override;
         void draw(ImDrawList* drawlist, float x, float y) override;

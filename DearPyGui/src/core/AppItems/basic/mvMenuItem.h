@@ -13,13 +13,13 @@ namespace Marvel {
 
 		static void InsertParser(std::map<std::string, mvPythonParser>* parsers);
 
-		MV_APPITEM_TYPE(mvAppItemType::mvMenuItem, add_menu_item)
+		MV_APPLY_WIDGET_REGISTRATION(mvAppItemType::mvMenuItem, add_menu_item)
 
-		MV_CREATE_CONSTANT(mvThemeCol_MenuItem_Text			,  0L, 0L);
-		MV_CREATE_CONSTANT(mvThemeCol_MenuItem_BgHovered		, 25L, 0L);
+		MV_CREATE_CONSTANT(mvThemeCol_MenuItem_Text				, ImGuiCol_Text			, 0L);
+		MV_CREATE_CONSTANT(mvThemeCol_MenuItem_BgHovered		, ImGuiCol_HeaderHovered, 0L);
 
-		MV_CREATE_CONSTANT(ImGuiStyleVar_MenuItem_TextAlignX	, 23L, 0L);
-		MV_CREATE_CONSTANT(ImGuiStyleVar_MenuItem_TextAlignY	, 23L, 1L);
+		MV_CREATE_CONSTANT(ImGuiStyleVar_MenuItem_TextAlignX	, ImGuiStyleVar_SelectableTextAlign, 0L);
+		MV_CREATE_CONSTANT(ImGuiStyleVar_MenuItem_TextAlignY	, ImGuiStyleVar_SelectableTextAlign, 1L);
 
 		MV_START_EXTRA_COMMANDS
 		MV_END_EXTRA_COMMANDS
@@ -39,7 +39,7 @@ namespace Marvel {
 
 	public:
 
-		explicit mvMenuItem(const std::string& name, bool default_value, const std::string& dataSource);
+		explicit mvMenuItem(const std::string& name);
 
 		void draw(ImDrawList* drawlist, float x, float y) override;
 

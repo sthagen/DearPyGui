@@ -1,5 +1,6 @@
 #include "mvTabButton.h"
 #include "mvApp.h"
+#include "mvLog.h"
 #include "mvItemRegistry.h"
 #include "mvImGuiThemeScope.h"
 #include "mvFontScope.h"
@@ -40,6 +41,17 @@ namespace Marvel {
 		if (ImGui::TabItemButton(m_label.c_str(), m_flags))
 			mvApp::GetApp()->getCallbackRegistry().addCallback(getCallback(false), m_name, m_callback_data);
 
+	}
+
+	bool mvTabButton::isParentCompatible(mvAppItemType type)
+	{
+		if (type == mvAppItemType::mvTabBar)
+			return true;
+
+		mvThrowPythonError(1000, "Tab button parent must be a tab bar.");
+		MV_ITEM_REGISTRY_ERROR("Tab button parent must be a tab bar.");
+		assert(false);
+		return false;
 	}
 
 	void mvTabButton::setExtraConfigDict(PyObject* dict)
@@ -83,99 +95,6 @@ namespace Marvel {
 		checkbitset("trailing", ImGuiTabItemFlags_Trailing, m_flags);
 		checkbitset("no_tooltip", ImGuiTabItemFlags_NoTooltip, m_flags);
 
-	}
-
-	PyObject* mvTabButton::add_tab_button(PyObject* self, PyObject* args, PyObject* kwargs)
-	{
-		static int i = 0; i++;
-		std::string sname = std::string(std::string("$$DPG_") + s_internal_id + std::to_string(i));
-		const char* name = sname.c_str();
-		const char* label = "";
-		int show = true;
-		int no_reorder = false;
-		int leading = false;
-		int trailing = false;
-		int no_tooltip = false;
-		PyObject* callback = nullptr;
-		PyObject* callback_data = nullptr;
-		const char* parent = "";
-		const char* before = "";
-
-		if (!(mvApp::GetApp()->getParsers())["add_tab_button"].parse(args, kwargs, __FUNCTION__, &name,
-			&label, &show, &no_reorder, &leading, &trailing, &no_tooltip, &callback,
-			&callback_data, &parent, &before))
-			return ToPyBool(false);
-
-		if (std::string(parent).empty())
-		{
-			auto parentItem = mvApp::GetApp()->getItemRegistry().topParent();
-
-			if (parentItem == nullptr)
-			{
-				ThrowPythonException("add_tab_button must follow a call to add_tabbar.");
-				return ToPyBool(false);
-			}
-
-			else if (parentItem->getType() == mvAppItemType::mvTabBar)
-			{
-				auto item = CreateRef<mvTabButton>(name);
-				if (callback)
-					Py_XINCREF(callback);
-				item->setCallback(callback);
-				if (callback_data)
-					Py_XINCREF(callback_data);
-				item->setCallbackData(callback_data);
-
-				item->checkConfigDict(kwargs);
-				item->setConfigDict(kwargs);
-				item->setExtraConfigDict(kwargs);
-
-				mvApp::GetApp()->getItemRegistry().addItemWithRuntimeChecks(item, parent, before);
-
-				return ToPyString(name);
-
-			}
-
-			else
-				ThrowPythonException("add_tab_bar was called incorrectly. Did you forget to call end_tab?");
-		}
-
-		else
-		{
-			auto parentItem = mvApp::GetApp()->getItemRegistry().getItem(parent);
-
-			if (parentItem == nullptr)
-			{
-				ThrowPythonException("add_tab parent must exist.");
-				return ToPyBool(false);
-			}
-
-			else if (parentItem->getType() == mvAppItemType::mvTabBar)
-			{
-				auto item = CreateRef<mvTabButton>(name);
-				if (callback)
-					Py_XINCREF(callback);
-				item->setCallback(callback);
-				if (callback_data)
-					Py_XINCREF(callback_data);
-				item->setCallbackData(callback_data);
-				item->checkConfigDict(kwargs);
-				item->setConfigDict(kwargs);
-				item->setExtraConfigDict(kwargs);
-
-				mvApp::GetApp()->getItemRegistry().addItemWithRuntimeChecks(item, parent, before);
-
-				return ToPyString(name);
-			}
-
-			else
-			{
-				ThrowPythonException("add_tab parent must be a tab bar.");
-				return ToPyBool(false);
-			}
-		}
-
-		return ToPyBool(false);
 	}
 
 }

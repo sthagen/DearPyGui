@@ -1,5 +1,6 @@
 #include "mvTabBar.h"
 #include "mvApp.h"
+#include "mvLog.h"
 #include "mvItemRegistry.h"
 #include "mvImGuiThemeScope.h"
 #include "mvTab.h"
@@ -24,8 +25,21 @@ namespace Marvel {
 
 	mvTabBar::mvTabBar(const std::string& name)
 		:
-		mvStringPtrBase(name, "")
+		mvStringPtrBase(name)
 	{
+	}
+
+
+	bool mvTabBar::canChildBeAdded(mvAppItemType type)
+	{
+		if (type == mvAppItemType::mvTab)return true;
+		if (type == mvAppItemType::mvTabButton)return true;
+
+		mvThrowPythonError(1000, "TabBar children must be tabs or tab buttons.");
+		MV_ITEM_REGISTRY_ERROR("TabBar children must be tabs or tab buttons.");
+		assert(false);
+
+		return false;
 	}
 
 	std::string& mvTabBar::getSpecificValue()
@@ -49,7 +63,7 @@ namespace Marvel {
 		{
 			//we do this so that the children dont get the theme
 			scope.cleanup();
-			for (auto& item : m_children1)
+			for (auto& item : m_children[1])
 			{
 				// skip item if it's not shown
 				if (!item->m_show)
@@ -110,47 +124,6 @@ namespace Marvel {
 
 		// window flags
 		checkbitset("reorderable", ImGuiTabBarFlags_Reorderable, m_flags);
-	}
-
-	PyObject* mvTabBar::add_tab_bar(PyObject* self, PyObject* args, PyObject* kwargs)
-	{
-		static int i = 0; i++;
-		std::string sname = std::string(std::string("$$DPG_") + s_internal_id + std::to_string(i));
-		const char* name = sname.c_str();
-		int reorderable = false;
-		PyObject* callback = nullptr;
-		PyObject* callback_data = nullptr;
-		int show = true;
-		const char* parent = "";
-		const char* before = "";
-
-		if (!(mvApp::GetApp()->getParsers())["add_tab_bar"].parse(args, kwargs, __FUNCTION__, &name, &reorderable,
-			&callback, &callback_data, &show, &parent, &before))
-			return ToPyBool(false);
-
-		auto item = CreateRef<mvTabBar>(name);
-
-		if (callback)
-			Py_XINCREF(callback);
-
-		item->setCallback(callback);
-
-		if (callback_data)
-			Py_XINCREF(callback_data);
-
-		item->setCallbackData(callback_data);
-		item->checkConfigDict(kwargs);
-		item->setConfigDict(kwargs);
-		item->setExtraConfigDict(kwargs);
-
-		if (mvApp::GetApp()->getItemRegistry().addItemWithRuntimeChecks(item, parent, before))
-		{
-			mvApp::GetApp()->getItemRegistry().pushParent(item);
-			if (!show)
-				item->hide();
-		}
-
-		return ToPyString(name);
 	}
 
 }

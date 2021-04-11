@@ -21,7 +21,7 @@ namespace Marvel {
 	}
 
 	mvMenu::mvMenu(const std::string& name)
-			: mvBoolPtrBase(name, false)
+			: mvBoolPtrBase(name)
 	{
 	}
 
@@ -36,7 +36,7 @@ namespace Marvel {
 		{
 
 			// set other menus's value false on same level
-			for (auto sibling : m_parentPtr->m_children1)
+			for (auto sibling : m_parentPtr->m_children[1])
 			{
 				// ensure sibling
 				if (sibling->getType() == mvAppItemType::mvMenu)
@@ -49,7 +49,7 @@ namespace Marvel {
 			//we do this so that the children dont get the theme
 			scope.cleanup();
 
-			for (auto& item : m_children1)
+			for (auto& item : m_children[1])
 			{
 				// skip item if it's not shown
 				if (!item->m_show)
@@ -86,39 +86,6 @@ namespace Marvel {
 			return;
 		 
 		PyDict_SetItemString(dict, "enabled", ToPyBool(m_enabled));
-	}
-
-
-	PyObject* mvMenu::add_menu(PyObject* self, PyObject* args, PyObject* kwargs)
-	{
-		static int i = 0; i++;
-		std::string sname = std::string(std::string("$$DPG_") + s_internal_id + std::to_string(i));
-		const char* name = sname.c_str();
-		const char* label = "";
-		int show = true;
-		const char* parent = "";
-		const char* before = "";
-		int enabled = true;
-
-		if (!(mvApp::GetApp()->getParsers())["add_menu"].parse(args, kwargs, __FUNCTION__, &name,
-			&label, &show, &parent, &before, &enabled))
-			return ToPyBool(false);
-
-		auto item = CreateRef<mvMenu>(name);
-
-		item->checkConfigDict(kwargs);
-		item->setConfigDict(kwargs);
-		item->setExtraConfigDict(kwargs);
-
-		if (mvApp::GetApp()->getItemRegistry().addItemWithRuntimeChecks(item, parent, before))
-		{
-			mvApp::GetApp()->getItemRegistry().pushParent(item);
-			if (!show)
-				item->hide();
-
-		}
-
-		return ToPyString(name);
 	}
 
 }

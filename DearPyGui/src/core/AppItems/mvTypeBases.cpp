@@ -1,17 +1,17 @@
 #include "mvTypeBases.h"
 #include <utility>
 #include "mvApp.h"
+#include "mvLog.h"
 #include "mvUtilities.h"
 #include "mvAppLog.h"
 #include "mvItemRegistry.h"
 
 namespace Marvel {
 
-	mvIntPtrBase::mvIntPtrBase(const std::string& name, int default_value)
+	mvIntPtrBase::mvIntPtrBase(const std::string& name)
 		: 
 		mvAppItem(name)
 	{
-		m_value = std::make_shared<int>(default_value);
 	}
 
 	void mvIntPtrBase::setDataSource(const std::string& dataSource)
@@ -43,11 +43,9 @@ namespace Marvel {
 		*m_value = ToInt(value);
 	}
 
-	mvInt4PtrBase::mvInt4PtrBase(const std::string& name, int* default_value)
+	mvInt4PtrBase::mvInt4PtrBase(const std::string& name)
 		: mvAppItem(name)
 	{
-		m_value = std::make_shared<std::array<int, 4>>(std::array{ default_value[0], 
-			default_value[1], default_value[2], default_value[3] });
 	}
 
 	PyObject* mvInt4PtrBase::getPyValue()
@@ -58,10 +56,15 @@ namespace Marvel {
 	void mvInt4PtrBase::setPyValue(PyObject* value)
 	{
 		std::vector<int> temp = ToIntVect(value);
+		while (temp.size() < 4)
+			temp.push_back(0);
 		std::array<int, 4> temp_array;
 		for (int i = 0; i < temp_array.size(); i++)
 			temp_array[i] = temp[i];
-		*m_value = temp_array;
+		if (m_value)
+			*m_value = temp_array;
+		else
+			m_value = std::make_shared<std::array<int, 4>>(temp_array);
 	}
 
 	void mvInt4PtrBase::setDataSource(const std::string& dataSource)
@@ -83,10 +86,9 @@ namespace Marvel {
 		m_value = std::get<std::shared_ptr<std::array<int, 4>>>(item->getValue());
 	}
 
-	mvFloatPtrBase::mvFloatPtrBase(const std::string& name, float default_value)
+	mvFloatPtrBase::mvFloatPtrBase(const std::string& name)
 		: mvAppItem(name)
 	{
-		m_value = std::make_shared<float>(default_value);
 	}
 
 	PyObject* mvFloatPtrBase::getPyValue()
@@ -118,10 +120,9 @@ namespace Marvel {
 		m_value = std::get<std::shared_ptr<float>>(item->getValue());
 	}
 
-	mvFloat4PtrBase::mvFloat4PtrBase(const std::string& name, float* default_value)
+	mvFloat4PtrBase::mvFloat4PtrBase(const std::string& name)
 		: mvAppItem(name)
 	{
-		m_value = std::make_shared<std::array<float, 4>>(std::array{ default_value[0], default_value[1], default_value[2], default_value[3] });
 	}
 
 	PyObject* mvFloat4PtrBase::getPyValue()
@@ -132,10 +133,15 @@ namespace Marvel {
 	void mvFloat4PtrBase::setPyValue(PyObject* value)
 	{
 		std::vector<float> temp = ToFloatVect(value);
+		while (temp.size() < 4)
+			temp.push_back(0.0f);
 		std::array<float, 4> temp_array;
 		for (int i = 0; i < temp_array.size(); i++)
 			temp_array[i] = temp[i];
-		*m_value = temp_array;
+		if (m_value)
+			*m_value = temp_array;
+		else
+			m_value = std::make_shared<std::array<float, 4>>(temp_array);
 	}
 
 	void mvFloat4PtrBase::setDataSource(const std::string& dataSource)
@@ -157,10 +163,9 @@ namespace Marvel {
 		m_value = std::get<std::shared_ptr<std::array<float, 4>>>(item->getValue());
 	}
 
-	mvColorPtrBase::mvColorPtrBase(const std::string& name, const float* default_value)
+	mvColorPtrBase::mvColorPtrBase(const std::string& name)
 		: mvAppItem(name)
 	{
-		m_value = std::make_shared<std::array<float, 4>>(std::array{ default_value[0], default_value[1], default_value[2], default_value[3] });
 	}
 
 	PyObject* mvColorPtrBase::getPyValue()
@@ -177,10 +182,15 @@ namespace Marvel {
 	void mvColorPtrBase::setPyValue(PyObject* value)
 	{
 		std::vector<float> temp = ToFloatVect(value);
+		while (temp.size() < 4)
+			temp.push_back(0.0f);
 		std::array<float, 4> temp_array;
 		for (int i = 0; i < temp_array.size(); i++)
 			temp_array[i] = temp[i];
-		*m_value = temp_array;
+		if (m_value)
+			*m_value = temp_array;
+		else
+			m_value = std::make_shared<std::array<float, 4>>(temp_array);
 	}
 
 	void mvColorPtrBase::setDataSource(const std::string& dataSource)
@@ -202,10 +212,9 @@ namespace Marvel {
 		m_value = std::get<std::shared_ptr<std::array<float, 4>>>(item->getValue());
 	}
 
-	mvBoolPtrBase::mvBoolPtrBase(const std::string& name, bool default_value)
+	mvBoolPtrBase::mvBoolPtrBase(const std::string& name)
 		: mvAppItem(name)
 	{
-		m_value = std::make_shared<bool>(default_value);
 	}
 
 	PyObject* mvBoolPtrBase::getPyValue()
@@ -237,10 +246,9 @@ namespace Marvel {
 		m_value = std::get<std::shared_ptr<bool>>(item->getValue());
 	}
 
-	mvStringPtrBase::mvStringPtrBase(const std::string& name, const std::string& default_value)
+	mvStringPtrBase::mvStringPtrBase(const std::string& name)
 		: mvAppItem(name)
 	{
-		m_value = std::make_shared<std::string>(default_value);
 	}
 
 	PyObject* mvStringPtrBase::getPyValue()
@@ -272,12 +280,9 @@ namespace Marvel {
 		m_value = std::get<std::shared_ptr<std::string>>(item->getValue());
 	}
 
-	mvTimePtrBase::mvTimePtrBase(const std::string& name, const tm& default_value)
+	mvTimePtrBase::mvTimePtrBase(const std::string& name)
 		: mvAppItem(name)
 	{
-
-		m_value = std::make_shared<tm>(default_value);
-		m_imvalue = std::make_shared<ImPlotTime>(ImPlot::MkGmtTime(m_value.get()));
 	}
 
 	PyObject* mvTimePtrBase::getPyValue()
@@ -287,14 +292,18 @@ namespace Marvel {
 
 	void mvTimePtrBase::setPyValue(PyObject* value)
 	{
-		*m_value = ToTime(value);
+
+		if (m_value)
+			*m_value = ToTime(value);
+		else
+			m_value = {};
+
 		ImPlot::GetGmtTime(*m_imvalue, m_value.get());
 	}
 
-	mvFloatVectPtrBase::mvFloatVectPtrBase(const std::string& name, const std::vector<float>& default_value)
+	mvFloatVectPtrBase::mvFloatVectPtrBase(const std::string& name)
 		: mvAppItem(name)
 	{
-		m_value = std::make_shared<std::vector<float>>(default_value);
 	}
 
 	PyObject* mvFloatVectPtrBase::getPyValue()
@@ -324,6 +333,93 @@ namespace Marvel {
 			return;
 		}
 		m_value = std::get<std::shared_ptr<std::vector<float>>>(item->getValue());
+	}
+
+	mvSeriesBase::mvSeriesBase(const std::string& name)
+		: mvAppItem(name)
+	{
+	}
+
+	PyObject* mvSeriesBase::getPyValue()
+	{
+		return ToPyList(*m_value);
+	}
+
+	void mvSeriesBase::setPyValue(PyObject* value)
+	{
+		*m_value = ToVectVectFloat(value);
+		resetMaxMins();
+		calculateMaxMins();
+	}
+
+	void mvSeriesBase::setDataSource(const std::string& dataSource)
+	{
+		if (dataSource == m_source) return;
+		m_source = dataSource;
+
+		mvRef<mvAppItem> item = mvApp::GetApp()->getItemRegistry().getItem(dataSource);
+		if (!item)
+		{
+			ThrowPythonException("Source item not found.");
+			return;
+		}
+		if (item->getValueType() != getValueType())
+		{
+			ThrowPythonException("Values types do not match");
+			return;
+		}
+		m_value = std::get<std::shared_ptr<std::vector<std::vector<float>>>>(item->getValue());
+		resetMaxMins();
+		calculateMaxMins();
+	}
+
+	const std::pair<float, float>& mvSeriesBase::getMaxMin(int i) const
+	{
+		assert(i < m_maxMins.size());
+
+		return m_maxMins[i];
+	}
+
+	void mvSeriesBase::calculateMaxMins()
+	{
+
+		static const std::vector<float>* xptr;
+
+		for (auto& data : (*m_value.get()))
+		{
+			xptr = &data;
+			if (xptr->empty())
+			{
+				m_maxMins.emplace_back(0.0f, 0.0f);
+				continue;
+			}
+			float maxValue = (*xptr)[0];
+			float minValue = (*xptr)[0];
+
+			for (const auto& x : (*xptr))
+			{
+				if (x > maxValue) maxValue = x;
+				if (x < minValue) minValue = x;
+			}
+
+			m_maxMins.emplace_back(maxValue, minValue);
+		}
+	}
+
+	void mvSeriesBase::resetMaxMins()
+	{
+		m_maxMins.clear();
+	}
+
+	bool mvSeriesBase::isParentCompatible(mvAppItemType type)
+	{
+		if (type == mvAppItemType::mvPlot)
+			return true;
+
+		mvThrowPythonError(1000, "Item's parent must be plot.");
+		MV_ITEM_REGISTRY_ERROR("Item's parent must be plot.");
+		assert(false);
+		return false;
 	}
 
 	mvBaseWindowAppitem::mvBaseWindowAppitem(const std::string& name)

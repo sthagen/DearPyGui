@@ -1,6 +1,7 @@
 #pragma once
 
 #include "mvAppItem.h"
+#include "mvItemRegistry.h"
 
 namespace Marvel {
 
@@ -11,7 +12,7 @@ namespace Marvel {
 
 		static void InsertParser(std::map<std::string, mvPythonParser>* parsers);
 
-		MV_APPITEM_TYPE(mvAppItemType::mvDrawBezierCurve, draw_bezier_curve)
+		MV_APPLY_WIDGET_REGISTRATION(mvAppItemType::mvDrawBezierCurve, draw_bezier_curve)
 
 		MV_START_EXTRA_COMMANDS
 		MV_END_EXTRA_COMMANDS
@@ -27,8 +28,7 @@ namespace Marvel {
 
 	public:
 
-		mvDrawBezierCurve(const std::string& name, const mvVec2& p1, const mvVec2& p2,
-			const mvVec2& p3, const mvVec2& p4, const mvColor& color, float thickness, int segments);
+		mvDrawBezierCurve(const std::string& name);
 
 		void draw(ImDrawList* drawlist, float x, float y) override;
 		bool isParentCompatible(mvAppItemType type) override;

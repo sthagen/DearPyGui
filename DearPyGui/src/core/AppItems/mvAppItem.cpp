@@ -31,7 +31,7 @@ namespace Marvel{
 			{mvPythonDataType::Kwargs, "**Kwargs"},
 		}, "Configures an item", "None", "Widget Commands") });
 
-		parsers->insert({ "get_item_children1", mvPythonParser({
+		parsers->insert({ "get_item_children[1]", mvPythonParser({
 			{mvPythonDataType::String, "item"}
 		}, "Returns a list of an item's children.", "List[str]", "Widget Commands") });
 
@@ -176,11 +176,11 @@ namespace Marvel{
 	void mvAppItem::resetState()
 	{
 		m_state.reset();
-		for (auto& item : m_children0)
-			item->resetState();
-		for (auto& item : m_children1)
-			item->resetState();
-
+		for (auto& childset : m_children)
+		{
+			for (auto& child : childset)
+				child->resetState();
+		}
 	}
 
 	bool  mvAppItem::moveChildUp(const std::string& name)
@@ -227,9 +227,13 @@ namespace Marvel{
 			return false;
 		};
 
-		if (operation(m_children0))
-			return true;
-		return operation(m_children1);
+		for (auto& childset : m_children)
+		{
+			if (operation(childset))
+				return true;
+		}
+
+		return false;
 
 
 	}
@@ -278,9 +282,13 @@ namespace Marvel{
 			return false;
 		};
 
-		if (operation(m_children0))
-			return true;
-		return operation(m_children1);
+		for (auto& childset : m_children)
+		{
+			if (operation(childset))
+				return true;
+		}
+
+		return false;
 
 	}
 
@@ -298,6 +306,7 @@ namespace Marvel{
 				if (parent == m_name)
 				{
 					children.push_back(item);
+					onChildAdd(item);
 					item->m_parentPtr = this;
 					return true;
 				}
@@ -344,7 +353,10 @@ namespace Marvel{
 					for (auto child : oldchildren)
 					{
 						if (child->m_name == before)
+						{
 							children.push_back(item);
+							onChildAdd(item);
+						}
 						children.push_back(child);
 
 					}
@@ -367,17 +379,14 @@ namespace Marvel{
 			return false;
 		};
 
-		if (item->getTarget() == 0)
-			return operation(m_children0);
-		return operation(m_children1);
+		return operation(m_children[item->getTarget()]);
 	}
 
 	bool mvAppItem::addItem(mvRef<mvAppItem> item)
 	{
-		if (item->getTarget() == 0)
-			m_children0.push_back(item);
-		else
-			m_children1.push_back(item);
+
+		m_children[item->getTarget()].push_back(item);
+		onChildAdd(item);
 
 		return true;
 	}
@@ -417,7 +426,10 @@ namespace Marvel{
 				{
 					children.push_back(child);
 					if (child->m_name == prev)
+					{
 						children.push_back(item);
+						onChildAdd(item);
+					}
 				}
 
 				return true;
@@ -438,9 +450,7 @@ namespace Marvel{
 			return false;
 		};
 
-		if (operation(m_children0))
-			return true;
-		return operation(m_children1);
+		return operation(m_children[item->getTarget()]);
 	}
 
 	bool mvAppItem::deleteChild(const std::string& name)
@@ -478,6 +488,7 @@ namespace Marvel{
 					if (item->m_name == name)
 					{
 						itemDeleted = true;
+						onChildRemoved(item);
 						continue;
 					}
 
@@ -488,15 +499,20 @@ namespace Marvel{
 			return itemDeleted;
 		};
 
-		if (operation(m_children0))
-			return true;
-		return operation(m_children1);
+		for (auto& childset : m_children)
+		{
+			if (operation(childset))
+				return true;
+		}
+
+		return false;
 	}
 
 	void mvAppItem::deleteChildren()
 	{
-		m_children0.clear();
-		m_children1.clear();
+		for (auto& childset : m_children)
+			childset.clear();
+		onChildrenRemoved();
 	}
 
 	void mvAppItem::setLabel(const std::string& value)
@@ -540,6 +556,7 @@ namespace Marvel{
 					if (item->m_name == name)
 					{
 						stolenChild = item;
+						onChildRemoved(item);
 						continue;
 					}
 
@@ -551,37 +568,30 @@ namespace Marvel{
 		};
 
 
-		if (operation(m_children0))
-			return stolenChild;
-		return operation(m_children1);
+		for (auto& childset : m_children)
+		{
+			if (operation(childset))
+				return stolenChild;
+		}
 
+		return stolenChild;
 	}
 
 	mvRef<mvAppItem> mvAppItem::getChild(const std::string& name)
 	{
-		for (auto& item : m_children0)
+		for (auto& childset : m_children)
 		{
-			if (item->m_name == name)
-				return item;
-
-			if (DoesItemHaveFlag(item.get(), MV_ITEM_DESC_CONTAINER))
+			for (auto& item : childset)
 			{
-				auto child = item->getChild(name);
-				if (child)
-					return child;
-			}
-		}
+				if (item->m_name == name)
+					return item;
 
-		for (auto& item : m_children1)
-		{
-			if (item->m_name == name)
-				return item;
-
-			if (DoesItemHaveFlag(item.get(), MV_ITEM_DESC_CONTAINER))
-			{
-				auto child = item->getChild(name);
-				if (child)
-					return child;
+				if (DoesItemHaveFlag(item.get(), MV_ITEM_DESC_CONTAINER))
+				{
+					auto child = item->getChild(name);
+					if (child)
+						return child;
+				}
 			}
 		}
 
@@ -628,7 +638,7 @@ namespace Marvel{
 		m_theme_color_dirty = true;
 		m_cached_colors.clear();
 
-		for (auto& child : m_children1)
+		for (auto& child : m_children[1])
 			child->inValidateThemeColorCache();
 	}
 
@@ -638,7 +648,7 @@ namespace Marvel{
 		m_cached_styles.clear();
 		m_cached_styles2.clear();
 
-		for (auto& child : m_children1)
+		for (auto& child : m_children[1])
 			child->inValidateThemeStyleCache();
 	}
 
@@ -647,7 +657,7 @@ namespace Marvel{
 		m_theme_font_dirty = true;
 		m_cached_font = nullptr;
 
-		for (auto& child : m_children1)
+		for (auto& child : m_children[1])
 			child->inValidateThemeFontCache();
 	}
 
@@ -706,6 +716,8 @@ namespace Marvel{
 		static std::string base_keyword6 = "enabled";
 		static std::string base_keyword7 = "width";
 		static std::string base_keyword8 = "height";
+		static std::string base_keyword9 = "callback";
+		static std::string base_keyword10 = "callback_data";
 
 		std::string parserCommand;
 
@@ -722,7 +734,7 @@ namespace Marvel{
 
 		const auto& parserKeywordsOrig = mvApp::GetApp()->getParsers()[parserCommand].getKeywords();
 		std::vector<std::string> parserKeywords;
-		parserKeywords.reserve(parserKeywordsOrig.size() + 8);
+		parserKeywords.reserve(parserKeywordsOrig.size() + 10);
 		for (int i = 0; i < parserKeywordsOrig.size(); i++)
 			if(parserKeywordsOrig[i])
 				parserKeywords.push_back(std::string(parserKeywordsOrig[i]));
@@ -735,6 +747,8 @@ namespace Marvel{
 		parserKeywords.push_back(base_keyword6);
 		parserKeywords.push_back(base_keyword7);
 		parserKeywords.push_back(base_keyword8);
+		parserKeywords.push_back(base_keyword9);
+		parserKeywords.push_back(base_keyword10);
 
 		for (const auto& key : configKeys)
 		{
@@ -766,6 +780,52 @@ namespace Marvel{
 		if (PyObject* item = PyDict_GetItemString(dict, "show")) m_show = ToBool(item);
 		if (PyObject* item = PyDict_GetItemString(dict, "source")) setDataSource(ToString(item));
 		if (PyObject* item = PyDict_GetItemString(dict, "enabled")) setEnabled(ToBool(item));
+		if (PyObject* item = PyDict_GetItemString(dict, "default_value")) setPyValue(item);
+
+		if (PyObject* item = PyDict_GetItemString(dict, "callback"))
+		{
+			if (m_callback)
+				Py_XDECREF(m_callback);
+
+			if (item)
+				Py_XINCREF(item);
+			setCallback(item);
+		}
+
+		if (PyObject* item = PyDict_GetItemString(dict, "callback_data"))
+		{
+			if (m_callback_data)
+				Py_XDECREF(m_callback_data);
+			if (item)
+				Py_XINCREF(item);
+			setCallbackData(item);
+		}
+
+	}
+
+	std::pair<std::string, std::string> mvAppItem::GetNameFromArgs(std::string& name, PyObject* args, PyObject* kwargs)
+	{
+		if (args)
+		{
+			if (PyTuple_GET_SIZE(args) > 0)
+			{
+				PyObject* pyname = nullptr;
+				pyname = PyTuple_GetItem(args, 0);
+
+				name = ToString(pyname);
+			}
+		}
+
+		std::string parent;
+		std::string before;
+
+		if (kwargs)
+		{
+			if (PyObject* item = PyDict_GetItemString(kwargs, "parent")) parent = ToString(item);
+			if (PyObject* item = PyDict_GetItemString(kwargs, "before")) before = ToString(item);
+		}
+
+		return std::make_pair(parent, before);
 	}
 
 	void mvAppItem::getConfigDict(PyObject* dict)
@@ -781,6 +841,21 @@ namespace Marvel{
 		PyDict_SetItemString(dict, "width", ToPyInt(m_width));
 		PyDict_SetItemString(dict, "height", ToPyInt(m_height));
 
+		if (m_callback)
+		{
+			Py_XINCREF(m_callback);
+			PyDict_SetItemString(dict, "callback", m_callback);
+		}
+		else
+			PyDict_SetItemString(dict, "callback", GetPyNone());
+
+		if (m_callback_data)
+		{
+			Py_XINCREF(m_callback_data);
+			PyDict_SetItemString(dict, "callback_data", m_callback_data);
+		}
+		else
+			PyDict_SetItemString(dict, "callback_data", GetPyNone());
 	}
 
 	PyObject* mvAppItem::get_item_configuration(PyObject* self, PyObject* args, PyObject* kwargs)
@@ -836,35 +911,11 @@ namespace Marvel{
 		return GetPyNone();
 	}
 
-	PyObject* mvAppItem::get_item_callback(PyObject* self, PyObject* args, PyObject* kwargs)
-	{
-		const char* item;
-
-		if (!(mvApp::GetApp()->getParsers())["get_item_callback"].parse(args, kwargs, __FUNCTION__, &item))
-			return GetPyNone();
-
-		std::lock_guard<std::mutex> lk(mvApp::GetApp()->getMutex());
-		auto appitem = mvApp::GetApp()->getItemRegistry().getItem(item);
-
-		if (appitem)
-		{
-			PyObject* callback = appitem->getCallback();
-			if (callback)
-			{
-				Py_XINCREF(callback);
-				return callback;
-			}
-
-		}
-
-		return GetPyNone();
-	}
-
 	PyObject* mvAppItem::get_item_children(PyObject* self, PyObject* args, PyObject* kwargs)
 	{
 		const char* item;
 
-		if (!(mvApp::GetApp()->getParsers())["get_item_children1"].parse(args, kwargs, __FUNCTION__, &item))
+		if (!(mvApp::GetApp()->getParsers())["get_item_children[1]"].parse(args, kwargs, __FUNCTION__, &item))
 			return GetPyNone();
 
 		std::lock_guard<std::mutex> lk(mvApp::GetApp()->getMutex());
@@ -1156,35 +1207,6 @@ namespace Marvel{
 		return GetPyNone();
 	}
 
-	PyObject* mvAppItem::set_item_callback(PyObject* self, PyObject* args, PyObject* kwargs)
-	{
-		PyObject* callback;
-		PyObject* callback_data = nullptr;
-		const char* item;
-
-		if (!(mvApp::GetApp()->getParsers())["set_item_callback"].parse(args, kwargs, __FUNCTION__, &item, &callback, &callback_data))
-			return GetPyNone();
-
-		std::lock_guard<std::mutex> lk(mvApp::GetApp()->getMutex());
-		auto appitem = mvApp::GetApp()->getItemRegistry().getItem(item);
-
-		if (appitem)
-		{
-			if (appitem->getCallback() != callback)
-				Py_XINCREF(callback);
-			appitem->setCallback(callback);
-
-			if (callback_data)
-			{
-				if (appitem->getCallbackData() != callback_data)
-					Py_XINCREF(callback_data);
-				appitem->setCallbackData(callback_data);
-			}
-		}
-
-		return GetPyNone();
-	}
-
 	PyObject* mvAppItem::get_item_type(PyObject* self, PyObject* args, PyObject* kwargs)
 	{
 		const char* name;
@@ -1209,51 +1231,6 @@ namespace Marvel{
 			});
 
 		return ToPyString(parserCommand);
-	}
-
-	PyObject* mvAppItem::get_item_callback_data(PyObject* self, PyObject* args, PyObject* kwargs)
-	{
-		const char* item;
-
-		if (!(mvApp::GetApp()->getParsers())["get_item_callback_data"].parse(args, kwargs, __FUNCTION__, &item))
-			return GetPyNone();
-
-		std::lock_guard<std::mutex> lk(mvApp::GetApp()->getMutex());
-		auto appitem = mvApp::GetApp()->getItemRegistry().getItem(item);
-
-		if (appitem)
-		{
-			PyObject* callback = appitem->getCallbackData();
-			if (callback)
-			{
-				Py_XINCREF(callback);
-				return callback;
-			}
-
-		}
-
-		return GetPyNone();
-	}
-
-	PyObject* mvAppItem::set_item_callback_data(PyObject* self, PyObject* args, PyObject* kwargs)
-	{
-		PyObject* data;
-		const char* item;
-
-		if (!(mvApp::GetApp()->getParsers())["set_item_callback_data"].parse(args, kwargs, __FUNCTION__, &item, &data))
-			return GetPyNone();
-
-		std::lock_guard<std::mutex> lk(mvApp::GetApp()->getMutex());
-		auto appitem = mvApp::GetApp()->getItemRegistry().getItem(item);
-
-		if (appitem)
-		{
-			if (appitem->getCallbackData() != data)
-				Py_XINCREF(data);
-			appitem->setCallbackData(data);
-		}
-
-		return GetPyNone();
 	}
 
 }

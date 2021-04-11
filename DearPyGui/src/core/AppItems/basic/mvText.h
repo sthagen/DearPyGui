@@ -23,9 +23,9 @@ namespace Marvel {
 
 		static void InsertParser(std::map<std::string, mvPythonParser>* parsers);
 
-		MV_APPITEM_TYPE(mvAppItemType::mvText, add_text)
+		MV_APPLY_WIDGET_REGISTRATION(mvAppItemType::mvText, add_text)
 
-		MV_CREATE_CONSTANT(mvThemeCol_Text_Text, 0L, 0L);
+		MV_CREATE_CONSTANT(mvThemeCol_Text_Text, ImGuiCol_Text, 0L);
 
 		MV_START_EXTRA_COMMANDS
 		MV_END_EXTRA_COMMANDS
@@ -42,7 +42,7 @@ namespace Marvel {
 
 	public:
 
-		mvText(const std::string& name, const std::string& default_value, const std::string& dataSource);
+		mvText(const std::string& name);
 
 		void draw(ImDrawList* drawlist, float x, float y) override;
 
@@ -68,11 +68,11 @@ namespace Marvel {
 
 		static void InsertParser(std::map<std::string, mvPythonParser>* parsers);
 
-		MV_APPITEM_TYPE(mvAppItemType::mvLabelText, add_label_text)
+		MV_APPLY_WIDGET_REGISTRATION(mvAppItemType::mvLabelText, add_label_text)
 
-		MV_CREATE_CONSTANT(mvThemeCol_LabelText_Text				    ,  0L, 0L);
-		MV_CREATE_CONSTANT(mvThemeStyle_LabelText_PaddingX			, 10L, 0L);
-		MV_CREATE_CONSTANT(mvThemeStyle_LabelText_PaddingY			, 10L, 1L);
+		MV_CREATE_CONSTANT(mvThemeCol_LabelText_Text				, ImGuiCol_Text, 0L);
+		MV_CREATE_CONSTANT(mvThemeStyle_LabelText_PaddingX			, ImGuiCol_TitleBg, 0L);
+		MV_CREATE_CONSTANT(mvThemeStyle_LabelText_PaddingY			, ImGuiCol_TitleBg, 1L);
 		MV_CREATE_CONSTANT(mvThemeStyle_LabelText_ItemInnerSpacingX	, 14L, 0L);
 		MV_CREATE_CONSTANT(mvThemeStyle_LabelText_ItemInnerSpacingY	, 14L, 1L);
 
@@ -95,7 +95,7 @@ namespace Marvel {
 
 	public:
 
-		mvLabelText(const std::string& name, const std::string& value, const std::string& dataSource);
+		mvLabelText(const std::string& name);
 
 		void draw(ImDrawList* drawlist, float x, float y) override;
 

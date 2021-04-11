@@ -12,11 +12,11 @@ namespace Marvel {
 
 		static void InsertParser(std::map<std::string, mvPythonParser>* parsers);
 
-		MV_APPITEM_TYPE(mvAppItemType::mvTabBar, add_tab_bar)
+		MV_APPLY_WIDGET_REGISTRATION(mvAppItemType::mvTabBar, add_tab_bar)
 
 		MV_CREATE_CONSTANT(mvThemeCol_TabBar, 35L, 0L);
-		MV_CREATE_CONSTANT(mvThemeStyle_TabBar_ItemSpacingX, 13L, 0L);
-		MV_CREATE_CONSTANT(mvThemeStyle_TabBar_ItemSpacingY, 13L, 1L);
+		MV_CREATE_CONSTANT(mvThemeStyle_TabBar_ItemSpacingX, ImGuiStyleVar_ItemSpacing, 0L);
+		MV_CREATE_CONSTANT(mvThemeStyle_TabBar_ItemSpacingY, ImGuiStyleVar_ItemSpacing, 1L);
 
 		MV_START_EXTRA_COMMANDS
 		MV_END_EXTRA_COMMANDS
@@ -36,6 +36,8 @@ namespace Marvel {
 	public:
 
 		mvTabBar(const std::string& name);
+
+		bool canChildBeAdded(mvAppItemType type) override;
 
 		std::string& getSpecificValue();
 		void         setValue(const std::string& value);

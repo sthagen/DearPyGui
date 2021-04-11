@@ -1,6 +1,7 @@
 #pragma once
 
 #include "mvAppItem.h"
+#include "mvItemRegistry.h"
 
 namespace Marvel {
 
@@ -12,7 +13,7 @@ namespace Marvel {
 
 		static void InsertParser(std::map<std::string, mvPythonParser>* parsers);
 
-		MV_APPITEM_TYPE(mvAppItemType::mvDrawText, draw_text)
+		MV_APPLY_WIDGET_REGISTRATION(mvAppItemType::mvDrawText, draw_text)
 
 		MV_START_EXTRA_COMMANDS
 		MV_END_EXTRA_COMMANDS
@@ -28,7 +29,7 @@ namespace Marvel {
 
 	public:
 
-		mvDrawText(const std::string& name, const mvVec2& pos, std::string text, const mvColor& color, int size);
+		mvDrawText(const std::string& name);
 
 		void draw(ImDrawList* drawlist, float x, float y) override;
 		bool isParentCompatible(mvAppItemType type) override;
