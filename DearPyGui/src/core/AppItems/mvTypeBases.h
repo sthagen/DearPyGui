@@ -1,10 +1,10 @@
 #pragma once
 
-#include "mvAppItem.h"
 #include <implot.h>
 #include <implot_internal.h>
 #include <array>
 #include "mvItemRegistry.h"
+#include "cpp.hint"
 
 //-----------------------------------------------------------------------------
 // mvTypeBases
@@ -211,6 +211,7 @@ namespace Marvel {
 
 		const std::pair<float, float>& getMaxMin(int i) const;
 		bool doesSeriesContributeToBounds() const { return m_contributeToBounds; }
+		ImPlotYAxis getAxis() const { return m_axis; }
 
 	protected:
 
@@ -227,7 +228,7 @@ namespace Marvel {
 			std::vector<float>{} });
 		std::vector<std::pair<float, float>>   m_maxMins;
 		bool                                   m_contributeToBounds = false;
-		ImPlotYAxis_                           m_axis = ImPlotYAxis_1;
+		ImPlotYAxis                           m_axis = ImPlotYAxis_1;
 	};
 
 	//-----------------------------------------------------------------------------
@@ -249,8 +250,8 @@ namespace Marvel {
 
 		void setWidth          (int width)      override;
 		void setHeight         (int height)     override;
-		void setExtraConfigDict(PyObject* dict) override;
-		void getExtraConfigDict(PyObject* dict) override;
+		void handleSpecificKeywordArgs(PyObject* dict) override;
+		void getSpecificConfiguration(PyObject* dict) override;
 
 	protected:
 

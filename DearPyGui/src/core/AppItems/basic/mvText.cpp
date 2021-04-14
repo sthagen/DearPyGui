@@ -8,35 +8,45 @@ namespace Marvel {
 
 	void mvText::InsertParser(std::map<std::string, mvPythonParser>* parsers)
 	{
-		parsers->insert({ s_command, mvPythonParser({
-			{mvPythonDataType::Optional},
-			{mvPythonDataType::String, "name"},
-			{mvPythonDataType::KeywordOnly},
-			{mvPythonDataType::Integer, "wrap", "number of characters until wraping", "-1"},
-			{mvPythonDataType::FloatList, "color", "color of the text (rgba)", "(-1, 0, 0, 0)"},
-			{mvPythonDataType::Bool, "bullet", "makes the text bulleted", "False"},
-			{mvPythonDataType::String, "parent", "Parent this item will be added to. (runtime adding)", "''"},
-			{mvPythonDataType::String, "before", "This item will be displayed before the specified item in the parent. (runtime adding)", "''"},
-			{mvPythonDataType::String, "source", "", "''"},
-			{mvPythonDataType::String, "default_value", "", "''"},
-			{mvPythonDataType::Bool, "show", "Attempt to render", "True"},
-		}, "Adds text", "None", "Adding Widgets") });
+		mvPythonParser parser(mvPyDataType::String);
+		mvAppItem::AddCommonArgs(parser);
+		parser.removeArg("width");
+		parser.removeArg("height");
+		parser.removeArg("label");
+		parser.removeArg("callback");
+		parser.removeArg("callback_data");
+		parser.removeArg("enabled");
+
+		parser.addArg<mvPyDataType::String>("default_value", mvArgType::POSITIONAL_ARG, "''");
+
+		parser.addArg<mvPyDataType::Integer>("wrap", mvArgType::KEYWORD_ARG, "-1", "number of characters until wraping");
+
+		parser.addArg<mvPyDataType::Bool>("bullet", mvArgType::KEYWORD_ARG, "False", "makes the text bulleted");
+
+		parser.addArg<mvPyDataType::FloatList>("color", mvArgType::KEYWORD_ARG, "(-1, -1, -1, -1)", "color of the text (rgba)");
+
+		parser.finalize();
+
+		parsers->insert({ s_command, parser });
 	}
 
 	void mvLabelText::InsertParser(std::map<std::string, mvPythonParser>* parsers)
 	{
-		parsers->insert({ s_command, mvPythonParser({
-			{mvPythonDataType::Optional},
-			{mvPythonDataType::String, "name"},
-			{mvPythonDataType::KeywordOnly},
-			{mvPythonDataType::String, "default_value", "", "''"},
-			{mvPythonDataType::FloatList, "color", "", "(-1, 0, 0, 0)"},
-			{mvPythonDataType::String, "parent", "Parent this item will be added to. (runtime adding)", "''"},
-			{mvPythonDataType::String, "before", "This item will be displayed before the specified item in the parent. (runtime adding)", "''"},
-			{mvPythonDataType::String, "source", "data source for shared data", "''"},
-			{mvPythonDataType::String, "label", "", "''"},
-			{mvPythonDataType::Bool, "show", "Attempt to render", "True"},
-		}, "Adds text with a label. Useful for output values.", "None", "Adding Widgets") });
+
+		mvPythonParser parser(mvPyDataType::String);
+		mvAppItem::AddCommonArgs(parser);
+		parser.removeArg("width");
+		parser.removeArg("height");
+		parser.removeArg("callback");
+		parser.removeArg("callback_data");
+		parser.removeArg("enabled");
+
+		parser.addArg<mvPyDataType::String>("default_value", mvArgType::KEYWORD_ARG, "''");
+		parser.addArg<mvPyDataType::FloatList>("color", mvArgType::KEYWORD_ARG, "(-1, -1, -1, -1)", "color of the text (rgba)");
+
+		parser.finalize();
+
+		parsers->insert({ s_command, parser });
 	}
 
 	mvText::mvText(const std::string& name)
@@ -103,7 +113,27 @@ namespace Marvel {
 
 	}
 
-	void mvText::setExtraConfigDict(PyObject* dict)
+	void mvText::handleSpecificPositionalArgs(PyObject* dict)
+	{
+		if (!mvApp::GetApp()->getParsers()[s_command].verifyPositionalArguments(dict))
+			return;
+
+		for (int i = 0; i < PyTuple_Size(dict); i++)
+		{
+			PyObject* item = PyTuple_GetItem(dict, i);
+			switch (i)
+			{
+			case 0:
+				*m_value = ToString(item);
+				break;
+
+			default:
+				break;
+			}
+		}
+	}
+
+	void mvText::handleSpecificKeywordArgs(PyObject* dict)
 	{
 		if (dict == nullptr)
 			return;
@@ -114,7 +144,7 @@ namespace Marvel {
 
 	}
 
-	void mvText::getExtraConfigDict(PyObject* dict)
+	void mvText::getSpecificConfiguration(PyObject* dict)
 	{
 		if (dict == nullptr)
 			return;
@@ -124,7 +154,7 @@ namespace Marvel {
 		PyDict_SetItemString(dict, "bullet", ToPyBool(m_bullet));
 	}
 
-	void mvLabelText::setExtraConfigDict(PyObject* dict)
+	void mvLabelText::handleSpecificKeywordArgs(PyObject* dict)
 	{
 		if (dict == nullptr)
 			return;
@@ -132,7 +162,7 @@ namespace Marvel {
 		if (PyObject* item = PyDict_GetItemString(dict, "color")) m_color = ToColor(item);
 	}
 
-	void mvLabelText::getExtraConfigDict(PyObject* dict)
+	void mvLabelText::getSpecificConfiguration(PyObject* dict)
 	{
 		if (dict == nullptr)
 			return;

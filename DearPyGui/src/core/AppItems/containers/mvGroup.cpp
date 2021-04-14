@@ -9,19 +9,23 @@ namespace Marvel {
 
 	void mvGroup::InsertParser(std::map<std::string, mvPythonParser>* parsers)
 	{
-		parsers->insert({ s_command, mvPythonParser({
-			{mvPythonDataType::Optional},
-			{mvPythonDataType::String, "name"},
-			{mvPythonDataType::KeywordOnly},
-			{mvPythonDataType::Bool, "show", "Attempt to render", "True"},
-			{mvPythonDataType::String, "parent", "Parent to add this item to. (runtime adding)", "''"},
-			{mvPythonDataType::String, "before", "This item will be displayed before the specified item in the parent. (runtime adding)", "''"},
-			{mvPythonDataType::Integer, "width","", "0"},
-			{mvPythonDataType::Bool, "horizontal", "", "False"},
-			{mvPythonDataType::Float, "horizontal_spacing","", "-1"},
-		}, "Creates a group that other widgets can belong to. The group allows item commands to be issued for all of its members.\
-				Must be closed with the end command."
-		, "None", "Containers") });
+
+		mvPythonParser parser(mvPyDataType::String);
+		mvAppItem::AddCommonArgs(parser);
+		parser.removeArg("source");
+		parser.removeArg("height");
+		parser.removeArg("label");
+		parser.removeArg("callback");
+		parser.removeArg("callback_data");
+		parser.removeArg("enabled");
+
+		parser.addArg<mvPyDataType::Bool>("horizontal", mvArgType::KEYWORD_ARG, "False");
+		parser.addArg<mvPyDataType::Float>("horizontal_spacing", mvArgType::KEYWORD_ARG, "-1");
+
+
+		parser.finalize();
+
+		parsers->insert({ s_command, parser });
 	}
 
 	mvGroup::mvGroup(const std::string& name)
@@ -69,7 +73,7 @@ namespace Marvel {
 		ImGui::EndGroup();
 	}
 
-	void mvGroup::setExtraConfigDict(PyObject* dict)
+	void mvGroup::handleSpecificKeywordArgs(PyObject* dict)
 	{
 		if (dict == nullptr)
 			return;
@@ -78,7 +82,7 @@ namespace Marvel {
 		if (PyObject* item = PyDict_GetItemString(dict, "horizontal_spacing")) m_hspacing = ToFloat(item);
 	}
 
-	void mvGroup::getExtraConfigDict(PyObject* dict)
+	void mvGroup::getSpecificConfiguration(PyObject* dict)
 	{
 		if (dict == nullptr)
 			return;

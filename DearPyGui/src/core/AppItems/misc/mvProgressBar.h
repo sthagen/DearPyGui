@@ -42,12 +42,12 @@ namespace Marvel {
 		MV_END_COLOR_CONSTANTS
 
 		MV_START_STYLE_CONSTANTS
-			MV_ADD_CONSTANT(mvThemeStyle_ProgressBar_BorderSize,        0, 1),
-			MV_ADD_CONSTANT(mvThemeStyle_ProgressBar_Rounding,          0, 12),
-			MV_ADD_CONSTANT(mvThemeStyle_ProgressBar_PaddingX,          8, 20),
-			MV_ADD_CONSTANT(mvThemeStyle_ProgressBar_PaddingY,          4, 20),
-			MV_ADD_CONSTANT(mvThemeStyle_ProgressBar_InnerItemSpacingX, 4, 20),
-			MV_ADD_CONSTANT(mvThemeStyle_ProgressBar_InnerItemSpacingY, 4, 20),
+			MV_ADD_CONSTANT_F(mvThemeStyle_ProgressBar_BorderSize,        0, 1),
+			MV_ADD_CONSTANT_F(mvThemeStyle_ProgressBar_Rounding,          0, 12),
+			MV_ADD_CONSTANT_F(mvThemeStyle_ProgressBar_PaddingX,          8, 20),
+			MV_ADD_CONSTANT_F(mvThemeStyle_ProgressBar_PaddingY,          4, 20),
+			MV_ADD_CONSTANT_F(mvThemeStyle_ProgressBar_InnerItemSpacingX, 4, 20),
+			MV_ADD_CONSTANT_F(mvThemeStyle_ProgressBar_InnerItemSpacingY, 4, 20),
 		MV_END_STYLE_CONSTANTS
 
 	public:
@@ -56,8 +56,8 @@ namespace Marvel {
 
 		void draw(ImDrawList* drawlist, float x, float y) override;
 
-		void setExtraConfigDict(PyObject* dict) override;
-		void getExtraConfigDict(PyObject* dict) override;
+		void handleSpecificKeywordArgs(PyObject* dict) override;
+		void getSpecificConfiguration(PyObject* dict) override;
 
 	private:
 

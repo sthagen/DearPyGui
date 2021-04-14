@@ -34,19 +34,20 @@ namespace Marvel {
 		void draw(ImDrawList* drawlist, float x, float y) override;
 		bool isParentCompatible(mvAppItemType type) override;
 
-		void setExtraConfigDict(PyObject* dict) override;
-		void getExtraConfigDict(PyObject* dict) override;
+		void handleSpecificRequiredArgs(PyObject* args) override;
+		void handleSpecificKeywordArgs(PyObject* dict) override;
+		void getSpecificConfiguration(PyObject* dict) override;
 
 
 	private:
 
-		mvVec2  m_p1;
-		mvVec2  m_p2;
-		mvVec2  m_p3;
-		mvVec2  m_p4;
+		mvVec2  m_p1 = { 0.0f, 0.0f };
+		mvVec2  m_p2 = { 0.0f, 0.0f };
+		mvVec2  m_p3 = { 0.0f, 0.0f };
+		mvVec2  m_p4 = { 0.0f, 0.0f };
 		mvColor m_color;
 		mvColor m_fill;
-		float   m_thickness;
+		float   m_thickness = 1.0f;
 
 	};
 

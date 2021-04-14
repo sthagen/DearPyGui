@@ -9,29 +9,25 @@ namespace Marvel {
 
 	void mvCombo::InsertParser(std::map<std::string, mvPythonParser>* parsers)
 	{
-		parsers->insert({ s_command, mvPythonParser({
-			{mvPythonDataType::Optional},
-			{mvPythonDataType::String, "name"},
-			{mvPythonDataType::KeywordOnly},
-			{mvPythonDataType::StringList, "items", "", "()"},
-			{mvPythonDataType::String, "default_value", "", "''"},
-			{mvPythonDataType::Callable, "callback", "Registers a callback", "None"},
-			{mvPythonDataType::Object, "callback_data", "Callback data", "None"},
-			{mvPythonDataType::String, "parent", "Parent this item will be added to. (runtime adding)", "''"},
-			{mvPythonDataType::String, "before", "This item will be displayed before the specified item in the parent. (runtime adding)", "''"},
-			{mvPythonDataType::String, "source", "Overrides 'name' as value storage key", "''"},
-			{mvPythonDataType::Bool, "enabled", "Display grayed out text so selectable cannot be selected", "True"},
-			{mvPythonDataType::Integer, "width","", "0"},
-			{mvPythonDataType::String, "label", "Overrides 'name' as label", "''"},
-			{mvPythonDataType::Bool, "show","Attemp to render", "True"},
-			{mvPythonDataType::Bool, "popup_align_left","Align the popup toward the left by default", "False"},
-			{mvPythonDataType::Bool, "height_small","Max ~4 items visible", "False"},
-			{mvPythonDataType::Bool, "height_regular","Max ~8 items visible (default)", "False"},
-			{mvPythonDataType::Bool, "height_large","Max ~20 items visible", "False"},
-			{mvPythonDataType::Bool, "height_largest","As many items visible as possible", "False"},
-			{mvPythonDataType::Bool, "no_arrow_button","Display on the preview box without the square arrow button", "False"},
-			{mvPythonDataType::Bool, "no_preview","Display only a square arrow button", "False"},
-		}, "Adds a combo.", "None", "Adding Widgets") });
+
+		mvPythonParser parser(mvPyDataType::String);
+		mvAppItem::AddCommonArgs(parser);
+		parser.removeArg("height");
+
+		parser.addArg<mvPyDataType::StringList>("items", mvArgType::POSITIONAL_ARG, "()");
+
+		parser.addArg<mvPyDataType::String>("default_value", mvArgType::KEYWORD_ARG, "''");
+		parser.addArg<mvPyDataType::Bool>("popup_align_left", mvArgType::KEYWORD_ARG, "False", "Align the popup toward the left by default");
+		parser.addArg<mvPyDataType::Bool>("height_small", mvArgType::KEYWORD_ARG, "False", "Max ~4 items visible");
+		parser.addArg<mvPyDataType::Bool>("height_regular", mvArgType::KEYWORD_ARG, "False", "Max ~8 items visible");
+		parser.addArg<mvPyDataType::Bool>("height_large", mvArgType::KEYWORD_ARG, "False", "Max ~20 items visible");
+		parser.addArg<mvPyDataType::Bool>("height_largest", mvArgType::KEYWORD_ARG, "False", "As many items visible as possible");
+		parser.addArg<mvPyDataType::Bool>("no_arrow_button", mvArgType::KEYWORD_ARG, "False", "Display on the preview box without the square arrow button");
+		parser.addArg<mvPyDataType::Bool>("no_preview", mvArgType::KEYWORD_ARG, "False", "Display only a square arrow button");
+
+		parser.finalize();
+
+		parsers->insert({ s_command, parser });
 	}
 
 	mvCombo::mvCombo(const std::string& name)
@@ -72,7 +68,27 @@ namespace Marvel {
 
 	}
 
-	void mvCombo::setExtraConfigDict(PyObject* dict)
+	void mvCombo::handleSpecificPositionalArgs(PyObject* dict)
+	{
+		if (!mvApp::GetApp()->getParsers()[s_command].verifyPositionalArguments(dict))
+			return;
+
+		for (int i = 0; i < PyTuple_Size(dict); i++)
+		{
+			PyObject* item = PyTuple_GetItem(dict, i);
+			switch (i)
+			{
+			case 0:
+				m_items = ToStringVect(item);
+				break;
+
+			default:
+				break;
+			}
+		}
+	}
+
+	void mvCombo::handleSpecificKeywordArgs(PyObject* dict)
 	{
 		if (dict == nullptr)
 			return;
@@ -122,7 +138,7 @@ namespace Marvel {
 
 	}
 
-	void mvCombo::getExtraConfigDict(PyObject* dict)
+	void mvCombo::getSpecificConfiguration(PyObject* dict)
 	{
 		if (dict == nullptr)
 			return;

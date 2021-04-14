@@ -24,8 +24,6 @@
 
 #include "misc/mvProgressBar.h"
 #include "misc/mvDummy.h"
-#include "misc/mvIndent.h"
-#include "misc/mvUnindent.h"
 #include "misc/mvSameLine.h"
 #include "misc/mvSpacing.h"
 #include "misc/mvSeparator.h"
@@ -62,6 +60,7 @@
 #include "custom/mvTimePicker.h"
 #include "custom/mvDatePicker.h"
 #include "custom/mvColorMapScale.h"
+#include "custom/mvSlider3D.h"
 
 #include "composite/mvDataGrid.h"
 #include "composite/mvLogger.h"

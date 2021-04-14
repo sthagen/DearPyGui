@@ -8,27 +8,22 @@ namespace Marvel {
 
 	void mvImageButton::InsertParser(std::map<std::string, mvPythonParser>* parsers)
 	{
-		parsers->insert({ s_command, mvPythonParser({
-			{mvPythonDataType::Optional},
-			{mvPythonDataType::String, "name"},
-			{mvPythonDataType::KeywordOnly},
-			{mvPythonDataType::String, "value"},
-			{mvPythonDataType::Callable, "callback", "Registers a callback", "None"},
-			{mvPythonDataType::Object, "callback_data", "Callback data", "None"},
-			{mvPythonDataType::FloatList, "tint_color", "", "(255, 255, 255, 255)"},
-			{mvPythonDataType::FloatList, "background_color", "", "(0, 0, 0, 0)"},
-			{mvPythonDataType::String, "parent", "Parent this item will be added to. (runtime adding)", "''"},
-			{mvPythonDataType::String, "before", "This item will be displayed before the specified item in the parent. (runtime adding)", "''"},
-			{mvPythonDataType::Integer, "width","", "0"},
-			{mvPythonDataType::Integer, "height","", "0"},
-			{mvPythonDataType::Integer, "frame_padding","", "-1"},
-			{mvPythonDataType::FloatList, "uv_min", "normalized texture coordinates", "(0.0, 0.0)"},
-			{mvPythonDataType::FloatList, "uv_max", "normalized texture coordinates", "(1.0, 1.0)"},
-			{mvPythonDataType::Bool, "show", "Attempt to render", "True"},
-			{mvPythonDataType::Bool, "enabled", "", "True"},
-		}, "Adds an image button."
-		"uv_min and uv_max represent the normalized texture coordinates of the original image that will be shown."
-		"Using(0,0)->(1,1) texture coordinates will generally display the entire texture", "None", "Adding Widgets") });
+
+		mvPythonParser parser(mvPyDataType::String);
+		mvAppItem::AddCommonArgs(parser);
+
+		parser.addArg<mvPyDataType::String>("value", mvArgType::POSITIONAL_ARG, "''");
+
+		parser.addArg<mvPyDataType::Integer>("frame_padding", mvArgType::KEYWORD_ARG, "-1");
+		
+		parser.addArg<mvPyDataType::FloatList>("tint_color", mvArgType::KEYWORD_ARG, "(255, 255, 255, 255)", "normalized texture coordinates");
+		parser.addArg<mvPyDataType::FloatList>("background_color", mvArgType::KEYWORD_ARG, "(0, 0, 0, 0)", "normalized texture coordinates");
+		parser.addArg<mvPyDataType::FloatList>("uv_min", mvArgType::KEYWORD_ARG, "(0.0, 0.0)", "normalized texture coordinates");
+		parser.addArg<mvPyDataType::FloatList>("uv_max", mvArgType::KEYWORD_ARG, "(1.0, 1.0)", "normalized texture coordinates");
+
+		parser.finalize();
+
+		parsers->insert({ s_command, parser });
 	}
 
 	mvImageButton::mvImageButton(const std::string& name)
@@ -113,7 +108,27 @@ namespace Marvel {
 
 	}
 
-	void mvImageButton::setExtraConfigDict(PyObject* dict)
+	void mvImageButton::handleSpecificPositionalArgs(PyObject* dict)
+	{
+		if (!mvApp::GetApp()->getParsers()[s_command].verifyPositionalArguments(dict))
+			return;
+
+		for (int i = 0; i < PyTuple_Size(dict); i++)
+		{
+			PyObject* item = PyTuple_GetItem(dict, i);
+			switch (i)
+			{
+			case 0:
+				m_value = ToString(item);
+				break;
+
+			default:
+				break;
+			}
+		}
+	}
+
+	void mvImageButton::handleSpecificKeywordArgs(PyObject* dict)
 	{
 		if (dict == nullptr)
 			return;
@@ -134,7 +149,7 @@ namespace Marvel {
 		if (PyObject* item = PyDict_GetItemString(dict, "value")) m_value = ToString(item);
 	}
 
-	void mvImageButton::getExtraConfigDict(PyObject* dict)
+	void mvImageButton::getSpecificConfiguration(PyObject* dict)
 	{
 		if (dict == nullptr)
 			return;

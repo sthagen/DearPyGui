@@ -46,20 +46,20 @@ namespace Marvel {
 
 		MV_START_COLOR_CONSTANTS
 			MV_ADD_CONSTANT(mvThemeCol_Button_Text,         mvColor(255, 255, 255, 255), mvColor(128, 128, 128, 63)),
-			MV_ADD_CONSTANT(mvThemeCol_Button_Bg,           mvColor( 41,  74, 122, 138), mvColor(128, 128, 128, 63)),
-			MV_ADD_CONSTANT(mvThemeCol_Button_Hovered,      mvColor( 66, 150, 250, 102), mvColor(128, 128, 128, 63)),
-			MV_ADD_CONSTANT(mvThemeCol_Button_Active,       mvColor( 66, 150, 250, 171), mvColor(128, 128, 128, 63)),
+			MV_ADD_CONSTANT(mvThemeCol_Button_Bg,           mvColor(119,  25,  24, 255), mvColor(128, 128, 128, 63)),
+			MV_ADD_CONSTANT(mvThemeCol_Button_Hovered,      mvColor(255,  64,  64, 143), mvColor(128, 128, 128, 63)),
+			MV_ADD_CONSTANT(mvThemeCol_Button_Active,       mvColor(181,  64,  64, 255), mvColor(128, 128, 128, 63)),
 			MV_ADD_CONSTANT(mvThemeCol_Button_Border,       mvColor(110, 110, 128, 128), mvColor(128, 128, 128, 63)),
 			MV_ADD_CONSTANT(mvThemeCol_Button_BorderShadow, mvColor(  0,   0,   0,   0), mvColor(128, 128, 128, 63)),
 		MV_END_COLOR_CONSTANTS
 
 		MV_START_STYLE_CONSTANTS
-			MV_ADD_CONSTANT(mvThemeStyle_Button_Rounding	, 0    ,12),
-			MV_ADD_CONSTANT(mvThemeStyle_Button_BorderSize	, 0    , 1),
-			MV_ADD_CONSTANT(mvThemeStyle_Button_TextAlignX	, 0.5f , 1),
-			MV_ADD_CONSTANT(mvThemeStyle_Button_TextAlignY	, 0.5f , 1),
-			MV_ADD_CONSTANT(mvThemeStyle_Button_PaddingX	, 4    ,20),
-			MV_ADD_CONSTANT(mvThemeStyle_Button_PaddingY	, 3    ,20),
+			MV_ADD_CONSTANT_F(mvThemeStyle_Button_Rounding	, 6    ,12),
+			MV_ADD_CONSTANT_F(mvThemeStyle_Button_BorderSize	, 0    , 1),
+			MV_ADD_CONSTANT_F(mvThemeStyle_Button_TextAlignX	, 0.5f , 1),
+			MV_ADD_CONSTANT_F(mvThemeStyle_Button_TextAlignY	, 0.5f , 1),
+			MV_ADD_CONSTANT_F(mvThemeStyle_Button_PaddingX	, 4    ,20),
+			MV_ADD_CONSTANT_F(mvThemeStyle_Button_PaddingY	, 3    ,20),
 		MV_END_STYLE_CONSTANTS
 
 	public:
@@ -68,8 +68,8 @@ namespace Marvel {
 
 		void draw(ImDrawList* drawlist, float x, float y) override;
 
-		void setExtraConfigDict(PyObject* dict) override;
-		void getExtraConfigDict(PyObject* dict) override;
+		void handleSpecificKeywordArgs(PyObject* dict) override;
+		void getSpecificConfiguration(PyObject* dict) override;
 
 	private:
 

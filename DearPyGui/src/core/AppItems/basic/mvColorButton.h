@@ -44,12 +44,12 @@ namespace Marvel {
 		MV_END_COLOR_CONSTANTS
 
 		MV_START_STYLE_CONSTANTS
-			MV_ADD_CONSTANT(mvThemeStyle_ColorButton_Rounding		, 0, 12),
-			MV_ADD_CONSTANT(mvThemeStyle_ColorButton_BorderSize		, 0,  1),
-			MV_ADD_CONSTANT(mvThemeStyle_ColorButton_PopupRounding	, 0, 12),
-			MV_ADD_CONSTANT(mvThemeStyle_ColorButton_PopupBorderSize, 1,  1),
-			MV_ADD_CONSTANT(mvThemeStyle_ColorButton_PopupPaddingX	, 8, 20),
-			MV_ADD_CONSTANT(mvThemeStyle_ColorButton_PopupPaddingY	, 8, 20),
+			MV_ADD_CONSTANT_F(mvThemeStyle_ColorButton_Rounding		, 0, 12),
+			MV_ADD_CONSTANT_F(mvThemeStyle_ColorButton_BorderSize		, 0,  1),
+			MV_ADD_CONSTANT_F(mvThemeStyle_ColorButton_PopupRounding	, 0, 12),
+			MV_ADD_CONSTANT_F(mvThemeStyle_ColorButton_PopupBorderSize, 1,  1),
+			MV_ADD_CONSTANT_F(mvThemeStyle_ColorButton_PopupPaddingX	, 8, 20),
+			MV_ADD_CONSTANT_F(mvThemeStyle_ColorButton_PopupPaddingY	, 8, 20),
 		MV_END_STYLE_CONSTANTS
 
 	public:
@@ -58,8 +58,9 @@ namespace Marvel {
 
 		void draw(ImDrawList* drawlist, float x, float y) override;
 
-		void setExtraConfigDict(PyObject* dict) override;
-		void getExtraConfigDict(PyObject* dict) override;
+		void handleSpecificPositionalArgs(PyObject* dict) override;
+		void handleSpecificKeywordArgs(PyObject* dict) override;
+		void getSpecificConfiguration(PyObject* dict) override;
 
 	private:
 

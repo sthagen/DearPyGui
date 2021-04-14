@@ -1,26 +1,38 @@
 #include "mvDrawCircle.h"
 #include "mvLog.h"
 #include "mvItemRegistry.h"
+#include "mvPythonExceptions.h"
 
 namespace Marvel {
 
 	void mvDrawCircle::InsertParser(std::map<std::string, mvPythonParser>* parsers)
 	{
 
-		parsers->insert({ s_command, mvPythonParser({
-			{mvPythonDataType::Optional},
-			{mvPythonDataType::String, "name", "", "''"},
-			{mvPythonDataType::KeywordOnly},
-			{mvPythonDataType::FloatList, "center"},
-			{mvPythonDataType::Float, "radius"},
-			{mvPythonDataType::IntList, "color"},	
-			{mvPythonDataType::Integer, "segments", "", "0"},
-			{mvPythonDataType::Float, "thickness", "", "1.0"},
-			{mvPythonDataType::FloatList, "fill", "", "(0, 0, 0, -1)"},
-			{mvPythonDataType::String, "parent", "Parent to add this item to. (runtime adding)", "''"},
-			{mvPythonDataType::String, "before", "This item will be displayed before the specified item in the parent. (runtime adding)", "''"},
-			{mvPythonDataType::Bool, "show", "Attempt to render", "True"},
-		}, "Draws a circle on a drawing.", "None", "Drawing") });
+		mvPythonParser parser(mvPyDataType::String);
+		mvAppItem::AddCommonArgs(parser);
+		parser.removeArg("source");
+		parser.removeArg("width");
+		parser.removeArg("height");
+		parser.removeArg("label");
+		parser.removeArg("callback");
+		parser.removeArg("callback_data");
+		parser.removeArg("enabled");
+
+		parser.addArg<mvPyDataType::FloatList>("center");
+
+		parser.addArg<mvPyDataType::Float>("radius");
+
+		parser.addArg<mvPyDataType::IntList>("color", mvArgType::KEYWORD_ARG, "(255, 255, 255, 255)");
+		parser.addArg<mvPyDataType::IntList>("fill", mvArgType::KEYWORD_ARG, "(0, 0, 0, -255)");
+
+		parser.addArg<mvPyDataType::Float>("thickness", mvArgType::KEYWORD_ARG, "1.0");
+
+		parser.addArg<mvPyDataType::Integer>("size", mvArgType::KEYWORD_ARG, "4");
+		parser.addArg<mvPyDataType::Integer>("segments", mvArgType::KEYWORD_ARG, "0");
+
+		parser.finalize();
+
+		parsers->insert({ s_command, parser });
 	}
 
 	mvDrawCircle::mvDrawCircle(const std::string& name)
@@ -51,7 +63,31 @@ namespace Marvel {
 
 	}
 
-	void mvDrawCircle::setExtraConfigDict(PyObject* dict)
+	void mvDrawCircle::handleSpecificRequiredArgs(PyObject* dict)
+	{
+		if (!mvApp::GetApp()->getParsers()[s_command].verifyRequiredArguments(dict))
+			return;
+
+		for (int i = 0; i < PyTuple_Size(dict); i++)
+		{
+			PyObject* item = PyTuple_GetItem(dict, i);
+			switch (i)
+			{
+			case 0:
+				m_center = ToVec2(item);
+				break;
+
+			case 1:
+				m_radius = ToFloat(item);
+				break;
+
+			default:
+				break;
+			}
+		}
+	}
+
+	void mvDrawCircle::handleSpecificKeywordArgs(PyObject* dict)
 	{
 		if (dict == nullptr)
 			return;
@@ -66,7 +102,7 @@ namespace Marvel {
 
 	}
 
-	void mvDrawCircle::getExtraConfigDict(PyObject* dict)
+	void mvDrawCircle::getSpecificConfiguration(PyObject* dict)
 	{
 		if (dict == nullptr)
 			return;

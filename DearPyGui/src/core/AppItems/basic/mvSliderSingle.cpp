@@ -13,56 +13,49 @@ namespace Marvel {
 
     void mvSliderFloat::InsertParser(std::map<std::string, mvPythonParser>* parsers)
     {
-        parsers->insert({ s_command, mvPythonParser({
-            {mvPythonDataType::Optional},
-            {mvPythonDataType::String, "name"},
-            {mvPythonDataType::KeywordOnly},
-            {mvPythonDataType::Float, "default_value", "", "0.0"},
-            {mvPythonDataType::Float, "min_value", "", "0.0"},
-            {mvPythonDataType::Float, "max_value", "", "100.0"},
-            {mvPythonDataType::String, "format", "", "'%.3f'"},
-            {mvPythonDataType::Bool, "vertical", "sets orientation to vertical", "False"},
-            {mvPythonDataType::Callable, "callback", "Registers a callback", "None"},
-            {mvPythonDataType::Object, "callback_data", "Callback data", "None"},
-            {mvPythonDataType::String, "parent", "Parent this item will be added to. (runtime adding)", "''"},
-            {mvPythonDataType::String, "before", "This item will be displayed before the specified item in the parent. (runtime adding)", "''"},
-            {mvPythonDataType::String, "source", "", "''"},
-            {mvPythonDataType::Bool, "enabled", "Display grayed out text so selectable cannot be selected", "True"},
-            {mvPythonDataType::Integer, "width","", "0"},
-            {mvPythonDataType::Integer, "height","Height of a vertical slider", "0"},
-            {mvPythonDataType::Bool, "no_input", "Disable CTRL+Click or Enter key allowing to input text directly into the widget", "False"},
-            {mvPythonDataType::Bool, "clamped", "Clamp value to min/max bounds when input manually with CTRL+Click. By default CTRL+Click allows going out of bounds.", "False"},
-            {mvPythonDataType::String, "label", "", "''"},
-            {mvPythonDataType::Bool, "show", "Attempt to render", "True"},
-        }, "Adds slider for a single float value. CTRL+Click to directly modify the value.", "None", "Adding Widgets") });
+        mvPythonParser parser(mvPyDataType::String);
+        mvAppItem::AddCommonArgs(parser);
+
+        parser.addArg<mvPyDataType::Float>("default_value", mvArgType::KEYWORD_ARG, "0.0");
+
+        parser.addArg<mvPyDataType::Integer>("size", mvArgType::KEYWORD_ARG, "4", "number of components");
+
+        parser.addArg<mvPyDataType::Bool>("vertical", mvArgType::KEYWORD_ARG, "False", "sets orientation to vertical");
+        parser.addArg<mvPyDataType::Bool>("no_input", mvArgType::KEYWORD_ARG, "False", "Disable CTRL+Click or Enter key allowing to input text directly into the widget");
+        parser.addArg<mvPyDataType::Bool>("clamped", mvArgType::KEYWORD_ARG, "False", "Clamp value to min/max bounds when input manually with CTRL+Click. By default CTRL+Click allows going out of bounds.");
+
+        parser.addArg<mvPyDataType::Float>("min_value", mvArgType::KEYWORD_ARG, "0.0");
+        parser.addArg<mvPyDataType::Float>("max_value", mvArgType::KEYWORD_ARG, "100.0");
+
+        parser.addArg<mvPyDataType::String>("format", mvArgType::KEYWORD_ARG, "'%.3f'");
+
+        parser.finalize();
+
+        parsers->insert({ s_command, parser });
 
     }
 
     void mvSliderInt::InsertParser(std::map<std::string, mvPythonParser>* parsers)
     {
-        parsers->insert({ "add_slider_int", mvPythonParser({
-            {mvPythonDataType::Optional},
-            {mvPythonDataType::String, "name"},
-            {mvPythonDataType::KeywordOnly},
-            {mvPythonDataType::Integer, "default_value", "", "0"},
-            {mvPythonDataType::Integer, "min_value", "", "0"},
-            {mvPythonDataType::Integer, "max_value", "", "100"},
-            {mvPythonDataType::String, "format", "", "'%d'"},
-            {mvPythonDataType::Bool, "vertical", "sets orientation to vertical", "False"},
-            {mvPythonDataType::Callable, "callback", "Registers a callback", "None"},
-            {mvPythonDataType::Object, "callback_data", "Callback data", "None"},
-            {mvPythonDataType::String, "parent", "Parent this item will be added to. (runtime adding)", "''"},
-            {mvPythonDataType::String, "before", "This item will be displayed before the specified item in the parent. (runtime adding)", "''"},
-            {mvPythonDataType::String, "source", "", "''"},
-            {mvPythonDataType::Bool, "enabled", "Display grayed out text so selectable cannot be selected", "True"},
-            {mvPythonDataType::Integer, "width","", "0"},
-            {mvPythonDataType::Integer, "height","Height of a vertical slider", "0"},
-            {mvPythonDataType::Bool, "no_input", "Disable CTRL+Click or Enter key allowing to input text directly into the widget", "False"},
-            {mvPythonDataType::Bool, "clamped", "Clamp value to min/max bounds when input manually with CTRL+Click. By default CTRL+Click allows going out of bounds.", "False"},
-            {mvPythonDataType::String, "label", "", "''"},
-            {mvPythonDataType::Bool, "show", "Attempt to render", "True"},
-        }, "Adds slider for a single int value. CTRL+Click to directly modify the value.", "None", "Adding Widgets") });
+        mvPythonParser parser(mvPyDataType::String);
+        mvAppItem::AddCommonArgs(parser);
 
+        parser.addArg<mvPyDataType::Integer>("default_value", mvArgType::KEYWORD_ARG, "0");
+
+        parser.addArg<mvPyDataType::Integer>("size", mvArgType::KEYWORD_ARG, "4", "number of components");
+
+        parser.addArg<mvPyDataType::Bool>("vertical", mvArgType::KEYWORD_ARG, "False", "sets orientation to vertical");
+        parser.addArg<mvPyDataType::Bool>("no_input", mvArgType::KEYWORD_ARG, "False", "Disable CTRL+Click or Enter key allowing to input text directly into the widget");
+        parser.addArg<mvPyDataType::Bool>("clamped", mvArgType::KEYWORD_ARG, "False", "Clamp value to min/max bounds when input manually with CTRL+Click. By default CTRL+Click allows going out of bounds.");
+
+        parser.addArg<mvPyDataType::Integer>("min_value", mvArgType::KEYWORD_ARG, "0");
+        parser.addArg<mvPyDataType::Integer>("max_value", mvArgType::KEYWORD_ARG, "100");
+
+        parser.addArg<mvPyDataType::String>("format", mvArgType::KEYWORD_ARG, "'%d'");
+
+        parser.finalize();
+
+        parsers->insert({ s_command, parser });
     }
 
     mvSliderFloat::mvSliderFloat(const std::string& name)
@@ -162,7 +155,7 @@ namespace Marvel {
         }
     }
 
-    void mvSliderFloat::setExtraConfigDict(PyObject* dict)
+    void mvSliderFloat::handleSpecificKeywordArgs(PyObject* dict)
     {
         if (dict == nullptr)
             return;
@@ -186,7 +179,7 @@ namespace Marvel {
 
     }
 
-    void mvSliderFloat::getExtraConfigDict(PyObject* dict)
+    void mvSliderFloat::getSpecificConfiguration(PyObject* dict)
     {
         if (dict == nullptr)
             return;
@@ -208,7 +201,7 @@ namespace Marvel {
 
     }
 
-    void mvSliderInt::setExtraConfigDict(PyObject* dict)
+    void mvSliderInt::handleSpecificKeywordArgs(PyObject* dict)
     {
         if (dict == nullptr)
             return;
@@ -232,7 +225,7 @@ namespace Marvel {
 
     }
 
-    void mvSliderInt::getExtraConfigDict(PyObject* dict)
+    void mvSliderInt::getSpecificConfiguration(PyObject* dict)
     {
         if (dict == nullptr)
             return;

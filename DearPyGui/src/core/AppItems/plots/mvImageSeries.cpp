@@ -11,22 +11,31 @@ namespace Marvel {
 	void mvImageSeries::InsertParser(std::map<std::string, mvPythonParser>* parsers)
 	{
 
-		parsers->insert({ s_command, mvPythonParser({
-			{mvPythonDataType::Optional},
-			{mvPythonDataType::String, "name"},
-			{mvPythonDataType::KeywordOnly},
-			{mvPythonDataType::String, "value"},
-			{mvPythonDataType::FloatList, "bounds_min", "bottom left coordinate"},
-			{mvPythonDataType::FloatList, "bounds_max", "top right coordinate"},
-			{mvPythonDataType::FloatList, "uv_min", "normalized texture coordinates", "(0.0, 0.0)"},
-			{mvPythonDataType::FloatList, "uv_max", "normalized texture coordinates", "(1.0, 1.0)"},
-			{mvPythonDataType::IntList, "tint_color", "", "(255, 255, 255, 255)"},
-			{mvPythonDataType::String, "label", "Overrides 'name' as label", "''"},
-			{mvPythonDataType::String, "parent", "Parent to add this item to. (runtime adding)", "''"},
-			{mvPythonDataType::String, "before", "This item will be displayed before the specified item in the parent. (runtime adding)", "''"},
-			{mvPythonDataType::Bool, "show", "Attempt to render", "True"},
-			{mvPythonDataType::Bool, "contribute_to_bounds", "", "True"},
-		}, "Adds a drag point to a plot.", "None", "Plotting") });
+		mvPythonParser parser(mvPyDataType::String);
+		mvAppItem::AddCommonArgs(parser);
+		parser.removeArg("width");
+		parser.removeArg("height");
+		parser.removeArg("callback");
+		parser.removeArg("callback_data");
+		parser.removeArg("enabled");
+
+		parser.addArg<mvPyDataType::String>("value");
+
+		parser.addArg<mvPyDataType::FloatList>("bounds_min");
+		parser.addArg<mvPyDataType::FloatList>("bounds_max");
+
+		parser.addArg<mvPyDataType::FloatList>("uv_min", mvArgType::KEYWORD_ARG, "(0.0, 0.0)", "normalized texture coordinates");
+		parser.addArg<mvPyDataType::FloatList>("uv_max", mvArgType::KEYWORD_ARG, "(1.0, 1.0)", "normalized texture coordinates");
+
+		parser.addArg<mvPyDataType::IntList>("tint_color", mvArgType::KEYWORD_ARG, "(255, 255, 255, 255)");
+
+		parser.addArg<mvPyDataType::Integer>("axis", mvArgType::KEYWORD_ARG, "0");
+
+		parser.addArg<mvPyDataType::Bool>("contribute_to_bounds", mvArgType::KEYWORD_ARG, "True");
+
+		parser.finalize();
+
+		parsers->insert({ s_command, parser });
 	}
 
 	mvImageSeries::mvImageSeries(const std::string& name)
@@ -82,11 +91,50 @@ namespace Marvel {
 			m_texture = texture->texture;
 		}
 		if (m_texture)
-			ImPlot::PlotImage(m_name.c_str(), m_texture, m_bounds_min, m_bounds_max, m_uv_min, m_uv_max, m_tintColor);
+			ImPlot::PlotImage(m_label.c_str(), m_texture, m_bounds_min, m_bounds_max, m_uv_min, m_uv_max, m_tintColor);
 
 	}
 
-	void mvImageSeries::setExtraConfigDict(PyObject* dict)
+	void mvImageSeries::handleSpecificRequiredArgs(PyObject* dict)
+	{
+		if (!mvApp::GetApp()->getParsers()[s_command].verifyRequiredArguments(dict))
+			return;
+
+		for (int i = 0; i < PyTuple_Size(dict); i++)
+		{
+			PyObject* item = PyTuple_GetItem(dict, i);
+			switch (i)
+			{
+			case 0:
+				m_imagevalue = ToString(item);
+				break;
+
+			case 1:
+			{
+				auto result = ToVec2(item);
+				m_bounds_min.x = (double)result.x;
+				m_bounds_min.y = (double)result.y;
+				break;
+			}
+
+			case 2:
+			{
+				auto result = ToVec2(item);
+				m_bounds_max.x = (double)result.x;
+				m_bounds_max.y = (double)result.y;
+				break;
+			}
+
+			default:
+				break;
+			}
+		}
+
+		resetMaxMins();
+		calculateMaxMins();
+	}
+
+	void mvImageSeries::handleSpecificKeywordArgs(PyObject* dict)
 	{
 		if (dict == nullptr)
 			return;
@@ -111,7 +159,7 @@ namespace Marvel {
 
 	}
 
-	void mvImageSeries::getExtraConfigDict(PyObject* dict)
+	void mvImageSeries::getSpecificConfiguration(PyObject* dict)
 	{
 		if (dict == nullptr)
 			return;

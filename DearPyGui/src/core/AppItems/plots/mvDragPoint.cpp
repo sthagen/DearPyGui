@@ -5,27 +5,33 @@
 #include "mvLog.h"
 #include "mvItemRegistry.h"
 #include "mvFontScope.h"
+#include "mvPythonExceptions.h"
 
 namespace Marvel {
 
 	void mvDragPoint::InsertParser(std::map<std::string, mvPythonParser>* parsers)
 	{
 
-		parsers->insert({ s_command, mvPythonParser({
-			{mvPythonDataType::Optional},
-			{mvPythonDataType::String, "name"},
-			{mvPythonDataType::KeywordOnly},
-			{mvPythonDataType::FloatList, "default_value", "", "(0.0, 0.0, 0.0, 0.0)"},
-			{mvPythonDataType::String, "label", "Overrides 'name' as label", "''"},
-			{mvPythonDataType::String, "source", "", "''"},
-			{mvPythonDataType::FloatList, "color", "", "(0, 0, 0, -1)"},
-			{mvPythonDataType::Float, "radius", "", "4.0"},
-			{mvPythonDataType::Bool, "show_label", "", "True"},
-			{mvPythonDataType::Callable, "callback", "function to run when point is moved", "None"},
-			{mvPythonDataType::String, "parent", "Parent to add this item to. (runtime adding)", "''"},
-			{mvPythonDataType::String, "before", "This item will be displayed before the specified item in the parent. (runtime adding)", "''"},
-			{mvPythonDataType::Bool, "show", "Attempt to render", "True"},
-		}, "Adds a drag point to a plot.", "None", "Plotting") });
+		mvPythonParser parser(mvPyDataType::String);
+		mvAppItem::AddCommonArgs(parser);
+		parser.removeArg("width");
+		parser.removeArg("height");
+		parser.removeArg("callback_data");
+		parser.removeArg("enabled");
+
+		parser.addArg<mvPyDataType::FloatList>("default_value", mvArgType::KEYWORD_ARG, "(0.0, 0.0, 0.0, 0.0)");
+
+
+		parser.addArg<mvPyDataType::IntList>("color", mvArgType::KEYWORD_ARG, "(0, 0, 0, -255)");
+
+
+		parser.addArg<mvPyDataType::Float>("thickness", mvArgType::KEYWORD_ARG, "1.0");
+
+		parser.addArg<mvPyDataType::Bool>("show_label", mvArgType::KEYWORD_ARG, "True");
+
+		parser.finalize();
+
+		parsers->insert({ s_command, parser });
 	}
 
 	mvDragPoint::mvDragPoint(const std::string& name)
@@ -54,16 +60,16 @@ namespace Marvel {
 		dummyx = (*m_value.get())[0];
 		dummyy = (*m_value.get())[1];
 
-		if (ImPlot::DragPoint(m_label.c_str(), &dummyx, &dummyy, m_show_label, m_color, m_radius))
+		if (ImPlot::DragPoint(m_specificedlabel.c_str(), &dummyx, &dummyy, m_show_label, m_color, m_radius))
 		{
-			(*m_value.get())[0] = dummyx;
-			(*m_value.get())[1] = dummyy;
+			(*m_value.get())[0] = (float)dummyx;
+			(*m_value.get())[1] = (float)dummyy;
 			mvApp::GetApp()->getCallbackRegistry().addCallback(m_callback, m_name, nullptr);
 		}
 
 	}
 
-	void mvDragPoint::setExtraConfigDict(PyObject* dict)
+	void mvDragPoint::handleSpecificKeywordArgs(PyObject* dict)
 	{
 		if (dict == nullptr)
 			return;
@@ -74,7 +80,7 @@ namespace Marvel {
 
 	}
 
-	void mvDragPoint::getExtraConfigDict(PyObject* dict)
+	void mvDragPoint::getSpecificConfiguration(PyObject* dict)
 	{
 		if (dict == nullptr)
 			return;

@@ -35,7 +35,7 @@ namespace Marvel {
 
 		MV_START_COLOR_CONSTANTS
 			MV_CREATE_CONSTANT_PAIR(mvThemeCol_CollapsingHeader_Text,			mvColor(255, 255, 255, 255)),
-			MV_CREATE_CONSTANT_PAIR(mvThemeCol_CollapsingHeader_Bg,				mvColor( 66, 150, 250, 79)),
+			MV_CREATE_CONSTANT_PAIR(mvThemeCol_CollapsingHeader_Bg,				mvColor(119,  25,  24, 255)),
 			MV_CREATE_CONSTANT_PAIR(mvThemeCol_CollapsingHeader_BgHovered,		mvColor( 66, 150, 250, 204)),
 			MV_CREATE_CONSTANT_PAIR(mvThemeCol_CollapsingHeader_BgActive,		mvColor( 66, 150, 250, 255)),
 			MV_CREATE_CONSTANT_PAIR(mvThemeCol_CollapsingHeader_Border,			mvColor(110, 110, 128, 128)),
@@ -43,12 +43,12 @@ namespace Marvel {
 		MV_END_COLOR_CONSTANTS
 
 		MV_START_STYLE_CONSTANTS
-			MV_ADD_CONSTANT(mvThemeStyle_CollapsingHeader_BorderSize	, 0,  1),
-			MV_ADD_CONSTANT(mvThemeStyle_CollapsingHeader_Rounding		, 0, 12),
-			MV_ADD_CONSTANT(mvThemeStyle_CollapsingHeader_PaddingX		, 4, 20),
-			MV_ADD_CONSTANT(mvThemeStyle_CollapsingHeader_PaddingY		, 3, 20),
-			MV_ADD_CONSTANT(mvThemeStyle_CollapsingHeader_ItemSpacingX	, 8, 20),
-			MV_ADD_CONSTANT(mvThemeStyle_CollapsingHeader_ItemSpacingY	, 4, 20),
+			MV_ADD_CONSTANT_F(mvThemeStyle_CollapsingHeader_BorderSize	, 0,  1),
+			MV_ADD_CONSTANT_F(mvThemeStyle_CollapsingHeader_Rounding		, 0, 12),
+			MV_ADD_CONSTANT_F(mvThemeStyle_CollapsingHeader_PaddingX		, 4, 20),
+			MV_ADD_CONSTANT_F(mvThemeStyle_CollapsingHeader_PaddingY		, 3, 20),
+			MV_ADD_CONSTANT_F(mvThemeStyle_CollapsingHeader_ItemSpacingX	, 8, 20),
+			MV_ADD_CONSTANT_F(mvThemeStyle_CollapsingHeader_ItemSpacingY	, 4, 20),
 		MV_END_STYLE_CONSTANTS
 
 	public:
@@ -57,8 +57,8 @@ namespace Marvel {
 
 		void draw(ImDrawList* drawlist, float x, float y)               override;
 
-		void setExtraConfigDict(PyObject* dict) override;
-		void getExtraConfigDict(PyObject* dict) override;
+		void handleSpecificKeywordArgs(PyObject* dict) override;
+		void getSpecificConfiguration(PyObject* dict) override;
 
 	private:
 

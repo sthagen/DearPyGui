@@ -43,11 +43,11 @@ namespace Marvel {
 		MV_END_COLOR_CONSTANTS
 
 		MV_START_STYLE_CONSTANTS
-			MV_ADD_CONSTANT(mvThemeStyle_Tab_Rounding		, 4, 12),
-			MV_ADD_CONSTANT(mvThemeStyle_Tab_PaddingX		, 4, 20),
-			MV_ADD_CONSTANT(mvThemeStyle_Tab_PaddingY		, 3, 20),
-			MV_ADD_CONSTANT(mvThemeStyle_Tab_InnerSpacingX	, 4, 20),
-			MV_ADD_CONSTANT(mvThemeStyle_Tab_InnerSpacingY	, 4, 20),
+			MV_ADD_CONSTANT_F(mvThemeStyle_Tab_Rounding		, 4, 12),
+			MV_ADD_CONSTANT_F(mvThemeStyle_Tab_PaddingX		, 4, 20),
+			MV_ADD_CONSTANT_F(mvThemeStyle_Tab_PaddingY		, 3, 20),
+			MV_ADD_CONSTANT_F(mvThemeStyle_Tab_InnerSpacingX	, 4, 20),
+			MV_ADD_CONSTANT_F(mvThemeStyle_Tab_InnerSpacingY	, 4, 20),
 		MV_END_STYLE_CONSTANTS
 
 	public:
@@ -58,8 +58,8 @@ namespace Marvel {
 		void addFlag   (ImGuiTabItemFlags flag);
 		void removeFlag(ImGuiTabItemFlags flag);
 
-		void setExtraConfigDict(PyObject* dict) override;
-		void getExtraConfigDict(PyObject* dict) override;
+		void handleSpecificKeywordArgs(PyObject* dict) override;
+		void getSpecificConfiguration(PyObject* dict) override;
 
 	private:
 

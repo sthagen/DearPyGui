@@ -35,19 +35,19 @@ namespace Marvel {
 
 		MV_START_COLOR_CONSTANTS
 			MV_ADD_CONSTANT(mvThemeCol_RadioButton_Text,			mvColor(255, 255, 255, 255), mvColor(128, 128, 128, 63)),
-			MV_ADD_CONSTANT(mvThemeCol_RadioButton_Bg,				mvColor( 41,  74, 122, 138), mvColor(128, 128, 128, 63)),
-			MV_ADD_CONSTANT(mvThemeCol_RadioButton_BgHovered,		mvColor( 66, 150, 250, 102), mvColor(128, 128, 128, 63)),
-			MV_ADD_CONSTANT(mvThemeCol_RadioButton_BgActive,		mvColor( 66, 150, 250, 171), mvColor(128, 128, 128, 63)),
+			MV_ADD_CONSTANT(mvThemeCol_RadioButton_Bg,				mvColor(119,  25,  24, 138), mvColor(128, 128, 128, 63)),
+			MV_ADD_CONSTANT(mvThemeCol_RadioButton_BgHovered,		mvColor(255,  25,  24, 138), mvColor(128, 128, 128, 63)),
+			MV_ADD_CONSTANT(mvThemeCol_RadioButton_BgActive,		mvColor(255,  25,  24, 255), mvColor(128, 128, 128, 63)),
 			MV_ADD_CONSTANT(mvThemeCol_RadioButton_Border,			mvColor(110, 110, 128, 128), mvColor(128, 128, 128, 63)),
 			MV_ADD_CONSTANT(mvThemeCol_RadioButton_BorderShadow,	mvColor(  0,   0,   0,   0), mvColor(128, 128, 128, 63)),
 		MV_END_COLOR_CONSTANTS
 
 		MV_START_STYLE_CONSTANTS
-			MV_ADD_CONSTANT(mvThemeStyle_RadioButton_BorderSize,    0,  1),
-			MV_ADD_CONSTANT(mvThemeStyle_RadioButton_PaddingX,      4, 20),
-			MV_ADD_CONSTANT(mvThemeStyle_RadioButton_PaddingY,      3, 20),
-			MV_ADD_CONSTANT(mvThemeStyle_RadioButton_InnerSpacingX, 4, 20),
-			MV_ADD_CONSTANT(mvThemeStyle_RadioButton_InnerSpacingY, 4, 20),
+			MV_ADD_CONSTANT_F(mvThemeStyle_RadioButton_BorderSize,    0,  1),
+			MV_ADD_CONSTANT_F(mvThemeStyle_RadioButton_PaddingX,      4, 20),
+			MV_ADD_CONSTANT_F(mvThemeStyle_RadioButton_PaddingY,      3, 20),
+			MV_ADD_CONSTANT_F(mvThemeStyle_RadioButton_InnerSpacingX, 4, 20),
+			MV_ADD_CONSTANT_F(mvThemeStyle_RadioButton_InnerSpacingY, 4, 20),
 		MV_END_STYLE_CONSTANTS
 
 	public:
@@ -56,8 +56,9 @@ namespace Marvel {
 
 		void draw(ImDrawList* drawlist, float x, float y) override;
 
-		void setExtraConfigDict(PyObject* dict) override;
-		void getExtraConfigDict(PyObject* dict) override;
+		void handleSpecificPositionalArgs(PyObject* dict) override;
+		void handleSpecificKeywordArgs(PyObject* dict) override;
+		void getSpecificConfiguration(PyObject* dict) override;
 
 	private:
 

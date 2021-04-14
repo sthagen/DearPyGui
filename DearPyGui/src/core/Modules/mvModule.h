@@ -1,7 +1,10 @@
 #pragma once
-#include "mvPython.h"
 #include <map>
 #include <vector>
+#include "mvPythonParser.h"
+
+#define PY_SSIZE_T_CLEAN
+#include <Python.h>
 
 namespace Marvel {
 

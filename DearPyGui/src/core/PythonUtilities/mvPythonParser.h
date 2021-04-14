@@ -15,37 +15,62 @@
 //-----------------------------------------------------------------------------
 
 #include <string>
+#include <cstring>
 #include <vector>
 #include <map>
-#include "mvCore.h"
-#include "mvPython.h"
+#include <assert.h>
+
+// forward declare PyObject
+// as suggested on the python mailing list
+// http://mail.python.org/pipermail/python-dev/2003-August/037601.html
+#ifndef PyObject_HEAD
+struct _object;
+typedef _object PyObject;
+#endif
 
 namespace Marvel {
 
     //-----------------------------------------------------------------------------
     // Enums and Helper Functions
     //-----------------------------------------------------------------------------
-    enum class mvPythonDataType
+    enum class mvPyDataType
     {
-        None, String, Integer, Float, Bool, StringList, FloatList, Optional,
-        Object, IntList, KeywordOnly, Double, Callable, Dict, ListFloatList, 
-        ListStrList, Kwargs
+        None = 0, String, Integer, Float, Bool, StringList, FloatList,
+        Object, IntList, Double, Callable, Dict, ListFloatList, 
+        ListStrList, ListListInt, Any
     };
+
+    enum class mvArgType
+    {
+        REQUIRED_ARG=0,
+        POSITIONAL_ARG,
+        KEYWORD_ARG
+    };
+
+
+    const char* PythonDataTypeActual(mvPyDataType type);
 
     //-----------------------------------------------------------------------------
     // mvPythonDataElement
     //-----------------------------------------------------------------------------
     struct mvPythonDataElement
     {
-        mvPythonDataType type = mvPythonDataType::None;
-        std::string      name = "";
-        std::string      description;
-        std::string      default_value = "...";
+        mvPyDataType type = mvPyDataType::None;
+        const char* name = "";
+        const char* description = "";
+        const char* default_value = "...";
+        mvArgType    arg_type = mvArgType::REQUIRED_ARG;
+        bool         active = true;
 
-        [[nodiscard]] char getSymbol() const;
+        constexpr mvPythonDataElement(mvPyDataType type, const char* name, const char* description,
+            const char* default_value, mvArgType arg_type, bool active)
+            : type(type), name(name), description(description), default_value(default_value),
+            arg_type(arg_type), active(active)
+        {
+
+        }
+
     };
-
-    const char* PythonDataTypeActual(mvPythonDataType type);
 
     //-----------------------------------------------------------------------------
     // mvPythonParser
@@ -55,35 +80,59 @@ namespace Marvel {
 
     public:
 
-        mvPythonParser() = default;
+        static void GenerateStubFile(const std::string& file);
 
-        mvPythonParser(const std::initializer_list<mvPythonDataElement>& elements, 
-            std::string about = "", std::string returnType = "None",
-            std::string category = "App");
+    public:
 
-        bool                             parse(PyObject* args, PyObject* kwargs, const char* message, ...);
-        [[nodiscard]] const char*        getDocumentation                () const { return m_documentation.c_str(); }
-        [[nodiscard]] const std::string& getCategory                     () const { return m_category; }
-        [[nodiscard]] const std::string& getReturnType                   () const { return m_return; }
-        [[nodiscard]] const std::string& getAbout                        () const { return m_about; }
-        [[nodiscard]] const std::vector<mvPythonDataElement>& getElements() const { return m_elements; }
-        [[nodiscard]] const std::vector<const char*>& getKeywords        () const { return m_keywords; }
+        explicit mvPythonParser(mvPyDataType returnType = mvPyDataType::None, const char* about = "Undocumented function", const char* category = "App");
+
+        template<mvPyDataType type>
+        void addArg(const char* name, mvArgType argType = mvArgType::REQUIRED_ARG, const char* defaultValue = "...", const char* description="")
+        {
+            for (const auto& arg : m_staged_elements)
+            {
+                if (strcmp(arg.name, name) == 0)
+                {
+                    assert(false);
+                    return;
+                }
+            }
+            m_staged_elements.emplace_back(type, name, description, defaultValue, argType, true);
+        }
+
+        void removeArg(const char* name);
+
+        bool verifyRequiredArguments(PyObject* args);
+        bool verifyPositionalArguments(PyObject* args);
+        bool verifyArgumentCount(PyObject* args);
+        void addKwargs() { m_unspecifiedKwargs = true; }
+
+        bool parse(PyObject* args, PyObject* kwargs, const char* message, ...);
+
+        [[nodiscard]] const char*        getDocumentation         () const { return m_documentation.c_str(); }
+        [[nodiscard]] const std::string& getCategory              () const { return m_category; }
+
+        void finalize();
+
+    private:
 
         void buildDocumentation();
 
     private:
 
-        std::vector<mvPythonDataElement> m_elements;
+        std::vector<mvPythonDataElement> m_staged_elements;
+        std::vector<mvPythonDataElement> m_required_elements;
+        std::vector<mvPythonDataElement> m_optional_elements;
+        std::vector<mvPythonDataElement> m_keyword_elements;
         std::vector<char>                m_formatstring;
         std::vector<const char*>         m_keywords;
-        bool                             m_optional = false; // check if optional has been found already
-        bool                             m_keyword  = false; // check if keyword has been found already
+
         std::string                      m_about;
-        std::string                      m_return;
+        mvPyDataType                     m_return = mvPyDataType::None;
         std::string                      m_documentation;
         std::string                      m_category;
+        bool                             m_unspecifiedKwargs = false;
 
     };
 
-    void GenerateStubFile(const std::string& file);
 }

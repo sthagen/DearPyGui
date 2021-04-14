@@ -48,14 +48,14 @@ namespace Marvel {
 		MV_END_COLOR_CONSTANTS
 
 		MV_START_STYLE_CONSTANTS
-			MV_ADD_CONSTANT(mvThemeStyle_Child_BorderSize			, 1,  1),
-			MV_ADD_CONSTANT(mvThemeStyle_Child_Rounding				, 0, 12),
-			MV_ADD_CONSTANT(mvThemeStyle_Child_PaddingX				, 8, 20),
-			MV_ADD_CONSTANT(mvThemeStyle_Child_PaddingY				, 8, 20),
-			MV_ADD_CONSTANT(mvThemeStyle_Child_ItemSpacingX			, 8, 20),
-			MV_ADD_CONSTANT(mvThemeStyle_Child_ItemSpacingY			, 4, 20),
-			MV_ADD_CONSTANT(mvThemeStyle_Child_ScrollbarSize		,14, 20),
-			MV_ADD_CONSTANT(mvThemeStyle_Child_ScrollbarRounding	, 9, 12),
+			MV_ADD_CONSTANT_F(mvThemeStyle_Child_BorderSize			, 1,  1),
+			MV_ADD_CONSTANT_F(mvThemeStyle_Child_Rounding				, 0, 12),
+			MV_ADD_CONSTANT_F(mvThemeStyle_Child_PaddingX				, 8, 20),
+			MV_ADD_CONSTANT_F(mvThemeStyle_Child_PaddingY				, 8, 20),
+			MV_ADD_CONSTANT_F(mvThemeStyle_Child_ItemSpacingX			, 8, 20),
+			MV_ADD_CONSTANT_F(mvThemeStyle_Child_ItemSpacingY			, 4, 20),
+			MV_ADD_CONSTANT_F(mvThemeStyle_Child_ScrollbarSize		,14, 20),
+			MV_ADD_CONSTANT_F(mvThemeStyle_Child_ScrollbarRounding	, 9, 12),
 		MV_END_STYLE_CONSTANTS
 
 	public:
@@ -64,8 +64,8 @@ namespace Marvel {
 
 		void draw(ImDrawList* drawlist, float x, float y)               override;
 
-		void setExtraConfigDict(PyObject* dict) override;
-		void getExtraConfigDict(PyObject* dict) override;
+		void handleSpecificKeywordArgs(PyObject* dict) override;
+		void getSpecificConfiguration(PyObject* dict) override;
 
 		void addFlag           (ImGuiWindowFlags flag);
 		void removeFlag        (ImGuiWindowFlags flag);

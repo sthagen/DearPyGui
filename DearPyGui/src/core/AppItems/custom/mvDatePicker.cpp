@@ -11,18 +11,22 @@ namespace Marvel {
 
 	void mvDatePicker::InsertParser(std::map<std::string, mvPythonParser>* parsers)
 	{
-		parsers->insert({ s_command, mvPythonParser({
-			{mvPythonDataType::Optional},
-			{mvPythonDataType::String, "name"},
-			{mvPythonDataType::KeywordOnly},
-			{mvPythonDataType::Dict, "default_value", "data dict", "{'month_day': 14, 'year':20, 'month':5}"},
-			{mvPythonDataType::Integer, "level", "0-day, 1-month, 2-year", "0"},
-			{mvPythonDataType::Callable, "callback", "Registers a callback", "None"},
-			{mvPythonDataType::Object, "callback_data", "Callback data", "None"},
-			{mvPythonDataType::String, "parent", "Parent this item will be added to. (runtime adding)", "''"},
-			{mvPythonDataType::String, "before","This item will be displayed before the specified item in the parent. (runtime adding)", "''"},
-			{mvPythonDataType::Bool, "show", "Attempt to render", "True"},
-		}, "Adds a data selector widget.", "None", "Adding Widgets") });
+
+		mvPythonParser parser(mvPyDataType::String);
+		mvAppItem::AddCommonArgs(parser);
+		parser.removeArg("source");
+		parser.removeArg("width");
+		parser.removeArg("height");
+		parser.removeArg("label");
+		parser.removeArg("enabled");
+
+		parser.addArg<mvPyDataType::Dict>("default_value", mvArgType::KEYWORD_ARG, "{'month_day': 14, 'year':20, 'month':5}");
+		parser.addArg<mvPyDataType::Integer>("level", mvArgType::KEYWORD_ARG, "0", "0-day, 1-month, 2-year");
+
+
+		parser.finalize();
+
+		parsers->insert({ s_command, parser });
 	}
 
 	mvDatePicker::mvDatePicker(const std::string& name)
@@ -44,7 +48,7 @@ namespace Marvel {
 
 	}
 
-	void mvDatePicker::setExtraConfigDict(PyObject* dict)
+	void mvDatePicker::handleSpecificKeywordArgs(PyObject* dict)
 	{
 		if (dict == nullptr)
 			return;
@@ -52,7 +56,7 @@ namespace Marvel {
 		if (PyObject* item = PyDict_GetItemString(dict, "level")) m_level = ToInt(item);
 	}
 
-	void mvDatePicker::getExtraConfigDict(PyObject* dict)
+	void mvDatePicker::getSpecificConfiguration(PyObject* dict)
 	{
 		if (dict == nullptr)
 			return;

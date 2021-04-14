@@ -7,21 +7,17 @@
 //     
 //-----------------------------------------------------------------------------
 
-#include "mvPython.h"
 #include <string>
 #include <vector>
 #include <map>
 #include <imgui.h>
 #include "mvAppItemState.h"
 #include "mvCallbackRegistry.h"
+#include "mvPythonTranslator.h"
+#include "cpp.hint"
 
 // forward declarations
 struct ImPlotTime;
-
-//-----------------------------------------------------------------------------
-// Helper Macros
-//-----------------------------------------------------------------------------
-#include "cpp.hint"
 
 namespace Marvel {
 
@@ -38,10 +34,10 @@ namespace Marvel {
         mvMenu, mvMenuItem, mvGroup, mvChild,
         mvSliderFloat, mvSliderInt,
         mvDragFloat, mvDragInt, mvInputFloat,
-        mvInputInt, mvColorEdit3, mvColorEdit4,
-        mvColorPicker3, mvColorPicker4, mvTooltip, mvCollapsingHeader,
+        mvInputInt, mvColorEdit,
+        mvColorPicker, mvTooltip, mvCollapsingHeader,
         mvSeparator, mvCheckbox, mvListbox, mvText, mvLabelText, mvCombo,
-        mvPlot, mvSimplePlot, mvIndent, mvUnindent, mvDrawing, mvWindowAppItem,
+        mvPlot, mvSimplePlot, mvDrawing, mvWindowAppItem,
         mvPopup, mvSelectable, mvTreeNode, mvProgressBar, mvDataGrid, mvDummy,
         mvImageButton, mvTimePicker, mvDatePicker, mvColorButton,
         mvAboutWindow, mvDocWindow, mvDebugWindow, mvMetricsWindow,
@@ -56,7 +52,7 @@ namespace Marvel {
         mvScatterSeries, mvStemSeries, mvStairSeries, mvBarSeries,
         mvErrorSeries, mvVLineSeries, mvHLineSeries, mvHeatSeries,
         mvImageSeries, mvPieSeries, mvShadeSeries, mvLabelSeries,
-        mvCandleSeries, mvAreaSeries, mvColorMapScale,
+        mvCandleSeries, mvAreaSeries, mvColorMapScale, mvSlider3D,
         ItemTypeCount
     };
 
@@ -186,6 +182,7 @@ namespace Marvel {
 
         static bool DoesItemHaveFlag(mvAppItem* item, int flag);
         static std::pair<std::string, std::string> GetNameFromArgs(std::string& name, PyObject* args, PyObject* kwargs);
+        static void AddCommonArgs(mvPythonParser& parser);
 
     protected:
 
@@ -235,12 +232,13 @@ namespace Marvel {
         virtual bool           canChildBeAdded   (mvAppItemType type) { return true; }
 
     
-        void                                checkConfigDict(PyObject* dict);    
-        void                                setConfigDict(PyObject* dict);  // python dictionary acts as an out parameter 
-        void                                getConfigDict(PyObject* dict);
-        virtual void                        setConfigArgs(PyObject* args) {}
-        virtual void                        setExtraConfigDict(PyObject* dict) {}
-        virtual void                        getExtraConfigDict(PyObject* dict) {}
+        void                                checkArgs(PyObject* args, PyObject* kwargs);    
+        void                                handleKeywordArgs(PyObject* dict);  // python dictionary acts as an out parameter 
+        void                                getConfiguration(PyObject* dict);
+        virtual void                        handleSpecificRequiredArgs(PyObject* args) {}
+        virtual void                        handleSpecificPositionalArgs(PyObject* args) {}
+        virtual void                        handleSpecificKeywordArgs(PyObject* dict) {}
+        virtual void                        getSpecificConfiguration(PyObject* dict) {}
 
         //-----------------------------------------------------------------------------
         // These methods can be optionally overridden if your widget needs to be
@@ -250,35 +248,40 @@ namespace Marvel {
         virtual void                        onChildRemoved(mvRef<mvAppItem> item) {}
         virtual void                        onChildrenRemoved() {}
 
-        void                                setCallback    (mvCallable callback);
+        void                                setCallback    (PyObject* callback);
         void                                hide           () { m_show = false; }
         void                                show           () { m_show = true; }
-        void                                setCallbackData(mvCallableData data);
+        void                                setCallbackData(PyObject* data);
 
         [[nodiscard]] bool                  isShown        () const { return m_show; }
-        [[nodiscard]] mvCallable            getCallback    (bool ignore_enabled = true);  // returns the callback. If ignore_enable false and item is disabled then no callback will be returned.
-        [[nodiscard]] mvCallableData        getCallbackData()       { return m_callback_data; }
+        [[nodiscard]] PyObject*             getCallback    (bool ignore_enabled = true);  // returns the callback. If ignore_enable false and item is disabled then no callback will be returned.
+        [[nodiscard]] PyObject*             getCallbackData()       { return m_callback_data; }
         mvAppItemState&                     getState       () { return m_state; } 
         mvAppItem*                          getParent() { return m_parentPtr; }
         bool                                isEnabled() const { return m_enabled; }
 
         // theme get/set
         std::unordered_map<mvAppItemType, mvThemeColors>& getColors() { return m_colors; }
+        std::unordered_map<mvAppItemType, mvThemeColors>& getDisabledColors() { return m_disabled_colors; }
         std::unordered_map<mvAppItemType, mvThemeStyles>& getStyles() { return m_styles; }
 
         // cached theming
         bool                                      isThemeColorCacheValid() const;
+        bool                                      isThemeDisabledColorCacheValid() const;
         bool                                      isThemeStyleCacheValid() const;
         bool                                      isThemeFontCacheValid() const;
         void                                      inValidateThemeColorCache();
+        void                                      inValidateThemeDisabledColorCache();
         void                                      inValidateThemeStyleCache();
         void                                      inValidateThemeFontCache();
         void                                      setThemeColorCacheValid();
+        void                                      setThemeDisabledColorCacheValid();
         void                                      setThemeStyleCacheValid();
         void                                      setThemeFontCacheValid();
         void                                      setFont(ImFont* font) { m_cached_font = font; }
         ImFont*                                   getCachedFont();
         mvThemeColors&                            getCachedThemeColors();
+        mvThemeColors&                            getCachedThemeDisabledColors();
         std::unordered_map<ImGuiStyleVar, float>& getCachedThemeStyles();
         std::unordered_map<ImGuiStyleVar, float>& getCachedThemeStyles1();
         std::unordered_map<ImGuiStyleVar, float>& getCachedThemeStyles2();
@@ -318,13 +321,16 @@ namespace Marvel {
         std::string                   m_label; // internal label
 
         std::unordered_map<mvAppItemType, mvThemeColors> m_colors;
+        std::unordered_map<mvAppItemType, mvThemeColors> m_disabled_colors;
         std::unordered_map<mvAppItemType, mvThemeStyles> m_styles;
 
         // cached theming
         bool                                     m_theme_color_dirty = true;
+        bool                                     m_theme_disabled_color_dirty = true;
         bool                                     m_theme_style_dirty = true;
         bool                                     m_theme_font_dirty = false;
         mvThemeColors                            m_cached_colors;
+        mvThemeColors                            m_cached_disabled_colors;
         std::unordered_map<ImGuiStyleVar, float> m_cached_styles;
         std::unordered_map<ImGuiStyleVar, float> m_cached_styles1;
         std::unordered_map<ImGuiStyleVar, float> m_cached_styles2;
@@ -346,8 +352,8 @@ namespace Marvel {
         int            m_posy = 0;
         bool           m_show = true;
         bool           m_enabled = true;
-        mvCallable     m_callback = nullptr;
-        mvCallableData m_callback_data = nullptr;
+        PyObject*      m_callback = nullptr;
+        PyObject*      m_callback_data = nullptr;
 
     };
 

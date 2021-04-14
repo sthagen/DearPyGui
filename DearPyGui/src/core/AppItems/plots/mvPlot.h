@@ -6,7 +6,6 @@
 #include <map>
 #include <utility>
 #include "mvCore.h"
-#include "mvPython.h"
 
 namespace Marvel {
 
@@ -183,44 +182,46 @@ namespace Marvel {
 		MV_END_COLOR_CONSTANTS
 
 		MV_START_STYLE_CONSTANTS
-			MV_ADD_CONSTANT(mvThemeStyle_Plot_FillAlpha,			   1,   1),
-			MV_ADD_CONSTANT(mvThemeStyle_Plot_BorderSize,			   1,  10),
-			MV_ADD_CONSTANT(mvThemeStyle_Plot_MinorAlpha,			0.25,   1),
-			MV_ADD_CONSTANT(mvThemeStyle_Plot_MajorTickLenX,		  10,  20),
-			MV_ADD_CONSTANT(mvThemeStyle_Plot_MajorTickLenY,		  10,  20),
-			MV_ADD_CONSTANT(mvThemeStyle_Plot_MinorTickLenX,		   5,  10),
-			MV_ADD_CONSTANT(mvThemeStyle_Plot_MinorTickLenY,		   5,  10),
-			MV_ADD_CONSTANT(mvThemeStyle_Plot_MajorTickSizeX,		   1,  10),
-			MV_ADD_CONSTANT(mvThemeStyle_Plot_MajorTickSizeY,		   1,  10),
-			MV_ADD_CONSTANT(mvThemeStyle_Plot_MinorTickSizeX,		   1,  10),
-			MV_ADD_CONSTANT(mvThemeStyle_Plot_MinorTickSizeY,		   1,  10),
-			MV_ADD_CONSTANT(mvThemeStyle_Plot_MajorGridSizeX,		   1,  10),
-			MV_ADD_CONSTANT(mvThemeStyle_Plot_MajorGridSizeY,		   1,  10),
-			MV_ADD_CONSTANT(mvThemeStyle_Plot_MinorGridSizeX,		   1,  10),
-			MV_ADD_CONSTANT(mvThemeStyle_Plot_MinorGridSizeY,		   1,  10),
-			MV_ADD_CONSTANT(mvThemeStyle_Plot_PlotPaddingX,		  10,  10),
-			MV_ADD_CONSTANT(mvThemeStyle_Plot_PlotPaddingY,		  10,  10),
-			MV_ADD_CONSTANT(mvThemeStyle_Plot_LabelPaddingX,		   5,  10),
-			MV_ADD_CONSTANT(mvThemeStyle_Plot_LabelPaddingY,		   5,  10),
-			MV_ADD_CONSTANT(mvThemeStyle_Plot_LegendPaddingX,		  10,  20),
-			MV_ADD_CONSTANT(mvThemeStyle_Plot_LegendPaddingY,		  10,  20),
-			MV_ADD_CONSTANT(mvThemeStyle_Plot_LegendInnerPaddingX,	   5,  10),
-			MV_ADD_CONSTANT(mvThemeStyle_Plot_LegendInnerPaddingY,	   5,  10),
-			MV_ADD_CONSTANT(mvThemeStyle_Plot_LegendSpacingX,		   5,  10),
-			MV_ADD_CONSTANT(mvThemeStyle_Plot_LegendSpacingY,		   0,  10),
-			MV_ADD_CONSTANT(mvThemeStyle_Plot_MousePosPaddingX,	  10,  20),
-			MV_ADD_CONSTANT(mvThemeStyle_Plot_MousePosPaddingY,	  10,  20),
-			MV_ADD_CONSTANT(mvThemeStyle_Plot_AnnotationPaddingX,	   2,   4),
-			MV_ADD_CONSTANT(mvThemeStyle_Plot_AnnotationPaddingY,	   2,   4),
-			MV_ADD_CONSTANT(mvThemeStyle_Plot_FitPaddingX,			   0,   1),
-			MV_ADD_CONSTANT(mvThemeStyle_Plot_FitPaddingY,			   0,   1),
-			MV_ADD_CONSTANT(mvThemeStyle_Plot_PlotDefaultSizeX,	 400, 800),
-			MV_ADD_CONSTANT(mvThemeStyle_Plot_PlotDefaultSizeY,	 300, 600),
-			MV_ADD_CONSTANT(mvThemeStyle_Plot_PlotMinSizeX,		 300, 600),
-			MV_ADD_CONSTANT(mvThemeStyle_Plot_PlotMinSizeY,		 255, 510),
+			MV_ADD_CONSTANT_F(mvThemeStyle_Plot_FillAlpha,			   1,   1),
+			MV_ADD_CONSTANT_F(mvThemeStyle_Plot_BorderSize,			   1,  10),
+			MV_ADD_CONSTANT_F(mvThemeStyle_Plot_MinorAlpha,			0.25,   1),
+			MV_ADD_CONSTANT_F(mvThemeStyle_Plot_MajorTickLenX,		  10,  20),
+			MV_ADD_CONSTANT_F(mvThemeStyle_Plot_MajorTickLenY,		  10,  20),
+			MV_ADD_CONSTANT_F(mvThemeStyle_Plot_MinorTickLenX,		   5,  10),
+			MV_ADD_CONSTANT_F(mvThemeStyle_Plot_MinorTickLenY,		   5,  10),
+			MV_ADD_CONSTANT_F(mvThemeStyle_Plot_MajorTickSizeX,		   1,  10),
+			MV_ADD_CONSTANT_F(mvThemeStyle_Plot_MajorTickSizeY,		   1,  10),
+			MV_ADD_CONSTANT_F(mvThemeStyle_Plot_MinorTickSizeX,		   1,  10),
+			MV_ADD_CONSTANT_F(mvThemeStyle_Plot_MinorTickSizeY,		   1,  10),
+			MV_ADD_CONSTANT_F(mvThemeStyle_Plot_MajorGridSizeX,		   1,  10),
+			MV_ADD_CONSTANT_F(mvThemeStyle_Plot_MajorGridSizeY,		   1,  10),
+			MV_ADD_CONSTANT_F(mvThemeStyle_Plot_MinorGridSizeX,		   1,  10),
+			MV_ADD_CONSTANT_F(mvThemeStyle_Plot_MinorGridSizeY,		   1,  10),
+			MV_ADD_CONSTANT_F(mvThemeStyle_Plot_PlotPaddingX,		  10,  10),
+			MV_ADD_CONSTANT_F(mvThemeStyle_Plot_PlotPaddingY,		  10,  10),
+			MV_ADD_CONSTANT_F(mvThemeStyle_Plot_LabelPaddingX,		   5,  10),
+			MV_ADD_CONSTANT_F(mvThemeStyle_Plot_LabelPaddingY,		   5,  10),
+			MV_ADD_CONSTANT_F(mvThemeStyle_Plot_LegendPaddingX,		  10,  20),
+			MV_ADD_CONSTANT_F(mvThemeStyle_Plot_LegendPaddingY,		  10,  20),
+			MV_ADD_CONSTANT_F(mvThemeStyle_Plot_LegendInnerPaddingX,	   5,  10),
+			MV_ADD_CONSTANT_F(mvThemeStyle_Plot_LegendInnerPaddingY,	   5,  10),
+			MV_ADD_CONSTANT_F(mvThemeStyle_Plot_LegendSpacingX,		   5,  10),
+			MV_ADD_CONSTANT_F(mvThemeStyle_Plot_LegendSpacingY,		   0,  10),
+			MV_ADD_CONSTANT_F(mvThemeStyle_Plot_MousePosPaddingX,	  10,  20),
+			MV_ADD_CONSTANT_F(mvThemeStyle_Plot_MousePosPaddingY,	  10,  20),
+			MV_ADD_CONSTANT_F(mvThemeStyle_Plot_AnnotationPaddingX,	   2,   4),
+			MV_ADD_CONSTANT_F(mvThemeStyle_Plot_AnnotationPaddingY,	   2,   4),
+			MV_ADD_CONSTANT_F(mvThemeStyle_Plot_FitPaddingX,			   0,   1),
+			MV_ADD_CONSTANT_F(mvThemeStyle_Plot_FitPaddingY,			   0,   1),
+			MV_ADD_CONSTANT_F(mvThemeStyle_Plot_PlotDefaultSizeX,	 400, 800),
+			MV_ADD_CONSTANT_F(mvThemeStyle_Plot_PlotDefaultSizeY,	 300, 600),
+			MV_ADD_CONSTANT_F(mvThemeStyle_Plot_PlotMinSizeX,		 300, 600),
+			MV_ADD_CONSTANT_F(mvThemeStyle_Plot_PlotMinSizeY,		 255, 510),
 		MV_END_STYLE_CONSTANTS
 
 		mvPlot(const std::string& name);
+
+		void updateBounds();
 
 		// settings
 		void SetColorMap    (ImPlotColormap colormap);
@@ -253,8 +254,9 @@ namespace Marvel {
 		const ImVec2&      getY2Limits       () const { return m_y2limits_actual; }
 		const ImVec2&      getY3Limits       () const { return m_y3limits_actual; }
 
-		void setExtraConfigDict(PyObject* dict) override;
-		void getExtraConfigDict(PyObject* dict) override;
+		void onChildAdd(mvRef<mvAppItem> item) override;
+		void handleSpecificKeywordArgs(PyObject* dict) override;
+		void getSpecificConfiguration(PyObject* dict) override;
 		bool canChildBeAdded(mvAppItemType type) override;
 
 	private:
@@ -276,7 +278,7 @@ namespace Marvel {
 		ImVec2                        m_xlimits_actual;
 		ImVec2                        m_ylimits;
 		ImVec2                        m_ylimits_actual;
-		mvCallable                    m_queryCallback = nullptr;
+		PyObject*                    m_queryCallback = nullptr;
 		bool                          m_queried = false;
 		float                         m_queryArea[4] = {0.0f , 0.0f, 0.0f, 0.0f};
 		bool                          m_dirty = false;

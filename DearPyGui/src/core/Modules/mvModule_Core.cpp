@@ -1,5 +1,4 @@
 #include "mvModule_Core.h"
-#include "mvApp.h"
 #include "mvInput.h"
 #include "mvAppLog.h"
 #include "mvAppItemCommons.h"
@@ -99,9 +98,10 @@ namespace Marvel {
 						mvColor color_disable = std::get<3>(item);
 						const std::string& name = std::get<0>(item);
 
-						mvThemeManager::GetColors()[type][mvThemeConstant].first = color;
-						mvThemeManager::GetColors()[type][mvThemeConstant].second = color_disable;
-						mvThemeManager::GetColorsPtr().push_back({name, mvThemeConstant, &mvThemeManager::GetColors()[type][mvThemeConstant].first, &mvThemeManager::GetColors()[type][mvThemeConstant].second });
+						mvThemeManager::GetColors()[type][mvThemeConstant] = color;
+						mvThemeManager::GetDisabledColors()[type][mvThemeConstant] = color_disable;
+						mvThemeManager::GetColorsPtr().push_back({name, mvThemeConstant, &mvThemeManager::GetColors()[type][mvThemeConstant]});
+						mvThemeManager::GetDisabledColorsPtr().push_back({name, mvThemeConstant, &mvThemeManager::GetDisabledColors()[type][mvThemeConstant]});
 
 					}
 

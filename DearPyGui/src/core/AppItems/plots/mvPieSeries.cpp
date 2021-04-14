@@ -10,24 +10,32 @@ namespace Marvel {
 	void mvPieSeries::InsertParser(std::map<std::string, mvPythonParser>* parsers)
 	{
 
-		parsers->insert({ s_command, mvPythonParser({
-			{mvPythonDataType::Optional},
-			{mvPythonDataType::String, "name"},
-			{mvPythonDataType::KeywordOnly},
-			{mvPythonDataType::FloatList, "values"},
-			{mvPythonDataType::StringList, "labels"},
-			{mvPythonDataType::Double, "x"},
-			{mvPythonDataType::Double, "y"},
-			{mvPythonDataType::Double, "radius"},
-			{mvPythonDataType::Bool, "normalize", "", "False"},
-			{mvPythonDataType::Double, "angle", "", "90.0"},
-			{mvPythonDataType::String, "format", "", "'%0.2f'"},
-			{mvPythonDataType::String, "label", "Overrides 'name' as label", "''"},
-			{mvPythonDataType::String, "parent", "Parent to add this item to. (runtime adding)", "''"},
-			{mvPythonDataType::String, "before", "This item will be displayed before the specified item in the parent. (runtime adding)", "''"},
-			{mvPythonDataType::Bool, "show", "Attempt to render", "True"},
-			{mvPythonDataType::Integer, "axis", "", "0"},
-		}, "Adds a drag point to a plot.", "None", "Plotting") });
+		mvPythonParser parser(mvPyDataType::String);
+		mvAppItem::AddCommonArgs(parser);
+		parser.removeArg("width");
+		parser.removeArg("height");
+		parser.removeArg("callback");
+		parser.removeArg("callback_data");
+		parser.removeArg("enabled");
+
+		parser.addArg<mvPyDataType::Double>("x");
+		parser.addArg<mvPyDataType::Double>("y");
+		parser.addArg<mvPyDataType::Double>("radius");
+		parser.addArg<mvPyDataType::FloatList>("values");
+		parser.addArg<mvPyDataType::StringList>("labels");
+
+		parser.addArg<mvPyDataType::String>("format", mvArgType::KEYWORD_ARG, "'%0.2f'");
+
+		parser.addArg<mvPyDataType::Double>("angle", mvArgType::KEYWORD_ARG, "90.0");
+
+		parser.addArg<mvPyDataType::Integer>("axis", mvArgType::KEYWORD_ARG, "0");
+
+		parser.addArg<mvPyDataType::Bool>("normalize", mvArgType::KEYWORD_ARG, "False");
+		parser.addArg<mvPyDataType::Bool>("contribute_to_bounds", mvArgType::KEYWORD_ARG, "True");
+
+		parser.finalize();
+
+		parsers->insert({ s_command, parser });
 	}
 
 	mvPieSeries::mvPieSeries(const std::string& name)
@@ -64,7 +72,49 @@ namespace Marvel {
 
 	}
 
-	void mvPieSeries::setExtraConfigDict(PyObject* dict)
+	void mvPieSeries::handleSpecificRequiredArgs(PyObject* dict)
+	{
+		if (!mvApp::GetApp()->getParsers()[s_command].verifyRequiredArguments(dict))
+			return;
+
+		for (int i = 0; i < PyTuple_Size(dict); i++)
+		{
+			PyObject* item = PyTuple_GetItem(dict, i);
+			switch (i)
+			{
+			case 0:
+				m_x = ToFloat(item);
+				break;
+
+			case 1:
+				m_y = ToFloat(item);
+				break;
+
+			case 2:
+				m_radius = ToFloat(item);
+				break;
+
+			case 3:
+				(*m_value)[0] = ToFloatVect(item);
+				break;
+
+			case 4:
+				m_labels = ToStringVect(item);
+				m_clabels.clear();
+				for (const auto& label : m_labels)
+					m_clabels.push_back(label.c_str());
+				break;
+
+			default:
+				break;
+			}
+		}
+
+		resetMaxMins();
+		calculateMaxMins();
+	}
+
+	void mvPieSeries::handleSpecificKeywordArgs(PyObject* dict)
 	{
 		if (dict == nullptr)
 			return;
@@ -95,7 +145,7 @@ namespace Marvel {
 
 	}
 
-	void mvPieSeries::getExtraConfigDict(PyObject* dict)
+	void mvPieSeries::getSpecificConfiguration(PyObject* dict)
 	{
 		if (dict == nullptr)
 			return;

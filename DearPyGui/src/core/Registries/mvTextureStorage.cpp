@@ -3,8 +3,51 @@
 #include <imgui.h>
 #include "mvApp.h"
 #include "implot.h"
+#include "mvPythonTranslator.h"
+#include "mvPythonExceptions.h"
+
+#define PY_SSIZE_T_CLEAN
+#include <Python.h>
 
 namespace Marvel {
+
+	static std::function<float(Py_buffer&, Py_ssize_t index)> BufferViewFunctions(Py_buffer& bufferView)
+	{
+		if (strcmp(bufferView.format, "f") == 0)
+			return [](Py_buffer& bufferView, Py_ssize_t index) {return *((float*)bufferView.buf + index); };
+
+		else if (strcmp(bufferView.format, "d") == 0)
+			return [](Py_buffer& bufferView, Py_ssize_t index) {return (float)*((double*)bufferView.buf + index); };
+
+		else if (strcmp(bufferView.format, "i") == 0)
+			return [](Py_buffer& bufferView, Py_ssize_t index) {return (float)*((int*)bufferView.buf + index); };
+
+		else if (strcmp(bufferView.format, "I") == 0)
+			return [](Py_buffer& bufferView, Py_ssize_t index) {return (float)*((unsigned int*)bufferView.buf + index); };
+
+		else if (strcmp(bufferView.format, "l") == 0)
+			return [](Py_buffer& bufferView, Py_ssize_t index) {return (float)*((long*)bufferView.buf + index); };
+
+		else if (strcmp(bufferView.format, "L") == 0)
+			return [](Py_buffer& bufferView, Py_ssize_t index) {return (float)*((unsigned long*)bufferView.buf + index); };
+
+		else if (strcmp(bufferView.format, "B") == 0)
+			return [](Py_buffer& bufferView, Py_ssize_t index) {return (float)*((unsigned char*)bufferView.buf + index); };
+
+		else if (strcmp(bufferView.format, "b") == 0)
+			return [](Py_buffer& bufferView, Py_ssize_t index) {return (float)*((signed char*)bufferView.buf + index); };
+
+		else if (strcmp(bufferView.format, "c") == 0)
+			return [](Py_buffer& bufferView, Py_ssize_t index) {return (float)*((char*)bufferView.buf + index); };
+		else
+		{
+			ThrowPythonException("Unknown buffer type.");
+			ThrowPythonException(bufferView.format);
+			ThrowPythonException("Currently supported buffer types f, d, l, B");
+			return nullptr;
+		}
+	}
+
 
 	void mvTextureStorage::InsertConstants(std::vector<std::pair<std::string, long>>& constants)
 	{
@@ -106,7 +149,7 @@ namespace Marvel {
 
 				ImGui::SameLine();
 
-				ImGui::Image(m_textures[selection].texture, ImVec2(m_textures[selection].width, m_textures[selection].height));
+				ImGui::Image(m_textures[selection].texture, ImVec2((float)m_textures[selection].width, (float)m_textures[selection].height));
 
 				ImPlot::PushStyleColor(ImPlotCol_FrameBg, ImVec4(0.0f, 0.0f, 0.0f, 0.0f));
 				if (ImPlot::BeginPlot("##texture plot", 0, 0, ImVec2(-1, -1), 
@@ -240,18 +283,24 @@ namespace Marvel {
 	void mvTextureStorage::InsertParser(std::map<std::string, mvPythonParser>* parsers)
 	{
 
-		parsers->insert({ "add_texture", mvPythonParser({
-			{mvPythonDataType::String, "name"},
-			{mvPythonDataType::IntList, "data", "RGBA format"},
-			{mvPythonDataType::Integer, "width"},
-			{mvPythonDataType::Integer, "height"},
-			{mvPythonDataType::KeywordOnly},
-			{mvPythonDataType::Integer, "format", "mvTEX_XXXX_XXXXX constants", "0"},
-		}, "Adds a texture. Incorrect format may yield unexpected results.") });
+		{
+			mvPythonParser parser(mvPyDataType::String);
+			parser.addArg<mvPyDataType::String>("name");
+			parser.addArg<mvPyDataType::IntList>("data");
+			parser.addArg<mvPyDataType::Integer>("width");
+			parser.addArg<mvPyDataType::Integer>("height");
+			parser.addArg<mvPyDataType::Integer>("format", mvArgType::KEYWORD_ARG, "0", "mvTEX_XXXX_XXXXX constants");
+			parser.finalize();
+			parsers->insert({ "add_texture", parser });
+		}
 
-		parsers->insert({ "decrement_texture", mvPythonParser({
-			{mvPythonDataType::String, "name"},
-		}, "Decrements a texture.") });
+		{
+			mvPythonParser parser(mvPyDataType::String);
+			parser.addArg<mvPyDataType::String>("name");
+			parser.finalize();
+			parsers->insert({ "decrement_texture", parser });
+		}
+
 	}
 
 	PyObject* mvTextureStorage::add_texture(PyObject* self, PyObject* args, PyObject* kwargs)
@@ -282,43 +331,43 @@ namespace Marvel {
 			case mvTextureFormat::RGBA_FLOAT:
 				for (size_t i = 0; i < fdata.size(); ++i)
 				{
-					fdata[i] = PyFloat_AsDouble(PyList_GetItem(data, i));
+					fdata[i] = (float)PyFloat_AsDouble(PyList_GetItem(data, i));
 				}
 				break;
 
 			case mvTextureFormat::RGBA_INT:
 				for (size_t i = 0; i < fdata.size(); ++i)
 				{
-					fdata[i] = PyFloat_AsDouble(PyList_GetItem(data, i)) / 255.0f;
+					fdata[i] = (float)PyFloat_AsDouble(PyList_GetItem(data, i)) / 255.0f;
 				}
 				break;
 
 			case mvTextureFormat::BGRA_FLOAT:
 				for (size_t i = 0; i < fdata.size(); i += 4)
 				{
-					fdata[i] = PyLong_AsLong(PyList_GetItem(data, i + 2));
-					fdata[i + 1] = PyLong_AsLong(PyList_GetItem(data, i + 1));
-					fdata[i + 2] = PyLong_AsLong(PyList_GetItem(data, i));
-					fdata[i + 3] = PyLong_AsLong(PyList_GetItem(data, i + 3));
+					fdata[i] = (float)PyLong_AsLong(PyList_GetItem(data, i + 2));
+					fdata[i + 1] = (float)PyLong_AsLong(PyList_GetItem(data, i + 1));
+					fdata[i + 2] = (float)PyLong_AsLong(PyList_GetItem(data, i));
+					fdata[i + 3] = (float)PyLong_AsLong(PyList_GetItem(data, i + 3));
 				}
 				break;
 
 			case mvTextureFormat::BGRA_INT:
 				for (size_t i = 0; i < fdata.size(); i += 4)
 				{
-					fdata[i] = PyLong_AsLong(PyList_GetItem(data, i + 2)) / 255.0f;
-					fdata[i + 1] = PyLong_AsLong(PyList_GetItem(data, i + 1)) / 255.0f;
-					fdata[i + 2] = PyLong_AsLong(PyList_GetItem(data, i)) / 255.0f;
-					fdata[i + 3] = PyLong_AsLong(PyList_GetItem(data, i + 3)) / 255.0f;
+					fdata[i] = (float)PyLong_AsLong(PyList_GetItem(data, i + 2)) / 255.0f;
+					fdata[i + 1] = (float)PyLong_AsLong(PyList_GetItem(data, i + 1)) / 255.0f;
+					fdata[i + 2] = (float)PyLong_AsLong(PyList_GetItem(data, i)) / 255.0f;
+					fdata[i + 3] = (float)PyLong_AsLong(PyList_GetItem(data, i + 3)) / 255.0f;
 				}
 				break;
 
 			case mvTextureFormat::RGB_FLOAT:
 				for (size_t i = 0; i < fdata.size(); i += 4)
 				{
-					fdata[i] = PyFloat_AsDouble(PyList_GetItem(data, (i / 4) * 3));
-					fdata[i + 1] = PyFloat_AsDouble(PyList_GetItem(data, (i / 4) * 3 + 1));
-					fdata[i + 2] = PyFloat_AsDouble(PyList_GetItem(data, (i / 4) * 3 + 2));
+					fdata[i] = (float)PyFloat_AsDouble(PyList_GetItem(data, (i / 4) * 3));
+					fdata[i + 1] = (float)PyFloat_AsDouble(PyList_GetItem(data, (i / 4) * 3 + 1));
+					fdata[i + 2] = (float)PyFloat_AsDouble(PyList_GetItem(data, (i / 4) * 3 + 2));
 					fdata[i + 3] = 1.0f;
 				}
 				break;
@@ -326,9 +375,9 @@ namespace Marvel {
 			case mvTextureFormat::RGB_INT:
 				for (size_t i = 0; i < fdata.size(); i += 4)
 				{
-					fdata[i] = PyLong_AsLong(PyList_GetItem(data, (i / 4) * 3)) / 255.0f;
-					fdata[i + 1] = PyLong_AsLong(PyList_GetItem(data, (i / 4) * 3 + 1)) / 255.0f;
-					fdata[i + 2] = PyLong_AsLong(PyList_GetItem(data, (i / 4) * 3 + 2)) / 255.0f;
+					fdata[i] = (float)PyLong_AsLong(PyList_GetItem(data, (i / 4) * 3)) / 255.0f;
+					fdata[i + 1] = (float)PyLong_AsLong(PyList_GetItem(data, (i / 4) * 3 + 1)) / 255.0f;
+					fdata[i + 2] = (float)PyLong_AsLong(PyList_GetItem(data, (i / 4) * 3 + 2)) / 255.0f;
 					fdata[i + 3] = 1.0f;
 				}
 				break;
@@ -336,9 +385,9 @@ namespace Marvel {
 			case mvTextureFormat::BGR_FLOAT:
 				for (size_t i = 0; i < fdata.size(); i += 4)
 				{
-					fdata[i] = PyFloat_AsDouble(PyList_GetItem(data, (i / 4) * 3 + 2));
-					fdata[i + 1] = PyFloat_AsDouble(PyList_GetItem(data, (i / 4) * 3 + 1));
-					fdata[i + 2] = PyFloat_AsDouble(PyList_GetItem(data, (i / 4) * 3));
+					fdata[i] = (float)PyFloat_AsDouble(PyList_GetItem(data, (i / 4) * 3 + 2));
+					fdata[i + 1] = (float)PyFloat_AsDouble(PyList_GetItem(data, (i / 4) * 3 + 1));
+					fdata[i + 2] = (float)PyFloat_AsDouble(PyList_GetItem(data, (i / 4) * 3));
 					fdata[i + 3] = 1.0f;
 				}
 				break;
@@ -346,9 +395,9 @@ namespace Marvel {
 			case mvTextureFormat::BGR_INT:
 				for (size_t i = 0; i < fdata.size(); i += 4)
 				{
-					fdata[i] = PyLong_AsLong(PyList_GetItem(data, (i / 4) * 3 + 2)) / 255.0f;
-					fdata[i + 1] = PyLong_AsLong(PyList_GetItem(data, (i / 4) * 3 + 1)) / 255.0f;
-					fdata[i + 2] = PyLong_AsLong(PyList_GetItem(data, (i / 4) * 3)) / 255.0f;
+					fdata[i] = (float)PyLong_AsLong(PyList_GetItem(data, (i / 4) * 3 + 2)) / 255.0f;
+					fdata[i + 1] = (float)PyLong_AsLong(PyList_GetItem(data, (i / 4) * 3 + 1)) / 255.0f;
+					fdata[i + 2] = (float)PyLong_AsLong(PyList_GetItem(data, (i / 4) * 3)) / 255.0f;
 					fdata[i + 3] = 1.0f;
 				}
 				break;

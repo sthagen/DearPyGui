@@ -64,14 +64,14 @@ namespace Marvel {
         MV_END_COLOR_CONSTANTS
 
         MV_START_STYLE_CONSTANTS
-            MV_ADD_CONSTANT(mvThemeStyle_InputInt_Rounding         , 0,   12),
-            MV_ADD_CONSTANT(mvThemeStyle_InputInt_BorderSize       , 0,    1),
-            MV_ADD_CONSTANT(mvThemeStyle_InputInt_PaddingX         , 4,   20),
-            MV_ADD_CONSTANT(mvThemeStyle_InputInt_PaddingY         , 3,   20),
-            MV_ADD_CONSTANT(mvThemeStyle_InputInt_InnerSpacingX    , 4,   20),
-            MV_ADD_CONSTANT(mvThemeStyle_InputInt_InnerSpacingY    , 4,   20),
-            MV_ADD_CONSTANT(mvThemeStyle_InputInt_ButtonTextAlignX , 0.5,  1),
-            MV_ADD_CONSTANT(mvThemeStyle_InputInt_ButtonTextAlignY , 0.5,  1),
+            MV_ADD_CONSTANT_F(mvThemeStyle_InputInt_Rounding         , 0,   12),
+            MV_ADD_CONSTANT_F(mvThemeStyle_InputInt_BorderSize       , 0,    1),
+            MV_ADD_CONSTANT_F(mvThemeStyle_InputInt_PaddingX         , 4,   20),
+            MV_ADD_CONSTANT_F(mvThemeStyle_InputInt_PaddingY         , 3,   20),
+            MV_ADD_CONSTANT_F(mvThemeStyle_InputInt_InnerSpacingX    , 4,   20),
+            MV_ADD_CONSTANT_F(mvThemeStyle_InputInt_InnerSpacingY    , 4,   20),
+            MV_ADD_CONSTANT_F(mvThemeStyle_InputInt_ButtonTextAlignX , 0.5,  1),
+            MV_ADD_CONSTANT_F(mvThemeStyle_InputInt_ButtonTextAlignY , 0.5,  1),
         MV_END_STYLE_CONSTANTS
 
     public:
@@ -81,8 +81,8 @@ namespace Marvel {
         void setEnabled(bool value) override;
         void draw(ImDrawList* drawlist, float x, float y) override;
 
-        void setExtraConfigDict(PyObject* dict) override;
-        void getExtraConfigDict(PyObject* dict) override;
+        void handleSpecificKeywordArgs(PyObject* dict) override;
+        void getSpecificConfiguration(PyObject* dict) override;
         
     private:
 
@@ -147,14 +147,14 @@ namespace Marvel {
         MV_END_COLOR_CONSTANTS
 
         MV_START_STYLE_CONSTANTS
-            MV_ADD_CONSTANT(mvThemeStyle_InputFloat_Rounding        , 0,   12),
-            MV_ADD_CONSTANT(mvThemeStyle_InputFloat_BorderSize      , 0,    1),
-            MV_ADD_CONSTANT(mvThemeStyle_InputFloat_PaddingX        , 4,   20),
-            MV_ADD_CONSTANT(mvThemeStyle_InputFloat_PaddingY        , 3,   20),
-            MV_ADD_CONSTANT(mvThemeStyle_InputFloat_InnerSpacingX   , 4,   20),
-            MV_ADD_CONSTANT(mvThemeStyle_InputFloat_InnerSpacingY   , 4,   20),
-            MV_ADD_CONSTANT(mvThemeStyle_InputFloat_ButtonTextAlignX, 0.5,  1),
-            MV_ADD_CONSTANT(mvThemeStyle_InputFloat_ButtonTextAlignY, 0.5,  1),
+            MV_ADD_CONSTANT_F(mvThemeStyle_InputFloat_Rounding        , 0,   12),
+            MV_ADD_CONSTANT_F(mvThemeStyle_InputFloat_BorderSize      , 0,    1),
+            MV_ADD_CONSTANT_F(mvThemeStyle_InputFloat_PaddingX        , 4,   20),
+            MV_ADD_CONSTANT_F(mvThemeStyle_InputFloat_PaddingY        , 3,   20),
+            MV_ADD_CONSTANT_F(mvThemeStyle_InputFloat_InnerSpacingX   , 4,   20),
+            MV_ADD_CONSTANT_F(mvThemeStyle_InputFloat_InnerSpacingY   , 4,   20),
+            MV_ADD_CONSTANT_F(mvThemeStyle_InputFloat_ButtonTextAlignX, 0.5,  1),
+            MV_ADD_CONSTANT_F(mvThemeStyle_InputFloat_ButtonTextAlignY, 0.5,  1),
         MV_END_STYLE_CONSTANTS
 
     public:
@@ -164,8 +164,8 @@ namespace Marvel {
         void setEnabled(bool value) override;
         void draw(ImDrawList* drawlist, float x, float y) override;
 
-        void setExtraConfigDict(PyObject* dict) override;
-        void getExtraConfigDict(PyObject* dict) override;
+        void handleSpecificKeywordArgs(PyObject* dict) override;
+        void getSpecificConfiguration(PyObject* dict) override;
 
     private:
 

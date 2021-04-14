@@ -8,6 +8,8 @@
 #include "mvItemRegistry.h"
 #include "mvTextureStorage.h"
 #include "mvViewport.h"
+#include "mvPythonExceptions.h"
+#include <frameobject.h>
 
 #define IM_MIN(A, B)            (((A) < (B)) ? (A) : (B))
 #define IM_MAX(A, B)            (((A) >= (B)) ? (A) : (B))
@@ -236,7 +238,7 @@ namespace Marvel {
 
 			builder.BuildRanges(&ranges);   // Build the final result (ordered ranges with all the unique characters submitted)
 
-			font.fontPtr = io.Fonts->AddFontFromFileTTF(font.file.c_str(), font.size, nullptr, ranges.Data);
+			font.fontPtr = io.Fonts->AddFontFromFileTTF(font.file.c_str(), (float)font.size, nullptr, ranges.Data);
 
 			if (font.fontPtr == nullptr)
 			{
@@ -275,7 +277,7 @@ namespace Marvel {
 	{
 		const std::string& widget = GetEString(event, "WIDGET");
 		const std::string& font = GetEString(event, "FONT");
-		int size = GetEInt(event, "SIZE");
+		int size = (int)GetEFloat(event, "SIZE");
 
 		if (widget.empty())
 		{
@@ -350,31 +352,41 @@ namespace Marvel {
 
 	void mvFontManager::InsertParser(std::map<std::string, mvPythonParser>* parsers)
 	{
-		parsers->insert({ "add_font", mvPythonParser({
-			{mvPythonDataType::String, "font", "ttf or otf file"},
-			{mvPythonDataType::String, "file", "ttf or otf file"},
-			{mvPythonDataType::Optional},
-			{mvPythonDataType::Float, "size", "", "13.0"},
-			{mvPythonDataType::String, "glyph_ranges", "options: korean, japanese, chinese_full, chinese_simplified_common, cryillic, thai, vietnamese", "''"},
-			{mvPythonDataType::KeywordOnly},
-			{mvPythonDataType::IntList, "custom_glyph_chars", "", "()"},
-			{mvPythonDataType::Object, "custom_glyph_ranges", "list of ranges", "List[List[int]]"},
-			{mvPythonDataType::Object, "char_remaps", "", "List[List[int]]"},
-		}, "Adds additional font.", "None", "Themes and Styles") });
+		{
+			mvPythonParser parser(mvPyDataType::None);
+			parser.addArg<mvPyDataType::String>("font");
+			parser.addArg<mvPyDataType::String>("file");
+			parser.addArg<mvPyDataType::Float>("size");
+			parser.addArg<mvPyDataType::String>("glyph_ranges", mvArgType::POSITIONAL_ARG, "''");
+			parser.addArg<mvPyDataType::IntList>("custom_glyph_chars", mvArgType::KEYWORD_ARG, "[]");
+			parser.addArg<mvPyDataType::Object>("custom_glyph_ranges", mvArgType::KEYWORD_ARG, "[[]]");
+			parser.addArg<mvPyDataType::Object>("char_remaps", mvArgType::KEYWORD_ARG, "[[]]");
+			parser.finalize();
+			parsers->insert({ "add_font", parser });
+		}
 
-		parsers->insert({ "set_font", mvPythonParser({
-			{mvPythonDataType::String, "font", "ttf or otf file"},
-			{mvPythonDataType::Integer, "size", "ttf or otf file"},
-			{mvPythonDataType::KeywordOnly},
-			{mvPythonDataType::String, "item", "", "''"},
-		}, "Adds additional font.", "None", "Themes and Styles") });
+		{
+			mvPythonParser parser(mvPyDataType::None);
+			parser.addArg<mvPyDataType::String>("font");
+			parser.addArg<mvPyDataType::Float>("size");
+			parser.addArg<mvPyDataType::String>("item", mvArgType::KEYWORD_ARG, "''");
+			parser.finalize();
+			parsers->insert({ "set_font", parser });
+		}
 
-		parsers->insert({ "set_global_font_scale", mvPythonParser({
-			{mvPythonDataType::Float, "scale", "default is 1.0"}
-		}, "Changes the global font scale.") });
+		{
+			mvPythonParser parser(mvPyDataType::None);
+			parser.addArg<mvPyDataType::Float>("scale");
+			parser.finalize();
+			parsers->insert({ "set_global_font_scale", parser });
+		}
 
-		parsers->insert({ "get_global_font_scale", mvPythonParser({
-		}, "Returns the global font scale.", "float") });
+		{
+			mvPythonParser parser(mvPyDataType::Float);
+			parser.finalize();
+			parsers->insert({ "get_global_font_scale", parser });
+		}
+
 	}
 
 	PyObject* mvFontManager::add_font(PyObject* self, PyObject* args, PyObject* kwargs)
@@ -404,7 +416,7 @@ namespace Marvel {
 		for (auto& item : custom_chars)
 			imgui_custom_chars.push_back((ImWchar)item);
 
-		mvApp::GetApp()->getFontManager().addFont(font, file, size, glyph_ranges, imgui_custom_chars, 
+		mvApp::GetApp()->getFontManager().addFont(font, file, (int)size, glyph_ranges, imgui_custom_chars, 
 			imgui_custom_ranges, custom_remaps);
 
 		return GetPyNone();
@@ -413,7 +425,7 @@ namespace Marvel {
 	PyObject* mvFontManager::set_font(PyObject* self, PyObject* args, PyObject* kwargs)
 	{
 		const char* font = "";
-		int size = 0;
+		float size = 0;
 		const char* item = "";
 
 		if (!(mvApp::GetApp()->getParsers())["set_font"].parse(args, kwargs, __FUNCTION__, &font, &size, &item))

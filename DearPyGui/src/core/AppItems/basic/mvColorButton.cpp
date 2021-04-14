@@ -9,23 +9,20 @@ namespace Marvel {
 
 	void mvColorButton::InsertParser(std::map<std::string, mvPythonParser>* parsers)
 	{
-		parsers->insert({ s_command, mvPythonParser({
-			{mvPythonDataType::Optional},
-			{mvPythonDataType::String, "name"},		
-			{mvPythonDataType::KeywordOnly},
-			{mvPythonDataType::IntList, "default_value", "", "(0, 0, 0, 255)"},
-			{mvPythonDataType::Callable, "callback", "Registers a callback", "None"},
-			{mvPythonDataType::Object, "callback_data", "Callback data", "None"},
-			{mvPythonDataType::String, "parent", "Parent to add this item to. (runtime adding)", "''"},
-			{mvPythonDataType::String, "before", "This item will be displayed before the specified item in the parent. (runtime adding)", "''"},
-			{mvPythonDataType::Integer, "width","", "0"},
-			{mvPythonDataType::Integer, "height", "", "0"},
-			{mvPythonDataType::Bool, "show", "Attemp to render", "True"},
-			{mvPythonDataType::Bool, "no_alpha", "ignore Alpha component", "False"},
-			{mvPythonDataType::Bool, "no_border", "disable border (which is enforced by default)", "False"},
-			{mvPythonDataType::Bool, "no_drag_drop", "disable display of inline text label", "False"},
-			{mvPythonDataType::Bool, "enabled", "", "True"},
-		}, "Adds a color button.", "None", "Adding Widgets") });
+		mvPythonParser parser(mvPyDataType::String);
+		mvAppItem::AddCommonArgs(parser);
+		parser.removeArg("source");
+		parser.removeArg("label");
+
+		parser.addArg<mvPyDataType::IntList>("default_value", mvArgType::POSITIONAL_ARG, "(0, 0, 0, 255)");
+
+		parser.addArg<mvPyDataType::Bool>("no_alpha", mvArgType::KEYWORD_ARG, "False", "ignore Alpha component");
+		parser.addArg<mvPyDataType::Bool>("no_border", mvArgType::KEYWORD_ARG, "False", "disable border");
+		parser.addArg<mvPyDataType::Bool>("no_drag_drop", mvArgType::KEYWORD_ARG, "False", "disable display of inline text label");
+
+		parser.finalize();
+
+		parsers->insert({ s_command, parser });
 	}
 
 	mvColorButton::mvColorButton(const std::string& name)
@@ -47,7 +44,27 @@ namespace Marvel {
 
 	}
 
-	void mvColorButton::setExtraConfigDict(PyObject* dict)
+	void mvColorButton::handleSpecificPositionalArgs(PyObject* dict)
+	{
+		if (!mvApp::GetApp()->getParsers()[s_command].verifyPositionalArguments(dict))
+			return;
+
+		for (int i = 0; i < PyTuple_Size(dict); i++)
+		{
+			PyObject* item = PyTuple_GetItem(dict, i);
+			switch (i)
+			{
+			case 0:
+				setPyValue(item);
+				break;
+
+			default:
+				break;
+			}
+		}
+	}
+
+	void mvColorButton::handleSpecificKeywordArgs(PyObject* dict)
 	{
 		if (dict == nullptr)
 			return;
@@ -63,7 +80,7 @@ namespace Marvel {
 		flagop("no_drag_drop", ImGuiColorEditFlags_NoDragDrop, m_flags);
 	}
 
-	void mvColorButton::getExtraConfigDict(PyObject* dict)
+	void mvColorButton::getSpecificConfiguration(PyObject* dict)
 	{
 		if (dict == nullptr)
 			return;

@@ -1,4 +1,5 @@
-#include "mvPython.h"
+#define PY_SSIZE_T_CLEAN
+#include <Python.h>
 #include "mvStdOutput.h"
 #include "mvModule_Core.h"
 #include "mvApp.h"
@@ -18,7 +19,7 @@ int main(int argc, char* argv[])
 #ifdef MV_RELEASE
 	HWND hWnd = GetConsoleWindow();
 	ShowWindow(hWnd, SW_HIDE);
-	GenerateStubFile("../../DearPyGui/dearpygui/core.pyi");
+	mvPythonParser::GenerateStubFile("../../DearPyGui/dearpygui/core.pyi");
 #else
 	HWND hWnd = GetConsoleWindow();
 	ShowWindow(hWnd, SW_SHOW);	

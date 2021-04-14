@@ -5,6 +5,7 @@
 #include "mvUtilities.h"
 #include "mvAppLog.h"
 #include "mvItemRegistry.h"
+#include "mvPythonExceptions.h"
 
 namespace Marvel {
 
@@ -489,7 +490,7 @@ namespace Marvel {
 		return true;
 	}
 
-	void mvBaseWindowAppitem::setExtraConfigDict(PyObject* dict)
+	void mvBaseWindowAppitem::handleSpecificKeywordArgs(PyObject* dict)
 	{
 		if (dict == nullptr)
 			return;
@@ -518,7 +519,7 @@ namespace Marvel {
 
 	}
 
-	void mvBaseWindowAppitem::getExtraConfigDict(PyObject* dict)
+	void mvBaseWindowAppitem::getSpecificConfiguration(PyObject* dict)
 	{
 		if (dict == nullptr)
 			return;

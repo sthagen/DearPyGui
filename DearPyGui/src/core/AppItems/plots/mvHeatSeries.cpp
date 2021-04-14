@@ -10,25 +10,32 @@ namespace Marvel {
 	void mvHeatSeries::InsertParser(std::map<std::string, mvPythonParser>* parsers)
 	{
 
-		parsers->insert({ s_command, mvPythonParser({
-			{mvPythonDataType::Optional},
-			{mvPythonDataType::String, "name"},
-			{mvPythonDataType::KeywordOnly},
-			{mvPythonDataType::FloatList, "x"},
-			{mvPythonDataType::Integer, "rows", "", "1"},
-			{mvPythonDataType::Integer, "cols", "", "1"},
-			{mvPythonDataType::Double, "scale_min", "", "0.0"},
-			{mvPythonDataType::Double, "scale_max", "", "1.0"},
-			{mvPythonDataType::String, "format", "", "'%0.1f'"},
-			{mvPythonDataType::FloatList, "bounds_min", "", "(0.0, 0.0)"},
-			{mvPythonDataType::FloatList, "bounds_max", "", "(1.0, 1.0)"},
-			{mvPythonDataType::String, "label", "Overrides 'name' as label", "''"},
-			{mvPythonDataType::String, "source", "", "''"},
-			{mvPythonDataType::String, "parent", "Parent to add this item to. (runtime adding)", "''"},
-			{mvPythonDataType::String, "before", "This item will be displayed before the specified item in the parent. (runtime adding)", "''"},
-			{mvPythonDataType::Bool, "show", "Attempt to render", "True"},
-			{mvPythonDataType::Bool, "contribute_to_bounds", "", "True"},
-		}, "Adds a drag point to a plot.", "None", "Plotting") });
+		mvPythonParser parser(mvPyDataType::String);
+		mvAppItem::AddCommonArgs(parser);
+		parser.removeArg("width");
+		parser.removeArg("height");
+		parser.removeArg("callback");
+		parser.removeArg("callback_data");
+		parser.removeArg("enabled");
+
+		parser.addArg<mvPyDataType::FloatList>("x");
+		parser.addArg<mvPyDataType::Integer>("rows");
+		parser.addArg<mvPyDataType::Integer>("cols");
+
+
+		parser.addArg<mvPyDataType::Double>("scale_min", mvArgType::KEYWORD_ARG, "0.0");
+		parser.addArg<mvPyDataType::Double>("scale_max", mvArgType::KEYWORD_ARG, "1.0");
+
+		parser.addArg<mvPyDataType::FloatList>("bounds_min", mvArgType::KEYWORD_ARG, "(0.0, 0.0)");
+		parser.addArg<mvPyDataType::FloatList>("bounds_max", mvArgType::KEYWORD_ARG, "(1.0, 1.0)");
+
+		parser.addArg<mvPyDataType::String>("format", mvArgType::KEYWORD_ARG, "'%0.1f'");
+
+		parser.addArg<mvPyDataType::Bool>("contribute_to_bounds", mvArgType::KEYWORD_ARG, "True");
+
+		parser.finalize();
+
+		parsers->insert({ s_command, parser });
 	}
 
 	mvHeatSeries::mvHeatSeries(const std::string& name)
@@ -46,12 +53,44 @@ namespace Marvel {
 		xptr = &(*m_value.get())[0];
 
 
-		ImPlot::PlotHeatmap(m_name.c_str(), xptr->data(), m_rows, m_cols, m_scale_min, m_scale_max,
+		ImPlot::PlotHeatmap(m_label.c_str(), xptr->data(), m_rows, m_cols, m_scale_min, m_scale_max,
 			m_format.c_str(), { m_bounds_min.x, m_bounds_min.y }, { m_bounds_max.x, m_bounds_max.y });
 
 	}
 
-	void mvHeatSeries::setExtraConfigDict(PyObject* dict)
+	void mvHeatSeries::handleSpecificRequiredArgs(PyObject* dict)
+	{
+		if (!mvApp::GetApp()->getParsers()[s_command].verifyRequiredArguments(dict))
+			return;
+
+		for (int i = 0; i < PyTuple_Size(dict); i++)
+		{
+			PyObject* item = PyTuple_GetItem(dict, i);
+			switch (i)
+			{
+			case 0:
+				(*m_value)[0] = ToFloatVect(item);
+				break;
+
+			case 1:
+				m_rows = ToInt(item);
+				break;
+
+			case 2:
+				m_cols = ToInt(item);
+				break;
+
+
+			default:
+				break;
+			}
+		}
+
+		resetMaxMins();
+		calculateMaxMins();
+	}
+
+	void mvHeatSeries::handleSpecificKeywordArgs(PyObject* dict)
 	{
 		if (dict == nullptr)
 			return;
@@ -76,7 +115,7 @@ namespace Marvel {
 
 	}
 
-	void mvHeatSeries::getExtraConfigDict(PyObject* dict)
+	void mvHeatSeries::getSpecificConfiguration(PyObject* dict)
 	{
 		if (dict == nullptr)
 			return;

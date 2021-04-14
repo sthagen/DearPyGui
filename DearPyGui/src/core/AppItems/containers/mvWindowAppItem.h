@@ -55,10 +55,10 @@ namespace Marvel {
 		MV_START_COLOR_CONSTANTS
 			MV_CREATE_CONSTANT_PAIR(mvThemeCol_Window_TitleText,			mvColor(255, 255, 255, 255)),
 			MV_CREATE_CONSTANT_PAIR(mvThemeCol_Window_TitleBg,				mvColor( 10,  10,  10, 255)),
-			MV_CREATE_CONSTANT_PAIR(mvThemeCol_Window_TitleBgActive,		mvColor( 41,  74, 122, 255)),
+			MV_CREATE_CONSTANT_PAIR(mvThemeCol_Window_TitleBgActive,		mvColor(119,  25,  24, 255)),
 			MV_CREATE_CONSTANT_PAIR(mvThemeCol_Window_TitleBgCollapsed,		mvColor(  0,   0,   0, 130)),
-			MV_CREATE_CONSTANT_PAIR(mvThemeCol_Window_MenuBar,				mvColor( 36,  36,  36, 255)),
-			MV_CREATE_CONSTANT_PAIR(mvThemeCol_Window_Bg,					mvColor( 15,  15,  15, 240)),
+			MV_CREATE_CONSTANT_PAIR(mvThemeCol_Window_MenuBar,				mvColor( 20,  20,  20, 255)),
+			MV_CREATE_CONSTANT_PAIR(mvThemeCol_Window_Bg,					mvColor( 10,  10,  10, 250)),
 			MV_CREATE_CONSTANT_PAIR(mvThemeCol_Window_Scrollbar,			mvColor(  5,   5,   5, 135)),
 			MV_CREATE_CONSTANT_PAIR(mvThemeCol_Window_ScrollbarGrab,		mvColor( 79,  79,  79, 255)),
 			MV_CREATE_CONSTANT_PAIR(mvThemeCol_Window_ScrollbarGrabHovered, mvColor(105, 105, 105, 255)),
@@ -72,18 +72,18 @@ namespace Marvel {
 		MV_END_COLOR_CONSTANTS
 
 		MV_START_STYLE_CONSTANTS
-			MV_ADD_CONSTANT(mvThemeStyle_Window_BorderSize			, 1,    1),
-			MV_ADD_CONSTANT(mvThemeStyle_Window_Rounding			, 0,   12),
-			MV_ADD_CONSTANT(mvThemeStyle_Window_MinSizeX			,32,   50),
-			MV_ADD_CONSTANT(mvThemeStyle_Window_MinSizeY			,32,   50),
-			MV_ADD_CONSTANT(mvThemeStyle_Window_TitleAlignX			, 0,    1),
-			MV_ADD_CONSTANT(mvThemeStyle_Window_TitleAlignY			, 0.5,  1),
-			MV_ADD_CONSTANT(mvThemeStyle_Window_PaddingX			, 8,   20),
-			MV_ADD_CONSTANT(mvThemeStyle_Window_PaddingY			, 8,   20),
-			MV_ADD_CONSTANT(mvThemeStyle_Window_ItemSpacingX		, 8,   20),
-			MV_ADD_CONSTANT(mvThemeStyle_Window_ItemSpacingY		, 4,   20),
-			MV_ADD_CONSTANT(mvThemeStyle_Window_ScrollbarSize		,14,   20),
-			MV_ADD_CONSTANT(mvThemeStyle_Window_ScrollbarRounding	, 9,   12),
+			MV_ADD_CONSTANT_F(mvThemeStyle_Window_BorderSize			, 1,    1),
+			MV_ADD_CONSTANT_F(mvThemeStyle_Window_Rounding			, 0,   12),
+			MV_ADD_CONSTANT_F(mvThemeStyle_Window_MinSizeX			,32,   50),
+			MV_ADD_CONSTANT_F(mvThemeStyle_Window_MinSizeY			,32,   50),
+			MV_ADD_CONSTANT_F(mvThemeStyle_Window_TitleAlignX			, 0,    1),
+			MV_ADD_CONSTANT_F(mvThemeStyle_Window_TitleAlignY			, 0.5,  1),
+			MV_ADD_CONSTANT_F(mvThemeStyle_Window_PaddingX			, 8,   20),
+			MV_ADD_CONSTANT_F(mvThemeStyle_Window_PaddingY			, 8,   20),
+			MV_ADD_CONSTANT_F(mvThemeStyle_Window_ItemSpacingX		, 8,   20),
+			MV_ADD_CONSTANT_F(mvThemeStyle_Window_ItemSpacingY		, 4,   20),
+			MV_ADD_CONSTANT_F(mvThemeStyle_Window_ScrollbarSize		,14,   20),
+			MV_ADD_CONSTANT_F(mvThemeStyle_Window_ScrollbarRounding	, 9,   12),
 		MV_END_STYLE_CONSTANTS
 
 		enum class Status{ Normal, Transition, Dirty};
@@ -102,11 +102,13 @@ namespace Marvel {
 		void   setHeight            (int height) override;
 		mvVec2 getWindowPos         () const;
 		void   draw                 (ImDrawList* drawlist, float x, float y) override;
-		void   setResizeCallback    (mvCallable callback);
+		void   setResizeCallback    (PyObject* callback);
 		bool  getWindowAsMainStatus() const { return m_mainWindow; }
 
-		void setExtraConfigDict(PyObject* dict) override;
-		void getExtraConfigDict(PyObject* dict) override;
+		void onChildAdd(mvRef<mvAppItem> item) override;
+		void onChildRemoved(mvRef<mvAppItem> item) override;
+		void handleSpecificKeywordArgs(PyObject* dict) override;
+		void getSpecificConfiguration(PyObject* dict) override;
 
 		void   setFocusedNextFrame  () { m_focusNextFrame = true; }
 
@@ -121,7 +123,7 @@ namespace Marvel {
 		int                   m_oldWidth = 200;
 		int                   m_oldHeight = 200;
 		bool                  m_mainWindow = false;
-		mvCallable            m_resize_callback = nullptr;
+		PyObject*            m_resize_callback = nullptr;
 		bool                  m_dirty_pos = true;
 		bool                  m_dirty_size = true;
 		bool                  m_hasMenuBar = false;
@@ -144,7 +146,7 @@ namespace Marvel {
 		bool       m_no_close = false;
 		bool       m_no_background = false;
 		bool       m_collapsed = false;
-		mvCallable m_on_close = nullptr;
+		PyObject* m_on_close = nullptr;
 		mvVec2     m_min_size = { 32.0f, 32.0f };
 		mvVec2     m_max_size = { 30000.0f, 30000.0f };
 		

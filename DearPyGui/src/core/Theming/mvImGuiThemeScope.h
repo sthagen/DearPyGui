@@ -18,6 +18,7 @@ namespace Marvel {
 		{
 
 			mvThemeColors& colors = item->getCachedThemeColors();
+			mvThemeColors& disabled_colors = item->getCachedThemeDisabledColors();
 			std::unordered_map<ImGuiStyleVar, float>& styles = item->getCachedThemeStyles();
 			std::unordered_map<ImGuiStyleVar, float>& styles1 = item->getCachedThemeStyles1();
 			std::unordered_map<ImGuiStyleVar, float>& styles2 = item->getCachedThemeStyles2();
@@ -28,6 +29,12 @@ namespace Marvel {
 				item->setThemeColorCacheValid();
 			}
 
+			if (!item->isThemeDisabledColorCacheValid())
+			{
+				SearchAncestorTreeForDisabledColors<T>(item, disabled_colors);
+				item->setThemeDisabledColorCacheValid();
+			}
+
 			if (!item->isThemeStyleCacheValid())
 			{
 				SearchAncestorTreeForStyles<T>(item, styles, styles1, styles2);
@@ -35,22 +42,26 @@ namespace Marvel {
 			}
 
 			// decode and push colors to ImGui
-			libIDCount = colors.size();
+			if (item->isEnabled())
+				libIDCount = colors.size();
+			else
+				libIDCount = disabled_colors.size();
+
 			static ImGuiCol imColorID;
 			if (item->isEnabled())
 			{
 				for (const auto& color : colors)
 				{
 					DecodelibID(color.first, &imColorID);
-					ImGui::PushStyleColor(imColorID, color.second.first.toVec4());
+					ImGui::PushStyleColor(imColorID, color.second.toVec4());
 				}
 			}
 			else
 			{
-				for (const auto& color : colors)
+				for (const auto& color : disabled_colors)
 				{
 					DecodelibID(color.first, &imColorID);
-					ImGui::PushStyleColor(imColorID, color.second.second.toVec4());
+					ImGui::PushStyleColor(imColorID, color.second.toVec4());
 				}
 			}
 
@@ -71,17 +82,17 @@ namespace Marvel {
 		void cleanup()
 		{
 			if (libIDCount > 0)
-				ImGui::PopStyleColor(libIDCount);
+				ImGui::PopStyleColor((int)libIDCount);
 			libIDCount = 0;
 			if (StyleIDCount > 0)
-				ImGui::PopStyleVar(StyleIDCount);
+				ImGui::PopStyleVar((int)StyleIDCount);
 			StyleIDCount = 0;
 		}
 
 	private:
 
-		int libIDCount = 0;
-		int StyleIDCount = 0;
+		size_t libIDCount = 0;
+		size_t StyleIDCount = 0;
 
 	};
 }

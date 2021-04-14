@@ -9,20 +9,20 @@ namespace Marvel {
 
 	void mvProgressBar::InsertParser(std::map<std::string, mvPythonParser>* parsers)
 	{
-		parsers->insert({ s_command, mvPythonParser({
-			{mvPythonDataType::Optional},
-			{mvPythonDataType::String, "name"},
-			{mvPythonDataType::KeywordOnly},
-			{mvPythonDataType::Float, "default_value", "value from 0 to 1", "0.0"},
-			{mvPythonDataType::String, "overlay", "overlayed text", "''"},
-			{mvPythonDataType::String, "parent", "Parent this item will be added to. (runtime adding)", "''"},
-			{mvPythonDataType::String, "before", "This item will be displayed before the specified item in the parent. (runtime adding)", "''"},
-			{mvPythonDataType::String, "source", "data source for shared data", "''"},
-			{mvPythonDataType::String, "label", "", "''"},
-			{mvPythonDataType::Integer, "width","", "0"},
-			{mvPythonDataType::Integer, "height","", "0"},
-			{mvPythonDataType::Bool, "show", "Attempt to render", "True"},
-		}, "Adds a progress bar.", "None", "Adding Widgets") });
+
+		mvPythonParser parser(mvPyDataType::String);
+		mvAppItem::AddCommonArgs(parser);
+		parser.removeArg("callback");
+		parser.removeArg("callback_data");
+		parser.removeArg("enabled");
+
+		parser.addArg<mvPyDataType::String>("overlay", mvArgType::KEYWORD_ARG, "''", "overlayed text");
+		parser.addArg<mvPyDataType::Float>("default_value", mvArgType::KEYWORD_ARG, "0.0", "value from 0 to 1");
+
+
+		parser.finalize();
+
+		parsers->insert({ s_command, parser });
 	}
 
 	mvProgressBar::mvProgressBar(const std::string& name)
@@ -40,7 +40,7 @@ namespace Marvel {
 
 	}
 
-	void mvProgressBar::setExtraConfigDict(PyObject* dict)
+	void mvProgressBar::handleSpecificKeywordArgs(PyObject* dict)
 	{
 		if (dict == nullptr)
 			return;
@@ -48,7 +48,7 @@ namespace Marvel {
 		if (PyObject* item = PyDict_GetItemString(dict, "overlay")) m_overlay = ToString(item);
 	}
 
-	void mvProgressBar::getExtraConfigDict(PyObject* dict)
+	void mvProgressBar::getSpecificConfiguration(PyObject* dict)
 	{
 		if (dict == nullptr)
 			return;

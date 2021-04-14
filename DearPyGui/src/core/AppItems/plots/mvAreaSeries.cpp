@@ -104,26 +104,32 @@ namespace Marvel {
 	void mvAreaSeries::InsertParser(std::map<std::string, mvPythonParser>* parsers)
 	{
 
-		parsers->insert({ s_command, mvPythonParser({
-			{mvPythonDataType::Optional},
-			{mvPythonDataType::String, "name"},
-			{mvPythonDataType::KeywordOnly},
-			{mvPythonDataType::FloatList, "x"},
-			{mvPythonDataType::FloatList, "y"},
-			{mvPythonDataType::FloatList, "fill", "", "(0, 0, 0, -1)"},
-			{mvPythonDataType::String, "label", "Overrides 'name' as label", "''"},
-			{mvPythonDataType::String, "source", "", "''"},
-			{mvPythonDataType::String, "parent", "Parent to add this item to. (runtime adding)", "''"},
-			{mvPythonDataType::String, "before", "This item will be displayed before the specified item in the parent. (runtime adding)", "''"},
-			{mvPythonDataType::Bool, "show", "Attempt to render", "True"},
-			{mvPythonDataType::Integer, "axis", "", "0"},
-			{mvPythonDataType::Bool, "contribute_to_bounds", "", "True"},
-		}, "Adds a drag point to a plot.", "None", "Plotting") });
+		mvPythonParser parser(mvPyDataType::String);
+		mvAppItem::AddCommonArgs(parser);
+		parser.removeArg("width");
+		parser.removeArg("height");
+		parser.removeArg("callback");
+		parser.removeArg("callback_data");
+		parser.removeArg("enabled");
+
+		parser.addArg<mvPyDataType::FloatList>("x");
+		parser.addArg<mvPyDataType::FloatList>("y");
+
+		parser.addArg<mvPyDataType::IntList>("fill", mvArgType::KEYWORD_ARG, "(0, 0, 0, -255)");
+
+		parser.addArg<mvPyDataType::Integer>("axis", mvArgType::KEYWORD_ARG, "0");
+
+		parser.addArg<mvPyDataType::Bool>("contribute_to_bounds", mvArgType::KEYWORD_ARG, "True");
+
+		parser.finalize();
+
+		parsers->insert({ s_command, parser });
 	}
 
 	mvAreaSeries::mvAreaSeries(const std::string& name)
 		: mvSeriesBase(name)
 	{
+		m_contributeToBounds = true;
 	}
 
 	void mvAreaSeries::draw(ImDrawList* drawlist, float x, float y)
@@ -152,7 +158,7 @@ namespace Marvel {
 		xptr = &(*m_value.get())[0];
 		yptr = &(*m_value.get())[1];
 
-		ImPlot::PlotLine(m_label.c_str(), xptr->data(), yptr->data(), xptr->size());
+		ImPlot::PlotLine(m_label.c_str(), xptr->data(), yptr->data(), (int)xptr->size());
 
 		ImPlot::PushPlotClipRect();
 		auto item = ImPlot::RegisterOrGetItem(m_label.c_str());
@@ -161,7 +167,34 @@ namespace Marvel {
 
 	}
 
-	void mvAreaSeries::setExtraConfigDict(PyObject* dict)
+	void mvAreaSeries::handleSpecificRequiredArgs(PyObject* dict)
+	{
+		if (!mvApp::GetApp()->getParsers()[s_command].verifyRequiredArguments(dict))
+			return;
+
+		for (int i = 0; i < PyTuple_Size(dict); i++)
+		{
+			PyObject* item = PyTuple_GetItem(dict, i);
+			switch (i)
+			{
+			case 0:
+				(*m_value)[0] = ToFloatVect(item);
+				break;
+
+			case 1:
+				(*m_value)[1] = ToFloatVect(item);
+				break;
+
+			default:
+				break;
+			}
+		}
+
+		resetMaxMins();
+		calculateMaxMins();
+	}
+
+	void mvAreaSeries::handleSpecificKeywordArgs(PyObject* dict)
 	{
 		if (dict == nullptr)
 			return;
@@ -182,7 +215,7 @@ namespace Marvel {
 
 	}
 
-	void mvAreaSeries::getExtraConfigDict(PyObject* dict)
+	void mvAreaSeries::getSpecificConfiguration(PyObject* dict)
 	{
 		if (dict == nullptr)
 			return;

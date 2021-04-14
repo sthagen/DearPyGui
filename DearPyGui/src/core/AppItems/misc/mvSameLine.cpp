@@ -6,17 +6,23 @@ namespace Marvel {
 
 	void mvSameLine::InsertParser(std::map<std::string, mvPythonParser>* parsers)
 	{
-		parsers->insert({ s_command, mvPythonParser({
-			{mvPythonDataType::Optional},
-			{mvPythonDataType::String, "name", "", "'sameline'"},
-			{mvPythonDataType::KeywordOnly},
-			{mvPythonDataType::Float, "xoffset", "offset from containing window", "0.0"},
-			{mvPythonDataType::Float, "spacing", "offset from previous widget", "-1.0"},
-			{mvPythonDataType::String, "parent", "Parent to add this item to. (runtime adding)", "''"},
-			{mvPythonDataType::String, "before", "This item will be displayed before the specified item in the parent. (runtime adding)", "''"},
-			{mvPythonDataType::Bool, "show", "Attempt to render", "True"},
-		}, "Places a widget on the same line as the previous widget. Can also be used for horizontal spacing.",
-		"None", "Adding Widgets") });
+
+		mvPythonParser parser(mvPyDataType::String);
+		mvAppItem::AddCommonArgs(parser);
+		parser.removeArg("source");
+		parser.removeArg("width");
+		parser.removeArg("height");
+		parser.removeArg("label");
+		parser.removeArg("callback");
+		parser.removeArg("callback_data");
+		parser.removeArg("enabled");
+
+		parser.addArg<mvPyDataType::Float>("xoffset", mvArgType::KEYWORD_ARG, "0.0", "offset from containing window");
+		parser.addArg<mvPyDataType::Float>("spacing", mvArgType::KEYWORD_ARG, "-1.0", "offset from previous widget");
+
+		parser.finalize();
+
+		parsers->insert({ s_command, parser });
 	}
 
 
@@ -30,7 +36,7 @@ namespace Marvel {
 		ImGui::SameLine(m_xoffset, m_spacing);
 	}
 
-	void mvSameLine::setExtraConfigDict(PyObject* dict)
+	void mvSameLine::handleSpecificKeywordArgs(PyObject* dict)
 	{
 		if (dict == nullptr)
 			return;
@@ -40,7 +46,7 @@ namespace Marvel {
 
 	}
 
-	void mvSameLine::getExtraConfigDict(PyObject* dict)
+	void mvSameLine::getSpecificConfiguration(PyObject* dict)
 	{
 		if (dict == nullptr)
 			return;

@@ -20,29 +20,33 @@ namespace Marvel {
 
 	void mvDebugWindow::InsertParser(std::map<std::string, mvPythonParser>* parsers)
 	{
-		parsers->insert({ s_command, mvPythonParser({
-			{mvPythonDataType::Optional},
-			{mvPythonDataType::String, "name"},
-			{mvPythonDataType::KeywordOnly},
-			{mvPythonDataType::Integer, "width", "", "700"},
-			{mvPythonDataType::Integer, "height", "", "500"},
-			{mvPythonDataType::Integer, "x_pos", "x position the window will start at", "200"},
-			{mvPythonDataType::Integer, "y_pos", "y position the window will start at", "200"},
-			{mvPythonDataType::Bool, "autosize", "Autosized the window to fit it's items.", "False"},
-			{mvPythonDataType::Bool, "no_resize", "Allows for the window size to be changed or fixed", "False"},
-			{mvPythonDataType::Bool, "no_title_bar", "Title name for the title bar of the window", "False"},
-			{mvPythonDataType::Bool, "no_move", "Allows for the window's position to be changed or fixed", "False"},
-			{mvPythonDataType::Bool, "no_scrollbar" ," Disable scrollbars (window can still scroll with mouse or programmatically)", "False"},
-			{mvPythonDataType::Bool, "no_collapse" ,"Disable user collapsing window by double-clicking on it", "False"},
-			{mvPythonDataType::Bool, "horizontal_scrollbar" ,"Allow horizontal scrollbar to appear (off by default).", "False"},
-			{mvPythonDataType::Bool, "no_focus_on_appearing" ,"Disable taking focus when transitioning from hidden to visible state", "False"},
-			{mvPythonDataType::Bool, "no_bring_to_front_on_focus" ,"Disable bringing window to front when taking focus (e.g. clicking on it or programmatically giving it focus)", "False"},
-			{mvPythonDataType::Bool, "no_close", "", "False"},
-			{mvPythonDataType::Bool, "no_background", "", "False"},
-			{mvPythonDataType::String, "label", "", "''"},
-			{mvPythonDataType::Bool, "show", "Attempt to render", "True"},
-		}, "Creates a debug window.",
-			"None", "Containers") });
+		mvPythonParser parser(mvPyDataType::String);
+		mvAppItem::AddCommonArgs(parser);
+		parser.removeArg("parent");
+		parser.removeArg("before");
+		parser.removeArg("source");
+		parser.removeArg("callback");
+		parser.removeArg("callback_data");
+		parser.removeArg("enabled");
+
+		parser.addArg<mvPyDataType::Integer>("x_pos", mvArgType::KEYWORD_ARG, "200");
+		parser.addArg<mvPyDataType::Integer>("y_pos", mvArgType::KEYWORD_ARG, "200");
+
+		parser.addArg<mvPyDataType::Bool>("autosize", mvArgType::KEYWORD_ARG, "False", "Autosized the window to fit it's items.");
+		parser.addArg<mvPyDataType::Bool>("no_resize", mvArgType::KEYWORD_ARG, "False", "Allows for the window size to be changed or fixed");
+		parser.addArg<mvPyDataType::Bool>("no_title_bar", mvArgType::KEYWORD_ARG, "False", "Title name for the title bar of the window");
+		parser.addArg<mvPyDataType::Bool>("no_move", mvArgType::KEYWORD_ARG, "False", "Allows for the window's position to be changed or fixed");
+		parser.addArg<mvPyDataType::Bool>("no_scrollbar", mvArgType::KEYWORD_ARG, "False", " Disable scrollbars (window can still scroll with mouse or programmatically)");
+		parser.addArg<mvPyDataType::Bool>("no_collapse", mvArgType::KEYWORD_ARG, "False", "Disable user collapsing window by double-clicking on it");
+		parser.addArg<mvPyDataType::Bool>("horizontal_scrollbar", mvArgType::KEYWORD_ARG, "False", "Allow horizontal scrollbar to appear (off by default).");
+		parser.addArg<mvPyDataType::Bool>("no_focus_on_appearing", mvArgType::KEYWORD_ARG, "False", "Disable taking focus when transitioning from hidden to visible state");
+		parser.addArg<mvPyDataType::Bool>("no_bring_to_front_on_focus", mvArgType::KEYWORD_ARG, "False", "Disable bringing window to front when taking focus (e.g. clicking on it or programmatically giving it focus)");
+		parser.addArg<mvPyDataType::Bool>("no_close", mvArgType::KEYWORD_ARG, "False");
+		parser.addArg<mvPyDataType::Bool>("no_background", mvArgType::KEYWORD_ARG, "False");
+
+		parser.finalize();
+
+		parsers->insert({ s_command, parser });
 	}
 
 	static void DebugItem(const char* label, const char* item)
@@ -184,7 +188,7 @@ namespace Marvel {
 				DebugItem("Global Mouse Position:", io.MousePos.x, io.MousePos.y);
 				DebugItem("Plot Mouse Position:", mvInput::getPlotMousePosition().x, mvInput::getPlotMousePosition().y);
 				DebugItem("Mouse Drag Delta:", mvInput::getMouseDragDelta().x, mvInput::getMouseDragDelta().y);
-				DebugItem("Mouse Drag Threshold:", mvInput::getMouseDragThreshold());
+				DebugItem("Mouse Drag Threshold:", (float)mvInput::getMouseDragThreshold());
 
 				ImGui::Spacing();
 				ImGui::Spacing();

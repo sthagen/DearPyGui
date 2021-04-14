@@ -10,19 +10,23 @@ namespace Marvel {
 	void mvVLineSeries::InsertParser(std::map<std::string, mvPythonParser>* parsers)
 	{
 
-		parsers->insert({ s_command, mvPythonParser({
-			{mvPythonDataType::Optional},
-			{mvPythonDataType::String, "name"},
-			{mvPythonDataType::KeywordOnly},
-			{mvPythonDataType::FloatList, "x"},
-			{mvPythonDataType::String, "label", "Overrides 'name' as label", "''"},
-			{mvPythonDataType::String, "source", "", "''"},
-			{mvPythonDataType::String, "parent", "Parent to add this item to. (runtime adding)", "''"},
-			{mvPythonDataType::String, "before", "This item will be displayed before the specified item in the parent. (runtime adding)", "''"},
-			{mvPythonDataType::Bool, "show", "Attempt to render", "True"},
-			{mvPythonDataType::Integer, "axis", "", "0"},
-			{mvPythonDataType::Bool, "contribute_to_bounds", "", "True"},
-		}, "Adds a drag point to a plot.", "None", "Plotting") });
+		mvPythonParser parser(mvPyDataType::String);
+		mvAppItem::AddCommonArgs(parser);
+		parser.removeArg("width");
+		parser.removeArg("height");
+		parser.removeArg("callback");
+		parser.removeArg("callback_data");
+		parser.removeArg("enabled");
+
+		parser.addArg<mvPyDataType::FloatList>("x");
+
+		parser.addArg<mvPyDataType::Integer>("axis", mvArgType::KEYWORD_ARG, "0");
+
+		parser.addArg<mvPyDataType::Bool>("contribute_to_bounds", mvArgType::KEYWORD_ARG, "True");
+
+		parser.finalize();
+
+		parsers->insert({ s_command, parser });
 	}
 
 	mvVLineSeries::mvVLineSeries(const std::string& name)
@@ -54,11 +58,34 @@ namespace Marvel {
 
 		xptr = &(*m_value.get())[0];
 
-		ImPlot::PlotVLines(m_label.c_str(), xptr->data(), xptr->size());
+		ImPlot::PlotVLines(m_label.c_str(), xptr->data(), (int)xptr->size());
 
 	}
 
-	void mvVLineSeries::setExtraConfigDict(PyObject* dict)
+	void mvVLineSeries::handleSpecificRequiredArgs(PyObject* dict)
+	{
+		if (!mvApp::GetApp()->getParsers()[s_command].verifyRequiredArguments(dict))
+			return;
+
+		for (int i = 0; i < PyTuple_Size(dict); i++)
+		{
+			PyObject* item = PyTuple_GetItem(dict, i);
+			switch (i)
+			{
+			case 0:
+				(*m_value)[0] = ToFloatVect(item);
+				break;
+
+			default:
+				break;
+			}
+		}
+
+		resetMaxMins();
+		calculateMaxMins();
+	}
+
+	void mvVLineSeries::handleSpecificKeywordArgs(PyObject* dict)
 	{
 		if (dict == nullptr)
 			return;
@@ -77,7 +104,7 @@ namespace Marvel {
 
 	}
 
-	void mvVLineSeries::getExtraConfigDict(PyObject* dict)
+	void mvVLineSeries::getSpecificConfiguration(PyObject* dict)
 	{
 		if (dict == nullptr)
 			return;
@@ -86,19 +113,23 @@ namespace Marvel {
 	void mvHLineSeries::InsertParser(std::map<std::string, mvPythonParser>* parsers)
 	{
 
-		parsers->insert({ s_command, mvPythonParser({
-			{mvPythonDataType::Optional},
-			{mvPythonDataType::String, "name"},
-			{mvPythonDataType::KeywordOnly},
-			{mvPythonDataType::FloatList, "x"},
-			{mvPythonDataType::String, "label", "Overrides 'name' as label", "''"},
-			{mvPythonDataType::String, "source", "", "''"},
-			{mvPythonDataType::String, "parent", "Parent to add this item to. (runtime adding)", "''"},
-			{mvPythonDataType::String, "before", "This item will be displayed before the specified item in the parent. (runtime adding)", "''"},
-			{mvPythonDataType::Bool, "show", "Attempt to render", "True"},
-			{mvPythonDataType::Integer, "axis", "", "0"},
-			{mvPythonDataType::Bool, "contribute_to_bounds", "", "True"},
-		}, "Adds a drag point to a plot.", "None", "Plotting") });
+		mvPythonParser parser(mvPyDataType::String);
+		mvAppItem::AddCommonArgs(parser);
+		parser.removeArg("width");
+		parser.removeArg("height");
+		parser.removeArg("callback");
+		parser.removeArg("callback_data");
+		parser.removeArg("enabled");
+
+		parser.addArg<mvPyDataType::FloatList>("x");
+
+		parser.addArg<mvPyDataType::Integer>("axis", mvArgType::KEYWORD_ARG, "0");
+
+		parser.addArg<mvPyDataType::Bool>("contribute_to_bounds", mvArgType::KEYWORD_ARG, "True");
+
+		parser.finalize();
+
+		parsers->insert({ s_command, parser });
 	}
 
 	mvHLineSeries::mvHLineSeries(const std::string& name)
@@ -130,11 +161,34 @@ namespace Marvel {
 
 		xptr = &(*m_value.get())[0];
 
-		ImPlot::PlotHLines(m_label.c_str(), xptr->data(), xptr->size());
+		ImPlot::PlotHLines(m_label.c_str(), xptr->data(), (int)xptr->size());
 
 	}
 
-	void mvHLineSeries::setExtraConfigDict(PyObject* dict)
+	void mvHLineSeries::handleSpecificRequiredArgs(PyObject* dict)
+	{
+		if (!mvApp::GetApp()->getParsers()[s_command].verifyRequiredArguments(dict))
+			return;
+
+		for (int i = 0; i < PyTuple_Size(dict); i++)
+		{
+			PyObject* item = PyTuple_GetItem(dict, i);
+			switch (i)
+			{
+			case 0:
+				(*m_value)[0] = ToFloatVect(item);
+				break;
+
+			default:
+				break;
+			}
+		}
+
+		resetMaxMins();
+		calculateMaxMins();
+	}
+
+	void mvHLineSeries::handleSpecificKeywordArgs(PyObject* dict)
 	{
 		if (dict == nullptr)
 			return;
@@ -153,7 +207,7 @@ namespace Marvel {
 
 	}
 
-	void mvHLineSeries::getExtraConfigDict(PyObject* dict)
+	void mvHLineSeries::getSpecificConfiguration(PyObject* dict)
 	{
 		if (dict == nullptr)
 			return;

@@ -85,32 +85,39 @@ namespace Marvel {
 	void mvCandleSeries::InsertParser(std::map<std::string, mvPythonParser>* parsers)
 	{
 
-		parsers->insert({ s_command, mvPythonParser({
-			{mvPythonDataType::Optional},
-			{mvPythonDataType::String, "name"},
-			{mvPythonDataType::KeywordOnly},
-			{mvPythonDataType::FloatList, "dates"},
-			{mvPythonDataType::FloatList, "opens"},
-			{mvPythonDataType::FloatList, "closes"},
-			{mvPythonDataType::FloatList, "lows"},
-			{mvPythonDataType::FloatList, "highs"},
-			{mvPythonDataType::Bool, "tooltip", "", "True"},
-			{mvPythonDataType::FloatList, "bull_color", "", "(0, 255, 113, 255)"},
-			{mvPythonDataType::FloatList, "bear_color", "", "(218, 13, 79, 255)"},
-			{mvPythonDataType::Float, "weight", "", "0.25"},
-			{mvPythonDataType::String, "label", "Overrides 'name' as label", "''"},
-			{mvPythonDataType::String, "source", "", "''"},
-			{mvPythonDataType::String, "parent", "Parent to add this item to. (runtime adding)", "''"},
-			{mvPythonDataType::String, "before", "This item will be displayed before the specified item in the parent. (runtime adding)", "''"},
-			{mvPythonDataType::Bool, "show", "Attempt to render", "True"},
-			{mvPythonDataType::Integer, "axis", "", "0"},
-			{mvPythonDataType::Bool, "contribute_to_bounds", "", "True"},
-		}, "Adds a drag point to a plot.", "None", "Plotting") });
+		mvPythonParser parser(mvPyDataType::String);
+		mvAppItem::AddCommonArgs(parser);
+		parser.removeArg("width");
+		parser.removeArg("height");
+		parser.removeArg("callback");
+		parser.removeArg("callback_data");
+		parser.removeArg("enabled");
+
+		parser.addArg<mvPyDataType::FloatList>("dates");
+		parser.addArg<mvPyDataType::FloatList>("opens");
+		parser.addArg<mvPyDataType::FloatList>("closes");
+		parser.addArg<mvPyDataType::FloatList>("lows");
+		parser.addArg<mvPyDataType::FloatList>("highs");
+
+		parser.addArg<mvPyDataType::IntList>("bull_color", mvArgType::KEYWORD_ARG, "(0, 255, 113, 255)");
+		parser.addArg<mvPyDataType::IntList>("bear_color", mvArgType::KEYWORD_ARG, "(218, 13, 79, 255)");
+
+		parser.addArg<mvPyDataType::Integer>("axis", mvArgType::KEYWORD_ARG, "0");
+
+		parser.addArg<mvPyDataType::Integer>("weight", mvArgType::KEYWORD_ARG, "0.25");
+
+		parser.addArg<mvPyDataType::Bool>("contribute_to_bounds", mvArgType::KEYWORD_ARG, "True");
+		parser.addArg<mvPyDataType::Bool>("tooltip", mvArgType::KEYWORD_ARG, "True");
+
+		parser.finalize();
+
+		parsers->insert({ s_command, parser });
 	}
 
 	mvCandleSeries::mvCandleSeries(const std::string& name)
 		: mvSeriesBase(name)
 	{
+		m_contributeToBounds = true;
 	}
 
 	void mvCandleSeries::draw(ImDrawList* drawlist, float x, float y)
@@ -151,7 +158,46 @@ namespace Marvel {
 
 	}
 
-	void mvCandleSeries::setExtraConfigDict(PyObject* dict)
+	void mvCandleSeries::handleSpecificRequiredArgs(PyObject* dict)
+	{
+		if (!mvApp::GetApp()->getParsers()[s_command].verifyRequiredArguments(dict))
+			return;
+
+		for (int i = 0; i < PyTuple_Size(dict); i++)
+		{
+			PyObject* item = PyTuple_GetItem(dict, i);
+			switch (i)
+			{
+			case 0:
+				(*m_value)[0] = ToFloatVect(item);
+				break;
+
+			case 1:
+				(*m_value)[1] = ToFloatVect(item);
+				break;
+
+			case 2:
+				(*m_value)[2] = ToFloatVect(item);
+				break;
+
+			case 3:
+				(*m_value)[3] = ToFloatVect(item);
+				break;
+
+			case 4:
+				(*m_value)[4] = ToFloatVect(item);
+				break;
+
+			default:
+				break;
+			}
+		}
+
+		resetMaxMins();
+		calculateMaxMins();
+	}
+
+	void mvCandleSeries::handleSpecificKeywordArgs(PyObject* dict)
 	{
 		if (dict == nullptr)
 			return;
@@ -178,7 +224,7 @@ namespace Marvel {
 
 	}
 
-	void mvCandleSeries::getExtraConfigDict(PyObject* dict)
+	void mvCandleSeries::getSpecificConfiguration(PyObject* dict)
 	{
 		if (dict == nullptr)
 			return;

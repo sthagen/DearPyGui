@@ -5,22 +5,25 @@
 #include "mvImGuiThemeScope.h"
 #include "mvTab.h"
 #include "mvFontScope.h"
+#include "mvPythonExceptions.h"
 
 namespace Marvel {
 
 	void mvTabBar::InsertParser(std::map<std::string, mvPythonParser>* parsers)
 	{
-		parsers->insert({ s_command, mvPythonParser({
-			{mvPythonDataType::Optional},
-			{mvPythonDataType::String, "name"},
-			{mvPythonDataType::KeywordOnly},
-			{mvPythonDataType::Bool, "reorderable", "allows for moveable tabs", "False"},
-			{mvPythonDataType::Callable, "callback", "Registers a callback", "None"},
-			{mvPythonDataType::Object, "callback_data", "Callback data", "None"},
-			{mvPythonDataType::Bool, "show", "Attempt to render", "True"},
-			{mvPythonDataType::String, "parent", "Parent to add this item to. (runtime adding)", "''"},
-			{mvPythonDataType::String, "before", "This item will be displayed before the specified item in the parent. (runtime adding)", "''"},
-		}, "Adds a tab bar.", "None", "Containers") });
+		mvPythonParser parser(mvPyDataType::String);
+		mvAppItem::AddCommonArgs(parser);
+		parser.removeArg("source");
+		parser.removeArg("width");
+		parser.removeArg("height");
+		parser.removeArg("label");
+		parser.removeArg("enabled");
+
+		parser.addArg<mvPyDataType::Bool>("reorderable", mvArgType::KEYWORD_ARG, "False", "allows for moveable tabs");
+
+		parser.finalize();
+
+		parsers->insert({ s_command, parser });
 	}
 
 	mvTabBar::mvTabBar(const std::string& name)
@@ -93,7 +96,7 @@ namespace Marvel {
 		m_lastValue = *m_value;
 	}
 
-	void mvTabBar::setExtraConfigDict(PyObject* dict)
+	void mvTabBar::handleSpecificKeywordArgs(PyObject* dict)
 	{
 		if (dict == nullptr)
 			return;
@@ -110,7 +113,7 @@ namespace Marvel {
 
 	}
 
-	void mvTabBar::getExtraConfigDict(PyObject* dict)
+	void mvTabBar::getSpecificConfiguration(PyObject* dict)
 	{
 		if (dict == nullptr)
 			return;

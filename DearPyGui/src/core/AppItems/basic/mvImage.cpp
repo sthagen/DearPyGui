@@ -8,24 +8,23 @@ namespace Marvel {
 
 	void mvImage::InsertParser(std::map<std::string, mvPythonParser>* parsers)
 	{
-		parsers->insert({ s_command, mvPythonParser({
-			{mvPythonDataType::Optional},
-			{mvPythonDataType::String, "name"},
-			{mvPythonDataType::KeywordOnly},
-			{mvPythonDataType::String, "value"},
-			{mvPythonDataType::FloatList, "tint_color", "", "(255, 255, 255, 255)"},
-			{mvPythonDataType::FloatList, "border_color", "", "(0, 0, 0, 0)"},
-			{mvPythonDataType::String, "parent", "Parent this item will be added to. (runtime adding)", "''"},
-			{mvPythonDataType::String, "before", "This item will be displayed before the specified item in the parent. (runtime adding)", "''"},
-			{mvPythonDataType::String, "source", "data source for shared data", "''"},
-			{mvPythonDataType::Integer, "width","", "0"},
-			{mvPythonDataType::Integer, "height","", "0"},
-			{mvPythonDataType::FloatList, "uv_min", "normalized texture coordinates", "(0.0, 0.0)"},
-			{mvPythonDataType::FloatList, "uv_max", "normalized texture coordinates", "(1.0, 1.0)"},
-			{mvPythonDataType::Bool, "show", "Attempt to render", "True"},
-		}, "Adds an image."
-		"uv_min and uv_max represent the normalized texture coordinates of the original image that will be shown."
-		"Using(0,0)->(1,1) texture coordinates will generally display the entire texture", "None", "Adding Widgets") });
+
+		mvPythonParser parser(mvPyDataType::String);
+		mvAppItem::AddCommonArgs(parser);
+		parser.removeArg("callback");
+		parser.removeArg("callback_data");
+		parser.removeArg("enabled");
+
+		parser.addArg<mvPyDataType::String>("value", mvArgType::POSITIONAL_ARG, "''");
+		
+		parser.addArg<mvPyDataType::FloatList>("tint_color", mvArgType::KEYWORD_ARG, "(255, 255, 255, 255)");
+		parser.addArg<mvPyDataType::FloatList>("border_color", mvArgType::KEYWORD_ARG, "(0, 0, 0, 0)");
+		parser.addArg<mvPyDataType::FloatList>("uv_min", mvArgType::KEYWORD_ARG, "(0.0, 0.0)", "normalized texture coordinates");
+		parser.addArg<mvPyDataType::FloatList>("uv_max", mvArgType::KEYWORD_ARG, "(1.0, 1.0)", "normalized texture coordinates");
+
+		parser.finalize();
+
+		parsers->insert({ s_command, parser });
 	}
 
 	mvImage::mvImage(const std::string& name)
@@ -120,7 +119,27 @@ namespace Marvel {
 		return m_value; 
 	}
 
-	void mvImage::setExtraConfigDict(PyObject* dict)
+	void mvImage::handleSpecificPositionalArgs(PyObject* dict)
+	{
+		if (!mvApp::GetApp()->getParsers()[s_command].verifyPositionalArguments(dict))
+			return;
+
+		for (int i = 0; i < PyTuple_Size(dict); i++)
+		{
+			PyObject* item = PyTuple_GetItem(dict, i);
+			switch (i)
+			{
+			case 0:
+				m_value = ToString(item);
+				break;
+
+			default:
+				break;
+			}
+		}
+	}
+
+	void mvImage::handleSpecificKeywordArgs(PyObject* dict)
 	{
 		if (dict == nullptr)
 			return;
@@ -140,7 +159,7 @@ namespace Marvel {
 		if (PyObject* item = PyDict_GetItemString(dict, "value")) m_value = ToString(item);
 	}
 
-	void mvImage::getExtraConfigDict(PyObject* dict)
+	void mvImage::getSpecificConfiguration(PyObject* dict)
 	{
 		if (dict == nullptr)
 			return;

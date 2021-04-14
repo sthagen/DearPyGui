@@ -5,37 +5,45 @@
 #include "mvItemRegistry.h"
 #include "mvImGuiThemeScope.h"
 #include "mvFontScope.h"
+#include "mvPythonExceptions.h"
 
 namespace Marvel {
 
 	void mvTableColumn::InsertParser(std::map<std::string, mvPythonParser>* parsers)
 	{
-		parsers->insert({ s_command, mvPythonParser({
-			{mvPythonDataType::Optional},
-			{mvPythonDataType::String, "name", ""},
-			{mvPythonDataType::KeywordOnly},
-			{mvPythonDataType::Float, "init_width_or_weight", "init_width_or_weight", "0.0"},
-			{mvPythonDataType::Bool, "show", "Attempt to render", "True"},
-			{mvPythonDataType::String, "parent", "Parent this item will be added to. (runtime adding)", "''"},
-			{mvPythonDataType::String, "before", "This item will be displayed before the specified item in the parent. (runtime adding)", "''"},
-			{mvPythonDataType::Bool, "default_hide", "Default as a hidden/disabled column.", "False"},
-			{mvPythonDataType::Bool, "default_sort", "Default as a sorting column.", "False"},
-			{mvPythonDataType::Bool, "width_stretch", "Column will stretch. Preferable with horizontal scrolling disabled (default if table sizing policy is _SizingStretchSame or _SizingStretchProp).", "False"},
-			{mvPythonDataType::Bool, "width_fixed", "Column will not stretch. Preferable with horizontal scrolling enabled (default if table sizing policy is _SizingFixedFit and table is resizable).", "False"},
-			{mvPythonDataType::Bool, "no_resize", "Disable manual resizing.", "False"},
-			{mvPythonDataType::Bool, "no_reorder", "Disable manual reordering this column, this will also prevent other columns from crossing over this column.", "False"},
-			{mvPythonDataType::Bool, "no_hide", "Disable ability to hide/disable this column.", "False"},
-			{mvPythonDataType::Bool, "no_clip", "Disable clipping for this column (all NoClip columns will render in a same draw command).", "False"},
-			{mvPythonDataType::Bool, "no_sort", "Disable ability to sort on this field (even if ImGuiTableFlags_Sortable is set on the table).", "False"},
-			{mvPythonDataType::Bool, "no_sort_ascending", "Disable ability to sort in the ascending direction.", "False"},
-			{mvPythonDataType::Bool, "no_sort_descending", "Disable ability to sort in the descending direction.", "False"},
-			{mvPythonDataType::Bool, "no_header_width", "Disable header text width contribution to automatic column width.", "False"},
-			{mvPythonDataType::Bool, "prefer_sort_ascending", "Make the initial sort direction Ascending when first sorting on this column (default).", "False"},
-			{mvPythonDataType::Bool, "prefer_sort_descending", "Make the initial sort direction Descending when first sorting on this column.", "False"},
-			{mvPythonDataType::Bool, "indent_enable", "Use current Indent value when entering cell (default for column 0).", "False"},
-			{mvPythonDataType::Bool, "indent_disable", "Ignore current Indent value when entering cell (default for columns > 0). Indentation changes _within_ the cell will still be honored.", "False"},
 
-			}, "Changes to next column.", "None", "Containers") });
+
+		mvPythonParser parser(mvPyDataType::String);
+		mvAppItem::AddCommonArgs(parser);
+		parser.removeArg("source");
+		parser.removeArg("label");
+		parser.removeArg("width");
+		parser.removeArg("height");
+		parser.removeArg("callback");
+		parser.removeArg("callback_data");
+		parser.removeArg("enabled");
+
+		parser.addArg<mvPyDataType::Bool>("init_width_or_weight", mvArgType::KEYWORD_ARG, "0.0");
+		parser.addArg<mvPyDataType::Bool>("default_hide", mvArgType::KEYWORD_ARG, "False", "Default as a hidden/disabled column.");
+		parser.addArg<mvPyDataType::Bool>("default_sort", mvArgType::KEYWORD_ARG, "False", "Default as a sorting column.");
+		parser.addArg<mvPyDataType::Bool>("width_stretch", mvArgType::KEYWORD_ARG, "False", "Column will stretch. Preferable with horizontal scrolling disabled (default if table sizing policy is _SizingStretchSame or _SizingStretchProp).");
+		parser.addArg<mvPyDataType::Bool>("width_fixed", mvArgType::KEYWORD_ARG, "False", "Column will not stretch. Preferable with horizontal scrolling enabled (default if table sizing policy is _SizingFixedFit and table is resizable).");
+		parser.addArg<mvPyDataType::Bool>("no_resize", mvArgType::KEYWORD_ARG, "False", "Disable manual resizing.");
+		parser.addArg<mvPyDataType::Bool>("no_reorder", mvArgType::KEYWORD_ARG, "False", "Disable manual reordering this column, this will also prevent other columns from crossing over this column.");
+		parser.addArg<mvPyDataType::Bool>("no_hide", mvArgType::KEYWORD_ARG, "False", "Disable ability to hide/disable this column.");
+		parser.addArg<mvPyDataType::Bool>("no_clip", mvArgType::KEYWORD_ARG, "False", "Disable clipping for this column (all NoClip columns will render in a same draw command).");
+		parser.addArg<mvPyDataType::Bool>("no_sort", mvArgType::KEYWORD_ARG, "False", "Disable ability to sort on this field (even if ImGuiTableFlags_Sortable is set on the table).");
+		parser.addArg<mvPyDataType::Bool>("no_sort_ascending", mvArgType::KEYWORD_ARG, "False", "Disable ability to sort in the ascending direction.");
+		parser.addArg<mvPyDataType::Bool>("no_sort_descending", mvArgType::KEYWORD_ARG, "False", "Disable ability to sort in the descending direction.");
+		parser.addArg<mvPyDataType::Bool>("no_header_width", mvArgType::KEYWORD_ARG, "False", "Disable header text width contribution to automatic column width.");
+		parser.addArg<mvPyDataType::Bool>("prefer_sort_ascending", mvArgType::KEYWORD_ARG, "False", "Make the initial sort direction Ascending when first sorting on this column (default).");
+		parser.addArg<mvPyDataType::Bool>("prefer_sort_descending", mvArgType::KEYWORD_ARG, "False", "Make the initial sort direction Descending when first sorting on this column.");
+		parser.addArg<mvPyDataType::Bool>("indent_enable", mvArgType::KEYWORD_ARG, "False", "Use current Indent value when entering cell (default for column 0).");
+		parser.addArg<mvPyDataType::Bool>("indent_disable", mvArgType::KEYWORD_ARG, "False", "Ignore current Indent value when entering cell (default for columns > 0). Indentation changes _within_ the cell will still be honored.");
+
+		parser.finalize();
+
+		parsers->insert({ s_command, parser });
 	}
 
 	mvTableColumn::mvTableColumn(const std::string& name)
@@ -59,7 +67,7 @@ namespace Marvel {
 		return false;
 	}
 
-	void mvTableColumn::setExtraConfigDict(PyObject* dict)
+	void mvTableColumn::handleSpecificKeywordArgs(PyObject* dict)
 	{
 		if (dict == nullptr)
 			return;
@@ -91,7 +99,7 @@ namespace Marvel {
 
 	}
 
-	void mvTableColumn::getExtraConfigDict(PyObject* dict)
+	void mvTableColumn::getSpecificConfiguration(PyObject* dict)
 	{
 		if (dict == nullptr)
 			return;

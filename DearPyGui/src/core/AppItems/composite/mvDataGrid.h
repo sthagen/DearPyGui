@@ -85,12 +85,12 @@ namespace Marvel {
 		MV_END_COLOR_CONSTANTS
 
 		MV_START_STYLE_CONSTANTS
-			MV_ADD_CONSTANT(mvThemeStyle_DataGrid_CellPaddingX			, 4, 20),
-			MV_ADD_CONSTANT(mvThemeStyle_DataGrid_CellPaddingY			, 2, 20),
-			MV_ADD_CONSTANT(mvThemeStyle_DataGrid_ItemSpacingX			, 8, 20),
-			MV_ADD_CONSTANT(mvThemeStyle_DataGrid_ItemSpacingY			, 4, 20),
-			MV_ADD_CONSTANT(mvThemeStyle_DataGrid_ItemTextAlignX		, 0,  1),
-			MV_ADD_CONSTANT(mvThemeStyle_DataGrid_ItemTextAlignY		, 0,  1),
+			MV_ADD_CONSTANT_F(mvThemeStyle_DataGrid_CellPaddingX			, 4, 20),
+			MV_ADD_CONSTANT_F(mvThemeStyle_DataGrid_CellPaddingY			, 2, 20),
+			MV_ADD_CONSTANT_F(mvThemeStyle_DataGrid_ItemSpacingX			, 8, 20),
+			MV_ADD_CONSTANT_F(mvThemeStyle_DataGrid_ItemSpacingY			, 4, 20),
+			MV_ADD_CONSTANT_F(mvThemeStyle_DataGrid_ItemTextAlignX		, 0,  1),
+			MV_ADD_CONSTANT_F(mvThemeStyle_DataGrid_ItemTextAlignY		, 0,  1),
 		MV_END_STYLE_CONSTANTS
 
 	public:
@@ -109,8 +109,10 @@ namespace Marvel {
 		void deleteColumn  (int column);
 		void clearGrid     ();
 		int  getColumnCount() const { return (int)m_columns; }
-		void setExtraConfigDict(PyObject* dict) override;
-		void getExtraConfigDict(PyObject* dict) override;
+
+		void handleSpecificPositionalArgs(PyObject* dict) override;
+		void handleSpecificKeywordArgs(PyObject* dict) override;
+		void getSpecificConfiguration(PyObject* dict) override;
 
 		[[nodiscard]] std::string getGridItem (int row, int column) const;
 		[[nodiscard]] PyObject*   getSelections() const;
@@ -130,7 +132,7 @@ namespace Marvel {
 		std::vector<std::string>              m_headers;
 		std::vector<std::vector<std::string>> m_hashValues;
 		std::vector<std::vector<std::string>> m_values;
-		size_t                                m_columns;
+		size_t                                m_columns = 0;
 		bool                                  m_hide_headers;
 
 		// new table api items

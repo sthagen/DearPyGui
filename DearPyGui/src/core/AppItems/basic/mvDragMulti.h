@@ -58,12 +58,12 @@ namespace Marvel {
 		MV_END_COLOR_CONSTANTS
 
 		MV_START_STYLE_CONSTANTS
-		MV_ADD_CONSTANT(mvThemeStyle_DragFloatx_Rounding,      0, 12),
-		MV_ADD_CONSTANT(mvThemeStyle_DragFloatx_BorderSize,    0, 1),
-		MV_ADD_CONSTANT(mvThemeStyle_DragFloatx_PaddingX,      4, 20),
-		MV_ADD_CONSTANT(mvThemeStyle_DragFloatx_PaddingY,      3, 20),
-		MV_ADD_CONSTANT(mvThemeStyle_DragFloatx_InnerSpacingX, 4, 20),
-		MV_ADD_CONSTANT(mvThemeStyle_DragFloatx_InnerSpacingY, 4, 20),
+		MV_ADD_CONSTANT_F(mvThemeStyle_DragFloatx_Rounding,      0, 12),
+		MV_ADD_CONSTANT_F(mvThemeStyle_DragFloatx_BorderSize,    0, 1),
+		MV_ADD_CONSTANT_F(mvThemeStyle_DragFloatx_PaddingX,      4, 20),
+		MV_ADD_CONSTANT_F(mvThemeStyle_DragFloatx_PaddingY,      3, 20),
+		MV_ADD_CONSTANT_F(mvThemeStyle_DragFloatx_InnerSpacingX, 4, 20),
+		MV_ADD_CONSTANT_F(mvThemeStyle_DragFloatx_InnerSpacingY, 4, 20),
 		MV_END_STYLE_CONSTANTS
 
 	public:
@@ -73,8 +73,8 @@ namespace Marvel {
 		void setEnabled(bool value) override;
 		void draw(ImDrawList* drawlist, float x, float y) override;
 
-		void setExtraConfigDict(PyObject* dict) override;
-		void getExtraConfigDict(PyObject* dict) override;
+		void handleSpecificKeywordArgs(PyObject* dict) override;
+		void getSpecificConfiguration(PyObject* dict) override;
 
 	private:
 
@@ -130,12 +130,12 @@ namespace Marvel {
 		MV_END_COLOR_CONSTANTS
 
 		MV_START_STYLE_CONSTANTS
-		MV_ADD_CONSTANT(mvThemeStyle_DragIntx_Rounding,			0, 12),
-		MV_ADD_CONSTANT(mvThemeStyle_DragIntx_BorderSize,		0,  1),
-		MV_ADD_CONSTANT(mvThemeStyle_DragIntx_PaddingX,			4, 20),
-		MV_ADD_CONSTANT(mvThemeStyle_DragIntx_PaddingY,			3, 20),
-		MV_ADD_CONSTANT(mvThemeStyle_DragIntx_InnerSpacingX,	4, 20),
-		MV_ADD_CONSTANT(mvThemeStyle_DragIntx_InnerSpacingY,	4, 20),
+		MV_ADD_CONSTANT_F(mvThemeStyle_DragIntx_Rounding,			0, 12),
+		MV_ADD_CONSTANT_F(mvThemeStyle_DragIntx_BorderSize,		0,  1),
+		MV_ADD_CONSTANT_F(mvThemeStyle_DragIntx_PaddingX,			4, 20),
+		MV_ADD_CONSTANT_F(mvThemeStyle_DragIntx_PaddingY,			3, 20),
+		MV_ADD_CONSTANT_F(mvThemeStyle_DragIntx_InnerSpacingX,	4, 20),
+		MV_ADD_CONSTANT_F(mvThemeStyle_DragIntx_InnerSpacingY,	4, 20),
 		MV_END_STYLE_CONSTANTS
 
 	public:
@@ -145,8 +145,8 @@ namespace Marvel {
 		void setEnabled(bool value) override;
 		void draw(ImDrawList* drawlist, float x, float y) override;
 
-		void setExtraConfigDict(PyObject* dict) override;
-		void getExtraConfigDict(PyObject* dict) override;
+		void handleSpecificKeywordArgs(PyObject* dict) override;
+		void getSpecificConfiguration(PyObject* dict) override;
 
 	private:
 

@@ -1,8 +1,8 @@
 #pragma once
 #include "mvAppItem.h"
 #include "mvItemRegistry.h"
-#include <imnodes.h>
 #include <stdint.h>
+#include <imnodes.h>
 
 namespace Marvel {
 
@@ -67,16 +67,16 @@ namespace Marvel {
 		MV_END_COLOR_CONSTANTS
 
 		MV_START_STYLE_CONSTANTS
-			MV_ADD_CONSTANT(mvThemeStyle_NodeEditor_GridSpacing,				20, 20),
-			MV_ADD_CONSTANT(mvThemeStyle_NodeEditor_LinkThickness,				3, 12),
-			MV_ADD_CONSTANT(mvThemeStyle_NodeEditor_LinkLineSegmentsPerLength,	1,  1),
-			MV_ADD_CONSTANT(mvThemeStyle_NodeEditor_LinkHoverDistance,			3, 12),
-			MV_ADD_CONSTANT(mvThemeStyle_NodeEditor_PinCircleRadius,			5, 12),
-			MV_ADD_CONSTANT(mvThemeStyle_NodeEditor_PinQuadSideLength,			5, 12),
-			MV_ADD_CONSTANT(mvThemeStyle_NodeEditor_PinTriangleSideLength,		5, 12),
-			MV_ADD_CONSTANT(mvThemeStyle_NodeEditor_PinLineThickness,			3, 12),
-			MV_ADD_CONSTANT(mvThemeStyle_NodeEditor_PinHoverRadius,				5, 12),
-			MV_ADD_CONSTANT(mvThemeStyle_NodeEditor_PinOffset,					0, 12),
+			MV_ADD_CONSTANT_F(mvThemeStyle_NodeEditor_GridSpacing,				20, 20),
+			MV_ADD_CONSTANT_F(mvThemeStyle_NodeEditor_LinkThickness,				3, 12),
+			MV_ADD_CONSTANT_F(mvThemeStyle_NodeEditor_LinkLineSegmentsPerLength,	1,  1),
+			MV_ADD_CONSTANT_F(mvThemeStyle_NodeEditor_LinkHoverDistance,			3, 12),
+			MV_ADD_CONSTANT_F(mvThemeStyle_NodeEditor_PinCircleRadius,			5, 12),
+			MV_ADD_CONSTANT_F(mvThemeStyle_NodeEditor_PinQuadSideLength,			5, 12),
+			MV_ADD_CONSTANT_F(mvThemeStyle_NodeEditor_PinTriangleSideLength,		5, 12),
+			MV_ADD_CONSTANT_F(mvThemeStyle_NodeEditor_PinLineThickness,			3, 12),
+			MV_ADD_CONSTANT_F(mvThemeStyle_NodeEditor_PinHoverRadius,				5, 12),
+			MV_ADD_CONSTANT_F(mvThemeStyle_NodeEditor_PinOffset,					0, 12),
 		MV_END_STYLE_CONSTANTS
 
 	public:
@@ -84,7 +84,7 @@ namespace Marvel {
 		mvNodeEditor(const std::string& name);
 		~mvNodeEditor();
 
-		void setExtraConfigDict(PyObject* dict) override;
+		void handleSpecificKeywordArgs(PyObject* dict) override;
 
 		bool canChildBeAdded(mvAppItemType type) override;
 
@@ -114,8 +114,8 @@ namespace Marvel {
 		bool m_clearNodes = false;
 		bool m_clearLinks = false;
 
-		mvCallable m_linkCallback = nullptr;
-		mvCallable m_delinkCallback = nullptr;
+		PyObject* m_linkCallback = nullptr;
+		PyObject* m_delinkCallback = nullptr;
 	};
 
 }

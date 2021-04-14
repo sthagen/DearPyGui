@@ -13,6 +13,7 @@ set(MARVEL_SOURCES
 	"src/core/PythonUtilities/mvPythonParser.cpp"
 	"src/core/PythonUtilities/mvPythonExceptions.cpp"
 	"src/core/PythonUtilities/mvGlobalIntepreterLock.cpp"
+	"src/core/PythonUtilities/mvPythonTypeChecker.cpp"
 
 	"$<$<PLATFORM_ID:Windows>:src/platform/Windows/mvWindowsViewport.cpp>"
 	"$<$<PLATFORM_ID:Windows>:src/platform/Windows/mvUtilities.cpp>"
@@ -66,8 +67,6 @@ set(MARVEL_SOURCES
 	"src/core/AppItems/basic/mvInputMulti.cpp"
 
 	"src/core/AppItems/misc/mvProgressBar.cpp"
-	"src/core/AppItems/misc/mvIndent.cpp"
-	"src/core/AppItems/misc/mvUnindent.cpp"
 	"src/core/AppItems/misc/mvSameLine.cpp"
 	"src/core/AppItems/misc/mvSeparator.cpp"
 	"src/core/AppItems/misc/mvDummy.cpp"
@@ -93,6 +92,7 @@ set(MARVEL_SOURCES
 	"src/core/AppItems/custom/mvTimePicker.cpp"
 	"src/core/AppItems/custom/mvTextEditor.cpp"
 	"src/core/AppItems/custom/mvColorMapScale.cpp"
+	"src/core/AppItems/custom/mvSlider3D.cpp"
 
 	"src/core/AppItems/drawing/mvDrawing.cpp"
 	"src/core/AppItems/drawing/mvDrawLine.cpp"

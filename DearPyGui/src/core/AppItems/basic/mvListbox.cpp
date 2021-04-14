@@ -9,23 +9,19 @@ namespace Marvel {
 
 	void mvListbox::InsertParser(std::map<std::string, mvPythonParser>* parsers)
 	{
-		parsers->insert({ s_command, mvPythonParser({
-			{mvPythonDataType::Optional},
-			{mvPythonDataType::String, "name", "Name of the listbox"},
-			{mvPythonDataType::KeywordOnly},
-			{mvPythonDataType::StringList, "items", "", "()"},
-			{mvPythonDataType::Integer, "default_value", "", "0"},
-			{mvPythonDataType::Callable, "callback", "Registers a callback", "None"},
-			{mvPythonDataType::Object, "callback_data", "Callback data", "None"},
-			{mvPythonDataType::String, "parent", "Parent this item will be added to. (runtime adding)", "''"},
-			{mvPythonDataType::String, "before", "This item will be displayed before the specified item in the parent. (runtime adding)", "''"},
-			{mvPythonDataType::String, "source", "", "''"},
-			{mvPythonDataType::Bool, "enabled", "Display grayed out text so selectable cannot be selected", "True"},
-			{mvPythonDataType::Integer, "width","", "0"},
-			{mvPythonDataType::Integer, "num_items", "number of items to show", "3"},
-			{mvPythonDataType::String, "label","", "''"},
-			{mvPythonDataType::Bool, "show", "Attempt to render", "True"},
-		}, "Adds a listbox.", "None", "Adding Widgets") });
+
+		mvPythonParser parser(mvPyDataType::String);
+		mvAppItem::AddCommonArgs(parser);
+		parser.removeArg("height");
+
+		parser.addArg<mvPyDataType::StringList>("items", mvArgType::POSITIONAL_ARG, "()");
+
+		parser.addArg<mvPyDataType::Integer>("default_value", mvArgType::KEYWORD_ARG, "0");
+		parser.addArg<mvPyDataType::Integer>("num_items", mvArgType::KEYWORD_ARG, "3", "number of items to show");
+
+		parser.finalize();
+
+		parsers->insert({ s_command, parser });
 	}
 
 	mvListbox::mvListbox(const std::string& name)
@@ -45,7 +41,30 @@ namespace Marvel {
 			mvApp::GetApp()->getCallbackRegistry().addCallback(getCallback(false), m_name, m_callback_data);
 	}
 
-	void mvListbox::setExtraConfigDict(PyObject* dict)
+	void mvListbox::handleSpecificPositionalArgs(PyObject* dict)
+	{
+		if (!mvApp::GetApp()->getParsers()[s_command].verifyPositionalArguments(dict))
+			return;
+
+		for (int i = 0; i < PyTuple_Size(dict); i++)
+		{
+			PyObject* item = PyTuple_GetItem(dict, i);
+			switch (i)
+			{
+			case 0:
+				m_names = ToStringVect(item);
+				m_charNames.clear();
+				for (const std::string& item : m_names)
+					m_charNames.emplace_back(item.c_str());
+				break;
+
+			default:
+				break;
+			}
+		}
+	}
+
+	void mvListbox::handleSpecificKeywordArgs(PyObject* dict)
 	{
 		if (dict == nullptr)
 			return;
@@ -60,7 +79,7 @@ namespace Marvel {
 		}
 	}
 
-	void mvListbox::getExtraConfigDict(PyObject* dict)
+	void mvListbox::getSpecificConfiguration(PyObject* dict)
 	{
 		if (dict == nullptr)
 			return;

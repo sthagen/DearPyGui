@@ -6,23 +6,25 @@
 #include "mvFontScope.h"
 
 namespace Marvel {
+
 	void mvRadioButton::InsertParser(std::map<std::string, mvPythonParser>* parsers)
 	{
-		parsers->insert({ s_command, mvPythonParser({
-			{mvPythonDataType::Optional},
-			{mvPythonDataType::String, "name"},
-			{mvPythonDataType::KeywordOnly},
-			{mvPythonDataType::StringList, "items", "", "()"},
-			{mvPythonDataType::Integer, "default_value", "", "0"},
-			{mvPythonDataType::Callable, "callback", "Registers a callback", "None"},
-			{mvPythonDataType::Object, "callback_data", "Callback data", "None"},
-			{mvPythonDataType::String, "parent", "Parent to add this item to. (runtime adding)", "''"},
-			{mvPythonDataType::String, "before", "This item will be displayed before the specified item in the parent. (runtime adding)", "''"},
-			{mvPythonDataType::String, "source", "", "''"},
-			{mvPythonDataType::Bool, "enabled", "Display grayed out text so selectable cannot be selected", "True"},
-			{mvPythonDataType::Bool, "horizontal", "", "False"},
-			{mvPythonDataType::Bool, "show", "Attempt to render", "True"},
-		}, "Adds a set of radio buttons. If items is empty, nothing will be shown.", "None", "Adding Widgets") });
+
+		mvPythonParser parser(mvPyDataType::String);
+		mvAppItem::AddCommonArgs(parser);
+		parser.removeArg("width");
+		parser.removeArg("height");
+		parser.removeArg("label");
+
+		parser.addArg<mvPyDataType::Integer>("items", mvArgType::POSITIONAL_ARG, "()");
+
+		parser.addArg<mvPyDataType::Integer>("default_value", mvArgType::KEYWORD_ARG, "0");
+
+		parser.addArg<mvPyDataType::Bool>("horizontal", mvArgType::KEYWORD_ARG, "False");
+
+		parser.finalize();
+
+		parsers->insert({ s_command, parser });
 	}
 
 	mvRadioButton::mvRadioButton(const std::string& name)
@@ -53,7 +55,27 @@ namespace Marvel {
 		ImGui::EndGroup();
 	}
 
-	void mvRadioButton::setExtraConfigDict(PyObject* dict)
+	void mvRadioButton::handleSpecificPositionalArgs(PyObject* dict)
+	{
+		if (!mvApp::GetApp()->getParsers()[s_command].verifyPositionalArguments(dict))
+			return;
+
+		for (int i = 0; i < PyTuple_Size(dict); i++)
+		{
+			PyObject* item = PyTuple_GetItem(dict, i);
+			switch (i)
+			{
+			case 0:
+				m_itemnames = ToStringVect(item);
+				break;
+
+			default:
+				break;
+			}
+		}
+	}
+
+	void mvRadioButton::handleSpecificKeywordArgs(PyObject* dict)
 	{
 		if (dict == nullptr)
 			return;
@@ -62,7 +84,7 @@ namespace Marvel {
 		if (PyObject* item = PyDict_GetItemString(dict, "horizontal")) m_horizontal = ToBool(item);
 	}
 
-	void mvRadioButton::getExtraConfigDict(PyObject* dict)
+	void mvRadioButton::getSpecificConfiguration(PyObject* dict)
 	{
 		if (dict == nullptr)
 			return;

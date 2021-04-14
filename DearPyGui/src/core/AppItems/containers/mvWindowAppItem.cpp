@@ -9,34 +9,41 @@ namespace Marvel {
 
 	void mvWindowAppItem::InsertParser(std::map<std::string, mvPythonParser>* parsers)
 	{
-		parsers->insert({ s_command, mvPythonParser({
-			{mvPythonDataType::Optional},
-			{mvPythonDataType::String, "name"},
-			{mvPythonDataType::KeywordOnly},
-			{mvPythonDataType::Integer, "width", "", "-1"},
-			{mvPythonDataType::Integer, "height", "", "-1"},
-			{mvPythonDataType::Integer, "x_pos", "x position the window will start at", "200"},
-			{mvPythonDataType::Integer, "y_pos", "y position the window will start at", "200"},
-			{mvPythonDataType::Bool, "autosize", "Autosized the window to fit it's items.", "False"},
-			{mvPythonDataType::Bool, "no_resize", "Allows for the window size to be changed or fixed", "False"},
-			{mvPythonDataType::Bool, "no_title_bar", "Title name for the title bar of the window", "False"},
-			{mvPythonDataType::Bool, "no_move", "Allows for the window's position to be changed or fixed", "False"},
-			{mvPythonDataType::Bool, "no_scrollbar" ," Disable scrollbars (window can still scroll with mouse or programmatically)", "False"},
-			{mvPythonDataType::Bool, "no_collapse" ,"Disable user collapsing window by double-clicking on it", "False"},
-			{mvPythonDataType::Bool, "horizontal_scrollbar" ,"Allow horizontal scrollbar to appear (off by default).", "False"},
-			{mvPythonDataType::Bool, "no_focus_on_appearing" ,"Disable taking focus when transitioning from hidden to visible state", "False"},
-			{mvPythonDataType::Bool, "no_bring_to_front_on_focus" ,"Disable bringing window to front when taking focus (e.g. clicking on it or programmatically giving it focus)", "False"},
-			{mvPythonDataType::Bool, "menubar", "", "False"},
-			{mvPythonDataType::Bool, "no_close", "", "False"},
-			{mvPythonDataType::Bool, "no_background", "", "False"},
-			{mvPythonDataType::String, "label", "", "''"},
-			{mvPythonDataType::Bool, "show", "Attempt to render", "True"},
-			{mvPythonDataType::Bool, "collapsed", "Collapse the window", "False"},
-			{mvPythonDataType::Callable, "on_close", "Callback ran when window is closed", "None"},
-			{mvPythonDataType::IntList, "min_size", "Minimum window size.", "[32, 32]"},
-			{mvPythonDataType::IntList, "max_size", "Maximum window size.", "[30000, 30000]"},
-		}, "Creates a new window for following items to be added to.",
-			"None", "Containers") });
+
+		mvPythonParser parser(mvPyDataType::String);
+		mvAppItem::AddCommonArgs(parser);
+		parser.removeArg("parent");
+		parser.removeArg("before");
+		parser.removeArg("source");
+		parser.removeArg("callback");
+		parser.removeArg("callback_data");
+		parser.removeArg("enabled");
+
+		parser.addArg<mvPyDataType::Integer>("x_pos", mvArgType::KEYWORD_ARG, "200");
+		parser.addArg<mvPyDataType::Integer>("y_pos", mvArgType::KEYWORD_ARG, "200");
+
+		parser.addArg<mvPyDataType::IntList>("min_size", mvArgType::KEYWORD_ARG, "[32, 32]", "Minimum window size.");
+		parser.addArg<mvPyDataType::IntList>("max_size", mvArgType::KEYWORD_ARG, "[30000, 30000]", "Maximum window size.");
+
+		parser.addArg<mvPyDataType::Bool>("menubar", mvArgType::KEYWORD_ARG, "False");
+		parser.addArg<mvPyDataType::Bool>("collapsed", mvArgType::KEYWORD_ARG, "False", "Collapse the window");
+		parser.addArg<mvPyDataType::Bool>("autosize", mvArgType::KEYWORD_ARG, "False", "Autosized the window to fit it's items.");
+		parser.addArg<mvPyDataType::Bool>("no_resize", mvArgType::KEYWORD_ARG, "False", "Allows for the window size to be changed or fixed");
+		parser.addArg<mvPyDataType::Bool>("no_title_bar", mvArgType::KEYWORD_ARG, "False", "Title name for the title bar of the window");
+		parser.addArg<mvPyDataType::Bool>("no_move", mvArgType::KEYWORD_ARG, "False", "Allows for the window's position to be changed or fixed");
+		parser.addArg<mvPyDataType::Bool>("no_scrollbar", mvArgType::KEYWORD_ARG, "False", " Disable scrollbars (window can still scroll with mouse or programmatically)");
+		parser.addArg<mvPyDataType::Bool>("no_collapse", mvArgType::KEYWORD_ARG, "False", "Disable user collapsing window by double-clicking on it");
+		parser.addArg<mvPyDataType::Bool>("horizontal_scrollbar", mvArgType::KEYWORD_ARG, "False", "Allow horizontal scrollbar to appear (off by default).");
+		parser.addArg<mvPyDataType::Bool>("no_focus_on_appearing", mvArgType::KEYWORD_ARG, "False", "Disable taking focus when transitioning from hidden to visible state");
+		parser.addArg<mvPyDataType::Bool>("no_bring_to_front_on_focus", mvArgType::KEYWORD_ARG, "False", "Disable bringing window to front when taking focus (e.g. clicking on it or programmatically giving it focus)");
+		parser.addArg<mvPyDataType::Bool>("no_close", mvArgType::KEYWORD_ARG, "False");
+		parser.addArg<mvPyDataType::Bool>("no_background", mvArgType::KEYWORD_ARG, "False");
+
+		parser.addArg<mvPyDataType::Callable>("on_close", mvArgType::KEYWORD_ARG, "None", "Callback ran when window is closed");
+
+		parser.finalize();
+
+		parsers->insert({ s_command, parser });
 	}
 
 	mvWindowAppItem::mvWindowAppItem(const std::string& name, bool mainWindow)
@@ -57,12 +64,24 @@ namespace Marvel {
 
 	mvWindowAppItem::~mvWindowAppItem()
 	{
-		mvCallable callback = m_on_close;
+		PyObject* callback = m_on_close;
 		mvApp::GetApp()->getCallbackRegistry().submitCallback([callback]() {
 			if (callback)
 				Py_XDECREF(callback);
 			});
 
+	}
+
+	void mvWindowAppItem::onChildAdd(mvRef<mvAppItem> item)
+	{
+		if(item->getType() == mvAppItemType::mvMenuBar)
+			m_windowflags |= ImGuiWindowFlags_MenuBar;
+	}
+
+	void mvWindowAppItem::onChildRemoved(mvRef<mvAppItem> item)
+	{
+		if (item->getType() == mvAppItemType::mvMenuBar)
+			m_windowflags &= ~ImGuiWindowFlags_MenuBar;
 	}
 
 	void mvWindowAppItem::setWindowAsMainStatus(bool value)
@@ -130,7 +149,7 @@ namespace Marvel {
 		return { (float)m_xpos, (float)m_ypos };
 	}
 
-	void mvWindowAppItem::setResizeCallback(mvCallable callback)
+	void mvWindowAppItem::setResizeCallback(PyObject* callback)
 	{
 		m_resize_callback = callback;
 	}
@@ -284,7 +303,7 @@ namespace Marvel {
 
 	}
 
-	void mvWindowAppItem::setExtraConfigDict(PyObject* dict)
+	void mvWindowAppItem::handleSpecificKeywordArgs(PyObject* dict)
 	{
 		if (dict == nullptr)
 			return;
@@ -347,7 +366,7 @@ namespace Marvel {
 
 	}
 
-	void mvWindowAppItem::getExtraConfigDict(PyObject* dict)
+	void mvWindowAppItem::getSpecificConfiguration(PyObject* dict)
 	{
 		if (dict == nullptr)
 			return;

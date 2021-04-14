@@ -1,26 +1,35 @@
 #include "mvDrawRect.h"
 #include "mvLog.h"
 #include "mvItemRegistry.h"
+#include "mvPythonExceptions.h"
 
 namespace Marvel {
 
 	void mvDrawRect::InsertParser(std::map<std::string, mvPythonParser>* parsers)
 	{
 
-		parsers->insert({ s_command, mvPythonParser({
-			{mvPythonDataType::Optional},
-			{mvPythonDataType::String, "name", "", "''"},
-			{mvPythonDataType::KeywordOnly},
-			{mvPythonDataType::FloatList, "pmin", "top left coordinate"},
-			{mvPythonDataType::FloatList, "pmax", "bottom right coordinate"},
-			{mvPythonDataType::IntList, "color"},
-			{mvPythonDataType::FloatList, "fill", "", "(0, 0, 0, -1)"},
-			{mvPythonDataType::Float, "rounding", "", "0.0"},
-			{mvPythonDataType::Float, "thickness", "", "1.0"},
-			{mvPythonDataType::String, "parent", "Parent to add this item to. (runtime adding)", "''"},
-			{mvPythonDataType::String, "before", "This item will be displayed before the specified item in the parent. (runtime adding)", "''"},
-			{mvPythonDataType::Bool, "show", "Attempt to render", "True"},
-		}, "Draws a line on a drawing.", "None", "Drawing") });
+		mvPythonParser parser(mvPyDataType::String);
+		mvAppItem::AddCommonArgs(parser);
+		parser.removeArg("source");
+		parser.removeArg("width");
+		parser.removeArg("height");
+		parser.removeArg("label");
+		parser.removeArg("callback");
+		parser.removeArg("callback_data");
+		parser.removeArg("enabled");
+
+		parser.addArg<mvPyDataType::FloatList>("pmin");
+		parser.addArg<mvPyDataType::FloatList>("pmax");
+
+		parser.addArg<mvPyDataType::IntList>("color", mvArgType::KEYWORD_ARG, "(255, 255, 255, 255)");
+		parser.addArg<mvPyDataType::IntList>("fill", mvArgType::KEYWORD_ARG, "(0, 0, 0, -255)");
+
+		parser.addArg<mvPyDataType::Float>("rounding", mvArgType::KEYWORD_ARG, "0.0");
+		parser.addArg<mvPyDataType::Float>("thickness", mvArgType::KEYWORD_ARG, "1.0");
+
+		parser.finalize();
+
+		parsers->insert({ s_command, parser });
 	}
 
 	mvDrawRect::mvDrawRect(const std::string& name)
@@ -48,7 +57,31 @@ namespace Marvel {
 		drawlist->AddRect(m_pmin + start, m_pmax + start, m_color, m_rounding, ImDrawCornerFlags_All, m_thickness);
 	}
 
-	void mvDrawRect::setExtraConfigDict(PyObject* dict)
+	void mvDrawRect::handleSpecificRequiredArgs(PyObject* dict)
+	{
+		if (!mvApp::GetApp()->getParsers()[s_command].verifyRequiredArguments(dict))
+			return;
+
+		for (int i = 0; i < PyTuple_Size(dict); i++)
+		{
+			PyObject* item = PyTuple_GetItem(dict, i);
+			switch (i)
+			{
+			case 0:
+				m_pmax = ToVec2(item);
+				break;
+
+			case 1:
+				m_pmin = ToVec2(item);
+				break;
+
+			default:
+				break;
+			}
+		}
+	}
+
+	void mvDrawRect::handleSpecificKeywordArgs(PyObject* dict)
 	{
 		if (dict == nullptr)
 			return;
@@ -61,7 +94,7 @@ namespace Marvel {
 		if (PyObject* item = PyDict_GetItemString(dict, "thickness")) m_thickness = ToFloat(item);
 	}
 
-	void mvDrawRect::getExtraConfigDict(PyObject* dict)
+	void mvDrawRect::getSpecificConfiguration(PyObject* dict)
 	{
 		if (dict == nullptr)
 			return;

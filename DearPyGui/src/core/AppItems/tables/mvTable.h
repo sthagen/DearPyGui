@@ -52,8 +52,8 @@ namespace Marvel {
 		MV_END_COLOR_CONSTANTS
 
 		MV_START_STYLE_CONSTANTS
-			MV_ADD_CONSTANT(mvThemeStyle_Table_CellPaddingX, 4, 20),
-			MV_ADD_CONSTANT(mvThemeStyle_Table_CellPaddingY, 2, 20),
+			MV_ADD_CONSTANT_F(mvThemeStyle_Table_CellPaddingX, 4, 20),
+			MV_ADD_CONSTANT_F(mvThemeStyle_Table_CellPaddingY, 2, 20),
 		MV_END_STYLE_CONSTANTS
 
 	public:
@@ -62,8 +62,8 @@ namespace Marvel {
 
 		void draw(ImDrawList* drawlist, float x, float y) override;
 
-		void setExtraConfigDict(PyObject* dict) override;
-		void getExtraConfigDict(PyObject* dict) override;
+		void handleSpecificKeywordArgs(PyObject* dict) override;
+		void getSpecificConfiguration(PyObject* dict) override;
 
 		void onChildAdd(mvRef<mvAppItem> item) override;
 		void onChildRemoved(mvRef<mvAppItem> item) override;

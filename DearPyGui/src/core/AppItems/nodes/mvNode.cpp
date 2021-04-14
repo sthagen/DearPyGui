@@ -5,6 +5,7 @@
 #include "mvItemRegistry.h"
 #include "mvImNodesThemeScope.h"
 #include "mvFontScope.h"
+#include "mvPythonExceptions.h"
 
 namespace Marvel {
 
@@ -36,19 +37,24 @@ namespace Marvel {
 
 	void mvNode::InsertParser(std::map<std::string, mvPythonParser>* parsers)
 	{
-		parsers->insert({ s_command, mvPythonParser({
-			{mvPythonDataType::Optional},
-			{mvPythonDataType::String, "name"},
-			{mvPythonDataType::KeywordOnly},
-			{mvPythonDataType::Bool, "show", "Attempt to render", "True"},
-			{mvPythonDataType::String, "label", "", "''"},
-			{mvPythonDataType::Bool, "draggable", "Allow node to be draggable.", "True"},
-			{mvPythonDataType::String, "parent", "Parent to add this item to. (runtime adding)", "''"},
-			{mvPythonDataType::String, "before", "This item will be displayed before the specified item in the parent. (runtime adding)", "''"},
-			{mvPythonDataType::Integer, "x_pos", "x position the node will start at", "100"},
-			{mvPythonDataType::Integer, "y_pos", "y position the node will start at", "100"},
-		}, "Adds a node to a node editor.",
-		"None", "Containers") });
+
+		mvPythonParser parser(mvPyDataType::String);
+		mvAppItem::AddCommonArgs(parser);
+		parser.removeArg("source");
+		parser.removeArg("width");
+		parser.removeArg("height");
+		parser.removeArg("callback");
+		parser.removeArg("callback_data");
+		parser.removeArg("enabled");
+
+		parser.addArg<mvPyDataType::Bool>("draggable", mvArgType::KEYWORD_ARG, "True");
+
+		parser.addArg<mvPyDataType::Integer>("x_pos", mvArgType::KEYWORD_ARG, "100");
+		parser.addArg<mvPyDataType::Integer>("y_pos", mvArgType::KEYWORD_ARG, "100");
+
+		parser.finalize();
+
+		parsers->insert({ s_command, parser });
 	}
 
 	mvNode::mvNode(const std::string& name)
@@ -99,7 +105,7 @@ namespace Marvel {
 
 		if (m_dirty_pos)
 		{
-			imnodes::SetNodeGridSpacePos((int)m_id, ImVec2(m_xpos, m_ypos));
+			imnodes::SetNodeGridSpacePos((int)m_id, ImVec2((float)m_xpos, (float)m_ypos));
 			m_dirty_pos = false;
 		}
 
@@ -134,11 +140,11 @@ namespace Marvel {
 		imnodes::EndNode();
 
 		ImVec2 pos = imnodes::GetNodeGridSpacePos((int)m_id);
-		m_xpos = pos.x;
-		m_ypos = pos.y;
+		m_xpos = (int)pos.x;
+		m_ypos = (int)pos.y;
 	}
 
-	void mvNode::setExtraConfigDict(PyObject* dict)
+	void mvNode::handleSpecificKeywordArgs(PyObject* dict)
 	{
 		if (dict == nullptr)
 			return;
@@ -149,7 +155,7 @@ namespace Marvel {
 
 	}
 
-	void mvNode::getExtraConfigDict(PyObject* dict)
+	void mvNode::getSpecificConfiguration(PyObject* dict)
 	{
 		if (dict == nullptr)
 			return;

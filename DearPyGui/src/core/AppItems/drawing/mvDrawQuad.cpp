@@ -1,27 +1,36 @@
 #include "mvDrawQuad.h"
 #include "mvLog.h"
 #include "mvItemRegistry.h"
+#include "mvPythonExceptions.h"
 
 namespace Marvel {
 
 	void mvDrawQuad::InsertParser(std::map<std::string, mvPythonParser>* parsers)
 	{
 
-		parsers->insert({ s_command, mvPythonParser({
-			{mvPythonDataType::Optional},
-			{mvPythonDataType::String, "name", "", "''"},
-			{mvPythonDataType::KeywordOnly},
-			{mvPythonDataType::FloatList, "p1"},
-			{mvPythonDataType::FloatList, "p2"},
-			{mvPythonDataType::FloatList, "p3"},
-			{mvPythonDataType::FloatList, "p4"},
-			{mvPythonDataType::IntList, "color"},
-			{mvPythonDataType::FloatList, "fill", "", "(0, 0, 0, -1)"},
-			{mvPythonDataType::Float, "thickness", "", "1.0"},
-			{mvPythonDataType::String, "parent", "Parent to add this item to. (runtime adding)", "''"},
-			{mvPythonDataType::String, "before", "This item will be displayed before the specified item in the parent. (runtime adding)", "''"},
-			{mvPythonDataType::Bool, "show", "Attempt to render", "True"},
-		}, "Draws a quad on a drawing.", "None", "Drawing") });
+		mvPythonParser parser(mvPyDataType::String);
+		mvAppItem::AddCommonArgs(parser);
+		parser.removeArg("source");
+		parser.removeArg("width");
+		parser.removeArg("height");
+		parser.removeArg("label");
+		parser.removeArg("callback");
+		parser.removeArg("callback_data");
+		parser.removeArg("enabled");
+
+		parser.addArg<mvPyDataType::FloatList>("p1");
+		parser.addArg<mvPyDataType::FloatList>("p2");
+		parser.addArg<mvPyDataType::FloatList>("p3");
+		parser.addArg<mvPyDataType::FloatList>("p4");
+
+		parser.addArg<mvPyDataType::IntList>("color", mvArgType::KEYWORD_ARG, "(255, 255, 255, 255)");
+		parser.addArg<mvPyDataType::IntList>("fill", mvArgType::KEYWORD_ARG, "(0, 0, 0, -255)");
+
+		parser.addArg<mvPyDataType::Float>("thickness", mvArgType::KEYWORD_ARG, "1.0");
+
+		parser.finalize();
+
+		parsers->insert({ s_command, parser });
 	}
 
 	mvDrawQuad::mvDrawQuad(const std::string& name)
@@ -49,7 +58,39 @@ namespace Marvel {
 		drawlist->AddQuad(m_p1 + start, m_p2 + start, m_p3 + start, m_p4 + start, m_color, m_thickness);
 	}
 
-	void mvDrawQuad::setExtraConfigDict(PyObject* dict)
+	void mvDrawQuad::handleSpecificRequiredArgs(PyObject* dict)
+	{
+		if (!mvApp::GetApp()->getParsers()[s_command].verifyRequiredArguments(dict))
+			return;
+
+		for (int i = 0; i < PyTuple_Size(dict); i++)
+		{
+			PyObject* item = PyTuple_GetItem(dict, i);
+			switch (i)
+			{
+			case 0:
+				m_p1 = ToVec2(item);
+				break;
+
+			case 1:
+				m_p2 = ToVec2(item);
+				break;
+
+			case 2:
+				m_p3 = ToVec2(item);
+				break;
+
+			case 3:
+				m_p4 = ToVec2(item);
+				break;
+
+			default:
+				break;
+			}
+		}
+	}
+
+	void mvDrawQuad::handleSpecificKeywordArgs(PyObject* dict)
 	{
 		if (dict == nullptr)
 			return;
@@ -65,7 +106,7 @@ namespace Marvel {
 
 	}
 
-	void mvDrawQuad::getExtraConfigDict(PyObject* dict)
+	void mvDrawQuad::getSpecificConfiguration(PyObject* dict)
 	{
 		if (dict == nullptr)
 			return;

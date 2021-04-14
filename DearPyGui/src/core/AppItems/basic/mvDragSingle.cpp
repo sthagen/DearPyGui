@@ -12,52 +12,51 @@ namespace Marvel {
 
     void mvDragFloat::InsertParser(std::map<std::string, mvPythonParser>* parsers)
     {
-        parsers->insert({ s_command, mvPythonParser({
-            {mvPythonDataType::Optional},
-            {mvPythonDataType::String, "name"},
-            {mvPythonDataType::KeywordOnly},
-            {mvPythonDataType::Float, "default_value", "", "0.0"},
-            {mvPythonDataType::Float, "speed", "", "1.0"},
-            {mvPythonDataType::Float, "min_value", "", "0.0"},
-            {mvPythonDataType::Float, "max_value", "", "100.0"},
-            {mvPythonDataType::String, "format", "", "'%0.3f'"},
-            {mvPythonDataType::Callable, "callback", "Registers a callback", "None"},
-            {mvPythonDataType::Object, "callback_data", "Callback data", "None"},
-            {mvPythonDataType::String, "parent", "Parent this item will be added to. (runtime adding)", "''"},
-            {mvPythonDataType::String, "before", "This item will be displayed before the specified item in the parent. (runtime adding)", "''"},
-            {mvPythonDataType::String, "source", "", "''"},
-            {mvPythonDataType::Bool, "enabled", "Display grayed out text so selectable cannot be selected", "True"},
-            {mvPythonDataType::Integer, "width","", "0"},
-            {mvPythonDataType::Bool, "no_input", "Disable CTRL+Click or Enter key allowing to input text directly into the widget", "False"},
-            {mvPythonDataType::Bool, "clamped", "Clamp value to min/max bounds when input manually with CTRL+Click. By default CTRL+Click allows going out of bounds.", "False"},
-            {mvPythonDataType::String, "label", "", "''"},
-            {mvPythonDataType::Bool, "show", "Attempt to render", "True"},
-        }, "Adds drag for a single float value. CTRL+Click to directly modify the value.", "None", "Adding Widgets") });
+        mvPythonParser parser(mvPyDataType::String);
+        mvAppItem::AddCommonArgs(parser);
+        parser.removeArg("height");
+
+        parser.addArg<mvPyDataType::Float>("default_value", mvArgType::KEYWORD_ARG, "0.0");
+
+        parser.addArg<mvPyDataType::Integer>("size", mvArgType::KEYWORD_ARG, "4", "number of components");
+
+        parser.addArg<mvPyDataType::String>("format", mvArgType::KEYWORD_ARG, "'%0.3f'");
+
+        parser.addArg<mvPyDataType::Float>("speed", mvArgType::KEYWORD_ARG, "1.0");
+        parser.addArg<mvPyDataType::Float>("min_value", mvArgType::KEYWORD_ARG, "0.0");
+        parser.addArg<mvPyDataType::Float>("max_value", mvArgType::KEYWORD_ARG, "100.0");
+
+        parser.addArg<mvPyDataType::Bool>("no_input", mvArgType::KEYWORD_ARG, "False", "Disable CTRL+Click or Enter key allowing to input text directly into the widget");
+        parser.addArg<mvPyDataType::Bool>("clamped", mvArgType::KEYWORD_ARG, "False", "Clamp value to min/max bounds when input manually with CTRL+Click. By default CTRL+Click allows going out of bounds.");
+
+        parser.finalize();
+
+        parsers->insert({ s_command, parser });
     }
 
     void mvDragInt::InsertParser(std::map<std::string, mvPythonParser>* parsers)
     {
-        parsers->insert({ s_command, mvPythonParser({
-            {mvPythonDataType::Optional},
-            {mvPythonDataType::String, "name"},
-            {mvPythonDataType::KeywordOnly},
-            {mvPythonDataType::Integer, "default_value", "", "0"},
-            {mvPythonDataType::Float, "speed", "", "1.0"},
-            {mvPythonDataType::Integer, "min_value", "", "0"},
-            {mvPythonDataType::Integer, "max_value", "", "100"},
-            {mvPythonDataType::String, "format", "", "'%d'"},
-            {mvPythonDataType::Callable, "callback", "Registers a callback", "None"},
-            {mvPythonDataType::Object, "callback_data", "Callback data", "None"},
-            {mvPythonDataType::String, "parent", "Parent this item will be added to. (runtime adding)", "''"},
-            {mvPythonDataType::String, "before", "This item will be displayed before the specified item in the parent. (runtime adding)", "''"},
-            {mvPythonDataType::String, "source", "", "''"},
-            {mvPythonDataType::Bool, "enabled", "Display grayed out text so selectable cannot be selected", "True"},
-            {mvPythonDataType::Integer, "width","", "0"},
-            {mvPythonDataType::Bool, "no_input", "Disable CTRL+Click or Enter key allowing to input text directly into the widget", "False"},
-            {mvPythonDataType::Bool, "clamped", "Clamp value to min/max bounds when input manually with CTRL+Click. By default CTRL+Click allows going out of bounds.", "False"},
-            {mvPythonDataType::String, "label", "", "''"},
-            {mvPythonDataType::Bool, "show", "Attempt to render", "True"},
-        }, "Adds drag for a single int value. CTRL+Click to directly modify the value.", "None", "Adding Widgets") });
+        mvPythonParser parser(mvPyDataType::String);
+        mvAppItem::AddCommonArgs(parser);
+        parser.removeArg("height");
+
+        parser.addArg<mvPyDataType::Integer>("default_value", mvArgType::KEYWORD_ARG, "0");
+
+        parser.addArg<mvPyDataType::Integer>("size", mvArgType::KEYWORD_ARG, "4", "number of components");
+
+        parser.addArg<mvPyDataType::String>("format", mvArgType::KEYWORD_ARG, "'%d'");
+
+        parser.addArg<mvPyDataType::Float>("speed", mvArgType::KEYWORD_ARG, "1.0");
+
+        parser.addArg<mvPyDataType::Integer>("min_value", mvArgType::KEYWORD_ARG, "0");
+        parser.addArg<mvPyDataType::Integer>("max_value", mvArgType::KEYWORD_ARG, "100");
+
+        parser.addArg<mvPyDataType::Bool>("no_input", mvArgType::KEYWORD_ARG, "False", "Disable CTRL+Click or Enter key allowing to input text directly into the widget");
+        parser.addArg<mvPyDataType::Bool>("clamped", mvArgType::KEYWORD_ARG, "False", "Clamp value to min/max bounds when input manually with CTRL+Click. By default CTRL+Click allows going out of bounds.");
+
+        parser.finalize();
+
+        parsers->insert({ s_command, parser });
     }
 
     mvDragFloat::mvDragFloat(const std::string& name)
@@ -130,7 +129,7 @@ namespace Marvel {
             mvApp::GetApp()->getCallbackRegistry().addCallback(getCallback(false), m_name, m_callback_data);
     }
 
-    void mvDragFloat::setExtraConfigDict(PyObject* dict)
+    void mvDragFloat::handleSpecificKeywordArgs(PyObject* dict)
     {
         if (dict == nullptr)
             return;
@@ -154,7 +153,7 @@ namespace Marvel {
 
     }
 
-    void mvDragFloat::getExtraConfigDict(PyObject* dict)
+    void mvDragFloat::getSpecificConfiguration(PyObject* dict)
     {
         if (dict == nullptr)
             return;
@@ -176,7 +175,7 @@ namespace Marvel {
 
     }
 
-    void mvDragInt::setExtraConfigDict(PyObject* dict)
+    void mvDragInt::handleSpecificKeywordArgs(PyObject* dict)
     {
         if (dict == nullptr)
             return;
@@ -199,7 +198,7 @@ namespace Marvel {
         flagop("no_input", ImGuiSliderFlags_NoInput, m_stor_flags);
     }
 
-    void mvDragInt::getExtraConfigDict(PyObject* dict)
+    void mvDragInt::getSpecificConfiguration(PyObject* dict)
     {
         if (dict == nullptr)
             return;
