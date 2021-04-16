@@ -20,7 +20,7 @@ namespace Marvel {
 	mvWindowsViewport::mvWindowsViewport(unsigned width, unsigned height, bool error)
 		: mvViewport(width, height, error)
 	{
-		m_clearColor = ImVec4(0.0f, 0.0f, 0.0f, 1.0f);
+		m_clearColor = ImVec4(0.0706f, 0.0706f, 0.0706f, 1.0f);
 	}
 
 	mvWindowsViewport::~mvWindowsViewport()
@@ -75,6 +75,26 @@ namespace Marvel {
 		m_hwnd = CreateWindow(m_wc.lpszClassName, _T(m_title.c_str()),
 			m_modes,
 			m_xpos, m_ypos, m_actualWidth, m_actualHeight, nullptr, nullptr, m_wc.hInstance, this);
+
+		if (!m_small_icon.empty())
+		{
+			HANDLE hIcon = LoadImage(0, _T(m_small_icon.c_str()), IMAGE_ICON, 0, 0, LR_DEFAULTSIZE | LR_LOADFROMFILE);
+			if (hIcon) 
+			{
+				SendMessage(m_hwnd, WM_SETICON, ICON_SMALL, (LPARAM)hIcon);
+				SendMessage(GetWindow(m_hwnd, GW_OWNER), WM_SETICON, ICON_BIG, (LPARAM)hIcon);
+			}
+		}
+
+		if (!m_large_icon.empty())
+		{
+			HANDLE hIcon = LoadImage(0, _T(m_large_icon.c_str()), IMAGE_ICON, 0, 0, LR_DEFAULTSIZE | LR_LOADFROMFILE);
+			if (hIcon) 
+			{
+				SendMessage(m_hwnd, WM_SETICON, ICON_BIG, (LPARAM)hIcon);
+				SendMessage(GetWindow(m_hwnd, GW_OWNER), WM_SETICON, ICON_BIG, (LPARAM)hIcon);
+			}
+		}
 
 		// Initialize Direct3D
 		if (!CreateDeviceD3D(m_hwnd))

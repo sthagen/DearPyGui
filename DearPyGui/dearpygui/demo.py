@@ -426,15 +426,14 @@ def show_demo():
                 demo_help("CTRL+click to enter value.")
                 add_slider_float(label="slider float", max_value=1.0, format="ratio = %.3f", callback=demo_log)
                 add_slider_int(label="slider angle", min_value=-360, max_value=360, format="%d deg", callback=demo_log)
-                add_color_edit(label="color edit 3", default_value=[255, 0, 51], callback=demo_log)
                 demo_help(
                         "Click on the colored square to open a color picker.\n"
                         "Click and hold to use drag and drop.\n"
                         "Right-click on the colored square to show options.\n"
                         "CTRL+click on individual component to input value.\n")
-                add_color_edit([102, 179, 0, 128], label="color edit 4", callback=demo_log)
+                add_color_edit([102, 179, 0, 128], label="color edit", callback=demo_log)
                 add_listbox(["Apple", "Banana", "Cherry", "Kiwi", "Mango", "Orange", "Pineapple", "Strawberry", "Watermelon"], label="listbox", num_items=4, callback=demo_log)
-
+                add_color_button(label="color button")
             with tree_node(label="Trees"):
                 with tree_node(label="Basic Trees"):
                     with tree_node(label="Child 0", default_open=True):
@@ -1273,4 +1272,11 @@ def show_demo():
 
         with collapsing_header(label="New Widgets"):
 
+            with group(horizontal=True):
+                add_knob_float(label="K1")
+                add_knob_float(label="K2", default_value=25.0)
+                add_knob_float(label="K3", default_value=50.0)
+            with group(horizontal=True):
+                add_loading_indicator()
+                add_loading_indicator(style=1)
             add_3d_slider(label="3D Slider", scale=0.5)

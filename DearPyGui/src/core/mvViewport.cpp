@@ -27,8 +27,10 @@ namespace Marvel {
 	{
 
 		{
-			mvPythonParser parser(mvPyDataType::None);
+			mvPythonParser parser(mvPyDataType::String);
 			parser.addArg<mvPyDataType::String>("title", mvArgType::KEYWORD_ARG, "'Dear PyGui'");
+			parser.addArg<mvPyDataType::String>("small_icon", mvArgType::KEYWORD_ARG, "''");
+			parser.addArg<mvPyDataType::String>("large_icon", mvArgType::KEYWORD_ARG, "''");
 
 			parser.addArg<mvPyDataType::String>("width", mvArgType::KEYWORD_ARG, "1280");
 			parser.addArg<mvPyDataType::String>("height", mvArgType::KEYWORD_ARG, "800");
@@ -53,6 +55,7 @@ namespace Marvel {
 
 		{
 			mvPythonParser parser(mvPyDataType::None);
+			parser.addArg<mvPyDataType::String>("viewport");
 			parser.addArg<mvPyDataType::Bool>("minimized", mvArgType::KEYWORD_ARG, "False");
 			parser.addArg<mvPyDataType::Bool>("maximized", mvArgType::KEYWORD_ARG, "False");
 			parser.finalize();
@@ -91,6 +94,8 @@ namespace Marvel {
 		if (dict == nullptr)
 			return;
 
+		if (PyObject* item = PyDict_GetItemString(dict, "small_icon")) m_small_icon = ToString(item);
+		if (PyObject* item = PyDict_GetItemString(dict, "large_icon")) m_large_icon = ToString(item);
 		if (PyObject* item = PyDict_GetItemString(dict, "x_pos")) { m_posDirty = true;  m_xpos = ToInt(item);}
 		if (PyObject* item = PyDict_GetItemString(dict, "y_pos")) { m_posDirty = true;  m_ypos = ToInt(item);}
 		if (PyObject* item = PyDict_GetItemString(dict, "width")) { m_sizeDirty = true;  m_actualWidth = ToInt(item);}
@@ -125,6 +130,8 @@ namespace Marvel {
 	PyObject* mvViewport::create_viewport(PyObject* self, PyObject* args, PyObject* kwargs)
 	{
 		const char* title = "Dear PyGui";
+		const char* small_icon = "";
+		const char* large_icon = "";
 		int width = 1280;
 		int height = 800;
 		int x_pos = 100;
@@ -144,7 +151,7 @@ namespace Marvel {
 
 
 		if (!(mvApp::GetApp()->getParsers())["create_viewport"].parse(args, kwargs, __FUNCTION__,
-			&title, &width, &height, &x_pos, &y_pos, &resizable, &vsync, &always_on_top,
+			&title, &small_icon, &large_icon, &width, &height, &x_pos, &y_pos, &resizable, &vsync, &always_on_top,
 			&maximized_box, &minimized_box, &border, &caption, &overlapped,
 			&min_width, &max_width, &min_height, &max_height))
 			return GetPyNone();
@@ -154,16 +161,17 @@ namespace Marvel {
 
 		mvApp::GetApp()->setViewport(viewport);
 
-		return GetPyNone();
+		return ToPyString("DPG_NOT_USED_YET");
 	}
 
 	PyObject* mvViewport::show_viewport(PyObject* self, PyObject* args, PyObject* kwargs)
 	{
+		const char* vp;
 		int minimized = false;
 		int maximized = false;
 
 		if (!(mvApp::GetApp()->getParsers())["show_viewport"].parse(args, kwargs, __FUNCTION__,
-			&minimized, &maximized))
+			&vp, &minimized, &maximized))
 			return GetPyNone();
 
 		mvViewport* viewport = mvApp::GetApp()->getViewport();

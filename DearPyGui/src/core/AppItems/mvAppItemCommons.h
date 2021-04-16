@@ -61,6 +61,8 @@
 #include "custom/mvDatePicker.h"
 #include "custom/mvColorMapScale.h"
 #include "custom/mvSlider3D.h"
+#include "custom/mvKnob.h"
+#include "custom/mvLoadingIndicator.h"
 
 #include "composite/mvDataGrid.h"
 #include "composite/mvLogger.h"

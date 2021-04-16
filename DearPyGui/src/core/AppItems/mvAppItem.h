@@ -15,6 +15,7 @@
 #include "mvCallbackRegistry.h"
 #include "mvPythonTranslator.h"
 #include "cpp.hint"
+#include "mvPredefinedColors.h"
 
 // forward declarations
 struct ImPlotTime;
@@ -53,6 +54,7 @@ namespace Marvel {
         mvErrorSeries, mvVLineSeries, mvHLineSeries, mvHeatSeries,
         mvImageSeries, mvPieSeries, mvShadeSeries, mvLabelSeries,
         mvCandleSeries, mvAreaSeries, mvColorMapScale, mvSlider3D,
+        mvKnobFloat, mvLoadingIndicator,
         ItemTypeCount
     };
 
