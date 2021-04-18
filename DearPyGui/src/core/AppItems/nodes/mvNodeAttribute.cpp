@@ -27,7 +27,7 @@ namespace Marvel {
 		parser.addArg<mvPyDataType::Bool>("output", mvArgType::KEYWORD_ARG, "False", "Set as output attribute");
 		parser.addArg<mvPyDataType::Bool>("static", mvArgType::KEYWORD_ARG, "False", "Set as static attribute");
 
-		parser.addArg<mvPyDataType::Integer>("shape", mvArgType::KEYWORD_ARG, "1", "Pin shape");
+		parser.addArg<mvPyDataType::Integer>("shape", mvArgType::KEYWORD_ARG, "54010", "Pin shape");
 
 		parser.finalize();
 
@@ -40,16 +40,6 @@ namespace Marvel {
 		int64_t address = (int64_t)this;
 		int64_t reduced_address = address % 2147483648;
 		m_id = (int)reduced_address;
-	}
-
-	mvNodeAttribute::~mvNodeAttribute()
-	{
-		if (!m_delete)
-		{
-			if (m_parentPtr)
-				if (m_parentPtr->m_parentPtr)
-					static_cast<mvNodeEditor*>(m_parentPtr->m_parentPtr)->deleteLink(m_name, m_id, true);
-		}
 	}
 
 	bool mvNodeAttribute::isParentCompatible(mvAppItemType type)
@@ -109,8 +99,6 @@ namespace Marvel {
 
 		if (PyObject* item = PyDict_GetItemString(dict, "output")) m_output = ToBool(item);
 		if (PyObject* item = PyDict_GetItemString(dict, "static")) m_static = ToBool(item);
-		if (PyObject* item = PyDict_GetItemString(dict, "shape")) m_shape = (imnodes::PinShape)ToInt(item);
-
 		if (PyObject* item = PyDict_GetItemString(dict, "shape"))
 		{
 			m_shape = (imnodes::PinShape)ToInt(item);

@@ -304,7 +304,7 @@ def node(*args, label: str = "__DearPyGuiDefault", show: bool = True, draggable:
 
 @contextmanager
 def node_attribute(*args, show: bool = True, output: bool = False,
-         static: bool = False, parent: str = "", before: str = "", shape: int = 1, id:str=''):
+         static: bool = False, parent: str = "", before: str = "", shape: int = 54010, id:str=''):
     """Wraps add_node_attribute() and automates calling end().
 
     Args:
@@ -327,7 +327,8 @@ def node_attribute(*args, show: bool = True, output: bool = False,
         internal_dpg.end()
 
 @contextmanager
-def node_editor(*args, show: bool = True, parent: str = "", before: str = "", link_callback: Callable = None, delink_callback: Callable = None, id:str=''):
+def node_editor(*args, show: bool = True, parent: str = "", before: str = "", callback: Callable = None, 
+                delink_callback: Callable = None, id:str=''):
     """Wraps add_node_editor() and automates calling end().
 
     Args:
@@ -343,7 +344,8 @@ def node_editor(*args, show: bool = True, parent: str = "", before: str = "", li
         None
     """
     try:
-        yield internal_dpg.add_node_editor(*args, show=show, parent=parent, before=before, link_callback=link_callback, delink_callback=delink_callback, id=id)
+        yield internal_dpg.add_node_editor(*args, show=show, parent=parent, before=before, 
+                                           callback=callback, delink_callback=delink_callback, id=id)
     finally:
         internal_dpg.end()
 
