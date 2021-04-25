@@ -23,12 +23,12 @@ namespace Marvel {
 		mvRef<mvAppItem> item = mvApp::GetApp()->getItemRegistry().getItem(dataSource);
 		if (!item)
 		{
-			ThrowPythonException("Source item not found.");
+			mvThrowPythonError(1000, "Source item not found.");
 			return;
 		}
 		if (item->getValueType() != getValueType())
 		{
-			ThrowPythonException("Values types do not match");
+			mvThrowPythonError(1000, "Values types do not match");
 			return;
 		}
 		m_value = std::get<std::shared_ptr<int>>(item->getValue());
@@ -76,12 +76,12 @@ namespace Marvel {
 		mvRef<mvAppItem> item = mvApp::GetApp()->getItemRegistry().getItem(dataSource);
 		if (!item)
 		{
-			ThrowPythonException("Source item not found.");
+			mvThrowPythonError(1000, "Source item not found.");
 			return;
 		}
 		if (item->getValueType() != getValueType())
 		{
-			ThrowPythonException("Values types do not match");
+			mvThrowPythonError(1000, "Values types do not match");
 			return;
 		}
 		m_value = std::get<std::shared_ptr<std::array<int, 4>>>(item->getValue());
@@ -110,12 +110,12 @@ namespace Marvel {
 		mvRef<mvAppItem> item = mvApp::GetApp()->getItemRegistry().getItem(dataSource);
 		if (!item)
 		{
-			ThrowPythonException("Source item not found.");
+			mvThrowPythonError(1000, "Source item not found.");
 			return;
 		}
 		if (item->getValueType() != getValueType())
 		{
-			ThrowPythonException("Values types do not match");
+			mvThrowPythonError(1000, "Values types do not match");
 			return;
 		}
 		m_value = std::get<std::shared_ptr<float>>(item->getValue());
@@ -153,12 +153,12 @@ namespace Marvel {
 		mvRef<mvAppItem> item = mvApp::GetApp()->getItemRegistry().getItem(dataSource);
 		if (!item)
 		{
-			ThrowPythonException("Source item not found.");
+			mvThrowPythonError(1000, "Source item not found.");
 			return;
 		}
 		if (item->getValueType() != getValueType())
 		{
-			ThrowPythonException("Values types do not match");
+			mvThrowPythonError(1000, "Values types do not match");
 			return;
 		}
 		m_value = std::get<std::shared_ptr<std::array<float, 4>>>(item->getValue());
@@ -202,12 +202,12 @@ namespace Marvel {
 		mvRef<mvAppItem> item = mvApp::GetApp()->getItemRegistry().getItem(dataSource);
 		if (!item)
 		{
-			ThrowPythonException("Source item not found.");
+			mvThrowPythonError(1000, "Source item not found.");
 			return;
 		}
 		if (item->getValueType() != getValueType())
 		{
-			ThrowPythonException("Values types do not match");
+			mvThrowPythonError(1000, "Values types do not match");
 			return;
 		}
 		m_value = std::get<std::shared_ptr<std::array<float, 4>>>(item->getValue());
@@ -236,12 +236,12 @@ namespace Marvel {
 		mvRef<mvAppItem> item = mvApp::GetApp()->getItemRegistry().getItem(dataSource);
 		if (!item)
 		{
-			ThrowPythonException("Source item not found.");
+			mvThrowPythonError(1000, "Source item not found.");
 			return;
 		}
 		if (item->getValueType() != getValueType())
 		{
-			ThrowPythonException("Values types do not match");
+			mvThrowPythonError(1000, "Values types do not match");
 			return;
 		}
 		m_value = std::get<std::shared_ptr<bool>>(item->getValue());
@@ -270,12 +270,12 @@ namespace Marvel {
 		mvRef<mvAppItem> item = mvApp::GetApp()->getItemRegistry().getItem(dataSource);
 		if (!item)
 		{
-			ThrowPythonException("Source item not found.");
+			mvThrowPythonError(1000, "Source item not found.");
 			return;
 		}
 		if (item->getValueType() != getValueType())
 		{
-			ThrowPythonException("Values types do not match");
+			mvThrowPythonError(1000, "Values types do not match");
 			return;
 		}
 		m_value = std::get<std::shared_ptr<std::string>>(item->getValue());
@@ -325,12 +325,12 @@ namespace Marvel {
 		mvRef<mvAppItem> item = mvApp::GetApp()->getItemRegistry().getItem(dataSource);
 		if (!item)
 		{
-			ThrowPythonException("Source item not found.");
+			mvThrowPythonError(1000, "Source item not found.");
 			return;
 		}
 		if (item->getValueType() != getValueType())
 		{
-			ThrowPythonException("Values types do not match");
+			mvThrowPythonError(1000, "Values types do not match");
 			return;
 		}
 		m_value = std::get<std::shared_ptr<std::vector<float>>>(item->getValue());
@@ -361,12 +361,12 @@ namespace Marvel {
 		mvRef<mvAppItem> item = mvApp::GetApp()->getItemRegistry().getItem(dataSource);
 		if (!item)
 		{
-			ThrowPythonException("Source item not found.");
+			mvThrowPythonError(1000, "Source item not found.");
 			return;
 		}
 		if (item->getValueType() != getValueType())
 		{
-			ThrowPythonException("Values types do not match");
+			mvThrowPythonError(1000, "Values types do not match");
 			return;
 		}
 		m_value = std::get<std::shared_ptr<std::vector<std::vector<float>>>>(item->getValue());
@@ -441,13 +441,6 @@ namespace Marvel {
 		m_windowflags &= ~flag; 
 	}
 
-	void mvBaseWindowAppitem::setWindowPos(float x, float y)
-	{
-		m_xpos = (int)x;
-		m_ypos = (int)y;
-		m_dirty_pos = true;
-	}
-
 	void mvBaseWindowAppitem::setWidth(int width)
 	{ 
 		m_width = width;
@@ -458,11 +451,6 @@ namespace Marvel {
 	{
 		m_height = height;
 		m_dirty_size = true; 
-	}
-
-	mvVec2 mvBaseWindowAppitem::getWindowPos() const
-	{
-		return { (float)m_xpos, (float)m_ypos };
 	}
 
 	bool mvBaseWindowAppitem::prerender()
@@ -477,10 +465,16 @@ namespace Marvel {
 			m_dirty_size = false;
 		}
 
-		if (m_dirty_pos)
+		if (m_dirtyPos)
 		{
-			ImGui::SetNextWindowPos(ImVec2((float)m_xpos, (float)m_ypos));
-			m_dirty_pos = false;
+			ImGui::SetNextWindowPos(m_state.getItemPos());
+			m_dirtyPos = false;
+		}
+
+		if (m_focusNextFrame)
+		{
+			ImGui::SetNextWindowFocus();
+			m_focusNextFrame = false;
 		}
 
 		if (!ImGui::Begin(m_label.c_str(), &m_show, m_windowflags))
@@ -496,9 +490,6 @@ namespace Marvel {
 	{
 		if (dict == nullptr)
 			return;
-		 
-		if (PyObject* item = PyDict_GetItemString(dict, "x_pos")) setWindowPos((float)ToInt(item), (float)m_ypos);
-		if (PyObject* item = PyDict_GetItemString(dict, "y_pos")) setWindowPos((float)m_xpos, (float)ToInt(item));
 
 		// helper for bit flipping
 		auto flagop = [dict](const char* keyword, int flag, int& flags)
@@ -525,9 +516,6 @@ namespace Marvel {
 	{
 		if (dict == nullptr)
 			return;
-		 
-		PyDict_SetItemString(dict, "x_pos", ToPyInt(m_xpos));
-		PyDict_SetItemString(dict, "y_pos", ToPyInt(m_ypos));
 
 		// helper to check and set bit
 		auto checkbitset = [dict](const char* keyword, int flag, const int& flags)

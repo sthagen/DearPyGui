@@ -13,9 +13,9 @@
 #include "mvFontManager.h"
 #include "mvThemeManager.h"
 #include "mvCallbackRegistry.h"
-#include "mvTextureStorage.h"
 #include "mvPythonTranslator.h"
 #include "mvPythonExceptions.h"
+#include "mvGlobalIntepreterLock.h"
 #include <frameobject.h>
 #include "mvModule_Core.h"
 #include "mvLog.h"
@@ -89,7 +89,6 @@ namespace Marvel {
 
 		// create managers
 		m_itemRegistry = CreateOwnedPtr<mvItemRegistry>();
-		m_textureStorage = CreateOwnedPtr<mvTextureStorage>();
 		m_themeManager = CreateOwnedPtr<mvThemeManager>();
         m_callbackRegistry = CreateOwnedPtr<mvCallbackRegistry>();
         m_fontManager = CreateOwnedPtr<mvFontManager>();
@@ -106,11 +105,6 @@ namespace Marvel {
 		return *m_itemRegistry; 
 	}
 
-	mvTextureStorage& mvApp::getTextureStorage() 
-	{ 
-		return *m_textureStorage; 
-	}
-
 	mvThemeManager& mvApp::getThemeManager()
 	{
 		return *m_themeManager;
@@ -124,8 +118,6 @@ namespace Marvel {
 	mvApp::~mvApp()
 	{
 		m_itemRegistry->clearRegistry();
-
-		mvApp::GetApp()->getTextureStorage().deleteAllTextures();
 
 		mvLog::Cleanup();
 	
@@ -170,15 +162,7 @@ namespace Marvel {
 
 	bool mvApp::checkIfMainThread() const
 	{
-		if (std::this_thread::get_id() != m_mainThreadID)
-		{
-			int line = PyFrame_GetLineNumber(PyEval_GetFrame());
-			PyErr_Format(PyExc_Exception,
-				"DearPyGui command on line %d can not be called asynchronously", line);
-			PyErr_Print();
-			return false;
-		}
-		return true;
+		return std::this_thread::get_id() == m_mainThreadID;
 	}
 
 	std::map<std::string, mvPythonParser>& mvApp::getParsers()
@@ -284,7 +268,7 @@ namespace Marvel {
 
 		if (mvApp::IsAppStarted())
 		{
-			ThrowPythonException("Cannot call \"setup_dearpygui\" while a Dear PyGUI app is already running.");
+			mvThrowPythonError(1000, "Cannot call \"setup_dearpygui\" while a Dear PyGUI app is already running.");
 			return GetPyNone();
 		}
 
@@ -312,8 +296,9 @@ namespace Marvel {
 
 	PyObject* mvApp::cleanup_dearpygui(PyObject* self, PyObject* args, PyObject* kwargs)
 	{
+
 		Py_BEGIN_ALLOW_THREADS;
-		mvApp::GetApp()->cleanup();
+		mvApp::GetApp()->cleanup();	
 		mvApp::DeleteApp();
 		mvEventBus::Reset();
 		mvAppLog::Clear();

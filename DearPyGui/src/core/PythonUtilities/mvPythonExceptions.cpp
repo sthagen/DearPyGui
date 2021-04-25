@@ -3,45 +3,28 @@
 #include <Python.h>
 #include <frameobject.h>
 #include <string>
+#include "mvApp.h"
+#include "mvViewport.h"
+#include "mvCallbackRegistry.h"
+#include "mvGlobalIntepreterLock.h"
 
 namespace Marvel
 {
 
-	void ThrowPythonException(const std::string& message, bool line)
+	void mvThrowPythonError(int code, const std::string& message)
 	{
 
-		std::string fullMessage = "Line: %d \t" + message;
 
-		int lineno = 0;
-		if (line)
+		if (mvApp::GetApp()->checkIfMainThread())
 		{
-			auto f = PyEval_GetFrame();
-			if (f)
-				lineno = PyFrame_GetLineNumber(f);
-			else
-				fullMessage.append(" || error occured in a callback");
+			std::string fullMessage = "Error: [%d] Message: \t" + message;
+			PyErr_Format(PyExc_Exception, fullMessage.c_str(), code);
 		}
-
-		PyErr_Format(PyExc_Exception, fullMessage.c_str(), lineno);
-		PyErr_Print();
-	}
-
-	void mvThrowPythonError(int code, const std::string& message, bool line)
-	{
-		std::string fullMessage = "Error: [" + std::to_string(code) + std::string("] Line: %d \t") + message;
-
-		int lineno = 0;
-		if (line)
+		else 
 		{
-			auto f = PyEval_GetFrame();
-			if (f)
-				lineno = PyFrame_GetLineNumber(f);
-			else
-				fullMessage.append(" || error occured in a callback");
+			assert(false);
 		}
-
-		PyErr_Format(PyExc_Exception, fullMessage.c_str(), lineno);
-		PyErr_Print();
+			
 	}
 
 }

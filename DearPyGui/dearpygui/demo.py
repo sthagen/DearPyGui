@@ -60,9 +60,14 @@ def demo_recursive_disable(sender, siblings, restart_index=0):
 
     Returns:
         None"""
+    parent = sender
+    parent = get_item_info(sender)["parent"]
+    parent = get_item_info(parent)["parent"]
+    print(get_item_info(sender)["parent"])
+    print(siblings)
     for i in range(restart_index,len(siblings)-1, 1):
-        if is_item_container(siblings[i]):
-            siblings += get_item_children(siblings.pop(i))
+        if get_item_info(siblings[i])["type"] == 2:
+            siblings += get_item_info(siblings.pop(i))["children"]
             demo_recursive_disable(sender, siblings, i-1)
             return
     siblings.remove(sender)
@@ -81,7 +86,7 @@ def demo_enable_disable():
 
     Returns:
         None"""
-    add_checkbox(label="Enable/Disable", default_value=True, callback=lambda sender: demo_recursive_disable(sender, get_item_children(get_item_parent(sender))))
+    add_checkbox(label="Enable/Disable", default_value=True, callback=lambda sender: demo_recursive_disable(sender,  get_item_info(get_item_info(sender)["parent"])["children"]))
     demo_help('This will toggle the keyword "enable" for any sibling widgets that allow enabled & disabled')
 
 def demo_config(sender, data):
@@ -282,7 +287,10 @@ def show_demo():
 
     #set_accelerator_callback(demo_accelerator_callback)
 
-    with window(id="Dear PyGui Demo", x_pos=100, y_pos=100, width=800, height=800, on_close=on_demo_close):
+   #TODO: should we be allowed to set x, y post on start, should these bee keywords or just use set_item_pos function?
+   #with window(id="Dear PyGui Demo", x=100, y=100, width=800, height=800, on_close=on_demo_close):
+
+    with window(id="Dear PyGui Demo", width=800, height=800, on_close=on_demo_close):
 
         with menu_bar():
 
@@ -361,7 +369,6 @@ def show_demo():
                 add_checkbox(label="checkbox", callback=demo_log)
                 add_radio_button(["radio a", "radio b", "radio c"], callback=demo_log, horizontal=True)
                 selectme = add_selectable(label="selectable", callback=demo_log)
-                get_item_children(selectme)
                 # TODO: when items whose colors are set then disabled the disable color is not found so its clear
                 # probably because if you dont set disable at the item level when the searcher finds color it grabs an empty disable member
 
@@ -413,7 +420,7 @@ def show_demo():
                 add_input_int(label="input int", callback=demo_log)
                 add_input_float(label="input float", callback=demo_log)
                 add_input_float(label="input scientific", format="%e", callback=demo_log)
-                add_input_floatx(label="input floatx", callback=demo_log)
+                add_input_floatx(label="input floatx", callback=demo_log, default_value=[1,2,3,4])
                 add_drag_int(label="drag int", callback=demo_log)
                 demo_help(
                         "Click and drag to edit value.\n"
@@ -431,7 +438,8 @@ def show_demo():
                         "Click and hold to use drag and drop.\n"
                         "Right-click on the colored square to show options.\n"
                         "CTRL+click on individual component to input value.\n")
-                add_color_edit([102, 179, 0, 128], label="color edit", callback=demo_log)
+                add_color_edit((102, 179, 0, 128), label="color edit 4", callback=demo_log, uint8=True)
+                add_color_edit(default_value=(.5, 1, .25, .1), label="color edit 3", callback=demo_log, m_3component=True, uint8=True, floats=False)
                 add_listbox(["Apple", "Banana", "Cherry", "Kiwi", "Mango", "Orange", "Pineapple", "Strawberry", "Watermelon"], label="listbox", num_items=4, callback=demo_log)
                 add_color_button(label="color button")
             with tree_node(label="Trees"):
@@ -482,17 +490,18 @@ def show_demo():
                 add_image("INTERNAL_DPG_FONT_ATLAS")
                 add_text(default_value="Here is an image button using a portion of the font atlas")
                 demo_enable_disable()
-                add_image_button("INTERNAL_DPG_FONT_ATLAS",uv_max=[0.1, 0.1], callback=demo_log)
+                add_image_button("INTERNAL_DPG_FONT_ATLAS", width=100, height=100, uv_max=[0.1, 0.1], callback=demo_log)
                 add_same_line()
                 textdata = []
                 for i in range(0, 10000):
-                    textdata.append(255)
+                    textdata.append(255/255)
                     textdata.append(0)
-                    textdata.append(255)
-                    textdata.append(255)
+                    textdata.append(255/255)
+                    textdata.append(255/255)
                 # TODO: texture requires a name when it would be nice that it didnt
-                add_texture("#cooltexture", textdata, 100, 100, format=mvTEX_RGBA_INT)
-                add_image_button("#cooltexture", callback=demo_log)
+                #add_texture("#cooltexture", textdata, 100, 100, format=mvTEX_RGBA_INT)
+                add_static_texture(100, 100, textdata, id="#cooltexture", parent="TextureRegistry")
+                add_image_button("#cooltexture", width=100, height=100, callback=demo_log)
 
             with tree_node(label="Text Input"):
                 demo_enable_disable()
@@ -1052,6 +1061,11 @@ def show_demo():
                 add_stair_series(sindatax, sindatay, label="0.5 + 0.5 * sin(x)", parent=plot_id)
                 add_stair_series(x2datax, x2datay, label="x^2", parent=plot_id)
 
+            with tree_node(label="Area Plots"):
+                plot_id = add_plot(label="Area Plot", height=400)
+                add_area_series([1,5,3],[0,0,3], fill=[255,50,100,190], parent=plot_id)
+            
+
             with tree_node(label="Shade Plots"):
 
                 stock_datax = []
@@ -1208,8 +1222,10 @@ def show_demo():
                 add_line_series(x2datax, x2datay, label="Series 3", axis=2, parent=plot_id)
 
             with tree_node(label="Annotations"):
-                
+                scatter_data1x = [0.25, 0.25, 0.75, 0.75]
+                scatter_data1y = [0.25, 0.75, 0.75, 0.25]
                 plot_id = add_plot(label="Annotations", height=400)
+                add_scatter_series(scatter_data1x, scatter_data1y, parent=plot_id)
                 add_plot_annotation(label="BL", default_value=(0.25, 0.25), offset=(-15, 15), color=[255, 255, 0, 255], parent=plot_id)
                 add_plot_annotation(label="BR", default_value=(0.75, 0.25), offset=(15, 15), color=[255, 255, 0, 255], parent=plot_id)
                 add_plot_annotation(label="TR not clampled", default_value=(0.75, 0.75), offset=(-15, -15), color=[255, 255, 0, 255], clamped=False, parent=plot_id)
@@ -1222,6 +1238,7 @@ def show_demo():
                 add_drag_line(label="dline1", color=[255, 0, 0, 255], parent=plot_id)
                 add_drag_line(label="dline2", color=[255, 255, 0, 255], vertical=False, parent=plot_id)
                 add_drag_point(label="dpoint1", color=[255, 0, 255, 255], parent=plot_id)
+                add_drag_point(label="dpoint2", color=[255, 0, 255, 255], parent=plot_id)
 
             with tree_node(label="Infinite Lines"):
 
@@ -1310,16 +1327,3 @@ def show_demo():
                 add_loading_indicator(style=1)
             add_3d_slider(label="3D Slider", scale=0.5)
 
-    with window(id="extra"):
-        add_button()
-        add_button()
-        add_button()
-        add_button()
-        draw_circle((0, 0), 20, color=(0, 255, 0, 255))
-        infinite_x_data = [3, 5, 6, 7]
-        infinite_y_data = [3, 5, 6, 7]
-        plot = add_plot(label="Image Plot", height=400)
-        draw_circle((0, 0), 49, color=(255, 255, 0, 255), parent=plot)
-        add_vline_series(infinite_x_data, label="vertical", parent=plot)
-        add_hline_series(infinite_y_data, label="horizontal", parent=plot)
-    add_button(label="some button", parent="extra")

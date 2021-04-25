@@ -1,18 +1,19 @@
 #pragma once
 
-#include "mvAppItem.h"
-#include "mvItemRegistry.h"
+#include "mvTypeBases.h"
+#include "cpp.hint"
 
 namespace Marvel {
 
-	MV_REGISTER_WIDGET(mvDrawCircle, MV_ITEM_DESC_DEFAULT, StorageValueTypes::None, 2);
-	class mvDrawCircle : public mvAppItem
+	MV_REGISTER_WIDGET(mvDynamicTexture, MV_ITEM_DESC_DEFAULT, StorageValueTypes::FloatVect, 1);
+	class mvDynamicTexture : public mvFloatVectPtrBase
 	{
+
 	public:
 
 		static void InsertParser(std::map<std::string, mvPythonParser>* parsers);
 
-		MV_APPLY_WIDGET_REGISTRATION(mvAppItemType::mvDrawCircle, draw_circle)
+		MV_APPLY_WIDGET_REGISTRATION(mvAppItemType::mvDynamicTexture, add_dynamic_texture)
 
 		MV_START_EXTRA_COMMANDS
 		MV_END_EXTRA_COMMANDS
@@ -28,24 +29,23 @@ namespace Marvel {
 
 	public:
 
-		mvDrawCircle(const std::string& name);
+		mvDynamicTexture(const std::string& name);
+		~mvDynamicTexture();
 
 		void draw(ImDrawList* drawlist, float x, float y) override;
 		bool isParentCompatible(mvAppItemType type) override;
-
-		void handleSpecificRequiredArgs(PyObject* args) override;
+		void handleSpecificRequiredArgs(PyObject* dict) override;
 		void handleSpecificKeywordArgs(PyObject* dict) override;
 		void getSpecificConfiguration(PyObject* dict) override;
+		void setWidth(int width) override {}
+		void setHeight(int height) override {}
 
+		void* getRawTexture() { return m_texture; }
 
 	private:
 
-		mvVec2  m_center = { 0.0f, 0.0f };
-		float   m_radius = 1.0f;
-		int     m_segments = 0;
-		mvColor m_color;
-		mvColor m_fill;
-		float   m_thickness = 1.0f;
+		void* m_texture = nullptr;
+		bool  m_dirty = true;
 
 	};
 

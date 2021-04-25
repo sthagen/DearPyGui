@@ -95,6 +95,19 @@ namespace Marvel {
 				if (item->m_width != 0)
 					ImGui::SetNextItemWidth((float)item->m_width);
 
+				if (item->m_focusNextFrame)
+				{
+					ImGui::SetKeyboardFocusHere();
+					item->m_focusNextFrame = false;
+				}
+
+				if (item->m_dirtyPos)
+				{
+					ImGui::SetCursorPos(item->getState().getItemPos());
+					item->m_dirtyPos = false;
+				}
+				//item->getState().setPos({ ImGui::GetCursorPosX(), ImGui::GetCursorPosY() });
+
 				item->draw(drawlist, x, y);
 
 				item->getState().update();

@@ -79,6 +79,19 @@ namespace Marvel {
 					if (item->m_width != 0)
 						ImGui::SetNextItemWidth((float)item->m_width);
 
+					if (item->m_focusNextFrame)
+					{
+						ImGui::SetKeyboardFocusHere();
+						item->m_focusNextFrame = false;
+					}
+
+					if (item->m_dirtyPos)
+					{
+						ImGui::SetCursorPos(item->getState().getItemPos());
+						item->m_dirtyPos = false;
+					}
+					item->getState().setPos({ ImGui::GetCursorPosX(), ImGui::GetCursorPosY() });
+
 					item->draw(drawlist, ImGui::GetCursorPosX(), ImGui::GetCursorPosY());
 
 					item->getState().update();
@@ -158,7 +171,7 @@ namespace Marvel {
 		if (item == nullptr)
 		{
 			std::string message = popup;
-			ThrowPythonException(message + " popup does not exist.");
+			mvThrowPythonError(1000, message + " popup does not exist.");
 			return GetPyNone();
 		}
 
@@ -167,7 +180,7 @@ namespace Marvel {
 			pop = static_cast<mvPopup*>(item.get());
 		else
 		{
-			ThrowPythonException(std::string(popup) + " is not a popup.");
+			mvThrowPythonError(1000, std::string(popup) + " is not a popup.");
 			return GetPyNone();
 		}
 

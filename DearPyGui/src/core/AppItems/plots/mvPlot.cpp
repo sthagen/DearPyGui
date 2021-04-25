@@ -191,7 +191,7 @@ namespace Marvel {
 	{
 		if (!PyList_Check(list))
 		{
-			ThrowPythonException(std::string(plot) + " add area series requires a list of floats.");
+			mvThrowPythonError(1000, std::string(plot) + " add area series requires a list of floats.");
 			return false;
 		}
 		return true;
@@ -201,13 +201,13 @@ namespace Marvel {
 	{
 		if (plot == nullptr)
 		{
-			ThrowPythonException(std::string(name) + " plot does not exist.");
+			mvThrowPythonError(1000, std::string(name) + " plot does not exist.");
 			return false;
 		}
 
 		if (plot->getType() != mvAppItemType::mvPlot)
 		{
-			ThrowPythonException(std::string(name) + " is not a plot.");
+			mvThrowPythonError(1000, std::string(name) + " is not a plot.");
 			return false;
 		}
 		return true;
@@ -227,7 +227,7 @@ namespace Marvel {
 		{
 			if (!Check2ArraySizes(name, arrays[i], arrays[i + 1]))
 			{
-				ThrowPythonException(std::string(name) + " data list must be the same size.");
+				mvThrowPythonError(1000, std::string(name) + " data list must be the same size.");
 				return false;
 			}
 		}
@@ -452,6 +452,7 @@ namespace Marvel {
 			ImVec2((float)m_width, (float)m_height), m_flags,
 			m_xflags, m_yflags, m_y2flags, m_y3flags))
 		{
+			ImPlot::PushPlotClipRect();
 			ImPlot::PushColormap(m_colormap);
 
 			for (auto item : m_children[0])
@@ -459,9 +460,7 @@ namespace Marvel {
 				// skip item if it's not shown
 				if (!item->m_show)
 					continue;
-				ImPlot::PushPlotClipRect();
 				item->draw(drawlist, ImPlot::GetPlotPos().x, ImPlot::GetPlotPos().y);
-				ImPlot::PopPlotClipRect();
 				item->getState().update();
 			}
 
@@ -470,12 +469,23 @@ namespace Marvel {
 				// skip item if it's not shown
 				if (!item->m_show)
 					continue;
-				ImPlot::PushPlotClipRect();
 				item->draw(drawlist, ImPlot::GetPlotPos().x, ImPlot::GetPlotPos().y);
-				ImPlot::PopPlotClipRect();
 
 				item->getState().update();
 			}
+
+			
+			for (auto item : m_children[2])
+			{
+				// skip item if it's not shown
+				if (!item->m_show)
+					continue;
+				
+				item->draw(ImPlot::GetPlotDrawList(), ImPlot::GetPlotPos().x, ImPlot::GetPlotPos().y);
+				
+				item->getState().update();
+			}
+			
 
 			ImPlot::PopColormap();
 
@@ -515,12 +525,7 @@ namespace Marvel {
 			m_y3limits_actual.x = (float)ImPlot::GetPlotLimits(ImPlotYAxis_3).Y.Min;
 			m_y3limits_actual.y = (float)ImPlot::GetPlotLimits(ImPlotYAxis_3).Y.Max;
 
-			// shouldnt we just draw them when we draw widgets
-			//ImPlot::PushPlotClipRect();
-			//auto topleft = ImPlot::GetPlotPos();
-			//m_drawList->draw(ImPlot::GetPlotDrawList(), topleft.x, topleft.y);
-			//ImPlot::PopPlotClipRect();
-
+			ImPlot::PopPlotClipRect();
 			ImPlot::EndPlot();
 		}
 
@@ -749,14 +754,14 @@ namespace Marvel {
 		if (aplot == nullptr)
 		{
 			std::string message = plot;
-			ThrowPythonException(message + " plot does not exist.");
+			mvThrowPythonError(1000, message + " plot does not exist.");
 			return GetPyNone();
 		}
 
 		if (aplot->getType() != mvAppItemType::mvPlot)
 		{
 			std::string message = plot;
-			ThrowPythonException(message + " is not a plot.");
+			mvThrowPythonError(1000, message + " is not a plot.");
 			return GetPyNone();
 		}
 
@@ -779,14 +784,14 @@ namespace Marvel {
 		if (aplot == nullptr)
 		{
 			std::string message = plot;
-			ThrowPythonException(message + " plot does not exist.");
+			mvThrowPythonError(1000, message + " plot does not exist.");
 			return GetPyNone();
 		}
 
 		if (aplot->getType() != mvAppItemType::mvPlot)
 		{
 			std::string message = plot;
-			ThrowPythonException(message + " is not a plot.");
+			mvThrowPythonError(1000, message + " is not a plot.");
 			return GetPyNone();
 		}
 
@@ -812,14 +817,14 @@ namespace Marvel {
 		if (aplot == nullptr)
 		{
 			std::string message = plot;
-			ThrowPythonException(message + " plot does not exist.");
+			mvThrowPythonError(1000, message + " plot does not exist.");
 			return GetPyNone();
 		}
 
 		if (aplot->getType() != mvAppItemType::mvPlot)
 		{
 			std::string message = plot;
-			ThrowPythonException(message + " is not a plot.");
+			mvThrowPythonError(1000, message + " is not a plot.");
 			return GetPyNone();
 		}
 
@@ -854,14 +859,14 @@ namespace Marvel {
 		if (aplot == nullptr)
 		{
 			std::string message = plot;
-			ThrowPythonException(message + " plot does not exist.");
+			mvThrowPythonError(1000, message + " plot does not exist.");
 			return GetPyNone();
 		}
 
 		if (aplot->getType() != mvAppItemType::mvPlot)
 		{
 			std::string message = plot;
-			ThrowPythonException(message + " is not a plot.");
+			mvThrowPythonError(1000, message + " is not a plot.");
 			return GetPyNone();
 		}
 
@@ -892,14 +897,14 @@ namespace Marvel {
 		if (aplot == nullptr)
 		{
 			std::string message = plot;
-			ThrowPythonException(message + " plot does not exist.");
+			mvThrowPythonError(1000, message + " plot does not exist.");
 			return GetPyNone();
 		}
 
 		if (aplot->getType() != mvAppItemType::mvPlot)
 		{
 			std::string message = plot;
-			ThrowPythonException(message + " is not a plot.");
+			mvThrowPythonError(1000, message + " is not a plot.");
 			return GetPyNone();
 		}
 
@@ -922,14 +927,14 @@ namespace Marvel {
 		if (aplot == nullptr)
 		{
 			std::string message = plot;
-			ThrowPythonException(message + " plot does not exist.");
+			mvThrowPythonError(1000, message + " plot does not exist.");
 			return GetPyNone();
 		}
 
 		if (aplot->getType() != mvAppItemType::mvPlot)
 		{
 			std::string message = plot;
-			ThrowPythonException(message + " is not a plot.");
+			mvThrowPythonError(1000, message + " is not a plot.");
 			return GetPyNone();
 		}
 
@@ -954,14 +959,14 @@ namespace Marvel {
 		if (aplot == nullptr)
 		{
 			std::string message = plot;
-			ThrowPythonException(message + " plot does not exist.");
+			mvThrowPythonError(1000, message + " plot does not exist.");
 			return GetPyNone();
 		}
 
 		if (aplot->getType() != mvAppItemType::mvPlot)
 		{
 			std::string message = plot;
-			ThrowPythonException(message + " is not a plot.");
+			mvThrowPythonError(1000, message + " is not a plot.");
 			return GetPyNone();
 		}
 
@@ -986,14 +991,14 @@ namespace Marvel {
 		if (aplot == nullptr)
 		{
 			std::string message = plot;
-			ThrowPythonException(message + " plot does not exist.");
+			mvThrowPythonError(1000, message + " plot does not exist.");
 			return GetPyNone();
 		}
 
 		if (aplot->getType() != mvAppItemType::mvPlot)
 		{
 			std::string message = plot;
-			ThrowPythonException(message + " is not a plot.");
+			mvThrowPythonError(1000, message + " is not a plot.");
 			return GetPyNone();
 		}
 
@@ -1016,14 +1021,14 @@ namespace Marvel {
 		if (aplot == nullptr)
 		{
 			std::string message = plot;
-			ThrowPythonException(message + " plot does not exist.");
+			mvThrowPythonError(1000, message + " plot does not exist.");
 			return GetPyNone();
 		}
 
 		if (aplot->getType() != mvAppItemType::mvPlot)
 		{
 			std::string message = plot;
-			ThrowPythonException(message + " is not a plot.");
+			mvThrowPythonError(1000, message + " is not a plot.");
 			return GetPyNone();
 		}
 
@@ -1044,14 +1049,14 @@ namespace Marvel {
 		if (aplot == nullptr)
 		{
 			std::string message = plot;
-			ThrowPythonException(message + " plot does not exist.");
+			mvThrowPythonError(1000, message + " plot does not exist.");
 			return GetPyNone();
 		}
 
 		if (aplot->getType() != mvAppItemType::mvPlot)
 		{
 			std::string message = plot;
-			ThrowPythonException(message + " is not a plot.");
+			mvThrowPythonError(1000, message + " is not a plot.");
 			return GetPyNone();
 		}
 
@@ -1073,14 +1078,14 @@ namespace Marvel {
 		if (aplot == nullptr)
 		{
 			std::string message = plot;
-			ThrowPythonException(message + " plot does not exist.");
+			mvThrowPythonError(1000, message + " plot does not exist.");
 			return GetPyNone();
 		}
 
 		if (aplot->getType() != mvAppItemType::mvPlot)
 		{
 			std::string message = plot;
-			ThrowPythonException(message + " is not a plot.");
+			mvThrowPythonError(1000, message + " is not a plot.");
 			return GetPyNone();
 		}
 
@@ -1102,14 +1107,14 @@ namespace Marvel {
 		if (aplot == nullptr)
 		{
 			std::string message = plot;
-			ThrowPythonException(message + " plot does not exist.");
+			mvThrowPythonError(1000, message + " plot does not exist.");
 			return GetPyNone();
 		}
 
 		if (aplot->getType() != mvAppItemType::mvPlot)
 		{
 			std::string message = plot;
-			ThrowPythonException(message + " is not a plot.");
+			mvThrowPythonError(1000, message + " is not a plot.");
 			return GetPyNone();
 		}
 

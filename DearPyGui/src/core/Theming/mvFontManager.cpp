@@ -6,10 +6,10 @@
 #include "mvAppItem.h"
 #include "mvCore.h"
 #include "mvItemRegistry.h"
-#include "mvTextureStorage.h"
 #include "mvViewport.h"
 #include "mvPythonExceptions.h"
 #include <frameobject.h>
+#include "textures/mvStaticTexture.h"
 
 #define IM_MIN(A, B)            (((A) < (B)) ? (A) : (B))
 #define IM_MAX(A, B)            (((A) >= (B)) ? (A) : (B))
@@ -182,7 +182,8 @@ namespace Marvel {
 		m_fonts.push_back(newFont);
 
 		m_dirty = true;
-		mvApp::GetApp()->getTextureStorage().scheduleRefresh();
+		auto item = mvApp::GetApp()->getItemRegistry().getItem("INTERNAL_DPG_FONT_ATLAS");
+		static_cast<mvStaticTexture*>(item.get())->markDirty();
 	}
 
 	ImFont* mvFontManager::getFont(const std::string& font, int size)
@@ -242,10 +243,7 @@ namespace Marvel {
 
 			if (font.fontPtr == nullptr)
 			{
-				int line = PyFrame_GetLineNumber(PyEval_GetFrame());
-				PyErr_Format(PyExc_Exception,
-					"Font file %s could not be found.  %d c", font.file.c_str(), line);
-				PyErr_Print();
+				mvThrowPythonError(1000, "Font file could not be found");
 				io.Fonts->Build();
 			}
 
@@ -298,7 +296,7 @@ namespace Marvel {
 		{
 			mvApp::GetApp()->getCallbackRegistry().submitCallback([=]()
 				{
-					ThrowPythonException("Item can not be found");
+					mvThrowPythonError(1000, "Item can not be found");
 				});
 		}
 		return true;

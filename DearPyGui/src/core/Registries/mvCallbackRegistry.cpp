@@ -127,6 +127,7 @@ namespace Marvel {
 
 	void mvCallbackRegistry::runTasks()
 	{
+
 		while (!m_tasks.empty())
 		{
 			mvFunctionWrapper t;
@@ -331,7 +332,8 @@ namespace Marvel {
 		{
 			if (data != nullptr)
 				Py_XDECREF(data);
-			ThrowPythonException("Callable not callable.");
+			mvThrowPythonError(1000, "Callable not callable.");
+			PyErr_Print();
 			return;
 		}
 
@@ -343,7 +345,7 @@ namespace Marvel {
 
 		Py_XINCREF(data);
 
-		PyErr_Clear();
+		//PyErr_Clear();
 
 		PyObject* intermediateResult = nullptr;
 		if (PyCallable_Check(data))
@@ -353,18 +355,14 @@ namespace Marvel {
 			if (intermediateResult == nullptr)
 			{
 				PyErr_Print();
-				ThrowPythonException("Callable data failed");
 				intermediateResult = data;
 			}
 
-			// check if error occurred
-			if (PyErr_Occurred())
-				PyErr_Print();
 		}
 		else
 			intermediateResult = data;
 
-		PyErr_Clear();
+		//PyErr_Clear();
 
 		PyObject* fc = PyObject_GetAttrString(callable, "__code__");
 		if (fc) {
@@ -388,10 +386,7 @@ namespace Marvel {
 
 					// check if call succeeded
 					if (!result.isOk())
-					{
 						PyErr_Print();
-						ThrowPythonException("Callable failed");
-					}
 
 				}
 				else if (count == 2)
@@ -402,12 +397,10 @@ namespace Marvel {
 
 					mvPyObject result(PyObject_CallObject(callable, pArgs));
 
+					pArgs.delRef();
 					// check if call succeeded
 					if (!result.isOk())
-					{
 						PyErr_Print();
-						ThrowPythonException("Callable failed");
-					}
 
 				}
 				else if(count == 1)
@@ -419,10 +412,7 @@ namespace Marvel {
 
 					// check if call succeeded
 					if (!result.isOk())
-					{
 						PyErr_Print();
-						ThrowPythonException("Callable failed");
-					}
 				}
 				else
 				{
@@ -430,18 +420,11 @@ namespace Marvel {
 
 					// check if call succeeded
 					if (!result.isOk())
-					{
 						PyErr_Print();
-						ThrowPythonException("Callable failed");
-					}
 
 
 				}
 				Py_DECREF(ac);
-
-				// check if error occurred
-				if (PyErr_Occurred())
-					PyErr_Print();
 			}
 			Py_DECREF(fc);
 		}
@@ -708,7 +691,7 @@ namespace Marvel {
 		auto message = fut.get();
 
 		if (!message.empty())
-			ThrowPythonException(message);
+			mvThrowPythonError(1000, message);
 
 		return GetPyNone();
 	}
