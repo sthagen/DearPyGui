@@ -79,6 +79,13 @@ namespace Marvel{
 			parsers->insert({ "set_item_pos", parser });
 		}
 
+		{
+			mvPythonParser parser(mvPyDataType::None);
+			parser.addArg<mvPyDataType::String>("item");
+			parser.finalize();
+			parsers->insert({ "reset_pos", parser });
+		}
+
 	}
 
 	bool mvAppItem::DoesItemHaveFlag(mvAppItem* item, int flag)
@@ -848,6 +855,12 @@ namespace Marvel{
 			PyDict_SetItemString(dict, "parent", ToPyString(m_parentPtr->getName()));
 		else
 			PyDict_SetItemString(dict, "parent", GetPyNone());
+
+		if(getDescFlags() == MV_ITEM_DESC_CONTAINER)
+			PyDict_SetItemString(dict, "container", ToPyBool(true));
+		else
+			PyDict_SetItemString(dict, "container", ToPyBool(false));
+
 	}
 
 	void mvAppItem::getConfiguration(PyObject* dict)
@@ -945,6 +958,26 @@ namespace Marvel{
 
 		if (appitem)
 			appitem->setPos({ x, y });
+		else
+			mvThrowPythonError(1000, item + std::string(" item was not found"));
+
+		return GetPyNone();
+	}
+
+	PyObject* mvAppItem::reset_pos(PyObject* self, PyObject* args, PyObject* kwargs)
+	{
+		const char* item;
+
+		if (!(mvApp::GetApp()->getParsers())["reset_pos"].parse(args, kwargs, __FUNCTION__,
+			&item))
+			return GetPyNone();
+
+
+		std::lock_guard<std::mutex> lk(mvApp::GetApp()->getMutex());
+		auto appitem = mvApp::GetApp()->getItemRegistry().getItem(item);
+
+		if (appitem)
+			appitem->m_dirtyPos = false;
 		else
 			mvThrowPythonError(1000, item + std::string(" item was not found"));
 

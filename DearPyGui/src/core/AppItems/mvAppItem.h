@@ -64,6 +64,7 @@ namespace Marvel {
         None = 0,
         Int, Int4,
         Float, Float4, FloatVect, 
+        Double, Double4, DoubleVect,
         Series,
         Bool,
         String,
@@ -80,12 +81,16 @@ namespace Marvel {
 
     using mvValueVariant = std::variant<
         std::shared_ptr<int>,
+        std::shared_ptr<float>,
+        std::shared_ptr<double>,
         std::shared_ptr<std::array<int, 4>>,
-        std::shared_ptr<float >,
         std::shared_ptr<std::array<float, 4>>,
-        std::shared_ptr<std::vector<float>>,
+        std::shared_ptr<std::array<double, 4>>,
         std::shared_ptr<std::vector<int>>,
+        std::shared_ptr<std::vector<float>>,
+        std::shared_ptr<std::vector<double>>,
         std::shared_ptr<std::vector<std::vector<float>>>,
+        std::shared_ptr<std::vector<std::vector<double>>>,
         std::shared_ptr<bool>,
         std::shared_ptr<std::string>,
         std::shared_ptr<tm>,
@@ -145,6 +150,7 @@ namespace Marvel {
         MV_CREATE_EXTRA_COMMAND(set_value);
         MV_CREATE_EXTRA_COMMAND(focus_item);
         MV_CREATE_EXTRA_COMMAND(set_item_pos);
+        MV_CREATE_EXTRA_COMMAND(reset_pos);
 
         MV_START_EXTRA_COMMANDS
             MV_ADD_EXTRA_COMMAND(get_item_configuration);
@@ -155,6 +161,7 @@ namespace Marvel {
             MV_ADD_EXTRA_COMMAND(set_value);
             MV_ADD_EXTRA_COMMAND(focus_item);
             MV_ADD_EXTRA_COMMAND(set_item_pos);
+            MV_ADD_EXTRA_COMMAND(reset_pos);
         MV_END_EXTRA_COMMANDS
 
         static bool DoesItemHaveFlag(mvAppItem* item, int flag);

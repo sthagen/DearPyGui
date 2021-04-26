@@ -60,13 +60,8 @@ def demo_recursive_disable(sender, siblings, restart_index=0):
 
     Returns:
         None"""
-    parent = sender
-    parent = get_item_info(sender)["parent"]
-    parent = get_item_info(parent)["parent"]
-    print(get_item_info(sender)["parent"])
-    print(siblings)
     for i in range(restart_index,len(siblings)-1, 1):
-        if get_item_info(siblings[i])["type"] == 2:
+        if get_item_info(siblings[i])["container"]:
             siblings += get_item_info(siblings.pop(i))["children"]
             demo_recursive_disable(sender, siblings, i-1)
             return
@@ -1094,12 +1089,11 @@ def show_demo():
                 add_shade_series(stock_datax, stock_data5, y2=stock_data4, label="Shade between lines", fill=[255, 255, 100, 64], parent=plot_id)
 
             with tree_node(label="Scatter Plots"):
-
                 scatter_data1x = []
                 scatter_data1y = []
                 for i in range(0, 100):
                     scatter_data1x.append(i/100)
-                    scatter_data1y.append((i + random.random())/100)
+                    scatter_data1y.append((i + random.random())*10000000000000000000000000001)
 
                 # using xy_format
                 scatter_data2x = []
@@ -1109,9 +1103,10 @@ def show_demo():
                     scatter_data2y.append(0.65 + 0.25*random.random())
 
                 plot_id = add_plot(label="Scatter Plot", height=400)
-                add_scatter_series(scatter_data1x, scatter_data1y, label="Data 1", parent=plot_id)
+                scatter_series = add_scatter_series(scatter_data1x, scatter_data1y, label="Data 1", parent=plot_id)
                 add_scatter_series(scatter_data2x, scatter_data2y, label="Data 2", 
                                    size=7, marker=mvPlotMarker_Square, fill=[255, 0, 0, 100], parent=plot_id)
+                add_button(id="print scatter", callback=lambda:print(f"Y-Values: {get_value(scatter_series)[1]}"))
 
             with tree_node(label="Bar Plots"):
 

@@ -94,11 +94,11 @@ def add_drag_intx(*, id: str =..., width: int =0, parent: str ='', before: str =
 	"""Undocumented function"""
 	...
 
-def add_drag_line(*, id: str =..., parent: str ='', before: str ='', label: str ='', source: str ='', callback: Callable =None, show: bool =True, default_value: List[float] =(0.0, 0.0, 0.0, 0.0), color: List[int] =(0, 0, 0, -255), thickness: float =1.0, show_label: bool =True, vertical: bool =True) -> str:
+def add_drag_line(*, id: str =..., parent: str ='', before: str ='', label: str ='', source: str ='', callback: Callable =None, show: bool =True, default_value: Any =(0.0, 0.0, 0.0, 0.0), color: List[int] =(0, 0, 0, -255), thickness: float =1.0, show_label: bool =True, vertical: bool =True) -> str:
 	"""Undocumented function"""
 	...
 
-def add_drag_point(*, id: str =..., parent: str ='', before: str ='', label: str ='', source: str ='', callback: Callable =None, show: bool =True, default_value: List[float] =(0.0, 0.0, 0.0, 0.0), color: List[int] =(0, 0, 0, -255), thickness: float =1.0, show_label: bool =True) -> str:
+def add_drag_point(*, id: str =..., parent: str ='', before: str ='', label: str ='', source: str ='', callback: Callable =None, show: bool =True, default_value: Any =(0.0, 0.0, 0.0, 0.0), color: List[int] =(0, 0, 0, -255), thickness: float =1.0, show_label: bool =True) -> str:
 	"""Undocumented function"""
 	...
 
@@ -134,7 +134,7 @@ def add_group(*, id: str =..., width: int =0, parent: str ='', before: str ='', 
 	"""Undocumented function"""
 	...
 
-def add_heat_series(x : List[float], rows : int, cols : int, *, id: str =..., parent: str ='', before: str ='', label: str ='', source: str ='', show: bool =True, scale_min: float =0.0, scale_max: float =1.0, bounds_min: List[float] =(0.0, 0.0), bounds_max: List[float] =(1.0, 1.0), format: str ='%0.1f', contribute_to_bounds: bool =True) -> str:
+def add_heat_series(x : List[float], rows : int, cols : int, *, id: str =..., parent: str ='', before: str ='', label: str ='', source: str ='', show: bool =True, scale_min: float =0.0, scale_max: float =1.0, bounds_min: Any =(0.0, 0.0), bounds_max: Any =(1.0, 1.0), format: str ='%0.1f', contribute_to_bounds: bool =True) -> str:
 	"""Undocumented function"""
 	...
 
@@ -234,7 +234,7 @@ def add_pie_series(x : float, y : float, radius : float, values : List[float], l
 	"""Undocumented function"""
 	...
 
-def add_plot_annotation(*, id: str =..., parent: str ='', before: str ='', label: str ='', source: str ='', show: bool =True, default_value: List[float] =(0.0, 0.0), offset: List[float] =(0.0, 0.0), color: List[int] =(0, 0, 0, -255), clamped: bool =True) -> str:
+def add_plot_annotation(*, id: str =..., parent: str ='', before: str ='', label: str ='', source: str ='', show: bool =True, default_value: Any =(0.0, 0.0), offset: List[float] =(0.0, 0.0), color: List[int] =(0, 0, 0, -255), clamped: bool =True) -> str:
 	"""Undocumented function"""
 	...
 
@@ -270,7 +270,7 @@ def add_separator(*, id: str =..., parent: str ='', before: str ='', show: bool 
 	"""Undocumented function"""
 	...
 
-def add_shade_series(x : List[float], y1 : List[float], *, id: str =..., parent: str ='', before: str ='', label: str ='', source: str ='', show: bool =True, y2: List[float] =[], axis: int =0, contribute_to_bounds: bool =True) -> str:
+def add_shade_series(x : List[float], y1 : List[float], *, id: str =..., parent: str ='', before: str ='', label: str ='', source: str ='', show: bool =True, y2: Any =[], axis: int =0, contribute_to_bounds: bool =True) -> str:
 	"""Undocumented function"""
 	...
 
@@ -671,6 +671,10 @@ def open_file_dialog(*, callback: Callable =None) -> str:
 	...
 
 def render_dearpygui_frame() -> None:
+	"""Undocumented function"""
+	...
+
+def reset_pos(item : str) -> None:
 	"""Undocumented function"""
 	...
 
