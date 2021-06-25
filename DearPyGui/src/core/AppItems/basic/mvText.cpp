@@ -1,68 +1,57 @@
 #include "mvText.h"
 #include "mvApp.h"
 #include "mvItemRegistry.h"
-#include "mvImGuiThemeScope.h"
-#include "mvFontScope.h"
 
 namespace Marvel {
 
 	void mvText::InsertParser(std::map<std::string, mvPythonParser>* parsers)
 	{
-		mvPythonParser parser(mvPyDataType::String);
-		mvAppItem::AddCommonArgs(parser);
-		parser.removeArg("width");
-		parser.removeArg("height");
-		parser.removeArg("label");
-		parser.removeArg("callback");
-		parser.removeArg("callback_data");
-		parser.removeArg("enabled");
+		mvPythonParser parser(mvPyDataType::UUID, "Adds text. Text can have an optional label that will display to the right of the text.", { "Widgets" });
+		mvAppItem::AddCommonArgs(parser, (CommonParserArgs)(
+			MV_PARSER_ARG_ID |
+			MV_PARSER_ARG_INDENT |
+			MV_PARSER_ARG_PARENT |
+			MV_PARSER_ARG_BEFORE |
+			MV_PARSER_ARG_SOURCE |
+			MV_PARSER_ARG_SHOW |
+			MV_PARSER_ARG_FILTER |
+			MV_PARSER_ARG_TRACKED |
+			MV_PARSER_ARG_POS)
+		);
 
 		parser.addArg<mvPyDataType::String>("default_value", mvArgType::POSITIONAL_ARG, "''");
 
-		parser.addArg<mvPyDataType::Integer>("wrap", mvArgType::KEYWORD_ARG, "-1", "number of characters until wraping");
+		parser.addArg<mvPyDataType::Integer>("wrap", mvArgType::KEYWORD_ARG, "-1", "Number of pixels until wrapping starts.");
 
-		parser.addArg<mvPyDataType::Bool>("bullet", mvArgType::KEYWORD_ARG, "False", "makes the text bulleted");
+		parser.addArg<mvPyDataType::Bool>("bullet", mvArgType::KEYWORD_ARG, "False", "Makes the text bulleted.");
 
-		parser.addArg<mvPyDataType::FloatList>("color", mvArgType::KEYWORD_ARG, "(-1, -1, -1, -1)", "color of the text (rgba)");
+		parser.addArg<mvPyDataType::FloatList>("color", mvArgType::KEYWORD_ARG, "(-1, -1, -1, -1)", "Color of the text (rgba).");
 
-		parser.finalize();
-
-		parsers->insert({ s_command, parser });
-	}
-
-	void mvLabelText::InsertParser(std::map<std::string, mvPythonParser>* parsers)
-	{
-
-		mvPythonParser parser(mvPyDataType::String);
-		mvAppItem::AddCommonArgs(parser);
-		parser.removeArg("width");
-		parser.removeArg("height");
-		parser.removeArg("callback");
-		parser.removeArg("callback_data");
-		parser.removeArg("enabled");
-
-		parser.addArg<mvPyDataType::String>("default_value", mvArgType::KEYWORD_ARG, "''");
-		parser.addArg<mvPyDataType::FloatList>("color", mvArgType::KEYWORD_ARG, "(-1, -1, -1, -1)", "color of the text (rgba)");
+		parser.addArg<mvPyDataType::Bool>("show_label", mvArgType::KEYWORD_ARG, "False", "Displays the label.");
 
 		parser.finalize();
 
 		parsers->insert({ s_command, parser });
 	}
 
-	mvText::mvText(const std::string& name)
+	mvText::mvText(mvUUID uuid)
 		: 
-		mvStringPtrBase(name)
+		mvStringPtrBase(uuid)
 	{
-		*m_value = name;
+		*m_value = "Not Specified";
 	}
 
 	void mvText::draw(ImDrawList* drawlist, float x, float y)
 	{
-		ScopedID id;
-		mvImGuiThemeScope scope(this);
-		mvFontScope fscope(this);
+		// this fixes the vertical text alignment issue according it DearImGui issue #2317
+		ImGui::AlignTextToFramePadding();
 
-		if (m_color.r > 0.0f)
+		const ImGuiStyle& style = ImGui::GetStyle();
+		const float w = ImGui::CalcItemWidth();
+		const float textVertCenter = ImGui::GetCursorPosY();
+		const float valueEndX = ImGui::GetCursorPosX() + w;
+
+		if (m_color.r >= 0.0f)
 			ImGui::PushStyleColor(ImGuiCol_Text, m_color.toVec4());
 
 		if (m_wrap >= 0)
@@ -77,38 +66,14 @@ namespace Marvel {
 		if (m_wrap >= 0)
 			ImGui::PopTextWrapPos();
 
-		if (m_color.r > 0.0f)
+		if (m_color.r >= 0.0f)
 			ImGui::PopStyleColor();
 
-	}
-
-	mvLabelText::mvLabelText(const std::string& name)
-		: 
-		mvStringPtrBase(name)
-	{
-	}
-
-	void mvLabelText::draw(ImDrawList* drawlist, float x, float y)
-	{
-
-		if (m_color.r > 0.0f)
+		if (m_show_label)
 		{
-			ImGui::PushStyleColor(ImGuiCol_Text, m_color.toVec4());
-
-			ImGui::TextUnformatted(m_value->c_str());
-
-			ImGui::PopStyleColor();
-
 			ImGui::SameLine();
-
-			mvImGuiThemeScope scope(this);
+			ImGui::SetCursorPos({ valueEndX + style.ItemInnerSpacing.x, textVertCenter });
 			ImGui::TextUnformatted(m_specificedlabel.c_str());
-		}
-
-		else
-		{
-			mvImGuiThemeScope scope(this);
-			ImGui::LabelText(m_specificedlabel.c_str(), m_value->c_str());
 		}
 
 	}
@@ -141,6 +106,7 @@ namespace Marvel {
 		if (PyObject* item = PyDict_GetItemString(dict, "color")) m_color = ToColor(item);
 		if (PyObject* item = PyDict_GetItemString(dict, "wrap")) m_wrap = ToInt(item);
 		if (PyObject* item = PyDict_GetItemString(dict, "bullet")) m_bullet = ToBool(item);
+		if (PyObject* item = PyDict_GetItemString(dict, "show_label")) m_show_label = ToBool(item);
 
 	}
 
@@ -152,22 +118,6 @@ namespace Marvel {
 		PyDict_SetItemString(dict, "color", ToPyColor(m_color));
 		PyDict_SetItemString(dict, "wrap", ToPyInt(m_wrap));
 		PyDict_SetItemString(dict, "bullet", ToPyBool(m_bullet));
+		PyDict_SetItemString(dict, "show_label", ToPyBool(m_show_label));
 	}
-
-	void mvLabelText::handleSpecificKeywordArgs(PyObject* dict)
-	{
-		if (dict == nullptr)
-			return;
-		 
-		if (PyObject* item = PyDict_GetItemString(dict, "color")) m_color = ToColor(item);
-	}
-
-	void mvLabelText::getSpecificConfiguration(PyObject* dict)
-	{
-		if (dict == nullptr)
-			return;
-		 
-		PyDict_SetItemString(dict, "color", ToPyColor(m_color));
-	}
-
 }

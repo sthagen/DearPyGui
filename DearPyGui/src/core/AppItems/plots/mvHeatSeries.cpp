@@ -3,20 +3,21 @@
 #include "mvCore.h"
 #include "mvApp.h"
 #include "mvItemRegistry.h"
-#include "mvImPlotThemeScope.h"
+#include "mvPythonExceptions.h"
 
 namespace Marvel {
 
 	void mvHeatSeries::InsertParser(std::map<std::string, mvPythonParser>* parsers)
 	{
 
-		mvPythonParser parser(mvPyDataType::String);
-		mvAppItem::AddCommonArgs(parser);
-		parser.removeArg("width");
-		parser.removeArg("height");
-		parser.removeArg("callback");
-		parser.removeArg("callback_data");
-		parser.removeArg("enabled");
+		mvPythonParser parser(mvPyDataType::UUID, "Adds a heat series to a plot.", { "Plotting", "Containers", "Widgets" });
+		mvAppItem::AddCommonArgs(parser, (CommonParserArgs)(
+			MV_PARSER_ARG_ID |
+			MV_PARSER_ARG_PARENT |
+			MV_PARSER_ARG_BEFORE |
+			MV_PARSER_ARG_SOURCE |
+			MV_PARSER_ARG_SHOW)
+		);
 
 		parser.addArg<mvPyDataType::DoubleList>("x");
 		parser.addArg<mvPyDataType::Integer>("rows");
@@ -38,15 +39,25 @@ namespace Marvel {
 		parsers->insert({ s_command, parser });
 	}
 
-	mvHeatSeries::mvHeatSeries(const std::string& name)
-		: mvSeriesBase(name)
+	mvHeatSeries::mvHeatSeries(mvUUID uuid)
+		: mvSeriesBase(uuid)
 	{
+	}
+
+	bool mvHeatSeries::isParentCompatible(mvAppItemType type)
+	{
+		if (type == mvAppItemType::mvPlotAxis) return true;
+
+		mvThrowPythonError(mvErrorCode::mvIncompatibleParent, s_command,
+			"Incompatible parent. Acceptable parents include: plot axis", this);
+
+		assert(false);
+		return false;
 	}
 
 	void mvHeatSeries::draw(ImDrawList* drawlist, float x, float y)
 	{
-		ScopedID id;
-		mvImPlotThemeScope scope(this);
+		ScopedID id(m_uuid);
 
 		static const std::vector<double>* xptr;
 
@@ -56,6 +67,22 @@ namespace Marvel {
 		ImPlot::PlotHeatmap(m_label.c_str(), xptr->data(), m_rows, m_cols, m_scale_min, m_scale_max,
 			m_format.c_str(), { m_bounds_min.x, m_bounds_min.y }, { m_bounds_max.x, m_bounds_max.y });
 
+		// Begin a popup for a legend entry.
+		if (ImPlot::BeginLegendPopup(m_label.c_str(), 1))
+		{
+			for (auto& childset : m_children)
+			{
+				for (auto& item : childset)
+				{
+					// skip item if it's not shown
+					if (!item->m_show)
+						continue;
+					item->draw(drawlist, ImPlot::GetPlotPos().x, ImPlot::GetPlotPos().y);
+					item->getState().update();
+				}
+			}
+			ImPlot::EndLegendPopup();
+		}
 	}
 
 	void mvHeatSeries::handleSpecificRequiredArgs(PyObject* dict)

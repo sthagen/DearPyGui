@@ -37,8 +37,9 @@ namespace Marvel {
     {
         None = 0, 
         Integer, Float, Double, String, Bool, Object, Callable, Dict,
-        IntList, FloatList, DoubleList, StringList,
-        ListListInt, ListFloatList, ListDoubleList, ListStrList, 
+        IntList, FloatList, DoubleList, StringList, ListAny,
+        ListListInt, ListFloatList, ListDoubleList, ListStrList, UUID,
+        UUIDList, Long,
         Any
     };
 
@@ -62,12 +63,11 @@ namespace Marvel {
         const char* description = "";
         const char* default_value = "...";
         mvArgType    arg_type = mvArgType::REQUIRED_ARG;
-        bool         active = true;
 
         constexpr mvPythonDataElement(mvPyDataType type, const char* name, const char* description,
-            const char* default_value, mvArgType arg_type, bool active)
+            const char* default_value, mvArgType arg_type)
             : type(type), name(name), description(description), default_value(default_value),
-            arg_type(arg_type), active(active)
+            arg_type(arg_type)
         {
 
         }
@@ -83,36 +83,43 @@ namespace Marvel {
     public:
 
         static void GenerateStubFile(const std::string& file);
+        static void GenerateCoreFile(const std::string& file);
+        static void GenerateContextsFile(const std::string& file);
+        static void GenerateDearPyGuiFile(const std::string& file);
 
     public:
 
-        explicit mvPythonParser(mvPyDataType returnType = mvPyDataType::None, const char* about = "Undocumented function", const char* category = "App");
+        explicit mvPythonParser(mvPyDataType returnType = mvPyDataType::None, 
+            const char* about = "Undocumented function", 
+            const std::vector<std::string>& category = { "None" },
+            bool createContextManager = false);
 
         template<mvPyDataType type>
         void addArg(const char* name, mvArgType argType = mvArgType::REQUIRED_ARG, const char* defaultValue = "...", const char* description="")
         {
             for (const auto& arg : m_staged_elements)
             {
-                if (strcmp(arg.name, name) == 0 && arg.active)
+                if (strcmp(arg.name, name) == 0)
                 {
                     assert(false);
                     return;
                 }
             }
-            m_staged_elements.emplace_back(type, name, description, defaultValue, argType, true);
+            m_staged_elements.emplace_back(type, name, description, defaultValue, argType);
         }
 
-        void removeArg(const char* name);
 
         bool verifyRequiredArguments(PyObject* args);
         bool verifyPositionalArguments(PyObject* args);
+        bool verifyKeywordArguments(PyObject* args);
         bool verifyArgumentCount(PyObject* args);
         void addKwargs() { m_unspecifiedKwargs = true; }
+        void makeInternal() { m_internal = true; }
 
         bool parse(PyObject* args, PyObject* kwargs, const char* message, ...);
 
-        [[nodiscard]] const char*        getDocumentation         () const { return m_documentation.c_str(); }
-        [[nodiscard]] const std::string& getCategory              () const { return m_category; }
+        [[nodiscard]] const char*                     getDocumentation         () const { return m_documentation.c_str(); }
+        [[nodiscard]] const std::vector<std::string>& getCategory              () const { return m_category; }
 
         void finalize();
 
@@ -132,8 +139,10 @@ namespace Marvel {
         std::string                      m_about;
         mvPyDataType                     m_return = mvPyDataType::None;
         std::string                      m_documentation;
-        std::string                      m_category;
+        std::vector<std::string>         m_category;
         bool                             m_unspecifiedKwargs = false;
+        bool                             m_createContextManager = false;
+        bool                             m_internal = false;
 
     };
 

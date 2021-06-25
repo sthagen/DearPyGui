@@ -2,8 +2,6 @@
 #include "mvApp.h"
 #include "mvLog.h"
 #include "mvItemRegistry.h"
-#include "mvImGuiThemeScope.h"
-#include "mvFontScope.h"
 #include "mvPythonExceptions.h"
 
 namespace Marvel {
@@ -11,23 +9,21 @@ namespace Marvel {
 	void mvTableNextColumn::InsertParser(std::map<std::string, mvPythonParser>* parsers)
 	{
 
-		mvPythonParser parser(mvPyDataType::String);
-		mvAppItem::AddCommonArgs(parser);
-		parser.removeArg("source");
-		parser.removeArg("width");
-		parser.removeArg("height");
-		parser.removeArg("label");
-		parser.removeArg("callback");
-		parser.removeArg("callback_data");
-		parser.removeArg("enabled");
+		mvPythonParser parser(mvPyDataType::UUID, "Undocumented function", { "Tables", "Widgets" });
+		mvAppItem::AddCommonArgs(parser, (CommonParserArgs)(
+			MV_PARSER_ARG_ID |
+			MV_PARSER_ARG_PARENT |
+			MV_PARSER_ARG_BEFORE |
+			MV_PARSER_ARG_SHOW)
+		);
 
 		parser.finalize();
 
 		parsers->insert({ s_command, parser });
 	}
 
-	mvTableNextColumn::mvTableNextColumn(const std::string& name)
-		: mvAppItem(name)
+	mvTableNextColumn::mvTableNextColumn(mvUUID uuid)
+		: mvAppItem(uuid)
 	{
 	}
 
@@ -38,10 +34,12 @@ namespace Marvel {
 
 	bool mvTableNextColumn::isParentCompatible(mvAppItemType type)
 	{
-		if (type == mvAppItemType::mvTable)
-			return true;
+		if (type == mvAppItemType::mvStagingContainer) return true;
+		if (type == mvAppItemType::mvTable) return true;
 
-		mvThrowPythonError(1000, "mvTableNextColumn parent must be a table.");
+		mvThrowPythonError(mvErrorCode::mvIncompatibleParent, s_command,
+			"Incompatible parent. Acceptable parents include: table, staging container.", this);
+
 		MV_ITEM_REGISTRY_ERROR("mvTableNextColumn parent must be a table.");
 		assert(false);
 		return false;

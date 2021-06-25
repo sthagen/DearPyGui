@@ -3,27 +3,26 @@
 #include "mvCore.h"
 #include "mvApp.h"
 #include "mvItemRegistry.h"
-#include "mvImPlotThemeScope.h"
+#include "mvPythonExceptions.h"
 
 namespace Marvel {
 
 	void mvErrorSeries::InsertParser(std::map<std::string, mvPythonParser>* parsers)
 	{
 
-		mvPythonParser parser(mvPyDataType::String);
-		mvAppItem::AddCommonArgs(parser);
-		parser.removeArg("width");
-		parser.removeArg("height");
-		parser.removeArg("callback");
-		parser.removeArg("callback_data");
-		parser.removeArg("enabled");
+		mvPythonParser parser(mvPyDataType::UUID, "Adds an error series to a plot.", { "Plotting", "Containers", "Widgets" });
+		mvAppItem::AddCommonArgs(parser, (CommonParserArgs)(
+			MV_PARSER_ARG_ID |
+			MV_PARSER_ARG_PARENT |
+			MV_PARSER_ARG_BEFORE |
+			MV_PARSER_ARG_SOURCE |
+			MV_PARSER_ARG_SHOW)
+		);
 
 		parser.addArg<mvPyDataType::DoubleList>("x");
 		parser.addArg<mvPyDataType::DoubleList>("y");
 		parser.addArg<mvPyDataType::DoubleList>("negative");
 		parser.addArg<mvPyDataType::DoubleList>("positive");
-
-		parser.addArg<mvPyDataType::Integer>("axis", mvArgType::KEYWORD_ARG, "0");
 
 		parser.addArg<mvPyDataType::Bool>("contribute_to_bounds", mvArgType::KEYWORD_ARG, "True");
 		parser.addArg<mvPyDataType::Bool>("horizontal", mvArgType::KEYWORD_ARG, "False");
@@ -33,31 +32,26 @@ namespace Marvel {
 		parsers->insert({ s_command, parser });
 	}
 
-	mvErrorSeries::mvErrorSeries(const std::string& name)
-		: mvSeriesBase(name)
+	mvErrorSeries::mvErrorSeries(mvUUID uuid)
+		: mvSeriesBase(uuid)
 	{
 		m_contributeToBounds = true;
 	}
 
+	bool mvErrorSeries::isParentCompatible(mvAppItemType type)
+	{
+		if (type == mvAppItemType::mvPlotAxis) return true;
+
+		mvThrowPythonError(mvErrorCode::mvIncompatibleParent, s_command,
+			"Incompatible parent. Acceptable parents include: plot axis", this);
+
+		assert(false);
+		return false;
+	}
+
 	void mvErrorSeries::draw(ImDrawList* drawlist, float x, float y)
 	{
-		ScopedID id;
-		mvImPlotThemeScope scope(this);
-
-		switch (m_axis)
-		{
-		case ImPlotYAxis_1:
-			ImPlot::SetPlotYAxis(ImPlotYAxis_1);
-			break;
-		case ImPlotYAxis_2:
-			ImPlot::SetPlotYAxis(ImPlotYAxis_2);
-			break;
-		case ImPlotYAxis_3:
-			ImPlot::SetPlotYAxis(ImPlotYAxis_3);
-			break;
-		default:
-			break;
-		}
+		ScopedID id(m_uuid);
 
 		static const std::vector<double>* xptr;
 		static const std::vector<double>* yptr;
@@ -74,6 +68,22 @@ namespace Marvel {
 		else
 			ImPlot::PlotErrorBars(m_label.c_str(), xptr->data(), yptr->data(), zptr->data(), wptr->data(), (int)xptr->size());
 
+		// Begin a popup for a legend entry.
+		if (ImPlot::BeginLegendPopup(m_label.c_str(), 1))
+		{
+			for (auto& childset : m_children)
+			{
+				for (auto& item : childset)
+				{
+					// skip item if it's not shown
+					if (!item->m_show)
+						continue;
+					item->draw(drawlist, ImPlot::GetPlotPos().x, ImPlot::GetPlotPos().y);
+					item->getState().update();
+				}
+			}
+			ImPlot::EndLegendPopup();
+		}
 	}
 
 	void mvErrorSeries::handleSpecificRequiredArgs(PyObject* dict)
@@ -116,7 +126,6 @@ namespace Marvel {
 		if (dict == nullptr)
 			return;
 
-		if (PyObject* item = PyDict_GetItemString(dict, "axis")) m_axis = (ImPlotYAxis_)ToInt(item);
 		if (PyObject* item = PyDict_GetItemString(dict, "contribute_to_bounds")) m_contributeToBounds = ToBool(item);
 		if (PyObject* item = PyDict_GetItemString(dict, "horizontal")) m_horizontal= ToBool(item);
 
@@ -139,7 +148,6 @@ namespace Marvel {
 		if (dict == nullptr)
 			return;
 
-		PyDict_SetItemString(dict, "axis", ToPyInt(m_axis));
 		PyDict_SetItemString(dict, "contribute_to_bounds", ToPyBool(m_contributeToBounds));
 		PyDict_SetItemString(dict, "horizontal", ToPyBool(m_horizontal));
 	}

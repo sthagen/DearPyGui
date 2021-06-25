@@ -1,8 +1,8 @@
 #include "mvAppleViewport.h"
-#include "mvAppLog.h"
 #include <implot.h>
 #include "imnodes.h"
 #include "mvFontManager.h"
+#include "mvToolManager.h"
 
 #define GLFW_INCLUDE_NONE
 #define GLFW_EXPOSE_NATIVE_COCOA
@@ -19,9 +19,9 @@ namespace Marvel {
 
     id <MTLDevice> mvAppleViewport::device;
 
-    mvViewport* mvViewport::CreateViewport(unsigned width, unsigned height, bool error)
+    mvViewport* mvViewport::CreateViewport(unsigned width, unsigned height)
 	{
-		return new mvAppleViewport(width, height, error);
+		return new mvAppleViewport(width, height);
 	}
 
     static void window_close_callback(GLFWwindow* window)
@@ -31,13 +31,11 @@ namespace Marvel {
 
     static void window_size_callback(GLFWwindow* window, int width, int height)
     {
-
-        mvEventBus::Publish(mvEVT_CATEGORY_VIEWPORT, mvEVT_VIEWPORT_RESIZE, {
-            CreateEventArgument("actual_width", width),
-            CreateEventArgument("actual_height", height),
-            CreateEventArgument("client_width", width),
-            CreateEventArgument("client_height", height)
-                    });
+        mvApp::GetApp()->getViewport()->setActualHeight(height);
+        mvApp::GetApp()->getViewport()->setClientHeight(height);
+        mvApp::GetApp()->getViewport()->setActualWidth(width);
+        mvApp::GetApp()->getViewport()->setClientWidth(width);
+        mvApp::GetApp()->getViewport()->onResizeEvent();
     }
 
     static void glfw_error_callback(int error, const char *description)
@@ -45,8 +43,8 @@ namespace Marvel {
         fprintf(stderr, "Glfw Error %d: %s\n", error, description);
     }
 
-    mvAppleViewport::mvAppleViewport(unsigned width, unsigned height, bool error)
-        : mvViewport(width, height, error)
+    mvAppleViewport::mvAppleViewport(unsigned width, unsigned height)
+        : mvViewport(width, height)
     {
     }
 
@@ -55,7 +53,7 @@ namespace Marvel {
         // Cleanup
         ImGui_ImplMetal_Shutdown();
         ImGui_ImplGlfw_Shutdown();
-        imnodes::Shutdown();
+        imnodes::DestroyContext();
         ImPlot::DestroyContext();
         ImGui::DestroyContext();
 
@@ -106,7 +104,7 @@ namespace Marvel {
         IMGUI_CHECKVERSION();
         ImGui::CreateContext();
         ImPlot::CreateContext();
-        imnodes::Initialize();
+        imnodes::CreateContext();
         ImGuiIO &io = ImGui::GetIO();
         io.ConfigWindowsMoveFromTitleBarOnly = true;
         io.IniFilename = nullptr;
@@ -117,11 +115,9 @@ namespace Marvel {
         if(mvApp::GetApp()->m_docking)
             io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
 
-        if (mvApp::GetApp()->m_dockingShiftOnly)
-            io.ConfigDockingWithShift = true;
-
         // Setup style
         ImGui::StyleColorsDark();
+        mvApp::SetDefaultTheme();
 
         ImGui_ImplGlfw_InitForOpenGL(m_window, true);
         ImGui_ImplMetal_Init(device);
@@ -196,11 +192,11 @@ namespace Marvel {
             // Generally you may always pass all inputs to dear imgui, and hide them from your application based on those two flags.
             glfwPollEvents();
 
-            if (mvApp::GetApp()->getFontManager().isInvalid())
+            if (mvToolManager::GetFontManager().isInvalid())
             {
-                mvApp::GetApp()->getFontManager().rebuildAtlas();
+                mvToolManager::GetFontManager().rebuildAtlas();
                 ImGui_ImplMetal_DestroyFontsTexture();
-                mvApp::GetApp()->getFontManager().updateDefaultFont();
+                mvToolManager::GetFontManager().updateAtlas();
                 ImGui_ImplMetal_CreateFontsTexture(device);
             }
 
@@ -235,13 +231,9 @@ namespace Marvel {
             ImGui_ImplGlfw_NewFrame();
             ImGui::NewFrame();
 
-            if (m_error) 
-            {
-                mvAppLog::setSize(m_width, m_height);
-                mvAppLog::render();
-            } 
-            else
-                m_app->render();
+            m_app->render();
+
+            glfwGetWindowPos(m_window, &m_xpos, &m_ypos);
 
             // Rendering
             ImGui::Render();

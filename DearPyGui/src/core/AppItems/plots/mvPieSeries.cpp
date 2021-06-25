@@ -3,20 +3,21 @@
 #include "mvCore.h"
 #include "mvApp.h"
 #include "mvItemRegistry.h"
-#include "mvImPlotThemeScope.h"
+#include "mvPythonExceptions.h"
 
 namespace Marvel {
 
 	void mvPieSeries::InsertParser(std::map<std::string, mvPythonParser>* parsers)
 	{
 
-		mvPythonParser parser(mvPyDataType::String);
-		mvAppItem::AddCommonArgs(parser);
-		parser.removeArg("width");
-		parser.removeArg("height");
-		parser.removeArg("callback");
-		parser.removeArg("callback_data");
-		parser.removeArg("enabled");
+		mvPythonParser parser(mvPyDataType::UUID, "Adds a pie series to a plot.", { "Plotting", "Containers", "Widgets" });
+		mvAppItem::AddCommonArgs(parser, (CommonParserArgs)(
+			MV_PARSER_ARG_ID |
+			MV_PARSER_ARG_PARENT |
+			MV_PARSER_ARG_BEFORE |
+			MV_PARSER_ARG_SOURCE |
+			MV_PARSER_ARG_SHOW)
+		);
 
 		parser.addArg<mvPyDataType::Double>("x");
 		parser.addArg<mvPyDataType::Double>("y");
@@ -28,8 +29,6 @@ namespace Marvel {
 
 		parser.addArg<mvPyDataType::Double>("angle", mvArgType::KEYWORD_ARG, "90.0");
 
-		parser.addArg<mvPyDataType::Integer>("axis", mvArgType::KEYWORD_ARG, "0");
-
 		parser.addArg<mvPyDataType::Bool>("normalize", mvArgType::KEYWORD_ARG, "False");
 		parser.addArg<mvPyDataType::Bool>("contribute_to_bounds", mvArgType::KEYWORD_ARG, "True");
 
@@ -38,30 +37,25 @@ namespace Marvel {
 		parsers->insert({ s_command, parser });
 	}
 
-	mvPieSeries::mvPieSeries(const std::string& name)
-		: mvSeriesBase(name)
+	mvPieSeries::mvPieSeries(mvUUID uuid)
+		: mvSeriesBase(uuid)
 	{
+	}
+
+	bool mvPieSeries::isParentCompatible(mvAppItemType type)
+	{
+		if (type == mvAppItemType::mvPlotAxis) return true;
+
+		mvThrowPythonError(mvErrorCode::mvIncompatibleParent, s_command,
+			"Incompatible parent. Acceptable parents include: plot axis", this);
+
+		assert(false);
+		return false;
 	}
 
 	void mvPieSeries::draw(ImDrawList* drawlist, float x, float y)
 	{
-		ScopedID id;
-		mvImPlotThemeScope scope(this);
-
-		switch (m_axis)
-		{
-		case ImPlotYAxis_1:
-			ImPlot::SetPlotYAxis(ImPlotYAxis_1);
-			break;
-		case ImPlotYAxis_2:
-			ImPlot::SetPlotYAxis(ImPlotYAxis_2);
-			break;
-		case ImPlotYAxis_3:
-			ImPlot::SetPlotYAxis(ImPlotYAxis_3);
-			break;
-		default:
-			break;
-		}
+		ScopedID id(m_uuid);
 
 		static const std::vector<double>* xptr;
 
@@ -69,6 +63,23 @@ namespace Marvel {
 
 		ImPlot::PlotPieChart(m_clabels.data(), xptr->data(), (int)m_labels.size(),
 			m_x, m_y, m_radius, m_normalize, m_format.c_str(), m_angle);
+
+		// Begin a popup for a legend entry.
+		if (ImPlot::BeginLegendPopup(m_label.c_str(), 1))
+		{
+			for (auto& childset : m_children)
+			{
+				for (auto& item : childset)
+				{
+					// skip item if it's not shown
+					if (!item->m_show)
+						continue;
+					item->draw(drawlist, ImPlot::GetPlotPos().x, ImPlot::GetPlotPos().y);
+					item->getState().update();
+				}
+			}
+			ImPlot::EndLegendPopup();
+		}
 
 	}
 
@@ -119,7 +130,6 @@ namespace Marvel {
 		if (dict == nullptr)
 			return;
 
-		if (PyObject* item = PyDict_GetItemString(dict, "axis")) m_axis = (ImPlotYAxis_)ToInt(item);
 		if (PyObject* item = PyDict_GetItemString(dict, "format")) m_format = ToString(item);
 		if (PyObject* item = PyDict_GetItemString(dict, "x")) m_x = ToDouble(item);
 		if (PyObject* item = PyDict_GetItemString(dict, "y")) m_y = ToDouble(item);
@@ -150,7 +160,6 @@ namespace Marvel {
 		if (dict == nullptr)
 			return;
 
-		PyDict_SetItemString(dict, "axis", ToPyInt(m_axis));
 		PyDict_SetItemString(dict, "format", ToPyString(m_format));
 		PyDict_SetItemString(dict, "x", ToPyDouble(m_x));
 		PyDict_SetItemString(dict, "y", ToPyDouble(m_y));

@@ -15,21 +15,15 @@ namespace Marvel {
 
 		MV_APPLY_WIDGET_REGISTRATION(mvAppItemType::mvDrawQuad, draw_quad)
 
-		MV_START_EXTRA_COMMANDS
-		MV_END_EXTRA_COMMANDS
+		MV_START_COMMANDS
+		MV_END_COMMANDS
 
-		MV_START_GENERAL_CONSTANTS
-		MV_END_GENERAL_CONSTANTS
-
-		MV_START_COLOR_CONSTANTS
-		MV_END_COLOR_CONSTANTS
-
-		MV_START_STYLE_CONSTANTS
-		MV_END_STYLE_CONSTANTS
+		MV_START_CONSTANTS
+		MV_END_CONSTANTS
 
 	public:
 
-		mvDrawQuad(const std::string& name);
+		mvDrawQuad(mvUUID uuid);
 
 		void draw(ImDrawList* drawlist, float x, float y) override;
 		bool isParentCompatible(mvAppItemType type) override;

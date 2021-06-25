@@ -2,33 +2,41 @@
 #include "mvApp.h"
 #include "mvLog.h"
 #include "mvItemRegistry.h"
-#include "mvImGuiThemeScope.h"
 #include "mvTab.h"
-#include "mvFontScope.h"
 #include "mvPythonExceptions.h"
 
 namespace Marvel {
 
 	void mvTabBar::InsertParser(std::map<std::string, mvPythonParser>* parsers)
 	{
-		mvPythonParser parser(mvPyDataType::String);
-		mvAppItem::AddCommonArgs(parser);
-		parser.removeArg("source");
-		parser.removeArg("width");
-		parser.removeArg("height");
-		parser.removeArg("label");
-		parser.removeArg("enabled");
+		mvPythonParser parser(mvPyDataType::UUID, "Adds a tab bar.", { "Containers", "Widgets" }, true);
+		mvAppItem::AddCommonArgs(parser, (CommonParserArgs)(
+			MV_PARSER_ARG_ID |
+			MV_PARSER_ARG_INDENT |
+			MV_PARSER_ARG_PARENT |
+			MV_PARSER_ARG_BEFORE |
+			MV_PARSER_ARG_CALLBACK |
+			MV_PARSER_ARG_USER_DATA |
+			MV_PARSER_ARG_SHOW |
+			MV_PARSER_ARG_FILTER |
+			MV_PARSER_ARG_DROP_CALLBACK |
+			MV_PARSER_ARG_DRAG_CALLBACK |
+			MV_PARSER_ARG_PAYLOAD_TYPE |
+			MV_PARSER_ARG_SEARCH_DELAY |
+			MV_PARSER_ARG_TRACKED |
+			MV_PARSER_ARG_POS)
+		);
 
-		parser.addArg<mvPyDataType::Bool>("reorderable", mvArgType::KEYWORD_ARG, "False", "allows for moveable tabs");
+		parser.addArg<mvPyDataType::Bool>("reorderable", mvArgType::KEYWORD_ARG, "False", "Allows for moveable tabs.");
 
 		parser.finalize();
 
 		parsers->insert({ s_command, parser });
 	}
 
-	mvTabBar::mvTabBar(const std::string& name)
+	mvTabBar::mvTabBar(mvUUID uuid)
 		:
-		mvStringPtrBase(name)
+		mvUUIDPtrBase(uuid)
 	{
 	}
 
@@ -38,68 +46,49 @@ namespace Marvel {
 		if (type == mvAppItemType::mvTab)return true;
 		if (type == mvAppItemType::mvTabButton)return true;
 
-		mvThrowPythonError(1000, "TabBar children must be tabs or tab buttons.");
+		mvThrowPythonError(mvErrorCode::mvIncompatibleChild, s_command,
+			"Incompatible child. Acceptable children include: tab, tab button", this);
+
 		MV_ITEM_REGISTRY_ERROR("TabBar children must be tabs or tab buttons.");
 		assert(false);
 
 		return false;
 	}
 
-	std::string& mvTabBar::getSpecificValue()
+	mvUUID mvTabBar::getSpecificValue()
 	{
 		return m_uiValue;
 	}
 
-	void mvTabBar::setValue(const std::string& value)
+	void mvTabBar::setValue(mvUUID value)
 	{
 		m_uiValue = value;
 	}
 
 	void mvTabBar::draw(ImDrawList* drawlist, float x, float y)
 	{
-		ScopedID id;
-		mvImGuiThemeScope scope(this);
-		mvFontScope fscope(this);
+		ScopedID id(m_uuid);
+
 		ImGui::BeginGroup();
 
 		if (ImGui::BeginTabBar(m_label.c_str(), m_flags))
 		{
-			//we do this so that the children dont get the theme
-			scope.cleanup();
+
 			for (auto& item : m_children[1])
 			{
-				// skip item if it's not shown
-				if (!item->m_show)
+
+				if (!item->preDraw())
 					continue;
 
-				// set item width
-				if (item->m_width != 0)
-					ImGui::SetNextItemWidth((float)item->m_width);
-
-				if (*m_value == item->m_name && m_lastValue != *m_value)
+				if (*m_value == item->m_uuid && m_lastValue != *m_value)
 					static_cast<mvTab*>(item.get())->addFlag(ImGuiTabItemFlags_SetSelected);
-
-				if (item->m_focusNextFrame)
-				{
-					ImGui::SetKeyboardFocusHere();
-					item->m_focusNextFrame = false;
-				}
-
-				auto oldCursorPos = ImGui::GetCursorPos();
-				if (item->m_dirtyPos)
-					ImGui::SetCursorPos(item->getState().getItemPos());
-
-				item->getState().setPos({ ImGui::GetCursorPosX(), ImGui::GetCursorPosY() });
 
 				item->draw(drawlist, ImGui::GetCursorPosX(), ImGui::GetCursorPosY());
 
-				if (item->m_dirtyPos)
-					ImGui::SetCursorPos(oldCursorPos);
+				item->postDraw();
 
-				if (*m_value == item->m_name)
+				if (*m_value == item->m_uuid)
 					static_cast<mvTab*>(item.get())->removeFlag(ImGuiTabItemFlags_SetSelected);
-
-				item->getState().update();
 			}
 
 			ImGui::EndTabBar();

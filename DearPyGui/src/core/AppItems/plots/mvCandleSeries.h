@@ -4,7 +4,7 @@
 
 namespace Marvel {
 
-	MV_REGISTER_WIDGET(mvCandleSeries, MV_ITEM_DESC_DEFAULT, StorageValueTypes::Series, 1);
+	MV_REGISTER_WIDGET(mvCandleSeries, MV_ITEM_DESC_DEFAULT | MV_ITEM_DESC_CONTAINER, StorageValueTypes::Series, 1);
 	class mvCandleSeries : public mvSeriesBase
 	{
 
@@ -15,24 +15,18 @@ namespace Marvel {
 			MV_APPLY_WIDGET_REGISTRATION(mvAppItemType::mvCandleSeries, add_candle_series)
 
 
-			MV_START_EXTRA_COMMANDS
-			MV_END_EXTRA_COMMANDS
+			MV_START_COMMANDS
+			MV_END_COMMANDS
 
-			MV_START_GENERAL_CONSTANTS
-			MV_END_GENERAL_CONSTANTS
-
-			MV_START_COLOR_CONSTANTS
-			MV_END_COLOR_CONSTANTS
-
-			MV_START_STYLE_CONSTANTS
-			MV_END_STYLE_CONSTANTS
+			MV_START_CONSTANTS
+			MV_END_CONSTANTS
 
 	public:
 
-		mvCandleSeries(const std::string& name);
+		mvCandleSeries(mvUUID uuid);
 
 		void draw(ImDrawList* drawlist, float x, float y) override;
-
+		bool isParentCompatible(mvAppItemType type) override;
 		void handleSpecificRequiredArgs(PyObject* args) override;
 		void handleSpecificKeywordArgs(PyObject* dict) override;
 		void getSpecificConfiguration(PyObject* dict) override;

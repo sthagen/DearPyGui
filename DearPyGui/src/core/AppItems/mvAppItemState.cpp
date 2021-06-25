@@ -33,7 +33,7 @@ namespace Marvel {
         m_rectMin = { ImGui::GetItemRectMin().x, ImGui::GetItemRectMin().y };
         m_rectMax = { ImGui::GetItemRectMax().x, ImGui::GetItemRectMax().y };
         m_rectSize = { ImGui::GetItemRectSize().x, ImGui::GetItemRectSize().y };
-
+        m_contextRegionAvail = { ImGui::GetContentRegionAvail().x, ImGui::GetContentRegionAvail().y };
     }
 
     void mvAppItemState::getState(PyObject* dict)
@@ -53,10 +53,11 @@ namespace Marvel {
         PyDict_SetItemString(dict, "toggled_open", ToPyBool(m_toggledOpen));
         PyDict_SetItemString(dict, "ok", ToPyBool(m_ok));
 
-        PyDict_SetItemString(dict, "rect_min", ToPyMPair(m_rectMin.x, m_rectMin.y));
-        PyDict_SetItemString(dict, "rect_max", ToPyMPair(m_rectMax.x, m_rectMax.y));
-        PyDict_SetItemString(dict, "rect_size", ToPyMPair(m_rectSize.x, m_rectSize.y));
-        PyDict_SetItemString(dict, "pos", ToPyMPair(m_pos.x, m_pos.y));
+        PyDict_SetItemString(dict, "rect_min", ToPyPairII(m_rectMin.x, m_rectMin.y));
+        PyDict_SetItemString(dict, "rect_max", ToPyPairII(m_rectMax.x, m_rectMax.y));
+        PyDict_SetItemString(dict, "rect_size", ToPyPairII(m_rectSize.x, m_rectSize.y));
+        PyDict_SetItemString(dict, "content_region_avail", ToPyPairII(m_contextRegionAvail.x, m_contextRegionAvail.y));
+        PyDict_SetItemString(dict, "pos", ToPyPairII(m_pos.x, m_pos.y));
     }
 
 }

@@ -4,7 +4,6 @@
 #include "mvApp.h"
 #include "mvLog.h"
 #include "mvItemRegistry.h"
-#include "mvFontScope.h"
 #include "mvPythonExceptions.h"
 
 namespace Marvel {
@@ -12,14 +11,17 @@ namespace Marvel {
 	void mvDragLine::InsertParser(std::map<std::string, mvPythonParser>* parsers)
 	{
 
-		mvPythonParser parser(mvPyDataType::String);
-		mvAppItem::AddCommonArgs(parser);
-		parser.removeArg("width");
-		parser.removeArg("height");
-		parser.removeArg("callback_data");
-		parser.removeArg("enabled");
+		mvPythonParser parser(mvPyDataType::UUID, "Adds a drag line to a plot.", { "Plotting", "Widgets" });
+		mvAppItem::AddCommonArgs(parser, (CommonParserArgs)(
+			MV_PARSER_ARG_ID |
+			MV_PARSER_ARG_PARENT |
+			MV_PARSER_ARG_BEFORE |
+			MV_PARSER_ARG_SOURCE |
+			MV_PARSER_ARG_CALLBACK |
+			MV_PARSER_ARG_SHOW)
+		);
 
-		parser.addArg<mvPyDataType::DoubleList>("default_value", mvArgType::KEYWORD_ARG, "(0.0, 0.0, 0.0, 0.0)");
+		parser.addArg<mvPyDataType::DoubleList>("default_value", mvArgType::KEYWORD_ARG, "0.0");
 
 		parser.addArg<mvPyDataType::IntList>("color", mvArgType::KEYWORD_ARG, "(0, 0, 0, -255)");
 
@@ -33,17 +35,18 @@ namespace Marvel {
 		parsers->insert({ s_command, parser });
 	}
 
-	mvDragLine::mvDragLine(const std::string& name)
-		: mvDoublePtrBase(name)
+	mvDragLine::mvDragLine(mvUUID uuid)
+		: mvDoublePtrBase(uuid)
 	{
 	}
 
 	bool mvDragLine::isParentCompatible(mvAppItemType type)
 	{
-		if (type == mvAppItemType::mvPlot)
-			return true;
+		if (type == mvAppItemType::mvStagingContainer) return true;
+		if (type == mvAppItemType::mvPlot) return true;
 
-		mvThrowPythonError(1000, "Item's parent must be plot.");
+		mvThrowPythonError(mvErrorCode::mvIncompatibleParent, s_command,
+			"Incompatible parent. Acceptable parents include: plot, staging container", this);
 		MV_ITEM_REGISTRY_ERROR("Item's parent must be plot.");
 		assert(false);
 		return false;
@@ -51,8 +54,8 @@ namespace Marvel {
 
 	void mvDragLine::draw(ImDrawList* drawlist, float x, float y)
 	{
-		ScopedID id;
-		mvFontScope fscope(this);
+		ScopedID id(m_uuid);
+		//mvFontScope fscope(this);
 
 		
 
@@ -60,14 +63,14 @@ namespace Marvel {
 		{
 			if (ImPlot::DragLineX(m_specificedlabel.c_str(), m_value.get(), m_show_label, m_color, m_thickness))
 			{
-				mvApp::GetApp()->getCallbackRegistry().addCallback(m_callback, m_name, nullptr);
+				mvApp::GetApp()->getCallbackRegistry().addCallback(m_callback, m_uuid, nullptr, nullptr);
 			}
 		}
 		else
 		{
 			if (ImPlot::DragLineY(m_specificedlabel.c_str(), m_value.get(), m_show_label, m_color, m_thickness))
 			{
-				mvApp::GetApp()->getCallbackRegistry().addCallback(m_callback, m_name, nullptr);
+				mvApp::GetApp()->getCallbackRegistry().addCallback(m_callback, m_uuid, nullptr, nullptr);
 			}
 		}
 

@@ -1,6 +1,6 @@
 #include "mvDummy.h"
 #include "mvItemRegistry.h"
-#include "mvImGuiThemeScope.h"
+//#include "mvImGuiThemeScope.h"
 
 namespace Marvel {
 
@@ -8,23 +8,26 @@ namespace Marvel {
 
 	void mvDummy::InsertParser(std::map<std::string, mvPythonParser>* parsers)
 	{
+		mvPythonParser parser(mvPyDataType::UUID, "Adds a spacer or 'dummy' object.", { "Widgets" });
+		mvAppItem::AddCommonArgs(parser, (CommonParserArgs)(
+			MV_PARSER_ARG_ID |
+			MV_PARSER_ARG_WIDTH |
+			MV_PARSER_ARG_HEIGHT |
+			MV_PARSER_ARG_INDENT |
+			MV_PARSER_ARG_PARENT |
+			MV_PARSER_ARG_BEFORE |
+			MV_PARSER_ARG_SHOW |
+			MV_PARSER_ARG_POS)
+		);
 
-
-		mvPythonParser parser(mvPyDataType::String);
-		mvAppItem::AddCommonArgs(parser);
-		parser.removeArg("source");
-		parser.removeArg("label");
-		parser.removeArg("callback");
-		parser.removeArg("callback_data");
-		parser.removeArg("enabled");
 		parser.finalize();
 
 		parsers->insert({ s_command, parser });
 	}
 
 
-	mvDummy::mvDummy(const std::string& name)
-		: mvAppItem(name)
+	mvDummy::mvDummy(mvUUID uuid)
+		: mvAppItem(uuid)
 	{
 	}
 

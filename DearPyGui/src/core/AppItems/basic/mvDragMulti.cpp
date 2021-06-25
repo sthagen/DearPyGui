@@ -5,29 +5,43 @@
 #include "mvModule_Core.h"
 #include <string>
 #include "mvItemRegistry.h"
-#include "mvImGuiThemeScope.h"
-#include "mvFontScope.h"
 
 namespace Marvel {
 
     void mvDragFloatMulti::InsertParser(std::map<std::string, mvPythonParser>* parsers)
     {
 
-        mvPythonParser parser(mvPyDataType::String);
-        mvAppItem::AddCommonArgs(parser);
-        parser.removeArg("height");
+        mvPythonParser parser(mvPyDataType::UUID, "Adds drag input for a set of int values up to 4. CTRL+Click to directly modify the value.", { "Widgets" });
+        mvAppItem::AddCommonArgs(parser, (CommonParserArgs)(
+            MV_PARSER_ARG_ID |
+            MV_PARSER_ARG_WIDTH |
+            MV_PARSER_ARG_INDENT |
+            MV_PARSER_ARG_PARENT |
+            MV_PARSER_ARG_BEFORE |
+            MV_PARSER_ARG_SOURCE |
+            MV_PARSER_ARG_CALLBACK |
+            MV_PARSER_ARG_USER_DATA |
+            MV_PARSER_ARG_SHOW |
+            MV_PARSER_ARG_ENABLED |
+            MV_PARSER_ARG_FILTER |
+            MV_PARSER_ARG_DROP_CALLBACK |
+            MV_PARSER_ARG_DRAG_CALLBACK |
+            MV_PARSER_ARG_PAYLOAD_TYPE |
+            MV_PARSER_ARG_TRACKED |
+            MV_PARSER_ARG_POS)
+        );
 
         parser.addArg<mvPyDataType::FloatList>("default_value", mvArgType::KEYWORD_ARG, "(0.0, 0.0, 0.0, 0.0)");
 
-        parser.addArg<mvPyDataType::Integer>("size", mvArgType::KEYWORD_ARG, "4", "number of components");
+        parser.addArg<mvPyDataType::Integer>("size", mvArgType::KEYWORD_ARG, "4", "Number of components");
 
         parser.addArg<mvPyDataType::String>("format", mvArgType::KEYWORD_ARG, "'%0.3f'");
 
         parser.addArg<mvPyDataType::Float>("speed", mvArgType::KEYWORD_ARG, "1.0");
-        parser.addArg<mvPyDataType::Float>("min_value", mvArgType::KEYWORD_ARG, "0.0");
-        parser.addArg<mvPyDataType::Float>("max_value", mvArgType::KEYWORD_ARG, "100.0");
+        parser.addArg<mvPyDataType::Float>("min_value", mvArgType::KEYWORD_ARG, "0.0", "Limits the Drag input but CTRL+Click can still be below value.");
+        parser.addArg<mvPyDataType::Float>("max_value", mvArgType::KEYWORD_ARG, "100.0", "Limits the Drag input but CTRL+Click can still be above value.");
         
-        parser.addArg<mvPyDataType::Bool>("no_input", mvArgType::KEYWORD_ARG, "False", "Disable CTRL+Click or Enter key allowing to input text directly into the widget");
+        parser.addArg<mvPyDataType::Bool>("no_input", mvArgType::KEYWORD_ARG, "False", "Disable CTRL+Click or Enter key allowing to input text directly into the widget.");
         parser.addArg<mvPyDataType::Bool>("clamped", mvArgType::KEYWORD_ARG, "False", "Clamp value to min/max bounds when input manually with CTRL+Click. By default CTRL+Click allows going out of bounds.");
 
         parser.finalize();
@@ -38,22 +52,38 @@ namespace Marvel {
     void mvDragIntMulti::InsertParser(std::map<std::string, mvPythonParser>* parsers)
     {
 
-        mvPythonParser parser(mvPyDataType::String);
-        mvAppItem::AddCommonArgs(parser);
-        parser.removeArg("height");
+        mvPythonParser parser(mvPyDataType::UUID, "Adds drag input for a set of int values up to 4. CTRL+Click to directly modify the value.", { "Widgets" });
+        mvAppItem::AddCommonArgs(parser, (CommonParserArgs)(
+            MV_PARSER_ARG_ID |
+            MV_PARSER_ARG_WIDTH |
+            MV_PARSER_ARG_INDENT |
+            MV_PARSER_ARG_PARENT |
+            MV_PARSER_ARG_BEFORE |
+            MV_PARSER_ARG_SOURCE |
+            MV_PARSER_ARG_CALLBACK |
+            MV_PARSER_ARG_USER_DATA |
+            MV_PARSER_ARG_SHOW |
+            MV_PARSER_ARG_ENABLED |
+            MV_PARSER_ARG_FILTER |
+            MV_PARSER_ARG_DROP_CALLBACK |
+            MV_PARSER_ARG_DRAG_CALLBACK |
+            MV_PARSER_ARG_PAYLOAD_TYPE |
+            MV_PARSER_ARG_TRACKED |
+            MV_PARSER_ARG_POS)
+        );
 
         parser.addArg<mvPyDataType::IntList>("default_value", mvArgType::KEYWORD_ARG, "(0, 0, 0, 0)");
 
-        parser.addArg<mvPyDataType::Integer>("size", mvArgType::KEYWORD_ARG, "4", "number of components");
+        parser.addArg<mvPyDataType::Integer>("size", mvArgType::KEYWORD_ARG, "4", "Number of components.");
 
         parser.addArg<mvPyDataType::String>("format", mvArgType::KEYWORD_ARG, "'%d'");
 
         parser.addArg<mvPyDataType::Float>("speed", mvArgType::KEYWORD_ARG, "1.0");
 
-        parser.addArg<mvPyDataType::Integer>("min_value", mvArgType::KEYWORD_ARG, "0");
-        parser.addArg<mvPyDataType::Integer>("max_value", mvArgType::KEYWORD_ARG, "100");
+        parser.addArg<mvPyDataType::Integer>("min_value", mvArgType::KEYWORD_ARG, "0", "Limits the Drag input but CTRL+Click can still be below value.");
+        parser.addArg<mvPyDataType::Integer>("max_value", mvArgType::KEYWORD_ARG, "100", "Limits the Drag input but CTRL+Click can still be above value.");
 
-        parser.addArg<mvPyDataType::Bool>("no_input", mvArgType::KEYWORD_ARG, "False", "Disable CTRL+Click or Enter key allowing to input text directly into the widget");
+        parser.addArg<mvPyDataType::Bool>("no_input", mvArgType::KEYWORD_ARG, "False", "Disable CTRL+Click or Enter key allowing to input text directly into the widget.");
         parser.addArg<mvPyDataType::Bool>("clamped", mvArgType::KEYWORD_ARG, "False", "Clamp value to min/max bounds when input manually with CTRL+Click. By default CTRL+Click allows going out of bounds.");
 
         parser.finalize();
@@ -61,16 +91,14 @@ namespace Marvel {
         parsers->insert({ s_command, parser });
     }
 
-    mvDragFloatMulti::mvDragFloatMulti(const std::string& name)
-        : mvFloat4PtrBase(name)
+    mvDragFloatMulti::mvDragFloatMulti(mvUUID uuid)
+        : mvFloat4PtrBase(uuid)
     {
     }
 
     void mvDragFloatMulti::draw(ImDrawList* drawlist, float x, float y)
     {
-        ScopedID id;
-        mvImGuiThemeScope scope(this);
-        mvFontScope fscope(this);
+        ScopedID id(m_uuid);
 
         if (!m_enabled) std::copy(m_value->data(), m_value->data() + 2, m_disabled_value);
 
@@ -78,15 +106,15 @@ namespace Marvel {
         {
         case 2:
             if (ImGui::DragFloat2(m_label.c_str(), m_enabled ? m_value->data() : &m_disabled_value[0], m_speed, m_min, m_max, m_format.c_str(), m_flags))
-                mvApp::GetApp()->getCallbackRegistry().addCallback(getCallback(false), m_name, m_callback_data);
+                mvApp::GetApp()->getCallbackRegistry().addCallback(getCallback(false), m_uuid, nullptr, m_user_data);
             break;
         case 3:
             if (ImGui::DragFloat3(m_label.c_str(), m_enabled ? m_value->data() : &m_disabled_value[0], m_speed, m_min, m_max, m_format.c_str(), m_flags))
-                mvApp::GetApp()->getCallbackRegistry().addCallback(getCallback(false), m_name, m_callback_data);
+                mvApp::GetApp()->getCallbackRegistry().addCallback(getCallback(false), m_uuid, nullptr, m_user_data);
             break;
         case 4:
             if (ImGui::DragFloat4(m_label.c_str(), m_enabled ? m_value->data() : &m_disabled_value[0], m_speed, m_min, m_max, m_format.c_str(), m_flags))
-                mvApp::GetApp()->getCallbackRegistry().addCallback(getCallback(false), m_name, m_callback_data);
+                mvApp::GetApp()->getCallbackRegistry().addCallback(getCallback(false), m_uuid, nullptr, m_user_data);
             break;
         default:
             break;
@@ -160,16 +188,14 @@ namespace Marvel {
 
     }
 
-    mvDragIntMulti::mvDragIntMulti(const std::string& name)
-        : mvInt4PtrBase(name)
+    mvDragIntMulti::mvDragIntMulti(mvUUID uuid)
+        : mvInt4PtrBase(uuid)
     {
     }
 
     void mvDragIntMulti::draw(ImDrawList* drawlist, float x, float y)
     {
-        ScopedID id;
-        mvImGuiThemeScope scope(this);
-        mvFontScope fscope(this);
+        ScopedID id(m_uuid);
 
         if (!m_enabled) std::copy(m_value->data(), m_value->data() + 2, m_disabled_value);
 
@@ -177,15 +203,15 @@ namespace Marvel {
         {
         case 2:
             if (ImGui::DragInt2(m_label.c_str(), m_enabled ? m_value->data() : &m_disabled_value[0], m_speed, m_min, m_max, m_format.c_str(), m_flags))
-                mvApp::GetApp()->getCallbackRegistry().addCallback(getCallback(false), m_name, m_callback_data);
+                mvApp::GetApp()->getCallbackRegistry().addCallback(getCallback(false), m_uuid, nullptr, m_user_data);
             break;
         case 3:
             if (ImGui::DragInt3(m_label.c_str(), m_enabled ? m_value->data() : &m_disabled_value[0], m_speed, m_min, m_max, m_format.c_str(), m_flags))
-                mvApp::GetApp()->getCallbackRegistry().addCallback(getCallback(false), m_name, m_callback_data);
+                mvApp::GetApp()->getCallbackRegistry().addCallback(getCallback(false), m_uuid, nullptr, m_user_data);
             break;
         case 4:
             if (ImGui::DragInt4(m_label.c_str(), m_enabled ? m_value->data() : &m_disabled_value[0], m_speed, m_min, m_max, m_format.c_str(), m_flags))
-                mvApp::GetApp()->getCallbackRegistry().addCallback(getCallback(false), m_name, m_callback_data);
+                mvApp::GetApp()->getCallbackRegistry().addCallback(getCallback(false), m_uuid, nullptr, m_user_data);
             break;
         default:
             break;

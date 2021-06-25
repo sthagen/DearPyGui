@@ -2,35 +2,46 @@
 #include "mvInput.h"
 #include "mvApp.h"
 #include "mvItemRegistry.h"
-#include "mvImGuiThemeScope.h"
-#include "mvFontScope.h"
 
 namespace Marvel {
 
 	void mvChild::InsertParser(std::map<std::string, mvPythonParser>* parsers)
 	{
-		mvPythonParser parser(mvPyDataType::String);
-		mvAppItem::AddCommonArgs(parser);
-		parser.removeArg("source");
-		parser.removeArg("label");
-		parser.removeArg("callback");
-		parser.removeArg("callback_data");
-		parser.removeArg("enabled");
+		mvPythonParser parser(mvPyDataType::UUID,
+			"Adds an embedded child window. Will show scrollbars when items do not fit. Must be followed by a call to end.", 
+			{ "Containers", "Widgets" },
+			true);
+		mvAppItem::AddCommonArgs(parser, (CommonParserArgs)(
+			MV_PARSER_ARG_ID |
+			MV_PARSER_ARG_WIDTH |
+			MV_PARSER_ARG_HEIGHT |
+			MV_PARSER_ARG_INDENT |
+			MV_PARSER_ARG_PARENT |
+			MV_PARSER_ARG_BEFORE |
+			MV_PARSER_ARG_SHOW |
+			MV_PARSER_ARG_FILTER |
+			MV_PARSER_ARG_DROP_CALLBACK |
+			MV_PARSER_ARG_DRAG_CALLBACK |
+			MV_PARSER_ARG_PAYLOAD_TYPE |
+			MV_PARSER_ARG_SEARCH_DELAY |
+			MV_PARSER_ARG_TRACKED |
+			MV_PARSER_ARG_POS)
+		);
 
-		parser.addArg<mvPyDataType::Bool>("border", mvArgType::KEYWORD_ARG, "True");
+		parser.addArg<mvPyDataType::Bool>("border", mvArgType::KEYWORD_ARG, "True", "Shows/Hides the border around the sides.");
 		parser.addArg<mvPyDataType::Bool>("autosize_x", mvArgType::KEYWORD_ARG, "False", "Autosize the window to fit it's items in the x.");
 		parser.addArg<mvPyDataType::Bool>("autosize_y", mvArgType::KEYWORD_ARG, "False", "Autosize the window to fit it's items in the y.");
-		parser.addArg<mvPyDataType::Bool>("no_scrollbar", mvArgType::KEYWORD_ARG, "False", " Disable scrollbars (window can still scroll with mouse or programmatically)");
+		parser.addArg<mvPyDataType::Bool>("no_scrollbar", mvArgType::KEYWORD_ARG, "False", " Disable scrollbars (window can still scroll with mouse or programmatically).");
 		parser.addArg<mvPyDataType::Bool>("horizontal_scrollbar", mvArgType::KEYWORD_ARG, "False", "Allow horizontal scrollbar to appear (off by default).");
-		parser.addArg<mvPyDataType::Bool>("menubar", mvArgType::KEYWORD_ARG, "False");
+		parser.addArg<mvPyDataType::Bool>("menubar", mvArgType::KEYWORD_ARG, "False", "Shows/Hides the menubar at the top.");
 
 		parser.finalize();
 
 		parsers->insert({ s_command, parser });
 	}
 
-	mvChild::mvChild(const std::string& name)
-		: mvBoolPtrBase(name)
+	mvChild::mvChild(mvUUID uuid)
+		: mvBoolPtrBase(uuid)
 	{
 	}
 
@@ -46,50 +57,51 @@ namespace Marvel {
 
 	void mvChild::draw(ImDrawList* drawlist, float x, float y)
 	{
-		ScopedID id;
-		mvImGuiThemeScope scope(this);
-		mvFontScope fscope(this);
+		ScopedID id(m_uuid);
 
 		ImGui::BeginChild(m_label.c_str(), ImVec2(m_autosize_x ? 0 : (float)m_width, m_autosize_y ? 0 : (float)m_height), m_border, m_windowflags);
 
-		//we do this so that the children dont get the theme
-		scope.cleanup();
-
 		for (auto& item : m_children[1])
 		{
-			// skip item if it's not shown
-			if (!item->m_show)
+
+			if (!item->preDraw())
 				continue;
 
-			if (item->m_focusNextFrame)
+			item->draw(drawlist, ImGui::GetCursorPosX(), ImGui::GetCursorPosY());
+			if (item->m_tracked)
 			{
-				ImGui::SetKeyboardFocusHere();
-				item->m_focusNextFrame = false;
+				ImGui::SetScrollHereX(item->m_trackOffset);
+				ImGui::SetScrollHereY(item->m_trackOffset);
 			}
 
-			auto oldCursorPos = ImGui::GetCursorPos();
-			if (item->m_dirtyPos)
-				ImGui::SetCursorPos(item->getState().getItemPos());
+			item->postDraw();
+		}
 
-			item->getState().setPos({ ImGui::GetCursorPosX(), ImGui::GetCursorPosY()});
+		if (m_scrollXSet)
+		{
+			if (m_scrollX < 0.0f)
+				ImGui::SetScrollHereX(1.0f);
+			else
+				ImGui::SetScrollX(m_scrollX);
+			m_scrollXSet = false;
+		}
 
-			// set item width
-			if (item->m_width != 0)
-				ImGui::SetNextItemWidth((float)item->m_width);
-
-			item->draw(drawlist, ImGui::GetCursorPosX(), ImGui::GetCursorPosY());
-
-			if (item->m_dirtyPos)
-				ImGui::SetCursorPos(oldCursorPos);
-
-			item->getState().update();
+		if (m_scrollYSet)
+		{
+			if (m_scrollY < 0.0f)
+				ImGui::SetScrollHereY(1.0f);
+			else
+				ImGui::SetScrollY(m_scrollY);
+			m_scrollYSet = false;
 		}
 
 		// allows this item to have a render callback
 		registerWindowFocusing();
 
-		m_width = (int)ImGui::GetWindowWidth();
-		m_height = (int)ImGui::GetWindowHeight();
+		m_scrollX = ImGui::GetScrollX();
+		m_scrollY = ImGui::GetScrollY();
+		m_scrollMaxX = ImGui::GetScrollMaxX();
+		m_scrollMaxY = ImGui::GetScrollMaxY();
 
 		ImGui::EndChild();
 	}

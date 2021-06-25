@@ -5,27 +5,41 @@
 #include "mvApp.h"
 #include <string>
 #include "mvItemRegistry.h"
-#include "mvImGuiThemeScope.h"
-#include "mvFontScope.h"
 
 namespace Marvel {
 
     void mvInputIntMulti::InsertParser(std::map<std::string, mvPythonParser>* parsers)
     {
-        mvPythonParser parser(mvPyDataType::String);
-        mvAppItem::AddCommonArgs(parser);
-        parser.removeArg("height");
+        mvPythonParser parser(mvPyDataType::UUID, "Adds multi int input for up to 4 integer values.", { "Widgets" });
+        mvAppItem::AddCommonArgs(parser, (CommonParserArgs)(
+            MV_PARSER_ARG_ID |
+            MV_PARSER_ARG_WIDTH |
+            MV_PARSER_ARG_INDENT |
+            MV_PARSER_ARG_PARENT |
+            MV_PARSER_ARG_BEFORE |
+            MV_PARSER_ARG_SOURCE |
+            MV_PARSER_ARG_CALLBACK |
+            MV_PARSER_ARG_USER_DATA |
+            MV_PARSER_ARG_SHOW |
+            MV_PARSER_ARG_ENABLED |
+            MV_PARSER_ARG_FILTER |
+            MV_PARSER_ARG_DROP_CALLBACK |
+            MV_PARSER_ARG_DRAG_CALLBACK |
+            MV_PARSER_ARG_PAYLOAD_TYPE |
+            MV_PARSER_ARG_TRACKED |
+            MV_PARSER_ARG_POS)
+        );
 
         parser.addArg<mvPyDataType::IntList>("default_value", mvArgType::KEYWORD_ARG, "(0, 0, 0, 0)");
 
-        parser.addArg<mvPyDataType::Integer>("min_value", mvArgType::KEYWORD_ARG, "0");
-        parser.addArg<mvPyDataType::Integer>("max_value", mvArgType::KEYWORD_ARG, "100");
-        parser.addArg<mvPyDataType::Integer>("size", mvArgType::KEYWORD_ARG, "4", "number of components");
+        parser.addArg<mvPyDataType::Integer>("min_value", mvArgType::KEYWORD_ARG, "0", "Value for lower limit of input for each cell. Use clamped to turn on.");
+        parser.addArg<mvPyDataType::Integer>("max_value", mvArgType::KEYWORD_ARG, "100", "Value for upper limit of input for each cell. Use clamped to turn on.");
+        parser.addArg<mvPyDataType::Integer>("size", mvArgType::KEYWORD_ARG, "4", "Number of components.");
 
-        parser.addArg<mvPyDataType::Bool>("min_clamped", mvArgType::KEYWORD_ARG, "False", "activates and deactivates min_value");
-        parser.addArg<mvPyDataType::Bool>("max_clamped", mvArgType::KEYWORD_ARG, "False", "activates and deactivates max_value");
-        parser.addArg<mvPyDataType::Bool>("on_enter", mvArgType::KEYWORD_ARG, "False", "Only runs callback on enter");
-        parser.addArg<mvPyDataType::Bool>("readonly", mvArgType::KEYWORD_ARG, "False");
+        parser.addArg<mvPyDataType::Bool>("min_clamped", mvArgType::KEYWORD_ARG, "False", "Activates and deactivates min_value.");
+        parser.addArg<mvPyDataType::Bool>("max_clamped", mvArgType::KEYWORD_ARG, "False", "Activates and deactivates max_value.");
+        parser.addArg<mvPyDataType::Bool>("on_enter", mvArgType::KEYWORD_ARG, "False", "Only runs callback on enter.");
+        parser.addArg<mvPyDataType::Bool>("readonly", mvArgType::KEYWORD_ARG, "False", "Activates a read only mode for the inputs.");
 
         parser.finalize();
 
@@ -35,31 +49,47 @@ namespace Marvel {
     void mvInputFloatMulti::InsertParser(std::map<std::string, mvPythonParser>* parsers)
     {
 
-        mvPythonParser parser(mvPyDataType::String);
-        mvAppItem::AddCommonArgs(parser);
-        parser.removeArg("height");
+        mvPythonParser parser(mvPyDataType::UUID, "Adds multi float input for up to 4 float values.", { "Widgets" });
+        mvAppItem::AddCommonArgs(parser, (CommonParserArgs)(
+            MV_PARSER_ARG_ID |
+            MV_PARSER_ARG_WIDTH |
+            MV_PARSER_ARG_INDENT |
+            MV_PARSER_ARG_PARENT |
+            MV_PARSER_ARG_BEFORE |
+            MV_PARSER_ARG_SOURCE |
+            MV_PARSER_ARG_CALLBACK |
+            MV_PARSER_ARG_USER_DATA |
+            MV_PARSER_ARG_SHOW |
+            MV_PARSER_ARG_ENABLED |
+            MV_PARSER_ARG_FILTER |
+            MV_PARSER_ARG_DROP_CALLBACK |
+            MV_PARSER_ARG_DRAG_CALLBACK |
+            MV_PARSER_ARG_PAYLOAD_TYPE |
+            MV_PARSER_ARG_TRACKED |
+            MV_PARSER_ARG_POS)
+        );
 
         parser.addArg<mvPyDataType::FloatList>("default_value", mvArgType::KEYWORD_ARG, "(0.0, 0.0, 0.0, 0.0)");
 
         parser.addArg<mvPyDataType::String>("format", mvArgType::KEYWORD_ARG, "'%.3f'");
 
-        parser.addArg<mvPyDataType::Float>("min_value", mvArgType::KEYWORD_ARG, "0.0");
-        parser.addArg<mvPyDataType::Float>("max_value", mvArgType::KEYWORD_ARG, "100.0");
+        parser.addArg<mvPyDataType::Float>("min_value", mvArgType::KEYWORD_ARG, "0.0", "Value for lower limit of input for each cell. Use clamped to turn on.");
+        parser.addArg<mvPyDataType::Float>("max_value", mvArgType::KEYWORD_ARG, "100.0", "Value for upper limit of input for each cell. Use clamped to turn on.");
 
-        parser.addArg<mvPyDataType::Integer>("size", mvArgType::KEYWORD_ARG, "4", "number of components");
+        parser.addArg<mvPyDataType::Integer>("size", mvArgType::KEYWORD_ARG, "4", "Number of components.");
 
-        parser.addArg<mvPyDataType::Bool>("min_clamped", mvArgType::KEYWORD_ARG, "False", "activates and deactivates min_value");
-        parser.addArg<mvPyDataType::Bool>("max_clamped", mvArgType::KEYWORD_ARG, "False", "activates and deactivates max_value");
-        parser.addArg<mvPyDataType::Bool>("on_enter", mvArgType::KEYWORD_ARG, "False", "Only runs callback on enter");
-        parser.addArg<mvPyDataType::Bool>("readonly", mvArgType::KEYWORD_ARG, "False");
+        parser.addArg<mvPyDataType::Bool>("min_clamped", mvArgType::KEYWORD_ARG, "False", "Activates and deactivates min_value.");
+        parser.addArg<mvPyDataType::Bool>("max_clamped", mvArgType::KEYWORD_ARG, "False", "Activates and deactivates max_value.");
+        parser.addArg<mvPyDataType::Bool>("on_enter", mvArgType::KEYWORD_ARG, "False", "Only runs callback on enter key press.");
+        parser.addArg<mvPyDataType::Bool>("readonly", mvArgType::KEYWORD_ARG, "False", "Activates a read only mode for the inputs.");
 
         parser.finalize();
 
         parsers->insert({ s_command, parser });
     }
 
-    mvInputIntMulti::mvInputIntMulti(const std::string& name)
-        : mvInt4PtrBase(name)
+    mvInputIntMulti::mvInputIntMulti(mvUUID uuid)
+        : mvInt4PtrBase(uuid)
     {
         m_last_value = *m_value;
     }
@@ -84,9 +114,7 @@ namespace Marvel {
 
     void mvInputIntMulti::draw(ImDrawList* drawlist, float x, float y)
     {
-        ScopedID id;
-        mvImGuiThemeScope scope(this);
-        mvFontScope fscope(this);
+        ScopedID id(m_uuid);
 
         bool res = false;
 
@@ -139,13 +167,13 @@ namespace Marvel {
             if (m_last_value != *m_value)
             {
                 m_last_value = *m_value;
-                mvApp::GetApp()->getCallbackRegistry().addCallback(m_callback, m_name, m_callback_data);
+                mvApp::GetApp()->getCallbackRegistry().addCallback(m_callback, m_uuid, nullptr, m_user_data);
             }
         }
     }
 
-    mvInputFloatMulti::mvInputFloatMulti(const std::string& name)
-        : mvFloat4PtrBase(name)
+    mvInputFloatMulti::mvInputFloatMulti(mvUUID uuid)
+        : mvFloat4PtrBase(uuid)
     {
         m_last_value = *m_value;
     }
@@ -170,9 +198,9 @@ namespace Marvel {
 
     void mvInputFloatMulti::draw(ImDrawList* drawlist, float x, float y)
     {
-        ScopedID id;
-        mvImGuiThemeScope scope(this);
-        mvFontScope fscope(this);
+        ScopedID id(m_uuid);
+        ////mvImGuiThemeScope scope(this);
+        //mvFontScope fscope(this);
 
         bool res = false;
 
@@ -225,7 +253,7 @@ namespace Marvel {
             if (m_last_value != *m_value)
             {
                 m_last_value = *m_value;
-                mvApp::GetApp()->getCallbackRegistry().addCallback(m_callback, m_name, m_callback_data);
+                mvApp::GetApp()->getCallbackRegistry().addCallback(m_callback, m_uuid, nullptr, m_user_data);
             }
         }
     }

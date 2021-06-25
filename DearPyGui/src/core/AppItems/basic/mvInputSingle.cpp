@@ -5,30 +5,43 @@
 #include "mvApp.h"
 #include <string>
 #include "mvItemRegistry.h"
-#include "mvImGuiThemeScope.h"
-#include "mvFontScope.h"
 
 namespace Marvel {
 
     void mvInputInt::InsertParser(std::map<std::string, mvPythonParser>* parsers)
     {
 
-        mvPythonParser parser(mvPyDataType::String);
-        mvAppItem::AddCommonArgs(parser);
-        parser.removeArg("height");
+        mvPythonParser parser(mvPyDataType::UUID, "Adds input for float. Step buttons can be turned on or off.", { "Widgets" });
+        mvAppItem::AddCommonArgs(parser, (CommonParserArgs)(
+            MV_PARSER_ARG_ID |
+            MV_PARSER_ARG_WIDTH |
+            MV_PARSER_ARG_INDENT |
+            MV_PARSER_ARG_PARENT |
+            MV_PARSER_ARG_BEFORE |
+            MV_PARSER_ARG_SOURCE |
+            MV_PARSER_ARG_CALLBACK |
+            MV_PARSER_ARG_USER_DATA |
+            MV_PARSER_ARG_SHOW |
+            MV_PARSER_ARG_ENABLED |
+            MV_PARSER_ARG_FILTER |
+            MV_PARSER_ARG_DROP_CALLBACK |
+            MV_PARSER_ARG_DRAG_CALLBACK |
+            MV_PARSER_ARG_PAYLOAD_TYPE |
+            MV_PARSER_ARG_TRACKED |
+            MV_PARSER_ARG_POS)
+        );
 
-        parser.addArg<mvPyDataType::IntList>("default_value", mvArgType::KEYWORD_ARG, "(0, 0, 0, 0)");
+        parser.addArg<mvPyDataType::IntList>("default_value", mvArgType::KEYWORD_ARG, "0");
 
-        parser.addArg<mvPyDataType::Integer>("min_value", mvArgType::KEYWORD_ARG, "0");
-        parser.addArg<mvPyDataType::Integer>("max_value", mvArgType::KEYWORD_ARG, "100");
-        parser.addArg<mvPyDataType::Integer>("size", mvArgType::KEYWORD_ARG, "4", "number of components");
-        parser.addArg<mvPyDataType::Integer>("step", mvArgType::KEYWORD_ARG, "1");
-        parser.addArg<mvPyDataType::Integer>("step_fast", mvArgType::KEYWORD_ARG, "100");
+        parser.addArg<mvPyDataType::Integer>("min_value", mvArgType::KEYWORD_ARG, "0", "Value for lower limit of input. By default this limits the step buttons. Use clamped to limit manual input.");
+        parser.addArg<mvPyDataType::Integer>("max_value", mvArgType::KEYWORD_ARG, "100", "Value for upper limit of input. By default this limits the step buttons. Use clamped to limit manual input.");
+        parser.addArg<mvPyDataType::Integer>("step", mvArgType::KEYWORD_ARG, "1", "Increment to change value by when the step buttons are pressed. Setting this to a value of 0 or smaller will turn off step buttons.");
+        parser.addArg<mvPyDataType::Integer>("step_fast", mvArgType::KEYWORD_ARG, "100", "After holding the step buttons for extended time the increments will switch to this value.");
 
-        parser.addArg<mvPyDataType::Bool>("min_clamped", mvArgType::KEYWORD_ARG, "False", "activates and deactivates min_value");
-        parser.addArg<mvPyDataType::Bool>("max_clamped", mvArgType::KEYWORD_ARG, "False", "activates and deactivates max_value");
-        parser.addArg<mvPyDataType::Bool>("on_enter", mvArgType::KEYWORD_ARG, "False", "Only runs callback on enter");
-        parser.addArg<mvPyDataType::Bool>("readonly", mvArgType::KEYWORD_ARG, "False");
+        parser.addArg<mvPyDataType::Bool>("min_clamped", mvArgType::KEYWORD_ARG, "False", "Activates and deactivates min_value.");
+        parser.addArg<mvPyDataType::Bool>("max_clamped", mvArgType::KEYWORD_ARG, "False", "Activates and deactivates max_value.");
+        parser.addArg<mvPyDataType::Bool>("on_enter", mvArgType::KEYWORD_ARG, "False", "Only runs callback on enter key press.");
+        parser.addArg<mvPyDataType::Bool>("readonly", mvArgType::KEYWORD_ARG, "False", "Activates a read only mode for the input.");
 
         parser.finalize();
 
@@ -39,33 +52,47 @@ namespace Marvel {
 
     void mvInputFloat::InsertParser(std::map<std::string, mvPythonParser>* parsers)
     {
-        mvPythonParser parser(mvPyDataType::String);
-        mvAppItem::AddCommonArgs(parser);
-        parser.removeArg("height");
+        mvPythonParser parser(mvPyDataType::UUID, "Adds input for integers. Step buttons can be turned on or off.", { "Widgets" });
+        mvAppItem::AddCommonArgs(parser, (CommonParserArgs)(
+            MV_PARSER_ARG_ID |
+            MV_PARSER_ARG_WIDTH |
+            MV_PARSER_ARG_INDENT |
+            MV_PARSER_ARG_PARENT |
+            MV_PARSER_ARG_BEFORE |
+            MV_PARSER_ARG_SOURCE |
+            MV_PARSER_ARG_CALLBACK |
+            MV_PARSER_ARG_USER_DATA |
+            MV_PARSER_ARG_SHOW |
+            MV_PARSER_ARG_ENABLED |
+            MV_PARSER_ARG_FILTER |
+            MV_PARSER_ARG_DROP_CALLBACK |
+            MV_PARSER_ARG_DRAG_CALLBACK |
+            MV_PARSER_ARG_PAYLOAD_TYPE |
+            MV_PARSER_ARG_TRACKED |
+            MV_PARSER_ARG_POS)
+        );
 
         parser.addArg<mvPyDataType::Float>("default_value", mvArgType::KEYWORD_ARG, "0.0");
 
         parser.addArg<mvPyDataType::String>("format", mvArgType::KEYWORD_ARG, "'%.3f'");
 
-        parser.addArg<mvPyDataType::Float>("min_value", mvArgType::KEYWORD_ARG, "0.0");
-        parser.addArg<mvPyDataType::Float>("max_value", mvArgType::KEYWORD_ARG, "100.0");
-        parser.addArg<mvPyDataType::Float>("step", mvArgType::KEYWORD_ARG, "0.1");
-        parser.addArg<mvPyDataType::Float>("step_fast", mvArgType::KEYWORD_ARG, "1.0");
+        parser.addArg<mvPyDataType::Float>("min_value", mvArgType::KEYWORD_ARG, "0.0", "Value for lower limit of input. By default this limits the step buttons. Use clamped to limit manual input.");
+        parser.addArg<mvPyDataType::Float>("max_value", mvArgType::KEYWORD_ARG, "100.0", "Value for upper limit of input. By default this limits the step buttons. Use clamped to limit manual input.");
+        parser.addArg<mvPyDataType::Float>("step", mvArgType::KEYWORD_ARG, "0.1", "Increment to change value by when the step buttons are pressed. Setting this to a value of 0 or smaller will turn off step buttons.");
+        parser.addArg<mvPyDataType::Float>("step_fast", mvArgType::KEYWORD_ARG, "1.0", "After holding the step buttons for extended time the increments will switch to this value.");
 
-        parser.addArg<mvPyDataType::Integer>("size", mvArgType::KEYWORD_ARG, "4", "number of components");
-
-        parser.addArg<mvPyDataType::Bool>("min_clamped", mvArgType::KEYWORD_ARG, "False", "activates and deactivates min_value");
-        parser.addArg<mvPyDataType::Bool>("max_clamped", mvArgType::KEYWORD_ARG, "False", "activates and deactivates max_value");
-        parser.addArg<mvPyDataType::Bool>("on_enter", mvArgType::KEYWORD_ARG, "False", "Only runs callback on enter");
-        parser.addArg<mvPyDataType::Bool>("readonly", mvArgType::KEYWORD_ARG, "False");
+        parser.addArg<mvPyDataType::Bool>("min_clamped", mvArgType::KEYWORD_ARG, "False", "Activates and deactivates min_value.");
+        parser.addArg<mvPyDataType::Bool>("max_clamped", mvArgType::KEYWORD_ARG, "False", "Activates and deactivates max_value.");
+        parser.addArg<mvPyDataType::Bool>("on_enter", mvArgType::KEYWORD_ARG, "False", "Only runs callback on enter key press.");
+        parser.addArg<mvPyDataType::Bool>("readonly", mvArgType::KEYWORD_ARG, "False", "Activates a read only mode for the input.");
 
         parser.finalize();
 
         parsers->insert({ s_command, parser });
     }
 
-    mvInputInt::mvInputInt(const std::string& name)
-        : mvIntPtrBase(name)
+    mvInputInt::mvInputInt(mvUUID uuid)
+        : mvIntPtrBase(uuid)
     {
         m_last_value = *m_value;
     }
@@ -90,9 +117,7 @@ namespace Marvel {
 
     void mvInputInt::draw(ImDrawList* drawlist, float x, float y)
     {
-        ScopedID id;
-        mvImGuiThemeScope scope(this);
-        mvFontScope fscope(this);
+        ScopedID id(m_uuid);
 
         if (ImGui::InputInt(m_label.c_str(), m_value.get(), m_step, m_step_fast, m_flags))
         {
@@ -118,14 +143,14 @@ namespace Marvel {
             if (m_last_value != *m_value)
             {
                 m_last_value = *m_value;
-                mvApp::GetApp()->getCallbackRegistry().addCallback(m_callback, m_name, m_callback_data);
+                mvApp::GetApp()->getCallbackRegistry().addCallback(m_callback, m_uuid, nullptr, m_user_data);
             }
         }
 
     }
 
-    mvInputFloat::mvInputFloat(const std::string& name)
-        : mvFloatPtrBase(name)
+    mvInputFloat::mvInputFloat(mvUUID uuid)
+        : mvFloatPtrBase(uuid)
     {
         m_last_value = *m_value;
     }
@@ -150,9 +175,7 @@ namespace Marvel {
 
     void mvInputFloat::draw(ImDrawList* drawlist, float x, float y)
     {
-        ScopedID id;
-        mvImGuiThemeScope scope(this);
-        mvFontScope fscope(this);
+        ScopedID id(m_uuid);
 
         if (ImGui::InputFloat(m_label.c_str(), m_value.get(), m_step, m_step_fast, m_format.c_str(), m_flags))
         {
@@ -179,7 +202,7 @@ namespace Marvel {
             if (m_last_value != *m_value)
             {
                 m_last_value = *m_value;
-                mvApp::GetApp()->getCallbackRegistry().addCallback(m_callback, m_name, m_callback_data);
+                mvApp::GetApp()->getCallbackRegistry().addCallback(m_callback, m_uuid, nullptr, m_user_data);
             }
         }
     }

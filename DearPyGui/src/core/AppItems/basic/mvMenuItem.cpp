@@ -1,43 +1,50 @@
 #include "mvMenuItem.h"
 #include "mvApp.h"
 #include "mvItemRegistry.h"
-#include "mvImGuiThemeScope.h"
-#include "mvFontScope.h"
 
 namespace Marvel {
 
 	void mvMenuItem::InsertParser(std::map<std::string, mvPythonParser>* parsers)
 	{
 
-		mvPythonParser parser(mvPyDataType::String);
-		mvAppItem::AddCommonArgs(parser);
-		parser.removeArg("width");
-		parser.removeArg("height");
-		parser.removeArg("source");
+		mvPythonParser parser(mvPyDataType::UUID, "Adds a menu item to an existing menu. Menu items act similar to selectables.", { "Widgets" });
+		mvAppItem::AddCommonArgs(parser, (CommonParserArgs)(
+			MV_PARSER_ARG_ID |
+			MV_PARSER_ARG_INDENT |
+			MV_PARSER_ARG_PARENT |
+			MV_PARSER_ARG_BEFORE |
+			MV_PARSER_ARG_CALLBACK |
+			MV_PARSER_ARG_USER_DATA |
+			MV_PARSER_ARG_SHOW |
+			MV_PARSER_ARG_FILTER |
+			MV_PARSER_ARG_DROP_CALLBACK |
+			MV_PARSER_ARG_DRAG_CALLBACK |
+			MV_PARSER_ARG_PAYLOAD_TYPE |
+			MV_PARSER_ARG_TRACKED |
+			MV_PARSER_ARG_ENABLED)
+		);
 
 		parser.addArg<mvPyDataType::Bool>("default_value", mvArgType::KEYWORD_ARG, "False");
 
-		parser.addArg<mvPyDataType::String>("shortcut", mvArgType::KEYWORD_ARG, "''", "Adds a shortcut.");
+		parser.addArg<mvPyDataType::String>("shortcut", mvArgType::KEYWORD_ARG, "''", "Displays text on the menu item. Typically used to show a shortcut key command.");
 
-		parser.addArg<mvPyDataType::Bool>("check", mvArgType::KEYWORD_ARG, "False", "Makes menu item with checkmark.");
+		parser.addArg<mvPyDataType::Bool>("check", mvArgType::KEYWORD_ARG, "False", "Displays a checkmark on the menu item when it is selected.");
 
 		parser.finalize();
 
 		parsers->insert({ s_command, parser });
 	}
 
-	mvMenuItem::mvMenuItem(const std::string& name)
-		: mvBoolPtrBase(name) 
+	mvMenuItem::mvMenuItem(mvUUID uuid)
+		: mvBoolPtrBase(uuid) 
 	{
 	}
 
 	void mvMenuItem::draw(ImDrawList* drawlist, float x, float y)
 	{
-		ScopedID id;
-		mvImGuiThemeScope scope(this);
-		mvFontScope fscope(this);
+		ScopedID id(m_uuid);
 
-		// This is ugly and goes against our style system but its the only widget that ImGui chooses to push teh disable color for us
+		// This is ugly and goes against our style system but its the only widget that ImGui chooses to push the disable color for us
 		// so we have to map our text disable color to the system text disable color, or we can create a new constant which goes agains our 
 		// constants. 
 		ImGui::PushStyleColor(ImGuiCol_TextDisabled, ImGui::GetStyleColorVec4(ImGuiCol_Text));
@@ -45,7 +52,7 @@ namespace Marvel {
 		// create menu item and see if its selected
 		if (ImGui::MenuItem(m_label.c_str(), m_shortcut.c_str(), m_check ? m_value.get() : nullptr, m_enabled))
 		{
-			mvApp::GetApp()->getCallbackRegistry().addCallback(m_callback, m_name, m_callback_data);
+			mvApp::GetApp()->getCallbackRegistry().addCallback(m_callback, m_uuid, nullptr, m_user_data);
 		}
 
 		ImGui::PopStyleColor();

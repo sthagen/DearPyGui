@@ -2,34 +2,68 @@
 #include "mvRadioButton.h"
 #include "mvApp.h"
 #include "mvItemRegistry.h"
-#include "mvImGuiThemeScope.h"
-#include "mvFontScope.h"
-
 namespace Marvel {
 
 	void mvRadioButton::InsertParser(std::map<std::string, mvPythonParser>* parsers)
 	{
 
-		mvPythonParser parser(mvPyDataType::String);
-		mvAppItem::AddCommonArgs(parser);
-		parser.removeArg("width");
-		parser.removeArg("height");
-		parser.removeArg("label");
+		mvPythonParser parser(mvPyDataType::UUID, "Adds a set of radio buttons. If items keyword is empty, nothing will be shown.", { "Widgets" });
+		mvAppItem::AddCommonArgs(parser, (CommonParserArgs)(
+			MV_PARSER_ARG_ID |
+			MV_PARSER_ARG_INDENT |
+			MV_PARSER_ARG_PARENT |
+			MV_PARSER_ARG_BEFORE |
+			MV_PARSER_ARG_SOURCE |
+			MV_PARSER_ARG_CALLBACK |
+			MV_PARSER_ARG_USER_DATA |
+			MV_PARSER_ARG_SHOW |
+			MV_PARSER_ARG_ENABLED |
+			MV_PARSER_ARG_FILTER |
+			MV_PARSER_ARG_DROP_CALLBACK |
+			MV_PARSER_ARG_DRAG_CALLBACK |
+			MV_PARSER_ARG_PAYLOAD_TYPE |
+			MV_PARSER_ARG_TRACKED |
+			MV_PARSER_ARG_POS)
+		);
 
-		parser.addArg<mvPyDataType::Integer>("items", mvArgType::POSITIONAL_ARG, "()");
+		parser.addArg<mvPyDataType::Integer>("items", mvArgType::POSITIONAL_ARG, "()", "A tuple of items to be shown as radio options. Can consist of any combination of types.");
 
-		parser.addArg<mvPyDataType::Integer>("default_value", mvArgType::KEYWORD_ARG, "0");
+		parser.addArg<mvPyDataType::String>("default_value", mvArgType::KEYWORD_ARG, "''");
 
-		parser.addArg<mvPyDataType::Bool>("horizontal", mvArgType::KEYWORD_ARG, "False");
+		parser.addArg<mvPyDataType::Bool>("horizontal", mvArgType::KEYWORD_ARG, "False", "Displays the radio options horizontally.");
 
 		parser.finalize();
 
 		parsers->insert({ s_command, parser });
 	}
 
-	mvRadioButton::mvRadioButton(const std::string& name)
-		: mvIntPtrBase(name)
+	mvRadioButton::mvRadioButton(mvUUID uuid)
+		: mvStringPtrBase(uuid)
 	{
+	}
+
+	void mvRadioButton::setPyValue(PyObject* value)
+	{
+		*m_value = ToString(value);
+		updateIndex();
+	}
+
+	void mvRadioButton::updateIndex()
+	{
+		m_index = 0;
+		m_disabledindex = 0;
+
+		int index = 0;
+		for (const auto& name : m_itemnames)
+		{
+			if (name == *m_value)
+			{
+				m_index = index;
+				m_disabledindex = index;
+				break;
+			}
+			index++;
+		}
 	}
 
 	void mvRadioButton::draw(ImDrawList* drawlist, float x, float y)
@@ -37,19 +71,26 @@ namespace Marvel {
 
 		ImGui::BeginGroup();
 
-		ScopedID id;
-		mvImGuiThemeScope scope(this);
-		mvFontScope fscope(this);
+		ScopedID id(m_uuid);
 
-		if (!m_enabled) m_disabled_value = *m_value;
+		if (!m_enabled)
+		{
+			m_disabled_value = *m_value;
+			m_disabledindex = m_index;
+		}
 
 		for (size_t i = 0; i < m_itemnames.size(); i++)
 		{
 			if (m_horizontal && i != 0)
 				ImGui::SameLine();
 
-			if (ImGui::RadioButton((m_itemnames[i] + "##" + m_name).c_str(), m_enabled ? m_value.get() : &m_disabled_value, (int)i))
-				mvApp::GetApp()->getCallbackRegistry().addCallback(getCallback(false), m_name, m_callback_data);
+			if (ImGui::RadioButton(m_itemnames[i].c_str(), m_enabled ? &m_index : &m_disabledindex, (int)i))
+			{
+				*m_value = m_itemnames[m_index];
+				m_disabled_value = m_itemnames[m_index];
+				mvApp::GetApp()->getCallbackRegistry().addCallback(getCallback(false), m_uuid, nullptr, m_user_data);
+			}
+
 		}
 
 		ImGui::EndGroup();
@@ -80,7 +121,11 @@ namespace Marvel {
 		if (dict == nullptr)
 			return;
 		 
-		if (PyObject* item = PyDict_GetItemString(dict, "items")) m_itemnames = ToStringVect(item);
+		if (PyObject* item = PyDict_GetItemString(dict, "items"))
+		{
+			m_itemnames = ToStringVect(item);
+			updateIndex();
+		}
 		if (PyObject* item = PyDict_GetItemString(dict, "horizontal")) m_horizontal = ToBool(item);
 	}
 

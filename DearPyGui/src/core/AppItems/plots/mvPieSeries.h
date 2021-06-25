@@ -4,7 +4,7 @@
 
 namespace Marvel {
 
-	MV_REGISTER_WIDGET(mvPieSeries, MV_ITEM_DESC_DEFAULT, StorageValueTypes::Series, 1);
+	MV_REGISTER_WIDGET(mvPieSeries, MV_ITEM_DESC_DEFAULT | MV_ITEM_DESC_CONTAINER, StorageValueTypes::Series, 1);
 	class mvPieSeries : public mvSeriesBase
 	{
 	public:
@@ -13,24 +13,18 @@ namespace Marvel {
 
 		MV_APPLY_WIDGET_REGISTRATION(mvAppItemType::mvPieSeries, add_pie_series)
 
-		MV_START_EXTRA_COMMANDS
-		MV_END_EXTRA_COMMANDS
+		MV_START_COMMANDS
+		MV_END_COMMANDS
 
-		MV_START_GENERAL_CONSTANTS
-		MV_END_GENERAL_CONSTANTS
-
-		MV_START_COLOR_CONSTANTS
-		MV_END_COLOR_CONSTANTS
-
-		MV_START_STYLE_CONSTANTS
-		MV_END_STYLE_CONSTANTS
+		MV_START_CONSTANTS
+		MV_END_CONSTANTS
 
 	public:
 
-		mvPieSeries(const std::string& name);
+		mvPieSeries(mvUUID uuid);
 
 		void draw(ImDrawList* drawlist, float x, float y) override;
-
+		bool isParentCompatible(mvAppItemType type) override;
 		void handleSpecificRequiredArgs(PyObject* args) override;
 		void handleSpecificKeywordArgs(PyObject* dict) override;
 		void getSpecificConfiguration(PyObject* dict) override;

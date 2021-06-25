@@ -1,6 +1,5 @@
 #include "mvPythonTranslator.h"
 #include "mvPythonExceptions.h"
-#include "mvAppLog.h"
 
 #define PY_SSIZE_T_CLEAN
 #include <Python.h>
@@ -15,7 +14,7 @@ namespace Marvel {
 
 		if (!PyList_Check(pyvalue))
 		{
-			mvThrowPythonError(1000, "Python value error");
+			mvThrowPythonError(mvErrorCode::mvWrongType, "Python value error");
 			return;
 		}
 		
@@ -36,7 +35,7 @@ namespace Marvel {
 
 		if (!PyList_Check(pyvalue))
 		{
-			mvThrowPythonError(1000, "Python value error");
+			mvThrowPythonError(mvErrorCode::mvWrongType, "Python value error");
 			return;
 		}
 
@@ -57,7 +56,7 @@ namespace Marvel {
 
 		if (!PyList_Check(pyvalue))
 		{
-			mvThrowPythonError(1000, "Python value error");
+			mvThrowPythonError(mvErrorCode::mvWrongType, "Python value error");
 			return;
 		}
 
@@ -104,6 +103,12 @@ namespace Marvel {
 	{
 		 
 		return PyLong_FromLong(value);
+	}
+
+	PyObject* ToPyUUID(mvUUID value)
+	{
+
+		return Py_BuildValue("K", value);
 	}
 
 	PyObject* ToPyBool(bool value)
@@ -156,6 +161,18 @@ namespace Marvel {
 
 		for (size_t i = 0; i < value.size(); ++i)
 			PyList_SetItem(result, i, PyLong_FromLong(value[i]));
+
+		return result;
+	}
+
+	PyObject* ToPyList(const std::vector<mvUUID>& value)
+	{
+
+
+		PyObject* result = PyList_New(value.size());
+
+		for (size_t i = 0; i < value.size(); ++i)
+			PyList_SetItem(result, i, Py_BuildValue("K", value[i]));
 
 		return result;
 	}
@@ -337,7 +354,7 @@ namespace Marvel {
 
 		if (!PyDict_Check(value))
 		{
-			mvThrowPythonError(1000, message);
+			mvThrowPythonError(mvErrorCode::mvWrongType, "Python value error. Must be dict/time.");
 			return result;
 		}
 
@@ -364,11 +381,26 @@ namespace Marvel {
 
 		if (!PyLong_Check(value))
 		{
-			mvThrowPythonError(1000, message);
+			mvThrowPythonError(mvErrorCode::mvWrongType, "Python value error. Must be int.");
 			return 0;
 		}
 
 		return PyLong_AsLong(value);
+	}
+
+	mvUUID ToUUID(PyObject* value, const std::string& message)
+	{
+		if (value == nullptr)
+			return 0;
+
+
+		if (!PyLong_Check(value))
+		{
+			mvThrowPythonError(mvErrorCode::mvWrongType, "Python value error. Must be int.");
+			return 0;
+		}
+
+		return PyLong_AsUnsignedLongLong(value);
 	}
 
 	float ToFloat(PyObject* value, const std::string& message)
@@ -379,8 +411,13 @@ namespace Marvel {
 
 		if (!PyNumber_Check(value))
 		{
-			mvThrowPythonError(1000, message);
+			mvThrowPythonError(mvErrorCode::mvWrongType, "Python value error. Must be float.");
 			return 0.0f;
+		}
+
+		if (PyLong_Check(value))
+		{
+			return PyLong_AsLong(value);
 		}
 
 		return (float)PyFloat_AsDouble(value);
@@ -394,7 +431,7 @@ namespace Marvel {
 
 		if (!PyNumber_Check(value))
 		{
-			mvThrowPythonError(1000, message);
+			mvThrowPythonError(mvErrorCode::mvWrongType, "Python value error. Must be float.");
 			return 0.0;
 		}
 
@@ -409,7 +446,7 @@ namespace Marvel {
 
 		if (!PyBool_Check(value))
 		{
-			mvThrowPythonError(1000, message);
+			mvThrowPythonError(mvErrorCode::mvWrongType, "Python value error. Must be bool.");
 			return false;
 		}
 
@@ -431,7 +468,7 @@ namespace Marvel {
 			PyObject* str = PyObject_Str(value);
 			if (str == nullptr)
 			{
-				mvThrowPythonError(1000, message);
+				mvThrowPythonError(mvErrorCode::mvWrongType, "Python value error. Must be string.");
 				return "";
 			}
 			result = _PyUnicode_AsString(str);
@@ -460,7 +497,13 @@ namespace Marvel {
 			return [](Py_buffer& bufferView, Py_ssize_t index) {return (float)*((long*)bufferView.buf + index); };
 
 		else if (strcmp(bufferView.format, "L") == 0)
+			return [](Py_buffer& bufferView, Py_ssize_t index) {return (float)*((long long*)bufferView.buf + index); };
+
+		else if (strcmp(bufferView.format, "k") == 0)
 			return [](Py_buffer& bufferView, Py_ssize_t index) {return (float)*((unsigned long*)bufferView.buf + index); };
+
+		else if (strcmp(bufferView.format, "K") == 0)
+			return [](Py_buffer& bufferView, Py_ssize_t index) {return (float)*((unsigned long long*)bufferView.buf + index); };
 
 		else if (strcmp(bufferView.format, "B") == 0)
 			return [](Py_buffer& bufferView, Py_ssize_t index) {return (float)*((unsigned char*)bufferView.buf + index); };
@@ -472,9 +515,9 @@ namespace Marvel {
 			return [](Py_buffer& bufferView, Py_ssize_t index) {return (float)*((char*)bufferView.buf + index); };
 		else
 		{
-			mvThrowPythonError(1000, "Unknown buffer type.");
-			mvThrowPythonError(1000, bufferView.format);
-			mvThrowPythonError(1000, "Currently supported buffer types f, d, l, B");
+			mvThrowPythonError(mvErrorCode::mvWrongType, "Unknown buffer type.");
+			mvThrowPythonError(mvErrorCode::mvWrongType, bufferView.format);
+			mvThrowPythonError(mvErrorCode::mvWrongType, "Currently supported buffer types f, d, l, B");
 			return nullptr;
 		}
 	}
@@ -497,7 +540,13 @@ namespace Marvel {
 			return [](Py_buffer& bufferView, Py_ssize_t index) {return (int)*((long*)bufferView.buf + index); };
 
 		else if (strcmp(bufferView.format, "L") == 0)
+			return [](Py_buffer& bufferView, Py_ssize_t index) {return (int)*((long long*)bufferView.buf + index); };
+
+		else if (strcmp(bufferView.format, "k") == 0)
 			return [](Py_buffer& bufferView, Py_ssize_t index) {return (int)*((unsigned long*)bufferView.buf + index); };
+
+		else if (strcmp(bufferView.format, "K") == 0)
+			return [](Py_buffer& bufferView, Py_ssize_t index) {return (int)*((unsigned long long*)bufferView.buf + index); };
 
 		else if (strcmp(bufferView.format, "B") == 0)
 			return [](Py_buffer& bufferView, Py_ssize_t index) {return (int)*((unsigned char*)bufferView.buf + index); };
@@ -509,9 +558,9 @@ namespace Marvel {
 			return [](Py_buffer& bufferView, Py_ssize_t index) {return (int)*((char*)bufferView.buf + index); };
 		else
 		{
-			mvThrowPythonError(1000, "Unknown buffer type.");
-			mvThrowPythonError(1000, bufferView.format);
-			mvThrowPythonError(1000, "Currently supported buffer types f, d, l, B");
+			mvThrowPythonError(mvErrorCode::mvWrongType, "Unknown buffer type.");
+			mvThrowPythonError(mvErrorCode::mvWrongType, bufferView.format);
+			mvThrowPythonError(mvErrorCode::mvWrongType, "Currently supported buffer types f, d, l, B");
 			return nullptr;
 		}
 	}
@@ -529,7 +578,7 @@ namespace Marvel {
 			items.resize(PyTuple_Size(value));
 			for (Py_ssize_t i = 0; i < PyTuple_Size(value); ++i)
 			{
-				items.emplace_back(PyLong_AsLong(PyTuple_GetItem(value, i)));
+				items[i] = PyLong_AsLong(PyTuple_GetItem(value, i));
 			}
 		}
 
@@ -563,7 +612,40 @@ namespace Marvel {
 		}
 
 		else
-			mvThrowPythonError(1000, message);
+			mvThrowPythonError(mvErrorCode::mvWrongType, "Python value error. Must be List[int].");
+
+
+		return items;
+	}
+
+	std::vector<mvUUID> ToUUIDVect(PyObject* value, const std::string& message)
+	{
+
+		std::vector<mvUUID> items;
+		if (value == nullptr)
+			return items;
+
+
+		if (PyTuple_Check(value))
+		{
+			items.resize(PyTuple_Size(value));
+			for (Py_ssize_t i = 0; i < PyTuple_Size(value); ++i)
+			{
+				items[i] = PyLong_AsUnsignedLongLong(PyTuple_GetItem(value, i));
+			}
+		}
+
+		else if (PyList_Check(value))
+		{
+			items.resize(PyList_Size(value));
+			for (Py_ssize_t i = 0; i < PyList_Size(value); ++i)
+			{
+				items[i] = PyLong_AsUnsignedLongLong(PyList_GetItem(value, i));
+			}
+		}
+
+		else
+			mvThrowPythonError(mvErrorCode::mvWrongType, "Python value error. Must be List[int].");
 
 
 		return items;
@@ -602,6 +684,7 @@ namespace Marvel {
 			{
 
 				auto BufferViewer = BufferViewFunctionsFloat(buffer_info);
+				items.reserve(buffer_info.len / buffer_info.itemsize);
 
 				for (Py_ssize_t i = 0; i < buffer_info.len / buffer_info.itemsize; ++i)
 				{
@@ -612,7 +695,7 @@ namespace Marvel {
 		}
 
 		else
-			mvThrowPythonError(1000, message);
+			mvThrowPythonError(mvErrorCode::mvWrongType, "Python value error. Must be List[float].");
 
 
 		return items;
@@ -661,7 +744,7 @@ namespace Marvel {
 		}
 
 		else
-			mvThrowPythonError(1000, message);
+			mvThrowPythonError(mvErrorCode::mvWrongType, "Python value error. Must be List[float].");
 
 
 		return items;
@@ -708,7 +791,7 @@ namespace Marvel {
 		}
 
 		else
-			mvThrowPythonError(1000, message);
+			mvThrowPythonError(mvErrorCode::mvWrongType, "Python value error. Must be List[str].");
 
 
 		return items;
@@ -827,7 +910,7 @@ namespace Marvel {
 		}
 
 		else
-			mvThrowPythonError(1000, message);
+			mvThrowPythonError(mvErrorCode::mvWrongType, "Python value error. Must be List[List[str, str]].");
 
 		return items;
 	}
@@ -851,7 +934,7 @@ namespace Marvel {
 		}
 
 		else
-			mvThrowPythonError(1000, message);
+			mvThrowPythonError(mvErrorCode::mvWrongType, "Python value error. Must be List[List[int, int]].");
 
 		return items;
 	}
@@ -865,19 +948,19 @@ namespace Marvel {
 
 		if (PyTuple_Check(value))
 		{
-			if (PyTuple_Size(value) != 2) mvThrowPythonError(1000, message);
+			if (PyTuple_Size(value) != 2) mvThrowPythonError(mvErrorCode::mvNone, message);
 			items.first = ToFloatVect(PyTuple_GetItem(value, 0), message);
 			items.second = ToFloatVect(PyTuple_GetItem(value, 1), message);
 		}
 		else if (PyList_Check(value))
 		{
-			if (PyList_Size(value) != 2) mvThrowPythonError(1000, message);
+			if (PyList_Size(value) != 2) mvThrowPythonError(mvErrorCode::mvNone, message);
 			items.first = ToFloatVect(PyList_GetItem(value, 0), message);
 			items.second = ToFloatVect(PyList_GetItem(value, 1), message);
 		}
 
 		else
-			mvThrowPythonError(1000, message);
+			mvThrowPythonError(mvErrorCode::mvWrongType, message);
 
 		return items;
 	}
@@ -901,7 +984,7 @@ namespace Marvel {
 		}
 
 		else
-			mvThrowPythonError(1000, message);
+			mvThrowPythonError(mvErrorCode::mvWrongType, message);
 
 		return items;
 	}
@@ -966,7 +1049,7 @@ namespace Marvel {
 		}
 
 		else
-			mvThrowPythonError(1000, message);
+			mvThrowPythonError(mvErrorCode::mvWrongType, message);
 
 		return items;
 
@@ -1024,7 +1107,7 @@ namespace Marvel {
 		}
 
 		else
-			mvThrowPythonError(1000, message);
+			mvThrowPythonError(mvErrorCode::mvWrongType, message);
 
 		return items;
 	}

@@ -2,10 +2,8 @@
 #include "mvApp.h"
 #include "mvLog.h"
 #include "mvItemRegistry.h"
-#include "mvImGuiThemeScope.h"
 #include "containers/mvWindowAppItem.h"
 #include "containers/mvChild.h"
-#include "mvFontScope.h"
 #include "mvPythonExceptions.h"
 
 namespace Marvel {
@@ -13,23 +11,21 @@ namespace Marvel {
 	void mvMenuBar::InsertParser(std::map<std::string, mvPythonParser>* parsers)
 	{
 
-		mvPythonParser parser(mvPyDataType::String);
-		mvAppItem::AddCommonArgs(parser);
-		parser.removeArg("source");
-		parser.removeArg("before");
-		parser.removeArg("width");
-		parser.removeArg("height");
-		parser.removeArg("label");
-		parser.removeArg("callback");
-		parser.removeArg("callback_data");
-		parser.removeArg("enabled");
+		mvPythonParser parser(mvPyDataType::UUID, "Adds a menu bar to a window. Must be followed by a call to end.", { "Containers", "Widgets" }, true);
+		mvAppItem::AddCommonArgs(parser, (CommonParserArgs)(
+			MV_PARSER_ARG_ID |
+			MV_PARSER_ARG_INDENT |
+			MV_PARSER_ARG_PARENT |
+			MV_PARSER_ARG_SEARCH_DELAY |
+			MV_PARSER_ARG_SHOW)
+		);
 		parser.finalize();
 
 		parsers->insert({ s_command, parser });
 	}
 
-	mvMenuBar::mvMenuBar(const std::string& name)
-			: mvBoolPtrBase(name)
+	mvMenuBar::mvMenuBar(mvUUID uuid)
+			: mvBoolPtrBase(uuid)
 		{
 
 			// TODO use code below to set item height when font and scale systems are done
@@ -41,42 +37,18 @@ namespace Marvel {
 
 	void mvMenuBar::draw(ImDrawList* drawlist, float x, float y)
 	{
-		mvImGuiThemeScope scope(this);
-		mvFontScope fscope(this);
 
 		if (ImGui::BeginMenuBar())
 		{
-			//we do this so that the children dont get the theme
-			scope.cleanup();
 
 			for (auto& item : m_children[1])
 			{
-				// skip item if it's not shown
-				if (!item->m_show)
+				if (!item->preDraw())
 					continue;
-
-				// set item width
-				if (item->m_width != 0)
-					ImGui::SetNextItemWidth((float)item->m_width);
-
-				if (item->m_focusNextFrame)
-				{
-					ImGui::SetKeyboardFocusHere();
-					item->m_focusNextFrame = false;
-				}
-
-				auto oldCursorPos = ImGui::GetCursorPos();
-				if (item->m_dirtyPos)
-					ImGui::SetCursorPos(item->getState().getItemPos());
-
-				item->getState().setPos({ ImGui::GetCursorPosX(), ImGui::GetCursorPosY() });
 
 				item->draw(drawlist, ImGui::GetCursorPosX(), ImGui::GetCursorPosY());
 
-				if (item->m_dirtyPos)
-					ImGui::SetCursorPos(oldCursorPos);
-
-				item->getState().update();
+				item->postDraw();
 			}
 			ImGui::EndMenuBar();
 		}
@@ -86,8 +58,11 @@ namespace Marvel {
 	{
 		if (type == mvAppItemType::mvWindowAppItem) return true;
 		if (type == mvAppItemType::mvChild) return true;
+		if (type == mvAppItemType::mvStagingContainer) return true;
 
-		mvThrowPythonError(1000, "Menubar parent must be a window or child.");
+		mvThrowPythonError(mvErrorCode::mvIncompatibleParent, s_command,
+			"Incompatible parent. Acceptable parents include: window, child, staging container.", this);
+
 		MV_ITEM_REGISTRY_ERROR("Menubar parent must be a window or child.");
 		assert(false);
 		return false;

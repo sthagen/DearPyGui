@@ -4,7 +4,6 @@
 #include "mvLog.h"
 #include "mvNodeAttribute.h"
 #include "mvItemRegistry.h"
-#include "mvImNodesThemeScope.h"
 #include "mvPythonExceptions.h"
 
 namespace Marvel {
@@ -12,27 +11,23 @@ namespace Marvel {
 	void mvNodeLink::InsertParser(std::map<std::string, mvPythonParser>* parsers)
 	{
 
-		mvPythonParser parser(mvPyDataType::String);
-		mvAppItem::AddCommonArgs(parser);
-		parser.removeArg("source");
-		parser.removeArg("width");
-		parser.removeArg("height");
-		parser.removeArg("callback");
-		parser.removeArg("callback_data");
-		parser.removeArg("enabled");
-		parser.removeArg("before");
-		parser.removeArg("label");
+		mvPythonParser parser(mvPyDataType::UUID, "Adds a node link between nodes.", { "Node Editor", "Widgets" });
+		mvAppItem::AddCommonArgs(parser, (CommonParserArgs)(
+			MV_PARSER_ARG_ID |
+			MV_PARSER_ARG_PARENT |
+			MV_PARSER_ARG_SHOW)
+		);
 
-		parser.addArg<mvPyDataType::String>("node_1");
-		parser.addArg<mvPyDataType::String>("node_2");
+		parser.addArg<mvPyDataType::UUID>("node_1");
+		parser.addArg<mvPyDataType::UUID>("node_2");
 
 		parser.finalize();
 
 		parsers->insert({ s_command, parser });
 	}
 
-	mvNodeLink::mvNodeLink(const std::string& name)
-		: mvAppItem(name)
+	mvNodeLink::mvNodeLink(mvUUID uuid)
+		: mvAppItem(uuid)
 	{
 		int64_t address = (int64_t)this;
 		int64_t reduced_address = address % 2147483648;
@@ -41,10 +36,12 @@ namespace Marvel {
 
 	bool mvNodeLink::isParentCompatible(mvAppItemType type)
 	{
-		if (type == mvAppItemType::mvNodeEditor)
-			return true;
+		if (type == mvAppItemType::mvStagingContainer) return true;
+		if (type == mvAppItemType::mvNodeEditor) return true;
 
-		mvThrowPythonError(1000, "Node link parent must be node editor.");
+		mvThrowPythonError(mvErrorCode::mvIncompatibleParent, s_command,
+			"Incompatible parent. Acceptable parents include: node editor, staging container", this);
+
 		MV_ITEM_REGISTRY_ERROR("Node link parent must be node editor.");
 		assert(false);
 		return false;
@@ -62,15 +59,16 @@ namespace Marvel {
 			{
 			case 0:
 			{
-				std::string node1 = ToString(item);
-				mvRef<mvAppItem> node = mvApp::GetApp()->getItemRegistry().getItem(node1);
+				mvUUID node1 = ToUUID(item);
+				mvAppItem* node = mvApp::GetApp()->getItemRegistry().getItem(node1);
 				if (node->getType() == mvAppItemType::mvNodeAttribute)
 				{
-					m_id1 = static_cast<const mvNodeAttribute*>(node.get())->getId();
+					m_id1 = static_cast<const mvNodeAttribute*>(node)->getId();
 				}
 				else
 				{
-					mvThrowPythonError(1000, "Nodes must be nodes. duh");
+					mvThrowPythonError(mvErrorCode::mvIncompatibleType, s_command,
+						"Incompatible type. Expected types include: mvNode", node);
 					MV_ITEM_REGISTRY_ERROR("Nodes must be nodes. duh");
 					assert(false);
 					return;
@@ -80,15 +78,16 @@ namespace Marvel {
 
 			case 1:
 			{
-				std::string node2 = ToString(item);
-				mvRef<mvAppItem> node = mvApp::GetApp()->getItemRegistry().getItem(node2);
+				mvUUID node2 = ToUUID(item);
+				mvAppItem* node = mvApp::GetApp()->getItemRegistry().getItem(node2);
 				if (node->getType() == mvAppItemType::mvNodeAttribute)
 				{
-					m_id2 = static_cast<const mvNodeAttribute*>(node.get())->getId();
+					m_id2 = static_cast<const mvNodeAttribute*>(node)->getId();
 				}
 				else
 				{
-					mvThrowPythonError(1000, "Nodes must be nodes. duh");
+					mvThrowPythonError(mvErrorCode::mvIncompatibleType, s_command,
+						"Incompatible type. Expected types include: mvNode", node);
 					MV_ITEM_REGISTRY_ERROR("Nodes must be nodes. duh");
 					assert(false);
 					return;
@@ -104,8 +103,7 @@ namespace Marvel {
 
 	void mvNodeLink::draw(ImDrawList* drawlist, float x, float y)
 	{
-		ScopedID id;
-		mvImNodesThemeScope scope(this);
+		ScopedID id(m_uuid);
 		
 		imnodes::Link(m_id, m_id1, m_id2);
 	}

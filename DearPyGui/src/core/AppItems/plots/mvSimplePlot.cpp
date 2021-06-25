@@ -1,18 +1,29 @@
 #include "mvSimplePlot.h"
 #include "mvItemRegistry.h"
-#include "mvImGuiThemeScope.h"
-#include "mvFontScope.h"
+//#include "mvImGuiThemeScope.h"
+//#include "mvFontScope.h"
 
 namespace Marvel {
 
 	void mvSimplePlot::InsertParser(std::map<std::string, mvPythonParser>* parsers)
 	{
 
-		mvPythonParser parser(mvPyDataType::String);
-		mvAppItem::AddCommonArgs(parser);
-		parser.removeArg("callback");
-		parser.removeArg("callback_data");
-		parser.removeArg("enabled");
+		mvPythonParser parser(mvPyDataType::UUID, "A simple plot for visualization of a 1 dimensional set of values.", { "Plotting", "Widgets" });
+		mvAppItem::AddCommonArgs(parser, (CommonParserArgs)(
+			MV_PARSER_ARG_ID |
+			MV_PARSER_ARG_WIDTH |
+			MV_PARSER_ARG_HEIGHT |
+			MV_PARSER_ARG_INDENT |
+			MV_PARSER_ARG_PARENT |
+			MV_PARSER_ARG_BEFORE |
+			MV_PARSER_ARG_SOURCE |
+			MV_PARSER_ARG_FILTER |
+			MV_PARSER_ARG_DROP_CALLBACK |
+			MV_PARSER_ARG_DRAG_CALLBACK |
+			MV_PARSER_ARG_PAYLOAD_TYPE |
+			MV_PARSER_ARG_TRACKED |
+			MV_PARSER_ARG_SHOW)
+		);
 
 		parser.addArg<mvPyDataType::FloatList>("default_value", mvArgType::KEYWORD_ARG, "()");
 		parser.addArg<mvPyDataType::String>("overlay", mvArgType::KEYWORD_ARG, "''", "overlays text (similar to a plot title)");
@@ -28,16 +39,16 @@ namespace Marvel {
 		parsers->insert({ s_command, parser });
 	}
 
-	mvSimplePlot::mvSimplePlot(const std::string& name)
-		: mvFloatVectPtrBase(name)
+	mvSimplePlot::mvSimplePlot(mvUUID uuid)
+		: mvFloatVectPtrBase(uuid)
 	{
 	}
 
 	void mvSimplePlot::draw(ImDrawList* drawlist, float x, float y)
 	{
 		ImGui::PushID(this);
-		mvImGuiThemeScope scope(this);
-		mvFontScope fscope(this);
+		//mvImGuiThemeScope scope(this);
+		//mvFontScope fscope(this);
 
 		if (m_histogram)
 			ImGui::PlotHistogram(m_label.c_str(), m_value->data(), (int)m_value->size(), 0, m_overlay.c_str(),

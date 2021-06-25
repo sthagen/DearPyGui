@@ -2,26 +2,41 @@
 #include "mvSelectable.h"
 #include "mvApp.h"
 #include "mvItemRegistry.h"
-#include "mvImGuiThemeScope.h"
-#include "mvFontScope.h"
-
 namespace Marvel {
 
 	void mvSelectable::InsertParser(std::map<std::string, mvPythonParser>* parsers)
 	{
-		mvPythonParser parser(mvPyDataType::String);
-		mvAppItem::AddCommonArgs(parser);
+		mvPythonParser parser(mvPyDataType::UUID, "Adds a selectable.", { "Widgets" });
+		mvAppItem::AddCommonArgs(parser, (CommonParserArgs)(
+			MV_PARSER_ARG_ID |
+			MV_PARSER_ARG_WIDTH |
+			MV_PARSER_ARG_HEIGHT |
+			MV_PARSER_ARG_INDENT |
+			MV_PARSER_ARG_PARENT |
+			MV_PARSER_ARG_BEFORE |
+			MV_PARSER_ARG_SOURCE |
+			MV_PARSER_ARG_CALLBACK |
+			MV_PARSER_ARG_USER_DATA |
+			MV_PARSER_ARG_SHOW |
+			MV_PARSER_ARG_ENABLED |
+			MV_PARSER_ARG_FILTER |
+			MV_PARSER_ARG_DROP_CALLBACK |
+			MV_PARSER_ARG_DRAG_CALLBACK |
+			MV_PARSER_ARG_PAYLOAD_TYPE |
+			MV_PARSER_ARG_TRACKED |
+			MV_PARSER_ARG_POS)
+		);
 
 		parser.addArg<mvPyDataType::Bool>("default_value", mvArgType::KEYWORD_ARG, "False");
-		parser.addArg<mvPyDataType::Bool>("span_columns", mvArgType::KEYWORD_ARG, "False", "span all columns");
+		parser.addArg<mvPyDataType::Bool>("span_columns", mvArgType::KEYWORD_ARG, "False", "Span the width of all columns if placed in a table.");
 
 		parser.finalize();
 
 		parsers->insert({ s_command, parser });
 	}
 
-	mvSelectable::mvSelectable(const std::string& name)
-		: mvBoolPtrBase(name)
+	mvSelectable::mvSelectable(mvUUID uuid)
+		: mvBoolPtrBase(uuid)
 	{
 	}
 
@@ -42,12 +57,10 @@ namespace Marvel {
 	void mvSelectable::draw(ImDrawList* drawlist, float x, float y)
 	{
 
-		ScopedID id;
-		mvImGuiThemeScope scope(this);
-		mvFontScope fscope(this);
+		ScopedID id(m_uuid);
 
 		if (ImGui::Selectable(m_label.c_str(), m_value.get(), m_flags, ImVec2((float)m_width, (float)m_height)))
-			mvApp::GetApp()->getCallbackRegistry().addCallback(m_callback, m_name, m_callback_data);
+			mvApp::GetApp()->getCallbackRegistry().addCallback(m_callback, m_uuid, nullptr, m_user_data);
 
 	}
 

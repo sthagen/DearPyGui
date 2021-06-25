@@ -146,6 +146,11 @@ namespace Marvel {
 	//-----------------------------------------------------------------------------
 	struct mvColor
 	{
+		static unsigned int ConvertToUnsignedInt(mvColor color)
+		{
+			return ImGui::ColorConvertFloat4ToU32(color.toVec4());
+		}
+
 		float r = -1.0f, g = -1.0f, b = -1.0f, a = -1.0f;
 
 		mvColor() = default;
@@ -183,6 +188,11 @@ namespace Marvel {
 			return { r, g, b, a };
 		}
 
+		operator ImVec4*()
+		{
+			return (ImVec4*)&r;
+		}
+
 		const ImVec4 toVec4() const
 		{
 			return { r, g, b, a };
@@ -203,11 +213,23 @@ namespace Marvel {
 		}
 	}
 
-	typedef std::unordered_map<long, mvColor> mvThemeColors;
 	typedef std::unordered_map<long, float> mvThemeStyles;
-
-	inline void DecodelibID(long encoded_constant, int* libID) { *libID = (int)((encoded_constant / 10) % 100); }
-	inline int  DecodeIndex(long encoded_constant) { return (int)(encoded_constant % 10); }
+	typedef unsigned long long mvUUID;
 }
 
 #define MV_DEFAULT_COLOR Marvel::mvColor(1.0f, 1.0f, 1.0f, 1.0f)
+
+// UUIDs (+ reserved uuids)
+#define MV_INVALID_UUID 0
+#define MV_APP_UUID 1
+#define MV_ATLAS_UUID 2
+#define MV_TOOL_ABOUT_UUID 3
+#define MV_TOOL_DEBUG_UUID 4
+#define MV_TOOL_DOC_UUID 5
+#define MV_TOOL_ITEM_REGISTRY_UUID 6
+#define MV_TOOL_METRICS_UUID 7
+#define MV_TOOL_STYLE_UUID 8
+#define MV_TOOL_FONT_UUID 9
+#define MV_RESERVED_UUIDs 10
+#define MV_RESERVED_UUID_start MV_TOOL_FONT_UUID+1
+#define MV_START_UUID MV_TOOL_FONT_UUID+MV_RESERVED_UUIDs+1

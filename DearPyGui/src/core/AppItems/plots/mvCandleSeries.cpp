@@ -2,7 +2,7 @@
 #include "mvCore.h"
 #include "mvApp.h"
 #include "mvItemRegistry.h"
-#include "mvImPlotThemeScope.h"
+#include "mvPythonExceptions.h"
 
 namespace Marvel {
 
@@ -85,13 +85,14 @@ namespace Marvel {
 	void mvCandleSeries::InsertParser(std::map<std::string, mvPythonParser>* parsers)
 	{
 
-		mvPythonParser parser(mvPyDataType::String);
-		mvAppItem::AddCommonArgs(parser);
-		parser.removeArg("width");
-		parser.removeArg("height");
-		parser.removeArg("callback");
-		parser.removeArg("callback_data");
-		parser.removeArg("enabled");
+		mvPythonParser parser(mvPyDataType::UUID, "Adds a candle series to a plot.", { "Plotting", "Containers", "Widgets" });
+		mvAppItem::AddCommonArgs(parser, (CommonParserArgs)(
+			MV_PARSER_ARG_ID |
+			MV_PARSER_ARG_PARENT |
+			MV_PARSER_ARG_BEFORE |
+			MV_PARSER_ARG_SOURCE |
+			MV_PARSER_ARG_SHOW)
+		);
 
 		parser.addArg<mvPyDataType::DoubleList>("dates");
 		parser.addArg<mvPyDataType::DoubleList>("opens");
@@ -101,8 +102,6 @@ namespace Marvel {
 
 		parser.addArg<mvPyDataType::IntList>("bull_color", mvArgType::KEYWORD_ARG, "(0, 255, 113, 255)");
 		parser.addArg<mvPyDataType::IntList>("bear_color", mvArgType::KEYWORD_ARG, "(218, 13, 79, 255)");
-
-		parser.addArg<mvPyDataType::Integer>("axis", mvArgType::KEYWORD_ARG, "0");
 
 		parser.addArg<mvPyDataType::Integer>("weight", mvArgType::KEYWORD_ARG, "0.25");
 
@@ -114,31 +113,26 @@ namespace Marvel {
 		parsers->insert({ s_command, parser });
 	}
 
-	mvCandleSeries::mvCandleSeries(const std::string& name)
-		: mvSeriesBase(name)
+	mvCandleSeries::mvCandleSeries(mvUUID uuid)
+		: mvSeriesBase(uuid)
 	{
 		m_contributeToBounds = true;
 	}
 
+	bool mvCandleSeries::isParentCompatible(mvAppItemType type)
+	{
+		if (type == mvAppItemType::mvPlotAxis) return true;
+
+		mvThrowPythonError(mvErrorCode::mvIncompatibleParent, s_command,
+			"Incompatible parent. Acceptable parents include: plot axis", this);
+
+		assert(false);
+		return false;
+	}
+
 	void mvCandleSeries::draw(ImDrawList* drawlist, float x, float y)
 	{
-		ScopedID id;
-		mvImPlotThemeScope scope(this);
-
-		switch (m_axis)
-		{
-		case ImPlotYAxis_1:
-			ImPlot::SetPlotYAxis(ImPlotYAxis_1);
-			break;
-		case ImPlotYAxis_2:
-			ImPlot::SetPlotYAxis(ImPlotYAxis_2);
-			break;
-		case ImPlotYAxis_3:
-			ImPlot::SetPlotYAxis(ImPlotYAxis_3);
-			break;
-		default:
-			break;
-		}
+		ScopedID id(m_uuid);
 
 		static const std::vector<double>* datesptr;
 		static const std::vector<double>* openptr;
@@ -155,6 +149,23 @@ namespace Marvel {
 		PlotCandlestick(m_label.c_str(), datesptr->data(), openptr->data(), closeptr->data(),
 			lowptr->data(), highptr->data(), (int)datesptr->size(), m_tooltip, m_weight, m_bullColor,
 			m_bearColor);
+
+		// Begin a popup for a legend entry.
+		if (ImPlot::BeginLegendPopup(m_label.c_str(), 1))
+		{
+			for (auto& childset : m_children)
+			{
+				for (auto& item : childset)
+				{
+					// skip item if it's not shown
+					if (!item->m_show)
+						continue;
+					item->draw(drawlist, ImPlot::GetPlotPos().x, ImPlot::GetPlotPos().y);
+					item->getState().update();
+				}
+			}
+			ImPlot::EndLegendPopup();
+		}
 
 	}
 
@@ -202,7 +213,6 @@ namespace Marvel {
 		if (dict == nullptr)
 			return;
 
-		if (PyObject* item = PyDict_GetItemString(dict, "axis")) m_axis = (ImPlotYAxis_)ToInt(item);
 		if (PyObject* item = PyDict_GetItemString(dict, "contribute_to_bounds")) m_contributeToBounds = ToBool(item);
 		if (PyObject* item = PyDict_GetItemString(dict, "bull_color")) m_bullColor = ToColor(item);
 		if (PyObject* item = PyDict_GetItemString(dict, "bear_color")) m_bearColor = ToColor(item);
@@ -229,7 +239,6 @@ namespace Marvel {
 		if (dict == nullptr)
 			return;
 
-		PyDict_SetItemString(dict, "axis", ToPyInt(m_axis));
 		PyDict_SetItemString(dict, "contribute_to_bounds", ToPyBool(m_contributeToBounds));
 		PyDict_SetItemString(dict, "bull_color", ToPyColor(m_bullColor));
 		PyDict_SetItemString(dict, "bear_color", ToPyColor(m_bearColor));

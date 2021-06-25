@@ -2,6 +2,7 @@
 
 #include <stack>
 #include <vector>
+#include <unordered_map>
 #include <queue>
 #include <string>
 #include <mutex>
@@ -32,31 +33,57 @@ namespace Marvel {
 
     public:
 
+        static constexpr int CachedContainerCount = 25;
+
         static void InsertParser(std::map<std::string, mvPythonParser>* parsers);
 
-        MV_CREATE_EXTRA_COMMAND(move_item);
-        MV_CREATE_EXTRA_COMMAND(delete_item);
-        MV_CREATE_EXTRA_COMMAND(does_item_exist);
-        MV_CREATE_EXTRA_COMMAND(move_item_down);
-        MV_CREATE_EXTRA_COMMAND(move_item_up);
-        MV_CREATE_EXTRA_COMMAND(get_windows);
-        MV_CREATE_EXTRA_COMMAND(get_all_items);
-        MV_CREATE_EXTRA_COMMAND(get_active_window);
-        MV_CREATE_EXTRA_COMMAND(set_primary_window);
-        MV_CREATE_EXTRA_COMMAND(end);
+        MV_CREATE_COMMAND(move_item);
+        MV_CREATE_COMMAND(delete_item);
+        MV_CREATE_COMMAND(does_item_exist);
+        MV_CREATE_COMMAND(move_item_down);
+        MV_CREATE_COMMAND(move_item_up);
+        MV_CREATE_COMMAND(get_windows);
+        MV_CREATE_COMMAND(get_all_items);
+        MV_CREATE_COMMAND(get_active_window);
+        MV_CREATE_COMMAND(set_primary_window);
+        MV_CREATE_COMMAND(push_container_stack);
+        MV_CREATE_COMMAND(pop_container_stack);
+        MV_CREATE_COMMAND(top_container_stack);
+        MV_CREATE_COMMAND(empty_container_stack);
+        MV_CREATE_COMMAND(last_item);
+        MV_CREATE_COMMAND(last_container);
+        MV_CREATE_COMMAND(last_root);
+        MV_CREATE_COMMAND(set_staging_mode);
+        MV_CREATE_COMMAND(stage_items);
+        MV_CREATE_COMMAND(unstage_items);
+        MV_CREATE_COMMAND(reorder_items);
+        MV_CREATE_COMMAND(show_imgui_demo);
+        MV_CREATE_COMMAND(show_implot_demo);
 
-        MV_START_EXTRA_COMMANDS
-            MV_ADD_EXTRA_COMMAND(move_item);
-            MV_ADD_EXTRA_COMMAND(delete_item);
-            MV_ADD_EXTRA_COMMAND(does_item_exist);
-            MV_ADD_EXTRA_COMMAND(move_item_down);
-            MV_ADD_EXTRA_COMMAND(move_item_up);
-            MV_ADD_EXTRA_COMMAND(get_windows);
-            MV_ADD_EXTRA_COMMAND(get_all_items);
-            MV_ADD_EXTRA_COMMAND(get_active_window);
-            MV_ADD_EXTRA_COMMAND(set_primary_window);
-            MV_ADD_EXTRA_COMMAND(end);
-        MV_END_EXTRA_COMMANDS
+        MV_START_COMMANDS
+            MV_ADD_COMMAND(move_item);
+            MV_ADD_COMMAND(delete_item);
+            MV_ADD_COMMAND(does_item_exist);
+            MV_ADD_COMMAND(move_item_down);
+            MV_ADD_COMMAND(move_item_up);
+            MV_ADD_COMMAND(get_windows);
+            MV_ADD_COMMAND(get_all_items);
+            MV_ADD_COMMAND(get_active_window);
+            MV_ADD_COMMAND(set_primary_window);
+            MV_ADD_COMMAND(push_container_stack);
+            MV_ADD_COMMAND(pop_container_stack);
+            MV_ADD_COMMAND(top_container_stack);
+            MV_ADD_COMMAND(empty_container_stack);
+            MV_ADD_COMMAND(last_item);
+            MV_ADD_COMMAND(last_container);
+            MV_ADD_COMMAND(last_root);
+            MV_ADD_COMMAND(set_staging_mode);
+            MV_ADD_COMMAND(stage_items);
+            MV_ADD_COMMAND(unstage_items);
+            MV_ADD_COMMAND(reorder_items);
+            MV_ADD_COMMAND(show_imgui_demo);
+            MV_ADD_COMMAND(show_implot_demo);
+        MV_END_COMMANDS
 
 	public:
 
@@ -65,57 +92,83 @@ namespace Marvel {
         //-----------------------------------------------------------------------------
         // Event Handling
         //-----------------------------------------------------------------------------
-        bool                           onEvent         (mvEvent& event) override;
-        bool                           onRender        (mvEvent& event);
-        bool                           onPreRenderReset(mvEvent& event);                     
-        bool                           onActiveWindow  (mvEvent& event);                     
+        bool onEvent         (mvEvent& event) override;
+        bool onRender        (mvEvent& event);
+        bool onPreRenderReset(mvEvent& event);                     
+        bool onActiveWindow  (mvEvent& event);                     
 
         //-----------------------------------------------------------------------------
         // Widget Operations
         //-----------------------------------------------------------------------------
-        bool                           deleteItem        (const std::string& name, bool childrenOnly = false);
-        bool                           moveItem          (const std::string& name, const std::string& parent, const std::string& before);
-        bool                           moveItemUp        (const std::string& name);
-        bool                           moveItemDown      (const std::string& name);
+        bool                           deleteItem        (mvUUID uuid, bool childrenOnly = false);
+        bool                           moveItem          (mvUUID uuid, mvUUID parent, mvUUID before);
+        bool                           moveItemUp        (mvUUID uuid);
+        bool                           moveItemDown      (mvUUID uuid);
         void                           clearRegistry     ();
-        mvValueVariant                 getValue          (const std::string& name);
-        mvRef<mvAppItem>               getItem           (const std::string& name);
-        mvWindowAppItem*               getWindow         (const std::string& name);
-        std::vector<mvRef<mvAppItem>>& getFrontWindows   ()       { return m_frontWindows; }
-        std::vector<mvRef<mvAppItem>>& getBackWindows    ()       { return m_backWindows; }
-        const std::string&             getActiveWindow   () const { return m_activeWindow; }
-        bool                           addItemWithRuntimeChecks(mvRef<mvAppItem> item, const char* parent, const char* before);
+        mvValueVariant                 getValue          (mvUUID uuid);
+        mvAppItem*                     getItem           (mvUUID uuid);
+        mvRef<mvAppItem>               getRefItem        (mvUUID uuid);
+        mvWindowAppItem*               getWindow         (mvUUID uuid);
+        std::vector<mvRef<mvAppItem>>& getRoots          ()       { return m_roots; }
+        mvUUID                         getActiveWindow   () const { return m_activeWindow; }
+        bool                           addItemWithRuntimeChecks(mvRef<mvAppItem> item, mvUUID parent, mvUUID before);
+        void                           cacheItem(mvAppItem* item);
+        void                           cleanUpItem(mvUUID uuid);
         
         // called by python interface
-        std::vector<std::string>       getAllItems       ();
-        std::vector<std::string>       getWindows        ();
-        std::vector<std::string>       getItemChildren   (const std::string& name);
-        std::string                    getItemParentName (const std::string& name);
-        void                           setPrimaryWindow  (const std::string& name, bool value);
+        std::vector<mvUUID>              getAllItems       ();
+        std::vector<mvUUID>              getWindows        ();
+        std::vector<std::vector<mvUUID>> getItemChildren   (mvUUID uuid);
+        void                             setPrimaryWindow  (mvUUID uuid, bool value);
+        void                             stageItem         (mvUUID uuid);
+        void                             unstageItem       (mvUUID uuid);
+        void                             setStagingMode    (bool value);
+
+        // hacky
+        std::unordered_map<mvUUID, mvRef<mvAppItem>>& getStaging() { return m_stagingArea; }
+        void delaySearch(mvAppItem* item);
 
         //-----------------------------------------------------------------------------
         // Parent stack operations
         //     - used for automatic parent deduction
         //-----------------------------------------------------------------------------
-        void                           pushParent  (mvRef<mvAppItem> item); // pushes parent onto stack
-        void                           emptyParents();                      // empties parent stack
-        mvRef<mvAppItem>               popParent   ();                      // pop parent off stack and return it
-        mvRef<mvAppItem>               topParent   ();                      // returns top parent without popping
+        void       pushParent  (mvAppItem* item); // pushes parent onto stack
+        void       emptyParents();                      // empties parent stack
+        mvAppItem* popParent   ();                      // pop parent off stack and return it
+        mvAppItem* topParent   ();                      // returns top parent without popping
 
     private:
 
-        bool                           addItem       (mvRef<mvAppItem> item);
-        bool                           addItemAfter  (const std::string& prev, mvRef<mvAppItem> item); // for popups/tooltips
-        bool                           addWindow     (mvRef<mvAppItem> item);
-        bool                           addRuntimeItem(const std::string& parent, const std::string& before, mvRef<mvAppItem> item);
+        bool addItem       (mvRef<mvAppItem> item);
+        bool addItemAfter  (mvUUID prev, mvRef<mvAppItem> item); // for popups/tooltips
+        bool addWindow     (mvRef<mvAppItem> item);
+        bool addRuntimeItem(mvUUID parent, mvUUID before, mvRef<mvAppItem> item);
 
 
 	private:
 
-		std::stack<mvRef<mvAppItem>>  m_parents;      // parent stack, top of stack becomes widget's parent
-		std::vector<mvRef<mvAppItem>> m_frontWindows; // user added windows
-		std::vector<mvRef<mvAppItem>> m_backWindows;  // default "standard" windows (debug, style editor, etc.)
-        std::string                   m_activeWindow;
+        // caching
+        mvUUID                                       m_lastItemAdded = 0;
+        mvUUID                                       m_lastContainerAdded = 0;
+        mvUUID                                       m_lastRootAdded = 0;
+        mvUUID                                       m_cachedItemsID[CachedContainerCount];
+        mvAppItem*                                   m_cachedItemsPTR[CachedContainerCount];
+        mvUUID                                       m_cachedContainersID[CachedContainerCount];
+        mvAppItem*                                   m_cachedContainersPTR[CachedContainerCount];
+        int                                          m_cachedContainerIndex = 0;
+        int                                          m_cachedItemsIndex = 0;
+
+		std::stack<mvAppItem*>                       m_containers;      // parent stack, top of stack becomes widget's parent
+		std::vector<mvRef<mvAppItem>>                m_roots;
+        std::unordered_map<mvUUID, mvRef<mvAppItem>> m_stagingArea;
+        mvUUID                                       m_activeWindow = 0;
+        bool                                         m_staging = false;
+        std::vector<mvAppItem*>                      m_delayedSearch;
+        bool                                         m_showImGuiDebug = false;
+        bool                                         m_showImPlotDebug = false;
+
+
+
 
 	};
 

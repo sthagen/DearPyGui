@@ -9,37 +9,29 @@
 
 namespace Marvel {
 
-	mvViewport::mvViewport(unsigned width, unsigned height, bool error) :
-		m_error(error), m_width(width), m_height(height)
+	mvViewport::mvViewport(unsigned width, unsigned height) :
+		m_width(width), m_height(height)
 	{
-
 		m_app = mvApp::GetApp();
-
-		if (m_error)
-		{
-			mvAppLog::ShowMain();
-			mvAppLog::setSize(width, height);
-		}
-
 	}
 
 	void mvViewport::InsertParser(std::map<std::string, mvPythonParser>* parsers)
 	{
 
 		{
-			mvPythonParser parser(mvPyDataType::String);
+			mvPythonParser parser(mvPyDataType::String, "Undocumented", { "General" });
 			parser.addArg<mvPyDataType::String>("title", mvArgType::KEYWORD_ARG, "'Dear PyGui'");
 			parser.addArg<mvPyDataType::String>("small_icon", mvArgType::KEYWORD_ARG, "''");
 			parser.addArg<mvPyDataType::String>("large_icon", mvArgType::KEYWORD_ARG, "''");
 
-			parser.addArg<mvPyDataType::String>("width", mvArgType::KEYWORD_ARG, "1280");
-			parser.addArg<mvPyDataType::String>("height", mvArgType::KEYWORD_ARG, "800");
-			parser.addArg<mvPyDataType::String>("x_pos", mvArgType::KEYWORD_ARG, "100");
-			parser.addArg<mvPyDataType::String>("y_pos", mvArgType::KEYWORD_ARG, "100");
-			parser.addArg<mvPyDataType::String>("min_width", mvArgType::KEYWORD_ARG, "250");
-			parser.addArg<mvPyDataType::String>("max_width", mvArgType::KEYWORD_ARG, "10000");
-			parser.addArg<mvPyDataType::String>("min_height", mvArgType::KEYWORD_ARG, "250");
-			parser.addArg<mvPyDataType::String>("max_height", mvArgType::KEYWORD_ARG, "10000");
+			parser.addArg<mvPyDataType::Integer>("width", mvArgType::KEYWORD_ARG, "1280");
+			parser.addArg<mvPyDataType::Integer>("height", mvArgType::KEYWORD_ARG, "800");
+			parser.addArg<mvPyDataType::Integer>("x_pos", mvArgType::KEYWORD_ARG, "100");
+			parser.addArg<mvPyDataType::Integer>("y_pos", mvArgType::KEYWORD_ARG, "100");
+			parser.addArg<mvPyDataType::Integer>("min_width", mvArgType::KEYWORD_ARG, "250");
+			parser.addArg<mvPyDataType::Integer>("max_width", mvArgType::KEYWORD_ARG, "10000");
+			parser.addArg<mvPyDataType::Integer>("min_height", mvArgType::KEYWORD_ARG, "250");
+			parser.addArg<mvPyDataType::Integer>("max_height", mvArgType::KEYWORD_ARG, "10000");
 
 			parser.addArg<mvPyDataType::Bool>("resizable", mvArgType::KEYWORD_ARG, "True");
 			parser.addArg<mvPyDataType::Bool>("vsync", mvArgType::KEYWORD_ARG, "True");
@@ -57,7 +49,7 @@ namespace Marvel {
 		}
 
 		{
-			mvPythonParser parser(mvPyDataType::None);
+			mvPythonParser parser(mvPyDataType::None, "Undocumented", { "General" });
 			parser.addArg<mvPyDataType::String>("viewport");
 			parser.addArg<mvPyDataType::Bool>("minimized", mvArgType::KEYWORD_ARG, "False");
 			parser.addArg<mvPyDataType::Bool>("maximized", mvArgType::KEYWORD_ARG, "False");
@@ -66,19 +58,32 @@ namespace Marvel {
 		}
 
 		{
-			mvPythonParser parser(mvPyDataType::None);
+			mvPythonParser parser(mvPyDataType::None, "Undocumented", { "General" });
 			parser.finalize();
 			parsers->insert({ "configure_viewport", parser });
 		}
 
 		{
-			mvPythonParser parser(mvPyDataType::None);
+			mvPythonParser parser(mvPyDataType::Dict, "Undocumented", { "General" });
+			parser.addArg<mvPyDataType::UUID>("item");
+			parser.finalize();
+			parsers->insert({ "get_viewport_configuration", parser });
+		}
+
+		{
+			mvPythonParser parser(mvPyDataType::Bool, "Undocumented", { "General" });
+			parser.finalize();
+			parsers->insert({ "is_viewport_created", parser });
+		}
+
+		{
+			mvPythonParser parser(mvPyDataType::None, "Undocumented", { "General" });
 			parser.finalize();
 			parsers->insert({ "maximize_viewport", parser });
 		}
 
 		{
-			mvPythonParser parser(mvPyDataType::None);
+			mvPythonParser parser(mvPyDataType::None, "Undocumented", { "General" });
 			parser.finalize();
 			parsers->insert({ "minimize_viewport", parser });
 		}
@@ -87,9 +92,15 @@ namespace Marvel {
 
 	void mvViewport::onResizeEvent()
 	{
-		mvApp::GetApp()->getCallbackRegistry().addCallback(
-			mvApp::GetApp()->getCallbackRegistry().getResizeCallback(),
-			"Main Application", nullptr);
+		mvApp::GetApp()->getCallbackRegistry().submitCallback([=]() {
+			PyObject* dimensions = PyTuple_New(4);
+			PyTuple_SetItem(dimensions, 0, PyLong_FromLong(m_actualWidth));
+			PyTuple_SetItem(dimensions, 1, PyLong_FromLong(m_actualHeight));
+			PyTuple_SetItem(dimensions, 2, PyLong_FromLong(m_clientWidth));
+			PyTuple_SetItem(dimensions, 3, PyLong_FromLong(m_clientHeight));
+			mvApp::GetApp()->getCallbackRegistry().addCallback(
+				mvApp::GetApp()->getCallbackRegistry().getResizeCallback(), MV_APP_UUID, dimensions, nullptr);
+			});
 	}
 
 	void mvViewport::setConfigDict(PyObject* dict)
@@ -120,7 +131,7 @@ namespace Marvel {
 
 		if (m_sizeDirty)
 		{
-			std::lock_guard<std::mutex> lk(mvApp::GetApp()->getMutex());
+			if (!mvApp::s_manualMutexControl) std::lock_guard<std::mutex> lk(mvApp::s_mutex);
 			mvEventBus::Publish(mvEVT_CATEGORY_VIEWPORT, mvEVT_VIEWPORT_RESIZE, {
 				CreateEventArgument("actual_width", m_actualWidth),
 				CreateEventArgument("actual_height", m_actualHeight),
@@ -129,6 +140,62 @@ namespace Marvel {
 				});
 		}
 
+	}
+
+	void mvViewport::getConfigDict(PyObject* dict)
+	{
+		if (dict == nullptr)
+			return;
+
+		PyDict_SetItemString(dict, "clear_color", ToPyColor(m_clearColor));
+		PyDict_SetItemString(dict, "small_icon",  ToPyString(m_small_icon));
+		PyDict_SetItemString(dict, "large_icon", ToPyString(m_large_icon));
+		PyDict_SetItemString(dict, "x_pos", ToPyInt(m_xpos));
+		PyDict_SetItemString(dict, "y_pos", ToPyInt(m_ypos));
+		PyDict_SetItemString(dict, "width", ToPyInt(m_actualWidth));
+		PyDict_SetItemString(dict, "height", ToPyInt(m_actualHeight));
+		PyDict_SetItemString(dict, "client_width", ToPyInt(m_clientWidth));
+		PyDict_SetItemString(dict, "client_height", ToPyInt(m_clientHeight));
+		PyDict_SetItemString(dict, "resizable", ToPyBool(m_resizable));
+		PyDict_SetItemString(dict, "vsync", ToPyBool(m_vsync));
+		PyDict_SetItemString(dict, "min_width",  ToPyInt(m_minwidth ));
+		PyDict_SetItemString(dict, "max_width",  ToPyInt(m_maxwidth ));
+		PyDict_SetItemString(dict, "min_height", ToPyInt(m_minheight));
+		PyDict_SetItemString(dict, "max_height", ToPyInt(m_maxheight));
+		PyDict_SetItemString(dict, "always_on_top", ToPyBool(m_alwaysOnTop));
+		PyDict_SetItemString(dict, "maximized_box", ToPyBool(m_maximizeBox));
+		PyDict_SetItemString(dict, "minimized_box", ToPyBool(m_minimizeBox));
+		PyDict_SetItemString(dict, "border", ToPyBool(m_border));
+		PyDict_SetItemString(dict, "title", ToPyString(m_title));
+		PyDict_SetItemString(dict, "caption", ToPyBool(m_caption));
+		PyDict_SetItemString(dict, "overlapped", ToPyBool(m_overlapped));
+
+	}
+
+	PyObject* mvViewport::get_viewport_configuration(PyObject* self, PyObject* args, PyObject* kwargs)
+	{
+
+		if (!mvApp::s_manualMutexControl) std::lock_guard<std::mutex> lk(mvApp::s_mutex);
+
+		PyObject* pdict = PyDict_New();
+
+		mvViewport* viewport = mvApp::GetApp()->getViewport();
+		if (viewport)
+			viewport->getConfigDict(pdict);
+
+		return pdict;
+	}
+
+	PyObject* mvViewport::is_viewport_created(PyObject* self, PyObject* args, PyObject* kwargs)
+	{
+
+		if (!mvApp::s_manualMutexControl) std::lock_guard<std::mutex> lk(mvApp::s_mutex);
+
+		mvViewport* viewport = mvApp::GetApp()->getViewport();
+		if (viewport)
+			return ToPyBool(true);
+
+		return ToPyBool(false);
 	}
 
 	PyObject* mvViewport::create_viewport(PyObject* self, PyObject* args, PyObject* kwargs)
@@ -168,7 +235,7 @@ namespace Marvel {
 			))
 			return GetPyNone();
 
-		mvViewport* viewport = CreateViewport(width, height, false);
+		mvViewport* viewport = CreateViewport(width, height);
 		viewport->setConfigDict(kwargs);
 
 		mvApp::GetApp()->setViewport(viewport);
@@ -205,7 +272,7 @@ namespace Marvel {
 
 	PyObject* mvViewport::maximize_viewport(PyObject* self, PyObject* args, PyObject* kwargs)
 	{
-		std::lock_guard<std::mutex> lk(mvApp::GetApp()->getMutex());
+		if (!mvApp::s_manualMutexControl) std::lock_guard<std::mutex> lk(mvApp::s_mutex);
 		mvApp::GetApp()->getCallbackRegistry().submit([=]()
 			{
 				mvApp::GetApp()->getViewport()->maximize();
@@ -216,7 +283,7 @@ namespace Marvel {
 
 	PyObject* mvViewport::minimize_viewport(PyObject* self, PyObject* args, PyObject* kwargs)
 	{
-		std::lock_guard<std::mutex> lk(mvApp::GetApp()->getMutex());
+		if (!mvApp::s_manualMutexControl) std::lock_guard<std::mutex> lk(mvApp::s_mutex);
 		mvApp::GetApp()->getCallbackRegistry().submit([=]()
 			{
 				mvApp::GetApp()->getViewport()->minimize();

@@ -6,17 +6,17 @@ namespace Marvel {
 	void mvSpacing::InsertParser(std::map<std::string, mvPythonParser>* parsers)
 	{
 
-		mvPythonParser parser(mvPyDataType::String);
-		mvAppItem::AddCommonArgs(parser);
-		parser.removeArg("source");
-		parser.removeArg("width");
-		parser.removeArg("height");
-		parser.removeArg("label");
-		parser.removeArg("callback");
-		parser.removeArg("callback_data");
-		parser.removeArg("enabled");
+		mvPythonParser parser(mvPyDataType::UUID, "Adds vertical spacing.", { "Widgets" });
+		mvAppItem::AddCommonArgs(parser, (CommonParserArgs)(
+			MV_PARSER_ARG_ID |
+			MV_PARSER_ARG_INDENT |
+			MV_PARSER_ARG_PARENT |
+			MV_PARSER_ARG_BEFORE |
+			MV_PARSER_ARG_SHOW |
+			MV_PARSER_ARG_POS)
+		);
 
-		parser.addArg<mvPyDataType::Integer>("count", mvArgType::KEYWORD_ARG, "1", "A cardinal direction");
+		parser.addArg<mvPyDataType::Integer>("count", mvArgType::KEYWORD_ARG, "1", "Number of spacings to add");
 
 		parser.finalize();
 
@@ -24,8 +24,8 @@ namespace Marvel {
 	}
 
 
-	mvSpacing::mvSpacing(const std::string& name)
-		: mvIntPtrBase(name)
+	mvSpacing::mvSpacing(mvUUID uuid)
+		: mvIntPtrBase(uuid)
 	{
 	}
 

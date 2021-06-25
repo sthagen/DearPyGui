@@ -1,23 +1,25 @@
 #include "mvWindowsViewport.h"
-#include "mvAppLog.h"
 #include "mvFontManager.h"
 #include <implot.h>
 #include <imnodes.h>
 #include <cstdlib>
 #include <ctime>
+#include "mvToolManager.h"
+#include "mvItemRegistry.h"
+#include "mvProfiler.h"
 
 // Forward declare message handler from imgui_impl_win32.cpp
 extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
 namespace Marvel {
 
-	mvViewport* mvViewport::CreateViewport(unsigned width, unsigned height, bool error)
+	mvViewport* mvViewport::CreateViewport(unsigned width, unsigned height)
 	{
-		return new mvWindowsViewport(width, height, error);
+		return new mvWindowsViewport(width, height);
 	}
 
-	mvWindowsViewport::mvWindowsViewport(unsigned width, unsigned height, bool error)
-		: mvViewport(width, height, error)
+	mvWindowsViewport::mvWindowsViewport(unsigned width, unsigned height)
+		: mvViewport(width, height)
 	{
 	}
 
@@ -26,7 +28,7 @@ namespace Marvel {
 		// Cleanup
 		ImGui_ImplDX11_Shutdown();
 		ImGui_ImplWin32_Shutdown();
-		imnodes::Shutdown();
+		imnodes::DestroyContext();
 		ImPlot::DestroyContext();
 		ImGui::DestroyContext();
 
@@ -125,20 +127,27 @@ namespace Marvel {
 		IMGUI_CHECKVERSION();
 		ImGui::CreateContext();
 		ImPlot::CreateContext();
-		imnodes::Initialize();
+		imnodes::CreateContext();
 
 		ImGuiIO& io = ImGui::GetIO(); (void)io;
 		io.ConfigWindowsMoveFromTitleBarOnly = true;
-		io.IniFilename = nullptr;
+		if (mvApp::GetApp()->m_loadIniFile)
+		{
+			ImGui::LoadIniSettingsFromDisk(mvApp::GetApp()->m_iniFile.c_str());
+		}
+		{
+			if (mvApp::GetApp()->m_iniFile.empty())
+				io.IniFilename = nullptr;
+			else
+				io.IniFilename = mvApp::GetApp()->m_iniFile.c_str();
+		}
 
 		if(mvApp::GetApp()->m_docking)
 			io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
-		
-		if (mvApp::GetApp()->m_dockingShiftOnly)
-			io.ConfigDockingWithShift = true;
 
 		// Setup Dear ImGui style
 		ImGui::StyleColorsDark();
+		mvApp::SetDefaultTheme();
 
 		// Setup Platform/Renderer bindings
 		ImGui_ImplWin32_Init(m_hwnd);
@@ -152,6 +161,8 @@ namespace Marvel {
 
 	void mvWindowsViewport::prerender()
 	{
+		MV_PROFILE_SCOPE("Viewport prerender")
+
 		if (m_msg.message == WM_QUIT)
 			m_running = false;
 
@@ -188,11 +199,11 @@ namespace Marvel {
 			//continue;
 		}
 
-		if (mvApp::GetApp()->getFontManager().isInvalid())
+		if (mvToolManager::GetFontManager().isInvalid())
 		{
-			mvApp::GetApp()->getFontManager().rebuildAtlas();
+			mvToolManager::GetFontManager().rebuildAtlas();
 			ImGui_ImplDX11_InvalidateDeviceObjects();
-			mvApp::GetApp()->getFontManager().updateDefaultFont();
+			mvToolManager::GetFontManager().updateAtlas();
 		}
 
 		// Start the Dear ImGui frame
@@ -200,30 +211,19 @@ namespace Marvel {
 		ImGui_ImplWin32_NewFrame();
 		ImGui::NewFrame();
 
-
-
-		//if (!mvApp::GetApp()->getTextureStorage().isValid())
-		//	mvApp::GetApp()->getTextureStorage().refreshAtlas();
 	}
 
 	void mvWindowsViewport::renderFrame()
 	{
 		prerender();
-
-		if (m_error)
-		{
-			mvAppLog::setSize(m_width, m_height);
-			mvAppLog::render();
-		}
-
-		else
-			m_app->render();
-
+		m_app->render();
 		postrender();
 	}
 
 	void mvWindowsViewport::postrender()
 	{
+
+		MV_PROFILE_SCOPE("Presentation")
 
 		// Rendering
 		ImGui::Render();
@@ -231,17 +231,14 @@ namespace Marvel {
 		s_pd3dDeviceContext->ClearRenderTargetView(s_mainRenderTargetView, m_clearColor);
 		ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
 
-		//s_pSwapChain->Present(1, 0); // Present with vsync
-		//s_pSwapChain->Present(0, 0); // Present without vsync
-
 		static UINT presentFlags = 0;
-		if (s_pSwapChain->Present(m_vsync ? 1 : 0, presentFlags) == DXGI_STATUS_OCCLUDED) {
+		if (s_pSwapChain->Present(m_vsync ? 1 : 0, presentFlags) == DXGI_STATUS_OCCLUDED) 
+		{
 			presentFlags = DXGI_PRESENT_TEST;
 			Sleep(20);
 		}
-		else {
+		else
 			presentFlags = 0;
-		}
 	}
 
 	bool mvWindowsViewport::CreateDeviceD3D(HWND hWnd)
@@ -264,7 +261,6 @@ namespace Marvel {
 		sd.SwapEffect = DXGI_SWAP_EFFECT_DISCARD;
 
 		UINT createDeviceFlags = 0;
-		//createDeviceFlags |= D3D11_CREATE_DEVICE_DEBUG;
 		D3D_FEATURE_LEVEL featureLevel;
 		const D3D_FEATURE_LEVEL featureLevelArray[2] = { D3D_FEATURE_LEVEL_11_0, D3D_FEATURE_LEVEL_10_0, };
 		if (D3D11CreateDeviceAndSwapChain(nullptr, D3D_DRIVER_TYPE_HARDWARE, nullptr,
@@ -358,6 +354,11 @@ namespace Marvel {
 			break;
 		}
 
+		case WM_MOVE:
+			m_xpos = (int)(short)LOWORD(lParam);   // horizontal position 
+			m_ypos = (int)(short)HIWORD(lParam);   // vertical position 
+			break;
+
 		case WM_SIZE:
 			if (s_pd3dDevice != nullptr && wParam != SIZE_MINIMIZED)
 			{
@@ -379,6 +380,11 @@ namespace Marvel {
 					cheight = crect.bottom - crect.top;
 				}
 
+				m_actualWidth = awidth;
+				m_actualHeight = aheight;
+				m_clientWidth = cwidth;
+				m_clientHeight = cheight;
+
 				onResizeEvent();
 
 				// I believe this are only used for the error logger
@@ -386,7 +392,10 @@ namespace Marvel {
 				m_height = (UINT)HIWORD(lParam);
 
 				CleanupRenderTarget();
-				s_pSwapChain->ResizeBuffers(0, (UINT)LOWORD(lParam), (UINT)HIWORD(lParam), DXGI_FORMAT_UNKNOWN, 0);
+				if(m_border && m_caption)
+					s_pSwapChain->ResizeBuffers(0, (UINT)LOWORD(lParam), (UINT)HIWORD(lParam), DXGI_FORMAT_UNKNOWN, 0);
+				else
+					s_pSwapChain->ResizeBuffers(0, (UINT)awidth, (UINT)aheight, DXGI_FORMAT_UNKNOWN, 0);
 				CreateRenderTarget();
 			}
 			return 0;

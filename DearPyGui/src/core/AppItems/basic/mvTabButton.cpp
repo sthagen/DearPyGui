@@ -2,54 +2,60 @@
 #include "mvApp.h"
 #include "mvLog.h"
 #include "mvItemRegistry.h"
-#include "mvImGuiThemeScope.h"
 #include "mvPythonExceptions.h"
-#include "mvFontScope.h"
 
 namespace Marvel {
 
 	void mvTabButton::InsertParser(std::map<std::string, mvPythonParser>* parsers)
 	{
-		mvPythonParser parser(mvPyDataType::String);
-		mvAppItem::AddCommonArgs(parser);
-		parser.removeArg("width");
-		parser.removeArg("height");
-		parser.removeArg("source");
-		parser.removeArg("enabled");
+		mvPythonParser parser(mvPyDataType::UUID, "Adds a tab button to a tab bar.", { "Widgets" });
+		mvAppItem::AddCommonArgs(parser, (CommonParserArgs)(
+			MV_PARSER_ARG_ID |
+			MV_PARSER_ARG_INDENT |
+			MV_PARSER_ARG_PARENT |
+			MV_PARSER_ARG_BEFORE |
+			MV_PARSER_ARG_CALLBACK |
+			MV_PARSER_ARG_USER_DATA |
+			MV_PARSER_ARG_FILTER |
+			MV_PARSER_ARG_DROP_CALLBACK |
+			MV_PARSER_ARG_DRAG_CALLBACK |
+			MV_PARSER_ARG_PAYLOAD_TYPE |
+			MV_PARSER_ARG_TRACKED |
+			MV_PARSER_ARG_SHOW)
+		);
 
-		parser.addArg<mvPyDataType::Bool>("no_reorder", mvArgType::KEYWORD_ARG, "False", "Disable reordering this tab or having another tab cross over this tab");
-		parser.addArg<mvPyDataType::Bool>("leading", mvArgType::KEYWORD_ARG, "False", "Enforce the tab position to the left of the tab bar (after the tab list popup button)");
-		parser.addArg<mvPyDataType::Bool>("trailing", mvArgType::KEYWORD_ARG, "False", "Enforce the tab position to the right of the tab bar (before the scrolling buttons)");
-		parser.addArg<mvPyDataType::Bool>("no_tooltip", mvArgType::KEYWORD_ARG, "False", "Disable tooltip for the given tab");
+		parser.addArg<mvPyDataType::Bool>("no_reorder", mvArgType::KEYWORD_ARG, "False", "Disable reordering this tab or having another tab cross over this tab.");
+		parser.addArg<mvPyDataType::Bool>("leading", mvArgType::KEYWORD_ARG, "False", "Enforce the tab position to the left of the tab bar (after the tab list popup button).");
+		parser.addArg<mvPyDataType::Bool>("trailing", mvArgType::KEYWORD_ARG, "False", "Enforce the tab position to the right of the tab bar (before the scrolling buttons).");
+		parser.addArg<mvPyDataType::Bool>("no_tooltip", mvArgType::KEYWORD_ARG, "False", "Disable tooltip for the given tab.");
 
 		parser.finalize();
 
 		parsers->insert({ s_command, parser });
 	}
 
-	mvTabButton::mvTabButton(const std::string& name)
+	mvTabButton::mvTabButton(mvUUID uuid)
 		:
-		mvAppItem(name)
+		mvAppItem(uuid)
 	{
 	}
 
 	void mvTabButton::draw(ImDrawList* drawlist, float x, float y)
 	{
-		ScopedID id;
-		mvImGuiThemeScope scope(this);
-		mvFontScope fscope(this);
+		ScopedID id(m_uuid);
 
 		if (ImGui::TabItemButton(m_label.c_str(), m_flags))
-			mvApp::GetApp()->getCallbackRegistry().addCallback(getCallback(false), m_name, m_callback_data);
+			mvApp::GetApp()->getCallbackRegistry().addCallback(getCallback(false), m_uuid, nullptr, m_user_data);
 
 	}
 
 	bool mvTabButton::isParentCompatible(mvAppItemType type)
 	{
-		if (type == mvAppItemType::mvTabBar)
-			return true;
+		if (type == mvAppItemType::mvTabBar) return true;
+		if (type == mvAppItemType::mvStagingContainer) return true;
 
-		mvThrowPythonError(1000, "Tab button parent must be a tab bar.");
+		mvThrowPythonError(mvErrorCode::mvIncompatibleParent, s_command, 
+			"Incompatible parent. Acceptable parents include: tab bar, staging container.", this);
 		MV_ITEM_REGISTRY_ERROR("Tab button parent must be a tab bar.");
 		assert(false);
 		return false;

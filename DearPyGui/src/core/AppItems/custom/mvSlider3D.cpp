@@ -1,15 +1,29 @@
 #include "mvSlider3D.h"
-#include "mvImGuiThemeScope.h"
-#include "mvFontScope.h"
 
 namespace Marvel {
 
     void mvSlider3D::InsertParser(std::map<std::string, mvPythonParser>* parsers)
     {
 
-        mvPythonParser parser(mvPyDataType::String);
-        mvAppItem::AddCommonArgs(parser);
-        parser.removeArg("enabled");
+        mvPythonParser parser(mvPyDataType::UUID, "Undocumented", { "Widgets" });
+		mvAppItem::AddCommonArgs(parser, (CommonParserArgs)(
+			MV_PARSER_ARG_ID |
+			MV_PARSER_ARG_WIDTH |
+			MV_PARSER_ARG_HEIGHT |
+			MV_PARSER_ARG_INDENT |
+			MV_PARSER_ARG_PARENT |
+			MV_PARSER_ARG_BEFORE |
+			MV_PARSER_ARG_SOURCE |
+			MV_PARSER_ARG_CALLBACK |
+			MV_PARSER_ARG_USER_DATA |
+			MV_PARSER_ARG_SHOW |
+			MV_PARSER_ARG_FILTER |
+			MV_PARSER_ARG_DROP_CALLBACK |
+			MV_PARSER_ARG_DRAG_CALLBACK |
+			MV_PARSER_ARG_PAYLOAD_TYPE |
+			MV_PARSER_ARG_TRACKED |
+			MV_PARSER_ARG_POS)
+		);
 
         parser.addArg<mvPyDataType::FloatList>("default_value", mvArgType::KEYWORD_ARG, "(0.0, 0.0, 0.0, 0.0)");
 
@@ -26,8 +40,8 @@ namespace Marvel {
         parsers->insert({ s_command, parser });
     }
 
-    mvSlider3D::mvSlider3D(const std::string& name)
-        : mvFloat4PtrBase(name)
+    mvSlider3D::mvSlider3D(mvUUID uuid)
+        : mvFloat4PtrBase(uuid)
     {
     }
 
@@ -371,12 +385,10 @@ namespace Marvel {
 
     void mvSlider3D::draw(ImDrawList* drawlist, float x, float y)
     {
-        ScopedID id;
-        mvImGuiThemeScope scope(this);
-        mvFontScope fscope(this);
+        ScopedID id(m_uuid);
 
         if(SliderScalar3D(m_specificedlabel.c_str(), &(*m_value)[0], &(*m_value)[1], &(*m_value)[2], m_minX, m_maxX, m_minY, m_maxY, m_minZ, m_maxZ, m_scale))
-            mvApp::GetApp()->getCallbackRegistry().addCallback(getCallback(false), m_name, m_callback_data);
+            mvApp::GetApp()->getCallbackRegistry().addCallback(getCallback(false), m_uuid, nullptr, m_user_data);
     }
 
     void mvSlider3D::handleSpecificKeywordArgs(PyObject* dict)

@@ -3,32 +3,33 @@
 #include "mvApp.h"
 #include "mvLog.h"
 #include "mvUtilities.h"
-#include "mvAppLog.h"
 #include "mvItemRegistry.h"
 #include "mvPythonExceptions.h"
 
 namespace Marvel {
 
-	mvIntPtrBase::mvIntPtrBase(const std::string& name)
+	mvIntPtrBase::mvIntPtrBase(mvUUID uuid)
 		: 
-		mvAppItem(name)
+		mvAppItem(uuid)
 	{
 	}
 
-	void mvIntPtrBase::setDataSource(const std::string& dataSource)
+	void mvIntPtrBase::setDataSource(mvUUID dataSource)
 	{
 		if (dataSource == m_source) return;
 		m_source = dataSource;
 
-		mvRef<mvAppItem> item = mvApp::GetApp()->getItemRegistry().getItem(dataSource);
+		mvAppItem* item = mvApp::GetApp()->getItemRegistry().getItem(dataSource);
 		if (!item)
 		{
-			mvThrowPythonError(1000, "Source item not found.");
+			mvThrowPythonError(mvErrorCode::mvSourceNotFound, "set_value",
+				"Source item not found: " + std::to_string(dataSource), this);
 			return;
 		}
 		if (item->getValueType() != getValueType())
 		{
-			mvThrowPythonError(1000, "Values types do not match");
+			mvThrowPythonError(mvErrorCode::mvSourceNotCompatible, "set_value",
+				"Values types do not match: " + std::to_string(dataSource), this);
 			return;
 		}
 		m_value = std::get<std::shared_ptr<int>>(item->getValue());
@@ -44,8 +45,8 @@ namespace Marvel {
 		*m_value = ToInt(value);
 	}
 
-	mvInt4PtrBase::mvInt4PtrBase(const std::string& name)
-		: mvAppItem(name)
+	mvInt4PtrBase::mvInt4PtrBase(mvUUID uuid)
+		: mvAppItem(uuid)
 	{
 	}
 
@@ -68,27 +69,29 @@ namespace Marvel {
 			m_value = std::make_shared<std::array<int, 4>>(temp_array);
 	}
 
-	void mvInt4PtrBase::setDataSource(const std::string& dataSource)
+	void mvInt4PtrBase::setDataSource(mvUUID dataSource)
 	{
 		if (dataSource == m_source) return;
 		m_source = dataSource;
 
-		mvRef<mvAppItem> item = mvApp::GetApp()->getItemRegistry().getItem(dataSource);
+		mvAppItem* item = mvApp::GetApp()->getItemRegistry().getItem(dataSource);
 		if (!item)
 		{
-			mvThrowPythonError(1000, "Source item not found.");
+			mvThrowPythonError(mvErrorCode::mvSourceNotFound, "set_value",
+				"Source item not found: " + std::to_string(dataSource), this);
 			return;
 		}
 		if (item->getValueType() != getValueType())
 		{
-			mvThrowPythonError(1000, "Values types do not match");
+			mvThrowPythonError(mvErrorCode::mvSourceNotCompatible, "set_value",
+				"Values types do not match: " + std::to_string(dataSource), this);
 			return;
 		}
 		m_value = std::get<std::shared_ptr<std::array<int, 4>>>(item->getValue());
 	}
 
-	mvFloatPtrBase::mvFloatPtrBase(const std::string& name)
-		: mvAppItem(name)
+	mvFloatPtrBase::mvFloatPtrBase(mvUUID uuid)
+		: mvAppItem(uuid)
 	{
 	}
 
@@ -102,27 +105,29 @@ namespace Marvel {
 		*m_value = ToFloat(value);
 	}
 
-	void mvFloatPtrBase::setDataSource(const std::string& dataSource)
+	void mvFloatPtrBase::setDataSource(mvUUID dataSource)
 	{
 		if (dataSource == m_source) return;
 		m_source = dataSource;
 
-		mvRef<mvAppItem> item = mvApp::GetApp()->getItemRegistry().getItem(dataSource);
+		mvAppItem* item = mvApp::GetApp()->getItemRegistry().getItem(dataSource);
 		if (!item)
 		{
-			mvThrowPythonError(1000, "Source item not found.");
+			mvThrowPythonError(mvErrorCode::mvSourceNotFound, "set_value",
+				"Source item not found: " + std::to_string(dataSource), this);
 			return;
 		}
 		if (item->getValueType() != getValueType())
 		{
-			mvThrowPythonError(1000, "Values types do not match");
+			mvThrowPythonError(mvErrorCode::mvSourceNotCompatible, "set_value",
+				"Values types do not match: " + std::to_string(dataSource), this);
 			return;
 		}
 		m_value = std::get<std::shared_ptr<float>>(item->getValue());
 	}
 
-	mvDoublePtrBase::mvDoublePtrBase(const std::string& name)
-		: mvAppItem(name)
+	mvDoublePtrBase::mvDoublePtrBase(mvUUID uuid)
+		: mvAppItem(uuid)
 	{
 	}
 
@@ -136,27 +141,29 @@ namespace Marvel {
 		*m_value = ToDouble(value);
 	}
 
-	void mvDoublePtrBase::setDataSource(const std::string& dataSource)
+	void mvDoublePtrBase::setDataSource(mvUUID dataSource)
 	{
 		if (dataSource == m_source) return;
 		m_source = dataSource;
 
-		mvRef<mvAppItem> item = mvApp::GetApp()->getItemRegistry().getItem(dataSource);
+		mvAppItem* item = mvApp::GetApp()->getItemRegistry().getItem(dataSource);
 		if (!item)
 		{
-			mvThrowPythonError(1000, "Source item not found.");
+			mvThrowPythonError(mvErrorCode::mvSourceNotFound, "set_value",
+				"Source item not found: " + std::to_string(dataSource), this);
 			return;
 		}
 		if (item->getValueType() != getValueType())
 		{
-			mvThrowPythonError(1000, "Values types do not match");
+			mvThrowPythonError(mvErrorCode::mvSourceNotCompatible, "set_value",
+				"Values types do not match: " + std::to_string(dataSource), this);
 			return;
 		}
 		m_value = std::get<std::shared_ptr<double>>(item->getValue());
 	}
 
-	mvFloat4PtrBase::mvFloat4PtrBase(const std::string& name)
-		: mvAppItem(name)
+	mvFloat4PtrBase::mvFloat4PtrBase(mvUUID uuid)
+		: mvAppItem(uuid)
 	{
 	}
 
@@ -179,27 +186,29 @@ namespace Marvel {
 			m_value = std::make_shared<std::array<float, 4>>(temp_array);
 	}
 
-	void mvFloat4PtrBase::setDataSource(const std::string& dataSource)
+	void mvFloat4PtrBase::setDataSource(mvUUID dataSource)
 	{
 		if (dataSource == m_source) return;
 		m_source = dataSource;
 
-		mvRef<mvAppItem> item = mvApp::GetApp()->getItemRegistry().getItem(dataSource);
+		mvAppItem* item = mvApp::GetApp()->getItemRegistry().getItem(dataSource);
 		if (!item)
 		{
-			mvThrowPythonError(1000, "Source item not found.");
+			mvThrowPythonError(mvErrorCode::mvSourceNotFound, "set_value",
+				"Source item not found: " + std::to_string(dataSource), this);
 			return;
 		}
 		if (item->getValueType() != getValueType())
 		{
-			mvThrowPythonError(1000, "Values types do not match");
+			mvThrowPythonError(mvErrorCode::mvSourceNotCompatible, "set_value",
+				"Values types do not match: " + std::to_string(dataSource), this);
 			return;
 		}
 		m_value = std::get<std::shared_ptr<std::array<float, 4>>>(item->getValue());
 	}
 
-	mvDouble4PtrBase::mvDouble4PtrBase(const std::string& name)
-		: mvAppItem(name)
+	mvDouble4PtrBase::mvDouble4PtrBase(mvUUID uuid)
+		: mvAppItem(uuid)
 	{
 	}
 
@@ -222,76 +231,81 @@ namespace Marvel {
 			m_value = std::make_shared<std::array<double, 4>>(temp_array);
 	}
 
-	void mvDouble4PtrBase::setDataSource(const std::string& dataSource)
+	void mvDouble4PtrBase::setDataSource(mvUUID dataSource)
 	{
 		if (dataSource == m_source) return;
 		m_source = dataSource;
 
-		mvRef<mvAppItem> item = mvApp::GetApp()->getItemRegistry().getItem(dataSource);
+		mvAppItem* item = mvApp::GetApp()->getItemRegistry().getItem(dataSource);
 		if (!item)
 		{
-			mvThrowPythonError(1000, "Source item not found.");
+			mvThrowPythonError(mvErrorCode::mvSourceNotFound, "set_value",
+				"Source item not found: " + std::to_string(dataSource), this);
 			return;
 		}
 		if (item->getValueType() != getValueType())
 		{
-			mvThrowPythonError(1000, "Values types do not match");
+			mvThrowPythonError(mvErrorCode::mvSourceNotCompatible, "set_value",
+				"Values types do not match: " + std::to_string(dataSource), this);
 			return;
 		}
 		m_value = std::get<std::shared_ptr<std::array<double, 4>>>(item->getValue());
 	}
 
-	mvColorPtrBase::mvColorPtrBase(const std::string& name)
-		: mvAppItem(name)
+	mvColorPtrBase::mvColorPtrBase(mvUUID uuid)
+		: mvAppItem(uuid)
 	{
 	}
 
 	PyObject* mvColorPtrBase::getPyValue()
 	{
-		mvColor color = { 
-			m_value->data()[0], 
-			m_value->data()[1], 
-			m_value->data()[2], 
-			m_value->data()[3]
-		};
+		// nasty hack
+		int r = (int)(m_value->data()[0] * 255.0f * 255.0f);
+		int g = (int)(m_value->data()[1] * 255.0f * 255.0f);
+		int b = (int)(m_value->data()[2] * 255.0f * 255.0f);
+		int a = (int)(m_value->data()[3] * 255.0f * 255.0f);
+
+		auto color = mvColor(r, g, b, a);
 		return ToPyColor(color);
 	}
 
 	void mvColorPtrBase::setPyValue(PyObject* value)
 	{
-		std::vector<float> temp = ToFloatVect(value);
-		while (temp.size() < 4)
-			temp.push_back(0.0f);
+		mvColor color = ToColor(value);
 		std::array<float, 4> temp_array;
-		for (int i = 0; i < temp_array.size(); i++)
-			temp_array[i] = temp[i];
+		temp_array[0] = color.r;
+		temp_array[1] = color.g;
+		temp_array[2] = color.b;
+		temp_array[3] = color.a;
 		if (m_value)
 			*m_value = temp_array;
 		else
 			m_value = std::make_shared<std::array<float, 4>>(temp_array);
 	}
 
-	void mvColorPtrBase::setDataSource(const std::string& dataSource)
+	void mvColorPtrBase::setDataSource(mvUUID dataSource)
 	{
 		if (dataSource == m_source) return;
 		m_source = dataSource;
 
-		mvRef<mvAppItem> item = mvApp::GetApp()->getItemRegistry().getItem(dataSource);
+		mvAppItem* item = mvApp::GetApp()->getItemRegistry().getItem(dataSource);
 		if (!item)
 		{
-			mvThrowPythonError(1000, "Source item not found.");
+			mvThrowPythonError(mvErrorCode::mvSourceNotFound, "set_value",
+				"Source item not found: " + std::to_string(dataSource), this);
 			return;
 		}
 		if (item->getValueType() != getValueType())
 		{
-			mvThrowPythonError(1000, "Values types do not match");
+			mvThrowPythonError(mvErrorCode::mvSourceNotCompatible, "set_value",
+				"Values types do not match: " + std::to_string(dataSource), this);
 			return;
 		}
 		m_value = std::get<std::shared_ptr<std::array<float, 4>>>(item->getValue());
 	}
 
-	mvBoolPtrBase::mvBoolPtrBase(const std::string& name)
-		: mvAppItem(name)
+	mvBoolPtrBase::mvBoolPtrBase(mvUUID uuid)
+		: mvAppItem(uuid)
 	{
 	}
 
@@ -305,27 +319,29 @@ namespace Marvel {
 		*m_value = ToBool(value);
 	}
 
-	void mvBoolPtrBase::setDataSource(const std::string& dataSource)
+	void mvBoolPtrBase::setDataSource(mvUUID dataSource)
 	{
 		if (dataSource == m_source) return;
 		m_source = dataSource;
 
-		mvRef<mvAppItem> item = mvApp::GetApp()->getItemRegistry().getItem(dataSource);
+		mvAppItem* item = mvApp::GetApp()->getItemRegistry().getItem(dataSource);
 		if (!item)
 		{
-			mvThrowPythonError(1000, "Source item not found.");
+			mvThrowPythonError(mvErrorCode::mvSourceNotFound, "set_value",
+				"Source item not found: " + std::to_string(dataSource), this);
 			return;
 		}
 		if (item->getValueType() != getValueType())
 		{
-			mvThrowPythonError(1000, "Values types do not match");
+			mvThrowPythonError(mvErrorCode::mvSourceNotCompatible, "set_value",
+				"Values types do not match: " + std::to_string(dataSource), this);
 			return;
 		}
 		m_value = std::get<std::shared_ptr<bool>>(item->getValue());
 	}
 
-	mvStringPtrBase::mvStringPtrBase(const std::string& name)
-		: mvAppItem(name)
+	mvStringPtrBase::mvStringPtrBase(mvUUID uuid)
+		: mvAppItem(uuid)
 	{
 	}
 
@@ -339,27 +355,29 @@ namespace Marvel {
 		*m_value = ToString(value);
 	}
 
-	void mvStringPtrBase::setDataSource(const std::string& dataSource)
+	void mvStringPtrBase::setDataSource(mvUUID dataSource)
 	{
 		if (dataSource == m_source) return;
 		m_source = dataSource;
 
-		mvRef<mvAppItem> item = mvApp::GetApp()->getItemRegistry().getItem(dataSource);
+		mvAppItem* item = mvApp::GetApp()->getItemRegistry().getItem(dataSource);
 		if (!item)
 		{
-			mvThrowPythonError(1000, "Source item not found.");
+			mvThrowPythonError(mvErrorCode::mvSourceNotFound, "set_value",
+				"Source item not found: " + std::to_string(dataSource), this);
 			return;
 		}
 		if (item->getValueType() != getValueType())
 		{
-			mvThrowPythonError(1000, "Values types do not match");
+			mvThrowPythonError(mvErrorCode::mvSourceNotCompatible, "set_value",
+				"Values types do not match: " + std::to_string(dataSource), this);
 			return;
 		}
 		m_value = std::get<std::shared_ptr<std::string>>(item->getValue());
 	}
 
-	mvTimePtrBase::mvTimePtrBase(const std::string& name)
-		: mvAppItem(name)
+	mvTimePtrBase::mvTimePtrBase(mvUUID uuid)
+		: mvAppItem(uuid)
 	{
 	}
 
@@ -371,16 +389,16 @@ namespace Marvel {
 	void mvTimePtrBase::setPyValue(PyObject* value)
 	{
 
-		if (m_value)
+		if (value)
 			*m_value = ToTime(value);
 		else
 			m_value = {};
 
-		ImPlot::GetGmtTime(*m_imvalue, m_value.get());
+		*m_imvalue = ImPlot::MkGmtTime(m_value.get());
 	}
 
-	mvFloatVectPtrBase::mvFloatVectPtrBase(const std::string& name)
-		: mvAppItem(name)
+	mvFloatVectPtrBase::mvFloatVectPtrBase(mvUUID uuid)
+		: mvAppItem(uuid)
 	{
 	}
 
@@ -394,27 +412,29 @@ namespace Marvel {
 		*m_value = ToFloatVect(value);
 	}
 
-	void mvFloatVectPtrBase::setDataSource(const std::string& dataSource)
+	void mvFloatVectPtrBase::setDataSource(mvUUID dataSource)
 	{
 		if (dataSource == m_source) return;
 		m_source = dataSource;
 
-		mvRef<mvAppItem> item = mvApp::GetApp()->getItemRegistry().getItem(dataSource);
+		mvAppItem* item = mvApp::GetApp()->getItemRegistry().getItem(dataSource);
 		if (!item)
 		{
-			mvThrowPythonError(1000, "Source item not found.");
+			mvThrowPythonError(mvErrorCode::mvSourceNotFound, "set_value",
+				"Source item not found: " + std::to_string(dataSource), this);
 			return;
 		}
 		if (item->getValueType() != getValueType())
 		{
-			mvThrowPythonError(1000, "Values types do not match");
+			mvThrowPythonError(mvErrorCode::mvSourceNotCompatible, "set_value",
+				"Values types do not match: " + std::to_string(dataSource), this);
 			return;
 		}
 		m_value = std::get<std::shared_ptr<std::vector<float>>>(item->getValue());
 	}
 
-	mvSeriesBase::mvSeriesBase(const std::string& name)
-		: mvAppItem(name)
+	mvSeriesBase::mvSeriesBase(mvUUID uuid)
+		: mvAppItem(uuid)
 	{
 	}
 
@@ -430,20 +450,22 @@ namespace Marvel {
 		calculateMaxMins();
 	}
 
-	void mvSeriesBase::setDataSource(const std::string& dataSource)
+	void mvSeriesBase::setDataSource(mvUUID dataSource)
 	{
 		if (dataSource == m_source) return;
 		m_source = dataSource;
 
-		mvRef<mvAppItem> item = mvApp::GetApp()->getItemRegistry().getItem(dataSource);
+		mvAppItem* item = mvApp::GetApp()->getItemRegistry().getItem(dataSource);
 		if (!item)
 		{
-			mvThrowPythonError(1000, "Source item not found.");
+			mvThrowPythonError(mvErrorCode::mvSourceNotFound, "set_value",
+				"Source item not found: " + std::to_string(dataSource), this);
 			return;
 		}
 		if (item->getValueType() != getValueType())
 		{
-			mvThrowPythonError(1000, "Values types do not match");
+			mvThrowPythonError(mvErrorCode::mvSourceNotCompatible, "set_value",
+				"Values types do not match: " + std::to_string(dataSource), this);
 			return;
 		}
 		m_value = std::get<std::shared_ptr<std::vector<std::vector<double>>>>(item->getValue());
@@ -489,129 +511,39 @@ namespace Marvel {
 		m_maxMins.clear();
 	}
 
-	bool mvSeriesBase::isParentCompatible(mvAppItemType type)
+	mvUUIDPtrBase::mvUUIDPtrBase(mvUUID uuid)
+		: mvAppItem(uuid)
 	{
-		if (type == mvAppItemType::mvPlot)
-			return true;
-
-		mvThrowPythonError(1000, "Item's parent must be plot.");
-		MV_ITEM_REGISTRY_ERROR("Item's parent must be plot.");
-		assert(false);
-		return false;
 	}
 
-	mvBaseWindowAppitem::mvBaseWindowAppitem(const std::string& name)
-		: 
-		mvAppItem(name)
+	PyObject* mvUUIDPtrBase::getPyValue()
 	{
-		m_width = 500;
-		m_height = 500;
+		return ToPyUUID(*m_value);
 	}
 
-	void mvBaseWindowAppitem::addFlag(ImGuiWindowFlags flag) 
-	{ 
-		m_windowflags |= flag; 
-	}
-
-	void mvBaseWindowAppitem::removeFlag(ImGuiWindowFlags flag) 
-	{ 
-		m_windowflags &= ~flag; 
-	}
-
-	void mvBaseWindowAppitem::setWidth(int width)
-	{ 
-		m_width = width;
-		m_dirty_size = true; 
-	}
-
-	void mvBaseWindowAppitem::setHeight(int height)
+	void mvUUIDPtrBase::setPyValue(PyObject* value)
 	{
-		m_height = height;
-		m_dirty_size = true; 
+		*m_value = ToUUID(value);
 	}
 
-	bool mvBaseWindowAppitem::prerender()
+	void mvUUIDPtrBase::setDataSource(mvUUID dataSource)
 	{
+		if (dataSource == m_source) return;
+		m_source = dataSource;
 
-		if (!m_show)
-			return false;
-
-		if (m_dirty_size)
+		mvAppItem* item = mvApp::GetApp()->getItemRegistry().getItem(dataSource);
+		if (!item)
 		{
-			ImGui::SetNextWindowSize(ImVec2((float)m_width, (float)m_height));
-			m_dirty_size = false;
-		}
-
-		if (m_dirtyPos)
-		{
-			ImGui::SetNextWindowPos(m_state.getItemPos());
-			m_dirtyPos = false;
-		}
-
-		if (m_focusNextFrame)
-		{
-			ImGui::SetNextWindowFocus();
-			m_focusNextFrame = false;
-		}
-
-		if (!ImGui::Begin(m_label.c_str(), &m_show, m_windowflags))
-		{
-			ImGui::End();
-			return false;
-		}
-
-		return true;
-	}
-
-	void mvBaseWindowAppitem::handleSpecificKeywordArgs(PyObject* dict)
-	{
-		if (dict == nullptr)
+			mvThrowPythonError(mvErrorCode::mvSourceNotFound, "set_value",
+				"Source item not found: " + std::to_string(dataSource), this);
 			return;
-
-		// helper for bit flipping
-		auto flagop = [dict](const char* keyword, int flag, int& flags)
+		}
+		if (item->getValueType() != getValueType())
 		{
-			if (PyObject* item = PyDict_GetItemString(dict, keyword)) ToBool(item) ? flags |= flag : flags &= ~flag;
-		};
-
-		// window flags
-		flagop("autosize", ImGuiWindowFlags_AlwaysAutoResize, m_windowflags);
-		flagop("no_move", ImGuiWindowFlags_NoMove, m_windowflags);
-		flagop("no_resize", ImGuiWindowFlags_NoResize, m_windowflags);
-		flagop("no_title_bar", ImGuiWindowFlags_NoTitleBar, m_windowflags);
-		flagop("no_scrollbar", ImGuiWindowFlags_NoScrollbar, m_windowflags);
-		flagop("no_collapse", ImGuiWindowFlags_NoCollapse, m_windowflags);
-		flagop("horizontal_scrollbar", ImGuiWindowFlags_HorizontalScrollbar, m_windowflags);
-		flagop("no_focus_on_appearing", ImGuiWindowFlags_NoFocusOnAppearing, m_windowflags);
-		flagop("no_bring_to_front_on_focus", ImGuiWindowFlags_NoBringToFrontOnFocus, m_windowflags);
-		flagop("menubar", ImGuiWindowFlags_MenuBar, m_windowflags);
-		flagop("no_background", ImGuiWindowFlags_NoBackground, m_windowflags);
-
-	}
-
-	void mvBaseWindowAppitem::getSpecificConfiguration(PyObject* dict)
-	{
-		if (dict == nullptr)
+			mvThrowPythonError(mvErrorCode::mvSourceNotCompatible, "set_value",
+				"Values types do not match: " + std::to_string(dataSource), this);
 			return;
-
-		// helper to check and set bit
-		auto checkbitset = [dict](const char* keyword, int flag, const int& flags)
-		{
-			PyDict_SetItemString(dict, keyword, ToPyBool(flags & flag));
-		};
-
-		// window flags
-		checkbitset("autosize", ImGuiWindowFlags_AlwaysAutoResize, m_windowflags);
-		checkbitset("no_resize", ImGuiWindowFlags_NoResize, m_windowflags);
-		checkbitset("no_title_bar", ImGuiWindowFlags_NoTitleBar, m_windowflags);
-		checkbitset("no_move", ImGuiWindowFlags_NoMove, m_windowflags);
-		checkbitset("no_scrollbar", ImGuiWindowFlags_NoScrollbar, m_windowflags);
-		checkbitset("no_collapse", ImGuiWindowFlags_NoCollapse, m_windowflags);
-		checkbitset("horizontal_scrollbar", ImGuiWindowFlags_HorizontalScrollbar, m_windowflags);
-		checkbitset("no_focus_on_appearing", ImGuiWindowFlags_NoFocusOnAppearing, m_windowflags);
-		checkbitset("no_bring_to_front_on_focus", ImGuiWindowFlags_NoBringToFrontOnFocus, m_windowflags);
-		checkbitset("menubar", ImGuiWindowFlags_MenuBar, m_windowflags);
-		checkbitset("no_background", ImGuiWindowFlags_NoBackground, m_windowflags);
+		}
+		m_value = std::get<std::shared_ptr<mvUUID>>(item->getValue());
 	}
-
 }

@@ -12,28 +12,18 @@ namespace Marvel {
 		static void InsertParser(std::map<std::string, mvPythonParser>* parsers);
 
 		MV_APPLY_WIDGET_REGISTRATION(mvAppItemType::mvAnnotation, add_plot_annotation)
-		
-		MV_CREATE_CONSTANT(mvThemeCol_Plot_Annotation, ImPlotCol_MarkerOutline, 0L);
 
-		MV_START_EXTRA_COMMANDS
-		MV_END_EXTRA_COMMANDS
+		MV_START_COMMANDS
+		MV_END_COMMANDS
 
-		MV_START_GENERAL_CONSTANTS
-		MV_END_GENERAL_CONSTANTS
-
-		MV_START_COLOR_CONSTANTS
-			MV_ADD_CONSTANT(mvThemeCol_Plot_Annotation, mvColor(0, 0, 0, -255), mvColor(0, 0, 0, -255)),
-		MV_END_COLOR_CONSTANTS
-
-		MV_START_STYLE_CONSTANTS
-		MV_END_STYLE_CONSTANTS
+		MV_START_CONSTANTS
+		MV_END_CONSTANTS
 
 	public:
 
-		mvAnnotation(const std::string& name);
+		mvAnnotation(mvUUID uuid);
 
 		void draw(ImDrawList* drawlist, float x, float y) override;
-
 		void handleSpecificKeywordArgs(PyObject* dict) override;
 		void getSpecificConfiguration(PyObject* dict) override;
 		bool isParentCompatible(mvAppItemType type) override;

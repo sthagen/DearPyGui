@@ -2,85 +2,64 @@
 #include "mvInput.h"
 #include "mvApp.h"
 #include "mvItemRegistry.h"
-#include "mvImGuiThemeScope.h"
-#include "mvFontScope.h"
 
 namespace Marvel {
 
 	void mvCollapsingHeader::InsertParser(std::map<std::string, mvPythonParser>* parsers)
 	{
 
-		mvPythonParser parser(mvPyDataType::String);
-		mvAppItem::AddCommonArgs(parser);
-		parser.removeArg("source");
-		parser.removeArg("width");
-		parser.removeArg("height");
-		parser.removeArg("source");
-		parser.removeArg("callback");
-		parser.removeArg("callback_data");
-		parser.removeArg("enabled");
+		mvPythonParser parser(mvPyDataType::UUID, "Adds a collapsing header to add items to. Must be closed with the end command.", { "Containers", "Widgets" }, true);
+		mvAppItem::AddCommonArgs(parser, (CommonParserArgs)(
+			MV_PARSER_ARG_ID |
+			MV_PARSER_ARG_INDENT |
+			MV_PARSER_ARG_PARENT |
+			MV_PARSER_ARG_BEFORE |
+			MV_PARSER_ARG_SHOW |
+			MV_PARSER_ARG_FILTER |
+			MV_PARSER_ARG_DROP_CALLBACK |
+			MV_PARSER_ARG_DRAG_CALLBACK |
+			MV_PARSER_ARG_PAYLOAD_TYPE |
+			MV_PARSER_ARG_TRACKED |
+			MV_PARSER_ARG_SEARCH_DELAY |
+			MV_PARSER_ARG_POS)
+		);
 
 		parser.addArg<mvPyDataType::Bool>("closable", mvArgType::KEYWORD_ARG, "False");
 		parser.addArg<mvPyDataType::Bool>("default_open", mvArgType::KEYWORD_ARG, "False");
-		parser.addArg<mvPyDataType::Bool>("open_on_double_click", mvArgType::KEYWORD_ARG, "False", "Need double-click to open node");
+		parser.addArg<mvPyDataType::Bool>("open_on_double_click", mvArgType::KEYWORD_ARG, "False", "Need double-click to open node.");
 		parser.addArg<mvPyDataType::Bool>("open_on_arrow", mvArgType::KEYWORD_ARG, "False", "Only open when clicking on the arrow part.");
 		parser.addArg<mvPyDataType::Bool>("leaf", mvArgType::KEYWORD_ARG, "False", "No collapsing, no arrow (use as a convenience for leaf nodes).");
-		parser.addArg<mvPyDataType::Bool>("bullet", mvArgType::KEYWORD_ARG, "False", "Display a bullet instead of arrow");
+		parser.addArg<mvPyDataType::Bool>("bullet", mvArgType::KEYWORD_ARG, "False", "Display a bullet instead of arrow.");
 
 		parser.finalize();
 
 		parsers->insert({ s_command, parser });
 	}
 
-	mvCollapsingHeader::mvCollapsingHeader(const std::string& name)
-		: mvBoolPtrBase(name)
+	mvCollapsingHeader::mvCollapsingHeader(mvUUID uuid)
+		: mvBoolPtrBase(uuid)
 	{
 	}
 
 	void mvCollapsingHeader::draw(ImDrawList* drawlist, float x, float y)
 	{
-		ScopedID id;
-		mvImGuiThemeScope scope(this);
-		mvFontScope fscope(this);
+		ScopedID id(m_uuid);
 
 		bool* toggle = nullptr;
 		if (m_closable)
 			toggle = &m_show;
 		*m_value = ImGui::CollapsingHeader(m_label.c_str(), toggle, m_flags);
 
-		//we do this so that the children dont get the theme
-		scope.cleanup();
-
 		if (*m_value)
 		{
 			for (auto& item : m_children[1])
 			{
-				// skip item if it's not shown
-				if (!item->m_show)
+				if (!item->preDraw())
 					continue;
-
-				if (item->m_focusNextFrame)
-				{
-					ImGui::SetKeyboardFocusHere();
-					item->m_focusNextFrame = false;
-				}
-
-				auto oldCursorPos = ImGui::GetCursorPos();
-				if (item->m_dirtyPos)
-					ImGui::SetCursorPos(item->getState().getItemPos());
-	
-				item->getState().setPos({ ImGui::GetCursorPosX(), ImGui::GetCursorPosY() });
-
-				// set item width
-				if (item->m_width != 0)
-					ImGui::SetNextItemWidth((float)item->m_width);
 
 				item->draw(drawlist, ImGui::GetCursorPosX(), ImGui::GetCursorPosY());
 
-				if (item->m_dirtyPos)
-					ImGui::SetCursorPos(oldCursorPos);
-
-				item->getState().update();
+				item->postDraw();
 			}
 		}
 	}

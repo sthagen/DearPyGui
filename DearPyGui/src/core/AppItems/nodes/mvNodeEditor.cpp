@@ -5,10 +5,7 @@
 #include "mvNode.h"
 #include "mvNodeAttribute.h"
 #include "mvNodeLink.h"
-#include "mvImGuiThemeScope.h"
-#include "mvImNodesThemeScope.h"
 #include "mvLog.h"
-#include "mvFontScope.h"
 #include "mvPythonExceptions.h"
 
 namespace Marvel {
@@ -17,14 +14,20 @@ namespace Marvel {
 	{
 
 		{
-			mvPythonParser parser(mvPyDataType::String);
-			mvAppItem::AddCommonArgs(parser);
-			parser.removeArg("source");
-			parser.removeArg("label");
-			parser.removeArg("width");
-			parser.removeArg("height");
-			parser.removeArg("callback_data");
-			parser.removeArg("enabled");
+			mvPythonParser parser(mvPyDataType::UUID, "Adds a node editor.", { "Node Editor", "Containers", "Widgets" }, true);
+			mvAppItem::AddCommonArgs(parser, (CommonParserArgs)(
+				MV_PARSER_ARG_ID |
+				MV_PARSER_ARG_PARENT |
+				MV_PARSER_ARG_BEFORE |
+				MV_PARSER_ARG_CALLBACK |
+				MV_PARSER_ARG_FILTER |
+				MV_PARSER_ARG_DROP_CALLBACK |
+				MV_PARSER_ARG_DRAG_CALLBACK |
+				MV_PARSER_ARG_PAYLOAD_TYPE |
+				MV_PARSER_ARG_SEARCH_DELAY |
+				MV_PARSER_ARG_TRACKED |
+				MV_PARSER_ARG_SHOW)
+			);
 
 			parser.addArg<mvPyDataType::Callable>("delink_callback", mvArgType::KEYWORD_ARG, "None", "Callback ran when a link is detached.");
 
@@ -34,44 +37,44 @@ namespace Marvel {
 		}
 
 		{
-			mvPythonParser parser(mvPyDataType::StringList);
-			parser.addArg<mvPyDataType::String>("node_editor");
+			mvPythonParser parser(mvPyDataType::UUIDList, "Undocumented", { "Node Editor" });
+			parser.addArg<mvPyDataType::UUID>("node_editor");
 			parser.finalize();
 			parsers->insert({ "get_selected_nodes", parser });
 		}
 
 		{
-			mvPythonParser parser(mvPyDataType::ListStrList);
-			parser.addArg<mvPyDataType::String>("node_editor");
+			mvPythonParser parser(mvPyDataType::ListStrList, "Undocumented", { "Node Editor" });
+			parser.addArg<mvPyDataType::UUID>("node_editor");
 			parser.finalize();
 			parsers->insert({ "get_selected_links", parser });
 		}
 
 		{
-			mvPythonParser parser(mvPyDataType::ListStrList);
-			parser.addArg<mvPyDataType::String>("node_editor");
+			mvPythonParser parser(mvPyDataType::ListStrList, "Undocumented", { "Node Editor" });
+			parser.addArg<mvPyDataType::UUID>("node_editor");
 			parser.finalize();
 			parsers->insert({ "get_links", parser });
 		}
 
 		{
-			mvPythonParser parser(mvPyDataType::None);
-			parser.addArg<mvPyDataType::String>("node_editor");
+			mvPythonParser parser(mvPyDataType::None, "Undocumented", { "Node Editor" });
+			parser.addArg<mvPyDataType::UUID>("node_editor");
 			parser.finalize();
 			parsers->insert({ "clear_selected_links", parser });
 		}
 
 		{
-			mvPythonParser parser(mvPyDataType::None);
-			parser.addArg<mvPyDataType::String>("node_editor");
+			mvPythonParser parser(mvPyDataType::None, "Undocumented", { "Node Editor" });
+			parser.addArg<mvPyDataType::UUID>("node_editor");
 			parser.finalize();
 			parsers->insert({ "clear_selected_nodes", parser });
 		}
 
 	}
 
-	mvNodeEditor::mvNodeEditor(const std::string& name)
-		: mvAppItem(name)
+	mvNodeEditor::mvNodeEditor(mvUUID uuid)
+		: mvAppItem(uuid)
 	{
 	}
 
@@ -97,15 +100,16 @@ namespace Marvel {
 		if(type ==mvAppItemType::mvNode) return true;
 		if(type ==mvAppItemType::mvNodeLink) return true;
 
-		mvThrowPythonError(1006, "Node editor children must be nodes only.");
+		mvThrowPythonError(mvErrorCode::mvIncompatibleChild, s_command,
+			"Incompatible child. Acceptable children include: mvNode, mvNodeLink", this);
 		MV_ITEM_REGISTRY_ERROR("Node editor children must be nodes only.");
 		assert(false);
 		return false;
 	}
 
-	std::vector<std::string> mvNodeEditor::getSelectedNodes() const
+	std::vector<mvUUID> mvNodeEditor::getSelectedNodes() const
 	{
-		std::vector<std::string> result;
+		std::vector<mvUUID> result;
 		for (const auto& item : m_selectedNodes)
 		{
 			for (const auto& child : m_children[1])
@@ -115,7 +119,7 @@ namespace Marvel {
 			    int i3 = i1 + i2;
 				//if (static_cast<mvNode*>(child.get())->getId() == item)
 				if (i1 == i2)
-					result.push_back(child->m_name);
+					result.push_back(child->m_uuid);
 			}
 		}
 
@@ -124,9 +128,7 @@ namespace Marvel {
 
 	void mvNodeEditor::draw(ImDrawList* drawlist, float x, float y)
 	{
-		ScopedID id;
-		mvImNodesThemeScope scope(this);
-		mvFontScope fscope(this);
+		ScopedID id(m_uuid);
 
 		imnodes::PushAttributeFlag(imnodes::AttributeFlags_EnableLinkDetachWithDragClick);
 
@@ -148,7 +150,7 @@ namespace Marvel {
 		}
 
 		// build links
-		for (auto item : m_children[0])
+		for (auto& item : m_children[0])
 		{
 			// skip item if it's not shown
 			if (!item->m_show)
@@ -159,7 +161,7 @@ namespace Marvel {
 			item->getState().update();
 		}
 
-		for (auto item : m_children[1])
+		for (auto& item : m_children[1])
 		{
 			// skip item if it's not shown
 			if (!item->m_show)
@@ -222,47 +224,47 @@ namespace Marvel {
 		static int start_attr, end_attr;
 		if (imnodes::IsLinkCreated(&start_attr, &end_attr))
 		{
-			std::string node1, node2;
+			mvUUID node1, node2;
 			for (const auto& child : m_children[1])
 			{
 				for (const auto& grandchild : child->m_children[1])
 				{
 					if (static_cast<mvNodeAttribute*>(grandchild.get())->getId()== start_attr)
-						node1 = grandchild->m_name;
+						node1 = grandchild->m_uuid;
 
 					if (static_cast<mvNodeAttribute*>(grandchild.get())->getId() == end_attr)
-						node2 = grandchild->m_name;
+						node2 = grandchild->m_uuid;
 				}
 			}
 
 			if (m_callback)
 				mvApp::GetApp()->getCallbackRegistry().submitCallback([=]() {
 				PyObject* link = PyTuple_New(2);
-				PyTuple_SetItem(link, 0, ToPyString(node1));
-				PyTuple_SetItem(link, 1, ToPyString(node2));
-				mvApp::GetApp()->getCallbackRegistry().addCallback(m_callback, m_name, link);
+				PyTuple_SetItem(link, 0, ToPyUUID(node1));
+				PyTuple_SetItem(link, 1, ToPyUUID(node2));
+				mvApp::GetApp()->getCallbackRegistry().addCallback(m_callback, m_uuid, link, nullptr);
 					});
 		}
 
 		static int destroyed_attr;
 		if (imnodes::IsLinkDestroyed(&destroyed_attr))
 		{
-			std::string name;
+			mvUUID name = 0;
 			for (auto& item : m_children[0])
 			{
 				if (item->getType() == mvAppItemType::mvNodeLink)
 				{
 					if (static_cast<const mvNodeLink*>(item.get())->m_id == destroyed_attr)
 					{
-						name = item->m_name;
+						name = item->m_uuid;
 						break;
 					}
 				}
 			}
 			if (m_delinkCallback)
 				mvApp::GetApp()->getCallbackRegistry().submitCallback([=]() {
-				PyObject* link = ToPyString(name);
-				mvApp::GetApp()->getCallbackRegistry().addCallback(m_delinkCallback, m_name, link);
+				PyObject* link = ToPyUUID(name);
+				mvApp::GetApp()->getCallbackRegistry().addCallback(m_delinkCallback, m_uuid, link, nullptr);
 					});
 		}
 
@@ -271,29 +273,29 @@ namespace Marvel {
 
 	PyObject* mvNodeEditor::get_selected_nodes(PyObject* self, PyObject* args, PyObject* kwargs)
 	{
-		const char* node_editor;
+		mvUUID node_editor;
 
 
 		if (!(mvApp::GetApp()->getParsers())["get_selected_nodes"].parse(args, kwargs, __FUNCTION__, &node_editor))
 			return ToPyBool(false);
 
-		std::lock_guard<std::mutex> lk(mvApp::GetApp()->getMutex());
+		if (!mvApp::s_manualMutexControl) std::lock_guard<std::mutex> lk(mvApp::s_mutex);
 		auto anode_editor = mvApp::GetApp()->getItemRegistry().getItem(node_editor);
 		if (anode_editor == nullptr)
 		{
-			std::string message = node_editor;
-			mvThrowPythonError(1000, message + " node_editor does not exist.");
+			mvThrowPythonError(mvErrorCode::mvItemNotFound, "get_selected_nodes",
+				"Item not found: " + std::to_string(node_editor), nullptr);
 			return GetPyNone();
 		}
 
 		if (anode_editor->getType() != mvAppItemType::mvNodeEditor)
 		{
-			std::string message = node_editor;
-			mvThrowPythonError(1000, message + " is not a plot.");
+			mvThrowPythonError(mvErrorCode::mvIncompatibleType, "get_selected_nodes",
+				"Incompatible type. Expected types include: mvNodeEditor", anode_editor);
 			return GetPyNone();
 		}
 
-		mvNodeEditor* editor = static_cast<mvNodeEditor*>(anode_editor.get());
+		mvNodeEditor* editor = static_cast<mvNodeEditor*>(anode_editor);
 
 		auto selected_nodes = editor->getSelectedNodes();
 
@@ -303,28 +305,28 @@ namespace Marvel {
 
 	PyObject* mvNodeEditor::get_selected_links(PyObject* self, PyObject* args, PyObject* kwargs)
 	{
-		const char* node_editor;
+		mvUUID node_editor;
 
 		if (!(mvApp::GetApp()->getParsers())["get_selected_links"].parse(args, kwargs, __FUNCTION__, &node_editor))
 			return ToPyBool(false);
 
-		std::lock_guard<std::mutex> lk(mvApp::GetApp()->getMutex());
+		if (!mvApp::s_manualMutexControl) std::lock_guard<std::mutex> lk(mvApp::s_mutex);
 		auto anode_editor = mvApp::GetApp()->getItemRegistry().getItem(node_editor);
 		if (anode_editor == nullptr)
 		{
-			std::string message = node_editor;
-			mvThrowPythonError(1000, message + " node_editor does not exist.");
+			mvThrowPythonError(mvErrorCode::mvItemNotFound, "get_selected_links",
+				"Item not found: " + std::to_string(node_editor), nullptr);
 			return GetPyNone();
 		}
 
 		if (anode_editor->getType() != mvAppItemType::mvNodeEditor)
 		{
-			std::string message = node_editor;
-			mvThrowPythonError(1000, message + " is not a plot.");
+			mvThrowPythonError(mvErrorCode::mvIncompatibleType, "get_selected_links",
+				"Incompatible type. Expected types include: mvNodeEditor", anode_editor);
 			return GetPyNone();
 		}
 
-		mvNodeEditor* editor = static_cast<mvNodeEditor*>(anode_editor.get());
+		mvNodeEditor* editor = static_cast<mvNodeEditor*>(anode_editor);
 
 		auto& selected_links = editor->getSelectedLinks();
 
@@ -338,28 +340,28 @@ namespace Marvel {
 
 	PyObject* mvNodeEditor::clear_selected_links(PyObject* self, PyObject* args, PyObject* kwargs)
 	{
-		const char* node_editor;
+		mvUUID node_editor;
 
 		if (!(mvApp::GetApp()->getParsers())["clear_selected_links"].parse(args, kwargs, __FUNCTION__, &node_editor))
 			return ToPyBool(false);
 
-		std::lock_guard<std::mutex> lk(mvApp::GetApp()->getMutex());
+		if (!mvApp::s_manualMutexControl) std::lock_guard<std::mutex> lk(mvApp::s_mutex);
 		auto anode_editor = mvApp::GetApp()->getItemRegistry().getItem(node_editor);
 		if (anode_editor == nullptr)
 		{
-			std::string message = node_editor;
-			mvThrowPythonError(1000, message + " node_editor does not exist.");
+			mvThrowPythonError(mvErrorCode::mvItemNotFound, "clear_selected_links",
+				"Item not found: " + std::to_string(node_editor), nullptr);
 			return GetPyNone();
 		}
 
 		if (anode_editor->getType() != mvAppItemType::mvNodeEditor)
 		{
-			std::string message = node_editor;
-			mvThrowPythonError(1000, message + " is not a plot.");
+			mvThrowPythonError(mvErrorCode::mvIncompatibleType, "clear_selected_links",
+				"Incompatible type. Expected types include: mvNodeEditor", anode_editor);
 			return GetPyNone();
 		}
 
-		mvNodeEditor* editor = static_cast<mvNodeEditor*>(anode_editor.get());
+		mvNodeEditor* editor = static_cast<mvNodeEditor*>(anode_editor);
 		editor->clearLinks();
 
 		return GetPyNone();
@@ -368,28 +370,28 @@ namespace Marvel {
 
 	PyObject* mvNodeEditor::clear_selected_nodes(PyObject* self, PyObject* args, PyObject* kwargs)
 	{
-		const char* node_editor;
+		mvUUID node_editor;
 
 		if (!(mvApp::GetApp()->getParsers())["clear_selected_nodes"].parse(args, kwargs, __FUNCTION__, &node_editor))
 			return ToPyBool(false);
 
-		std::lock_guard<std::mutex> lk(mvApp::GetApp()->getMutex());
+		if (!mvApp::s_manualMutexControl) std::lock_guard<std::mutex> lk(mvApp::s_mutex);
 		auto anode_editor = mvApp::GetApp()->getItemRegistry().getItem(node_editor);
 		if (anode_editor == nullptr)
 		{
-			std::string message = node_editor;
-			mvThrowPythonError(1000, message + " node_editor does not exist.");
+			mvThrowPythonError(mvErrorCode::mvItemNotFound, "clear_selected_nodes",
+				"Item not found: " + std::to_string(node_editor), nullptr);
 			return GetPyNone();
 		}
 
 		if (anode_editor->getType() != mvAppItemType::mvNodeEditor)
 		{
-			std::string message = node_editor;
-			mvThrowPythonError(1000, message + " is not a plot.");
+			mvThrowPythonError(mvErrorCode::mvIncompatibleType, "clear_selected_nodes",
+				"Incompatible type. Expected types include: mvNodeEditor", anode_editor);
 			return GetPyNone();
 		}
 
-		mvNodeEditor* editor = static_cast<mvNodeEditor*>(anode_editor.get());
+		mvNodeEditor* editor = static_cast<mvNodeEditor*>(anode_editor);
 		editor->clearNodes();
 
 		return GetPyNone();

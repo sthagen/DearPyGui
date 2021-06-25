@@ -9,46 +9,41 @@ namespace Marvel {
 	void mvDynamicTexture::InsertParser(std::map<std::string, mvPythonParser>* parsers)
 	{
 
-		mvPythonParser parser(mvPyDataType::None);
-		mvAppItem::AddCommonArgs(parser);
-		parser.removeArg("source");
-		parser.removeArg("before");
-		parser.removeArg("label");
-		parser.removeArg("callback");
-		parser.removeArg("callback_data");
-		parser.removeArg("show");
-		parser.removeArg("enabled");
-		parser.removeArg("width");
-		parser.removeArg("height");
+		mvPythonParser parser(mvPyDataType::UUID, "Undocumented function", { "Textures", "Widgets" });
+		mvAppItem::AddCommonArgs(parser, (CommonParserArgs)(
+			MV_PARSER_ARG_ID)
+		);
 
 		parser.addArg<mvPyDataType::Integer>("width");
 		parser.addArg<mvPyDataType::Integer>("height");
 		parser.addArg<mvPyDataType::FloatList>("default_value");
-
+		parser.addArg<mvPyDataType::UUID>("parent", mvArgType::KEYWORD_ARG, "internal_dpg.mvReservedUUID_2", "Parent to add this item to. (runtime adding)");
 		parser.finalize();
 
 		parsers->insert({ s_command, parser });
 	}
 
-	mvDynamicTexture::mvDynamicTexture(const std::string& name)
+	mvDynamicTexture::mvDynamicTexture(mvUUID uuid)
 		:
-		mvFloatVectPtrBase(name)
+		mvFloatVectPtrBase(uuid)
 	{
 
 	}
 
 	mvDynamicTexture::~mvDynamicTexture()
 	{
-		UnloadTexture(m_name);
 		FreeTexture(m_texture);
 	}
 
 
 	bool mvDynamicTexture::isParentCompatible(mvAppItemType type)
 	{
-		if (type == mvAppItemType::mvTextureContainer) return true;
+		if (type == mvAppItemType::mvStagingContainer) return true;
+		if (type == mvAppItemType::mvTextureRegistry) return true;
 
-		mvThrowPythonError(1000, "Drawing item parent must be a drawing.");
+		mvThrowPythonError(mvErrorCode::mvIncompatibleParent, s_command,
+			"Incompatible parent. Acceptable parents include: mvTextureRegistry, mvStagingContainer.", this);
+
 		MV_ITEM_REGISTRY_ERROR("Drawing item parent must be a drawing.");
 		assert(false);
 		return false;

@@ -2,39 +2,55 @@
 #include <misc/cpp/imgui_stdlib.h>
 #include <utility>
 #include "mvItemRegistry.h"
-#include "mvImGuiThemeScope.h"
-#include "mvFontScope.h"
 
 namespace Marvel {
 
 	void mvInputText::InsertParser(std::map<std::string, mvPythonParser>* parsers)
 	{
 
-		mvPythonParser parser(mvPyDataType::String);
-		mvAppItem::AddCommonArgs(parser);
+		mvPythonParser parser(mvPyDataType::UUID, "Adds input for text.", { "Widgets" });
+		mvAppItem::AddCommonArgs(parser, (CommonParserArgs)(
+			MV_PARSER_ARG_ID |
+			MV_PARSER_ARG_WIDTH |
+			MV_PARSER_ARG_HEIGHT |
+			MV_PARSER_ARG_INDENT |
+			MV_PARSER_ARG_PARENT |
+			MV_PARSER_ARG_BEFORE |
+			MV_PARSER_ARG_SOURCE |
+			MV_PARSER_ARG_CALLBACK |
+			MV_PARSER_ARG_USER_DATA |
+			MV_PARSER_ARG_SHOW |
+			MV_PARSER_ARG_ENABLED |
+			MV_PARSER_ARG_FILTER |
+			MV_PARSER_ARG_DROP_CALLBACK |
+			MV_PARSER_ARG_DRAG_CALLBACK |
+			MV_PARSER_ARG_PAYLOAD_TYPE |
+			MV_PARSER_ARG_TRACKED |
+			MV_PARSER_ARG_POS)
+		);
 
 		parser.addArg<mvPyDataType::String>("default_value", mvArgType::KEYWORD_ARG, "''");
-		parser.addArg<mvPyDataType::String>("hint", mvArgType::KEYWORD_ARG, "''");
+		parser.addArg<mvPyDataType::String>("hint", mvArgType::KEYWORD_ARG, "''", "Displayed only when value is empty string. Will reappear if input value is set to empty string. Will not show if default value is anything other than default empty string.");
 
-		parser.addArg<mvPyDataType::Bool>("multiline", mvArgType::KEYWORD_ARG, "False");
-		parser.addArg<mvPyDataType::Bool>("no_spaces", mvArgType::KEYWORD_ARG, "False", "Filter out spaces, tabs");
-		parser.addArg<mvPyDataType::Bool>("uppercase", mvArgType::KEYWORD_ARG, "False");
-		parser.addArg<mvPyDataType::Bool>("tab_input", mvArgType::KEYWORD_ARG, "False", "Allows tabs to be input instead of changing widget focus");
-		parser.addArg<mvPyDataType::Bool>("decimal", mvArgType::KEYWORD_ARG, "False", "Allow 0123456789.+-*/");
-		parser.addArg<mvPyDataType::Bool>("hexadecimal", mvArgType::KEYWORD_ARG, "False", "Allow 0123456789ABCDEFabcdef");
-		parser.addArg<mvPyDataType::Bool>("readonly", mvArgType::KEYWORD_ARG, "False");
-		parser.addArg<mvPyDataType::Bool>("password", mvArgType::KEYWORD_ARG, "False", "Password mode, display all characters as '*'");
-		parser.addArg<mvPyDataType::Bool>("scientific", mvArgType::KEYWORD_ARG, "False", "Allow 0123456789.+-*/eE (Scientific notation input)");
-		parser.addArg<mvPyDataType::Bool>("on_enter", mvArgType::KEYWORD_ARG, "False", "Only runs callback on enter");
+		parser.addArg<mvPyDataType::Bool>("multiline", mvArgType::KEYWORD_ARG, "False", "Allows for multiline text input.");
+		parser.addArg<mvPyDataType::Bool>("no_spaces", mvArgType::KEYWORD_ARG, "False", "Filter out spaces and tabs.");
+		parser.addArg<mvPyDataType::Bool>("uppercase", mvArgType::KEYWORD_ARG, "False", "Automatically make all inputs uppercase.");
+		parser.addArg<mvPyDataType::Bool>("tab_input", mvArgType::KEYWORD_ARG, "False", "Allows tabs to be input instead of changing widget focus.");
+		parser.addArg<mvPyDataType::Bool>("decimal", mvArgType::KEYWORD_ARG, "False", "Only allow 0123456789.+-*/");
+		parser.addArg<mvPyDataType::Bool>("hexadecimal", mvArgType::KEYWORD_ARG, "False", "Only allow 0123456789ABCDEFabcdef");
+		parser.addArg<mvPyDataType::Bool>("readonly", mvArgType::KEYWORD_ARG, "False", "Activates read only mode.");
+		parser.addArg<mvPyDataType::Bool>("password", mvArgType::KEYWORD_ARG, "False", "Password mode, display all characters as '*'.");
+		parser.addArg<mvPyDataType::Bool>("scientific", mvArgType::KEYWORD_ARG, "False", "Only allow 0123456789.+-*/eE (Scientific notation input)");
+		parser.addArg<mvPyDataType::Bool>("on_enter", mvArgType::KEYWORD_ARG, "False", "Only runs callback on enter key press.");
 
 		parser.finalize();
 
 		parsers->insert({ s_command, parser });
 	}
 
-	mvInputText::mvInputText(const std::string& name)
+	mvInputText::mvInputText(mvUUID uuid)
 		: 
-		mvStringPtrBase(name)
+		mvStringPtrBase(uuid)
 	{
 	}
 
@@ -55,9 +71,7 @@ namespace Marvel {
 
 	void mvInputText::draw(ImDrawList* drawlist, float x, float y)
 	{
-		ScopedID id;
-		mvImGuiThemeScope scope(this);
-		mvFontScope fscope(this);
+		ScopedID id(m_uuid);
 
 		if (m_multiline)
 			m_hint = "";
@@ -67,19 +81,19 @@ namespace Marvel {
 			if (m_multiline)
 			{
 				if (ImGui::InputTextMultiline(m_label.c_str(), m_value.get(), ImVec2((float)m_width, (float)m_height), m_flags))
-					mvApp::GetApp()->getCallbackRegistry().addCallback(m_callback, m_name, m_callback_data);
+					mvApp::GetApp()->getCallbackRegistry().addCallback(m_callback, m_uuid, nullptr, m_user_data);
 			}
 			else
 			{
 				if (ImGui::InputText(m_label.c_str(), m_value.get(), m_flags))
-					mvApp::GetApp()->getCallbackRegistry().addCallback(m_callback, m_name, m_callback_data);
+					mvApp::GetApp()->getCallbackRegistry().addCallback(m_callback, m_uuid, nullptr, m_user_data);
 			}
 		}
 
 		else
 		{
 			if (ImGui::InputTextWithHint(m_label.c_str(), m_hint.c_str(), m_value.get(), m_flags))
-				mvApp::GetApp()->getCallbackRegistry().addCallback(m_callback, m_name, m_callback_data);
+				mvApp::GetApp()->getCallbackRegistry().addCallback(m_callback, m_uuid, nullptr, m_user_data);
 		}
 
 	}

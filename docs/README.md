@@ -6,7 +6,6 @@
 
 </a>
 
-
 <sub>(This library is available under a free and permissive license however, if you Enjoy _Dear PyGui_ please consider becoming a [Sponsor](https://github.com/hoffstadt/DearPyGui/wiki/Sponsors))</sub>
 
 ![Python Version](https://img.shields.io/pypi/pyversions/dearpygui)
@@ -30,7 +29,7 @@ the following platforms:
 | **Windows 10** | _DirectX 11_ | [![PYPI](https://img.shields.io/pypi/v/dearpygui)](https://pypi.org/project/dearpygui/) |
 | **macOs** | _Metal_ | [![PYPI](https://img.shields.io/pypi/v/dearpygui)](https://pypi.org/project/dearpygui/) |
 | **Linux** | _OpenGL 3_ | [![PYPI](https://img.shields.io/pypi/v/dearpygui)](https://pypi.org/project/dearpygui/) |
-| **Raspberry Pi 4** | _OpenGL ES_ | [![PYPI](https://img.shields.io/badge/pypi-v0.6.398-orange)](https://img.shields.io/badge/pypi-v0.6.398-orange) |
+| **Raspberry Pi 4** | _OpenGL ES_ | [![PYPI](https://img.shields.io/badge/pypi-v0.6.415-orange)](https://img.shields.io/badge/pypi-v0.6.415-orange) |
 
 
 In the same manner Dear ImGui provides a simple way to create tools for game developers, _Dear PyGui_ provides a 
@@ -66,10 +65,10 @@ Ensure you have at least Python 3.6 64bit.
 - Internal Documentation: Run the `show_documentation` command from within the library to view a reference guide. 
 - Complete Demo: You can also view a mostly complete showcase of _Dear PyGui_ by running:
 ```python
-from dearpygui.core import start_dearpygui
+import dearpygui.dearpygui as dpg
 from dearpygui.demo import show_demo
 show_demo()
-start_dearpygui()
+dpg.start_dearpygui()
 ```
 
 
@@ -81,18 +80,19 @@ Using _Dear PyGui_ is a simple as creating a python script like the one below:
 
 Code:
 ```Python
-from dearpygui import core, simple
+import dearpygui.dearpygui as dpg
 
-def save_callback(sender, data):
+def save_callback():
     print("Save Clicked")
 
-with simple.window("Example Window"):
-    core.add_text("Hello world")
-    core.add_button("Save", callback=save_callback)
-    core.add_input_text("string")
-    core.add_slider_float("float")
+with dpg.window("Example Window"):
+    dpg.add_text("Hello world")
+    dpg.add_button(label="Save", callback=save_callback)
+    dpg.add_input_text(label="string")
+    dpg.add_slider_float(label="float")
 
-core.start_dearpygui()
+dpg.setup_viewport()
+dpg.start_dearpygui()
 ```
 Result:
 <BR>![BasicUsageExample](https://github.com/hoffstadt/DearPyGui/blob/assets/BasicUsageExample1.PNG?raw=true)
@@ -158,11 +158,11 @@ These include:
 * 🏆 [Anthony Doupe](https://github.com/Atlamillias) _Partner Sponsor_
 * 🏆 [Ray Heasman](https://github.com/rheasman) _Partner Sponsor_
 * 🏆 [Marco Studer](https://github.com/Mstpyt) _Partner Sponsor_
-* 🥇 [Caden Bloxham](https://github.com/cubic-unit) _Gold Sponsor_
+* 🏆 [Anthony Hernandez](https://github.com/scriptslol) _Partner Sponsor_
+* 🥇 [Caden Bloxham](https://github.com/cbxm) _Gold Sponsor_
 * 🥇 [Michael Kadziela](https://github.com/Innominus) _Gold Sponsor_
 * 🥇 [Yan Zaretskiy](https://github.com/mindv0rtex) _Gold Sponsor_
 * 🥇 [Trinnik](https://github.com/Trinnik) _Gold Sponsor_
-* 🥇 [Derek Barker](https://github.com/LordOdin) _Gold Sponsor_
 * 🥇 [Barney Mannerings](https://github.com/barnabee) _Gold Sponsor_
 * 🥇 [Leron Gray](https://github.com/daddycocoaman) _Gold Sponsor_
 * 🥇 [RB Blackstone](https://github.com/RBBlackstone) _Gold Sponsor_
@@ -180,9 +180,9 @@ Developed by [Jonathan Hoffstadt](https://github.com/hoffstadt), [Preston Cothre
 
 [Omar Cornut](http://www.miracleworld.net/) for all his incredible work on [Dear ImGui](https://github.com/ocornut/imgui).
 
-[Evan Pezent](http://evanpezent.com/) for all his work on [ImPlot](https://github.com/epezent/implot)
+[Evan Pezent](http://evanpezent.com/) for all his work on [ImPlot](https://github.com/epezent/implot).
 
-[Johann Muszynski](https://github.com/Nelarius) for all of his work on [imnodes](https://github.com/Nelarius/imnodes)
+[Johann Muszynski](https://github.com/Nelarius) for all of his work on [imnodes](https://github.com/Nelarius/imnodes).
 
 ### License
 

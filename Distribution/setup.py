@@ -45,7 +45,8 @@ setup(
     ],
     packages=find_packages(exclude=['contrib', 'docs', 'tests']),  # Required
     package_data={  # Optional
-    'dearpygui': ["core.so", "core.pyd", "core.pyi", "simple.py", "demo.py", "vcruntime140_1.dll"],
+    'dearpygui': ["core.so", "core.pyd", "core.pyi", "dearpygui.py",
+                  "logger.py", "demo.py", "vcruntime140_1.dll"],
     },
     distclass=BinaryDistribution
 )

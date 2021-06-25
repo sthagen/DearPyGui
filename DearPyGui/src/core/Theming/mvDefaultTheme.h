@@ -4,8 +4,8 @@
 #define MV_BASE_COL_lightBgColor mvColor(82, 82, 85, 255)
 #define MV_BASE_COL_veryLightBgColor mvColor(90, 90, 95, 255)
 #define MV_BASE_COL_panelColor mvColor(51, 51, 55, 255)
-#define MV_BASE_COL_panelHoverColor mvColor(29, 151, 236, 255)
-#define MV_BASE_COL_panelActiveColor mvColor(0, 119, 200, 255)
+#define MV_BASE_COL_panelHoverColor mvColor(29, 151, 236, 103)
+#define MV_BASE_COL_panelActiveColor mvColor(0, 119, 200, 153)
 #define MV_BASE_COL_textColor mvColor(255, 255, 255, 255)
 #define MV_BASE_COL_textDisabledColor mvColor(151, 151, 151, 255)
 #define MV_BASE_COL_borderColor mvColor(78, 78, 78, 255)
@@ -44,10 +44,10 @@
 #define mvImGuiCol_ResizeGrip MV_BASE_COL_bgColor
 #define mvImGuiCol_ResizeGripHovered MV_BASE_COL_panelColor
 #define mvImGuiCol_ResizeGripActive MV_BASE_COL_lightBgColor
-#define mvImGuiCol_Tab MV_BASE_COL_bgColor
+#define mvImGuiCol_Tab MV_BASE_COL_panelColor
 #define mvImGuiCol_TabHovered MV_BASE_COL_panelHoverColor
 #define mvImGuiCol_TabActive MV_BASE_COL_panelActiveColor
-#define mvImGuiCol_TabUnfocused MV_BASE_COL_bgColor
+#define mvImGuiCol_TabUnfocused MV_BASE_COL_panelColor
 #define mvImGuiCol_TabUnfocusedActive MV_BASE_COL_panelActiveColor
 #define mvImGuiCol_DockingPreview MV_BASE_COL_panelActiveColor
 #define mvImGuiCol_DockingEmptyBg mvColor(51, 51, 51, 255)
@@ -55,11 +55,11 @@
 #define mvImGuiCol_PlotLinesHovered MV_BASE_COL_panelHoverColor
 #define mvImGuiCol_PlotHistogram MV_BASE_COL_panelActiveColor
 #define mvImGuiCol_PlotHistogramHovered MV_BASE_COL_panelHoverColor
-#define mvImGuiCol_DragDropTarget MV_BASE_COL_bgColor
+#define mvImGuiCol_DragDropTarget mvColor(255, 255, 0, 179)
 #define mvImGuiCol_NavHighlight MV_BASE_COL_bgColor
 #define mvImGuiCol_NavWindowingHighlight mvColor(255, 255, 255, 179)
 #define mvImGuiCol_NavWindowingDimBg mvColor(204, 204, 204, 51)
-#define mvImGuiCol_ModalWindowDimBg MV_BASE_COL_bgColor
+#define mvImGuiCol_ModalWindowDimBg mvColor(37, 37, 38, 150)
 
 #define mvImGuiCol_NodeBackground mvColor(62, 62, 62, 255)
 #define mvImGuiCol_NodeBackgroundHovered mvColor(75, 75, 75, 255)

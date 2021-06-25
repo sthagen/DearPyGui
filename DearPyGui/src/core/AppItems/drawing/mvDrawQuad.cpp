@@ -8,15 +8,13 @@ namespace Marvel {
 	void mvDrawQuad::InsertParser(std::map<std::string, mvPythonParser>* parsers)
 	{
 
-		mvPythonParser parser(mvPyDataType::String);
-		mvAppItem::AddCommonArgs(parser);
-		parser.removeArg("source");
-		parser.removeArg("width");
-		parser.removeArg("height");
-		parser.removeArg("label");
-		parser.removeArg("callback");
-		parser.removeArg("callback_data");
-		parser.removeArg("enabled");
+		mvPythonParser parser(mvPyDataType::UUID, "Draws a quad on a drawing.", { "Drawlist", "Widgets" });
+		mvAppItem::AddCommonArgs(parser, (CommonParserArgs)(
+			MV_PARSER_ARG_ID |
+			MV_PARSER_ARG_PARENT |
+			MV_PARSER_ARG_BEFORE |
+			MV_PARSER_ARG_SHOW)
+		);
 
 		parser.addArg<mvPyDataType::FloatList>("p1");
 		parser.addArg<mvPyDataType::FloatList>("p2");
@@ -33,19 +31,24 @@ namespace Marvel {
 		parsers->insert({ s_command, parser });
 	}
 
-	mvDrawQuad::mvDrawQuad(const std::string& name)
+	mvDrawQuad::mvDrawQuad(mvUUID uuid)
 		:
-		mvAppItem(name)
+		mvAppItem(uuid)
 	{
 	}
 
 	bool mvDrawQuad::isParentCompatible(mvAppItemType type)
 	{
-		if (type == mvAppItemType::mvDrawing) return true;
+		if (type == mvAppItemType::mvStagingContainer) return true;
+		if (type == mvAppItemType::mvDrawlist) return true;
 		if (type == mvAppItemType::mvWindowAppItem) return true;
 		if (type == mvAppItemType::mvPlot) return true;
+		if (type == mvAppItemType::mvDrawLayer) return true;
+		if (type == mvAppItemType::mvViewportDrawlist) return true;
 
-		mvThrowPythonError(1000, "Drawing item parent must be a drawing.");
+		mvThrowPythonError(mvErrorCode::mvIncompatibleParent, s_command,
+			"Incompatible parent. Acceptable parents include: staging container, drawlist, layer, window, plot, viewport drawlist.", this);
+
 		MV_ITEM_REGISTRY_ERROR("Drawing item parent must be a drawing.");
 		assert(false);
 		return false;

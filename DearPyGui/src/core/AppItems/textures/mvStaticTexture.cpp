@@ -9,50 +9,46 @@ namespace Marvel {
 	void mvStaticTexture::InsertParser(std::map<std::string, mvPythonParser>* parsers)
 	{
 
-		mvPythonParser parser(mvPyDataType::None);
-		mvAppItem::AddCommonArgs(parser);
-		parser.removeArg("source");
-		parser.removeArg("before");
-		parser.removeArg("label");
-		parser.removeArg("callback");
-		parser.removeArg("callback_data");
-		parser.removeArg("show");
-		parser.removeArg("enabled");
-		parser.removeArg("width");
-		parser.removeArg("height");
+		mvPythonParser parser(mvPyDataType::UUID, "Undocumented function", { "Textures", "Widgets" });
+		mvAppItem::AddCommonArgs(parser, (CommonParserArgs)(
+			MV_PARSER_ARG_ID)
+		);
 
 		parser.addArg<mvPyDataType::Integer>("width");
 		parser.addArg<mvPyDataType::Integer>("height");
 		parser.addArg<mvPyDataType::FloatList>("default_value");
 
 		parser.addArg<mvPyDataType::String>("file", mvArgType::KEYWORD_ARG, "''");
-
+		parser.addArg<mvPyDataType::UUID>("parent", mvArgType::KEYWORD_ARG, "internal_dpg.mvReservedUUID_2", "Parent to add this item to. (runtime adding)");
 		parser.finalize();
 
 		parsers->insert({ s_command, parser });
 	}
 
-	mvStaticTexture::mvStaticTexture(const std::string& name)
+	mvStaticTexture::mvStaticTexture(mvUUID uuid)
 		:
-		mvFloatVectPtrBase(name)
+		mvFloatVectPtrBase(uuid)
 	{
 
 	}
 
 	mvStaticTexture::~mvStaticTexture()
 	{
-		if (m_name == "INTERNAL_DPG_FONT_ATLAS")
+		if (m_uuid == MV_ATLAS_UUID)
 			return;
-		UnloadTexture(m_name);
+		//UnloadTexture(m_name);
 		FreeTexture(m_texture);
 	}
 
 
 	bool mvStaticTexture::isParentCompatible(mvAppItemType type)
 	{
-		if (type == mvAppItemType::mvTextureContainer) return true;
+		if (type == mvAppItemType::mvStagingContainer) return true;
+		if (type == mvAppItemType::mvTextureRegistry) return true;
 
-		mvThrowPythonError(1000, "Drawing item parent must be a drawing.");
+		mvThrowPythonError(mvErrorCode::mvIncompatibleParent, s_command,
+			"Incompatible parent. Acceptable parents include: mvTextureRegistry, mvStagingContainer.", this);
+
 		MV_ITEM_REGISTRY_ERROR("Drawing item parent must be a drawing.");
 		assert(false);
 		return false;
@@ -63,7 +59,7 @@ namespace Marvel {
 		if (!m_dirty)
 			return;
 
-		if (m_name == "INTERNAL_DPG_FONT_ATLAS")
+		if (m_uuid == MV_ATLAS_UUID)
 		{
 			m_texture = ImGui::GetIO().Fonts->TexID;
 			m_width = ImGui::GetIO().Fonts->TexWidth;
@@ -75,7 +71,11 @@ namespace Marvel {
 			m_texture = LoadTextureFromArray(m_width, m_height, m_value->data());
 
 		if (m_texture == nullptr)
+		{
 			m_state.setOk(false);
+			mvThrowPythonError(mvErrorCode::mvItemNotFound, "get_selected_nodes",
+				"Texture item (using file) can not be found: " + m_file, this);
+		}
 
 
 		m_dirty = false;

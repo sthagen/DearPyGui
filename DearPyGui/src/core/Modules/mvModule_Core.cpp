@@ -1,13 +1,12 @@
 #include "mvModule_Core.h"
 #include "mvInput.h"
-#include "mvAppLog.h"
 #include "mvAppItemCommons.h"
 #include "mvViewport.h"
 #include "mvFontManager.h"
 #include "mvItemRegistry.h"
-#include "mvImGuiThemeScope.h"
 #include <ImGuiFileDialog.h>
 #include <cstdlib>
+#include "mvToolManager.h"
 
 namespace Marvel {
 
@@ -24,11 +23,11 @@ namespace Marvel {
 				item_type::FillExtraCommands(methods);
 			});
 
+		mvToolManager::FillExtraCommands(methods);
 		mvViewport::FillExtraCommands(methods);
 		mvApp::FillExtraCommands(methods);
 		mvAppItem::FillExtraCommands(methods);
 		mvItemRegistry::FillExtraCommands(methods);
-		mvThemeManager::FillExtraCommands(methods);
 		mvFontManager::FillExtraCommands(methods);
 		mvCallbackRegistry::FillExtraCommands(methods);
 		mvInput::FillExtraCommands(methods);
@@ -51,11 +50,11 @@ namespace Marvel {
 					item_type::InsertParser(&parsers);
 				});
 
+			mvToolManager::InsertParser(&parsers);
 			mvViewport::InsertParser(&parsers);
 			mvApp::InsertParser(&parsers);
 			mvAppItem::InsertParser(&parsers);
 			mvItemRegistry::InsertParser(&parsers);
-			mvThemeManager::InsertParser(&parsers);
 			mvFontManager::InsertParser(&parsers);
 			mvCallbackRegistry::InsertParser(&parsers);
 			mvInput::InsertParser(&parsers);
@@ -71,59 +70,25 @@ namespace Marvel {
 		if (First_Run)
 		{
 			mvInput::InsertConstants(ModuleConstants);
-
-			auto decodeType = [](long encoded_constant, mvAppItemType* type)
-			{
-				*type = (mvAppItemType)(encoded_constant / 1000);
-			};
+			mvToolManager::InsertConstants(ModuleConstants);
 
 			constexpr_for<1, (int)mvAppItemType::ItemTypeCount, 1>(
 				[&](auto i) {
 
 					using item_type = typename mvItemTypeMap<i>::type;
-
-					// color constants
-					for (const auto& item : item_type::GetColorConstants())
-					{
-						ModuleConstants.push_back({ std::get<0>(item), std::get<1>(item) });
-
-						static mvAppItemType type;
-						long mvThemeConstant = std::get<1>(item);
-						decodeType(mvThemeConstant, &type);
-						mvColor color = std::get<2>(item);
-						mvColor color_disable = std::get<3>(item);
-						const std::string& name = std::get<0>(item);
-
-						mvThemeManager::GetColors()[type][mvThemeConstant] = color;
-						mvThemeManager::GetDisabledColors()[type][mvThemeConstant] = color_disable;
-						mvThemeManager::GetColorsPtr().push_back({name, mvThemeConstant, &mvThemeManager::GetColors()[type][mvThemeConstant]});
-						mvThemeManager::GetDisabledColorsPtr().push_back({name, mvThemeConstant, &mvThemeManager::GetDisabledColors()[type][mvThemeConstant]});
-
-					}
-
-					// style constants
-					for (const auto& item : item_type::GetStyleConstants())
-					{
-						ModuleConstants.push_back({ std::get<0>(item), std::get<1>(item) });
-
-						static mvAppItemType type;
-						long mvThemeConstant = std::get<1>(item);
-						decodeType(mvThemeConstant, &type);
-						float default_val = std::get<2>(item);
-						float max_val = std::get<3>(item);
-						const std::string& name = std::get<0>(item);
-
-						mvThemeManager::GetStyles()[type][mvThemeConstant] = default_val;
-						mvThemeManager::GetStylesPtr().push_back({ name, mvThemeConstant,
-							&mvThemeManager::GetStyles()[type][mvThemeConstant] , max_val});
-
-					}
-
-					// general constants
+					ModuleConstants.push_back({ std::string(mvItemTypeMap<i>::s_class), item_type::s_internal_type });
 					for (const auto& item : item_type::GetGeneralConstants())
 						ModuleConstants.push_back({ item.first, item.second });
 
 				});
+
+			int j = 0;
+			for (int i = MV_RESERVED_UUID_start; i < MV_RESERVED_UUID_start+MV_RESERVED_UUIDs; i++)
+			{
+				ModuleConstants.push_back({"mvReservedUUID_" + std::to_string(j), (long)i});
+				j++;
+			}
+
 		}
 
 		First_Run = false;

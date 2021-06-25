@@ -3,8 +3,8 @@
 #include "mvApp.h"
 #include "mvLog.h"
 #include "mvItemRegistry.h"
-#include "mvImGuiThemeScope.h"
-#include "mvFontScope.h"
+//#include "mvImGuiThemeScope.h"
+//#include "mvFontScope.h"
 #include "mvPythonExceptions.h"
 
 namespace Marvel {
@@ -13,15 +13,14 @@ namespace Marvel {
 	{
 
 
-		mvPythonParser parser(mvPyDataType::String);
-		mvAppItem::AddCommonArgs(parser);
-		parser.removeArg("source");
-		parser.removeArg("label");
-		parser.removeArg("width");
-		parser.removeArg("height");
-		parser.removeArg("callback");
-		parser.removeArg("callback_data");
-		parser.removeArg("enabled");
+		mvPythonParser parser(mvPyDataType::UUID, "Undocumented function", { "Tables", "Widgets" });
+		mvAppItem::AddCommonArgs(parser, (CommonParserArgs)(
+			MV_PARSER_ARG_ID |
+			MV_PARSER_ARG_PARENT |
+			MV_PARSER_ARG_WIDTH |
+			MV_PARSER_ARG_BEFORE |
+			MV_PARSER_ARG_SHOW)
+		);
 
 		parser.addArg<mvPyDataType::Bool>("init_width_or_weight", mvArgType::KEYWORD_ARG, "0.0");
 		parser.addArg<mvPyDataType::Bool>("default_hide", mvArgType::KEYWORD_ARG, "False", "Default as a hidden/disabled column.");
@@ -46,22 +45,25 @@ namespace Marvel {
 		parsers->insert({ s_command, parser });
 	}
 
-	mvTableColumn::mvTableColumn(const std::string& name)
-		: mvAppItem(name)
+	mvTableColumn::mvTableColumn(mvUUID uuid)
+		: mvAppItem(uuid)
 	{
 	}
 
 	void mvTableColumn::draw(ImDrawList* drawlist, float x, float y)
 	{
-		ImGui::TableSetupColumn(m_name.c_str(), m_flags, m_init_width_or_weight);
+		m_id = m_uuid;
+		ImGui::TableSetupColumn(m_label.c_str(), m_flags, m_init_width_or_weight, m_id);
 	}
 
 	bool mvTableColumn::isParentCompatible(mvAppItemType type)
 	{
-		if (type == mvAppItemType::mvTable)
-			return true;
+		if (type == mvAppItemType::mvStagingContainer) return true;
+		if (type == mvAppItemType::mvTable) return true;
 
-		mvThrowPythonError(1000, "mvTableColumn parent must be a table.");
+		mvThrowPythonError(mvErrorCode::mvIncompatibleParent, s_command,
+			"Incompatible parent. Acceptable parents include: table, staging container.", this);
+
 		MV_ITEM_REGISTRY_ERROR("mvTableColumn parent must be a table.");
 		assert(false);
 		return false;

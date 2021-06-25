@@ -9,17 +9,15 @@ namespace Marvel {
 	void mvDrawImage::InsertParser(std::map<std::string, mvPythonParser>* parsers)
 	{
 
-		mvPythonParser parser(mvPyDataType::String);
-		mvAppItem::AddCommonArgs(parser);
-		parser.removeArg("source");
-		parser.removeArg("width");
-		parser.removeArg("height");
-		parser.removeArg("label");
-		parser.removeArg("callback");
-		parser.removeArg("callback_data");
-		parser.removeArg("enabled");
+		mvPythonParser parser(mvPyDataType::UUID, "Draws an image on a drawing. p_min (top-left) and p_max (bottom-right) represent corners of the rectangle the image will be drawn to.Setting the p_min equal to the p_max will sraw the image to with 1:1 scale.uv_min and uv_max represent the normalized texture coordinates of the original image that will be shown. Using (0.0,0.0)->(1.0,1.0) texturecoordinates will generally display the entire texture.", { "Textures", "Drawlist", "Widgets" });
+		mvAppItem::AddCommonArgs(parser, (CommonParserArgs)(
+			MV_PARSER_ARG_ID |
+			MV_PARSER_ARG_PARENT |
+			MV_PARSER_ARG_BEFORE |
+			MV_PARSER_ARG_SHOW)
+		);
 
-		parser.addArg<mvPyDataType::String>("file");
+		parser.addArg<mvPyDataType::UUID>("texture_id");
 		parser.addArg<mvPyDataType::FloatList>("pmin");
 		parser.addArg<mvPyDataType::FloatList>("pmax");
 
@@ -34,20 +32,24 @@ namespace Marvel {
 		parsers->insert({ s_command, parser });
 	}
 
-	mvDrawImage::mvDrawImage(const std::string& name)
+	mvDrawImage::mvDrawImage(mvUUID uuid)
 		:
-		mvAppItem(name)
+		mvAppItem(uuid)
 	{
 	}
 
-
 	bool mvDrawImage::isParentCompatible(mvAppItemType type)
 	{
-		if (type == mvAppItemType::mvDrawing) return true;
+		if (type == mvAppItemType::mvStagingContainer) return true;
+		if (type == mvAppItemType::mvDrawlist) return true;
 		if (type == mvAppItemType::mvWindowAppItem) return true;
 		if (type == mvAppItemType::mvPlot) return true;
+		if (type == mvAppItemType::mvDrawLayer) return true;
+		if (type == mvAppItemType::mvViewportDrawlist) return true;
 
-		mvThrowPythonError(1000, "Drawing item parent must be a drawing.");
+		mvThrowPythonError(mvErrorCode::mvIncompatibleParent, s_command,
+			"Incompatible parent. Acceptable parents include: staging container, drawlist, layer, window, plot, viewport drawlist.", this);
+
 		MV_ITEM_REGISTRY_ERROR("Drawing item parent must be a drawing.");
 		assert(false);
 		return false;
@@ -60,6 +62,9 @@ namespace Marvel {
 
 		if (m_texture)
 		{
+			if (m_internalTexture)
+				m_texture->draw(drawlist, x, y);
+
 			if (!m_texture->getState().isOk())
 				return;
 
@@ -85,13 +90,19 @@ namespace Marvel {
 			{
 			case 0:
 			{
-				m_file = ToString(item);
-				m_texture = mvApp::GetApp()->getItemRegistry().getItem(m_file);
+				m_textureUUID = ToUUID(item);
+				m_texture = mvApp::GetApp()->getItemRegistry().getRefItem(m_textureUUID);
 				if (m_texture)
 					break;
+				else if (m_textureUUID == MV_ATLAS_UUID)
+				{
+					m_texture = std::make_shared<mvStaticTexture>(m_textureUUID);
+					m_internalTexture = true;
+					break;
+				}
 				else
 				{
-					m_texture = std::make_shared<mvStaticTexture>(m_file);
+					mvThrowPythonError(mvErrorCode::mvTextureNotFound, s_command, "Texture not found.", this);
 					break;
 				}
 			}
@@ -121,12 +132,6 @@ namespace Marvel {
 		if (PyObject* item = PyDict_GetItemString(dict, "uv_max")) m_uv_max = ToVec2(item);
 		if (PyObject* item = PyDict_GetItemString(dict, "color")) m_color = ToColor(item);
 
-		if (PyObject* item = PyDict_GetItemString(dict, "file"))
-		{
-			m_file = ToString(item);
-
-		}
-
 	}
 
 	void mvDrawImage::getSpecificConfiguration(PyObject* dict)
@@ -139,7 +144,7 @@ namespace Marvel {
 		PyDict_SetItemString(dict, "uv_min", ToPyPair(m_uv_min.x, m_uv_min.y));
 		PyDict_SetItemString(dict, "uv_max", ToPyPair(m_uv_max.x, m_uv_max.y));
 		PyDict_SetItemString(dict, "color", ToPyColor(m_color));
-		PyDict_SetItemString(dict, "file", ToPyString(m_file));
+		PyDict_SetItemString(dict, "texture_id", ToPyUUID(m_textureUUID));
 	}
 
 }

@@ -2,26 +2,38 @@
 #include "mvApp.h"
 #include "mvLog.h"
 #include "mvItemRegistry.h"
-#include "mvImGuiThemeScope.h"
-#include "mvFontScope.h"
+#include "mvTableColumn.h"
 
 namespace Marvel {
 
 	void mvTable::InsertParser(std::map<std::string, mvPythonParser>* parsers)
 	{
 
-		mvPythonParser parser(mvPyDataType::String);
-		mvAppItem::AddCommonArgs(parser);
-		parser.removeArg("source");
-		parser.removeArg("label");
-		parser.removeArg("callback");
-		parser.removeArg("callback_data");
-		parser.removeArg("enabled");
+		mvPythonParser parser(mvPyDataType::UUID, "Undocumented function", { "Tables", "Containers", "Widgets" }, true);
+		mvAppItem::AddCommonArgs(parser, (CommonParserArgs)(
+			MV_PARSER_ARG_ID |
+			MV_PARSER_ARG_WIDTH |
+			MV_PARSER_ARG_HEIGHT |
+			MV_PARSER_ARG_INDENT |
+			MV_PARSER_ARG_PARENT |
+			MV_PARSER_ARG_BEFORE |
+			MV_PARSER_ARG_SOURCE |
+			MV_PARSER_ARG_CALLBACK |
+			MV_PARSER_ARG_SHOW |
+			MV_PARSER_ARG_FILTER |
+			MV_PARSER_ARG_SEARCH_DELAY |
+			MV_PARSER_ARG_POS)
+		);
 
 		parser.addArg<mvPyDataType::Bool>("header_row", mvArgType::KEYWORD_ARG, "True", "show headers at the top of the columns");
 
 		parser.addArg<mvPyDataType::Integer>("inner_width", mvArgType::KEYWORD_ARG, "0");
 		parser.addArg<mvPyDataType::Integer>("policy", mvArgType::KEYWORD_ARG, "0");
+		parser.addArg<mvPyDataType::Integer>("freeze_rows", mvArgType::KEYWORD_ARG, "0");
+		parser.addArg<mvPyDataType::Integer>("freeze_columns", mvArgType::KEYWORD_ARG, "0");
+
+		parser.addArg<mvPyDataType::Bool>("sort_multi", mvArgType::KEYWORD_ARG, "False", "Hold shift when clicking headers to sort on multiple column.");
+		parser.addArg<mvPyDataType::Bool>("sort_tristate", mvArgType::KEYWORD_ARG, "False", "Allow no sorting, disable default sorting.");
 
 		parser.addArg<mvPyDataType::Bool>("resizable", mvArgType::KEYWORD_ARG, "False", "Enable resizing columns");
 		parser.addArg<mvPyDataType::Bool>("reorderable", mvArgType::KEYWORD_ARG, "False", "Enable reordering columns in header row (need calling TableSetupColumn() + TableHeadersRow() to display headers)");
@@ -43,28 +55,32 @@ namespace Marvel {
 		parser.addArg<mvPyDataType::Bool>("no_pad_outerX", mvArgType::KEYWORD_ARG, "False", "Default if BordersOuterV is off. Disable outer-most padding.");
 		parser.addArg<mvPyDataType::Bool>("no_pad_innerX", mvArgType::KEYWORD_ARG, "False", "Disable inner padding between columns (double inner padding if BordersOuterV is on, single inner padding if BordersOuterV is off).");
 		parser.addArg<mvPyDataType::Bool>("scrollX", mvArgType::KEYWORD_ARG, "False", "Enable horizontal scrolling. Require 'outer_size' parameter of BeginTable() to specify the container size. Changes default sizing policy. Because this create a child window, ScrollY is currently generally recommended when using ScrollX.");
-		parser.addArg<mvPyDataType::Bool>("scrollY", mvArgType::KEYWORD_ARG, "False", "Enable horizontal vertical.");
+		parser.addArg<mvPyDataType::Bool>("scrollY", mvArgType::KEYWORD_ARG, "False", "Enable vertical scrolling.");
 
 		parser.finalize();
 
 		parsers->insert({ s_command, parser });
 	}
 
-	mvTable::mvTable(const std::string& name)
-		: mvAppItem(name)
+	mvTable::mvTable(mvUUID uuid)
+		: mvAppItem(uuid)
 	{
+		m_label = "table" + std::to_string(uuid);
 	}
 
 	void mvTable::draw(ImDrawList* drawlist, float x, float y)
 	{
-		ScopedID id;
-		mvImGuiThemeScope scope(this);
-		mvFontScope fscope(this);
+		ScopedID id(m_uuid);
+		//mvImGuiThemeScope scope(this);
+		//mvFontScope fscope(this);
 
-		if (ImGui::BeginTable(m_name.c_str(), m_columns, m_flags, 
+		if (ImGui::BeginTable(m_label.c_str(), m_columns, m_flags, 
 			ImVec2((float)m_width, (float)m_height), (float)m_inner_width))
 		{
 
+			ImGui::TableSetupScrollFreeze(m_freezeRows, m_freezeColumns);
+
+			// columns
 			for (auto& item : m_children[0])
 			{
 				// skip item if it's not shown
@@ -72,8 +88,8 @@ namespace Marvel {
 					continue;
 
 				// set item width
-				if (item->m_width != 0)
-					ImGui::SetNextItemWidth((float)item->m_width);
+				//if (item->m_width != 0)
+				//	ImGui::SetNextItemWidth((float)item->m_width);
 
 				item->draw(drawlist, ImGui::GetCursorPosX(), ImGui::GetCursorPosY());
 
@@ -83,30 +99,61 @@ namespace Marvel {
 			if (m_tableHeader)
 				ImGui::TableHeadersRow();
 
-			ImGui::TableNextColumn();
+			if (ImGuiTableSortSpecs* sorts_specs = ImGui::TableGetSortSpecs())
+			{
+				if (sorts_specs->SpecsDirty)
+				{
+					if (sorts_specs->SpecsCount == 0)
+						mvApp::GetApp()->getCallbackRegistry().addCallback(getCallback(false), m_uuid, nullptr, nullptr);
+					else
+					{
+
+						// generate id map for columns
+						std::unordered_map<ImGuiID, mvUUID> idMap;
+						for (int i = 0; i < m_children[0].size(); i++)
+							idMap[static_cast<mvTableColumn*>(m_children[0][i].get())->m_id] = m_children[0][i]->getUUID();
+
+						std::vector<SortSpec> specs;
+						for (int i = 0; i < sorts_specs->SpecsCount; i++)
+						{
+							const ImGuiTableColumnSortSpecs* sort_spec = &sorts_specs->Specs[i];
+							specs.push_back({ idMap[sort_spec->ColumnUserID], sort_spec->SortDirection == ImGuiSortDirection_Ascending ? 1 : -1 });
+						}
+
+						mvApp::GetApp()->getCallbackRegistry().submitCallback([=]() {
+							PyObject* pySpec = PyList_New(specs.size());
+							for (int i = 0; i < specs.size(); i++)
+							{
+								PyObject* pySingleSpec = PyList_New(2);
+								PyList_SetItem(pySingleSpec, 0, ToPyUUID(specs[i].column));
+								PyList_SetItem(pySingleSpec, 1, ToPyInt(specs[i].direction));
+								PyList_SetItem(pySpec, i, pySingleSpec);
+							}
+							mvApp::GetApp()->getCallbackRegistry().runCallback(getCallback(false), m_uuid, pySpec, m_user_data);
+							Py_XDECREF(pySpec);
+							});
+					}
+					sorts_specs->SpecsDirty = false;
+				}
+			}
+
+			if (!m_children[1].empty())
+			{
+				if(m_children[1][0]->getType() != mvAppItemType::mvTableRow && 
+					m_children[1][0]->getType() != mvAppItemType::mvClipper &&
+					m_children[1][0]->getType() != mvAppItemType::mvFilterSet)
+					ImGui::TableNextColumn();
+			}
+			
 
 			for (auto& item : m_children[1])
 			{
-				// skip item if it's not shown
-				if (!item->m_show)
+				if (!item->preDraw())
 					continue;
 
-				// set item width
-				if (item->m_width != 0)
-					ImGui::SetNextItemWidth((float)item->m_width);
+				item->draw(drawlist, ImGui::GetCursorPosX(), ImGui::GetCursorPosY());
 
-				if (item->m_focusNextFrame)
-				{
-					ImGui::SetKeyboardFocusHere();
-					item->m_focusNextFrame = false;
-				}
-
-				item->getState().setPos({ ImGui::GetCursorPosX(), ImGui::GetCursorPosY() });
-
-				item->draw(drawlist, x, y);
-
-
-				item->getState().update();
+				item->postDraw();
 			}
 			ImGui::EndTable();
 		}
@@ -135,6 +182,8 @@ namespace Marvel {
 		if (dict == nullptr)
 			return;
 
+		if (PyObject* item = PyDict_GetItemString(dict, "freeze_rows")) m_freezeRows = ToInt(item);
+		if (PyObject* item = PyDict_GetItemString(dict, "freeze_columns")) m_freezeColumns = ToInt(item);
 		if (PyObject* item = PyDict_GetItemString(dict, "header_row")) m_tableHeader = ToBool(item);
 		if (PyObject* item = PyDict_GetItemString(dict, "inner_width")) m_inner_width = (int)ToFloat(item);
 
@@ -164,9 +213,12 @@ namespace Marvel {
 		flagop("no_pad_innerX", ImGuiTableFlags_NoPadInnerX, m_flags);
 		flagop("scrollX", ImGuiTableFlags_ScrollX, m_flags);
 		flagop("scrollY", ImGuiTableFlags_ScrollY, m_flags);
+		flagop("sort_multi", ImGuiTableFlags_SortMulti, m_flags);
+		flagop("sort_tristate", ImGuiTableFlags_SortTristate, m_flags);
 
 		if (PyObject* item = PyDict_GetItemString(dict, "policy"))
 		{
+
 			int policy = ToInt(item);
 
 			// remove old flags
@@ -185,6 +237,9 @@ namespace Marvel {
 				m_flags |= ImGuiTableFlags_SizingStretchSame;
 
 		}
+
+		//if (m_flags & ImGuiTableFlags_BordersInnerV)
+		//	m_flags &= ~ImGuiTableFlags_Resizable;
 }
 
 	void mvTable::getSpecificConfiguration(PyObject* dict)
@@ -192,6 +247,8 @@ namespace Marvel {
 		if (dict == nullptr)
 			return;
 
+		PyDict_SetItemString(dict, "freeze_rows", ToPyInt(m_freezeRows));
+		PyDict_SetItemString(dict, "freeze_columns", ToPyInt(m_freezeColumns));
 		PyDict_SetItemString(dict, "inner_width", ToPyInt(m_inner_width));
 		PyDict_SetItemString(dict, "header_row", ToPyBool(m_tableHeader));
 
@@ -221,6 +278,8 @@ namespace Marvel {
 		checkbitset("no_pad_innerX", ImGuiTableFlags_NoPadInnerX, m_flags);
 		checkbitset("scrollX", ImGuiTableFlags_ScrollX, m_flags);
 		checkbitset("scrollY", ImGuiTableFlags_ScrollY, m_flags);
+		checkbitset("sort_multi", ImGuiTableFlags_SortMulti, m_flags);
+		checkbitset("sort_tristate", ImGuiTableFlags_SortTristate, m_flags);
 		
 		if(m_flags & ImGuiTableFlags_SizingFixedFit)
 			PyDict_SetItemString(dict, "policy", ToPyInt(ImGuiTableFlags_SizingFixedFit));

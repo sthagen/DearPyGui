@@ -6,26 +6,40 @@
 #include "mvApp.h"
 #include <string>
 #include "mvItemRegistry.h"
-#include "mvImGuiThemeScope.h"
-#include "mvFontScope.h"
 
 namespace Marvel {
 
     void mvSliderFloat::InsertParser(std::map<std::string, mvPythonParser>* parsers)
     {
-        mvPythonParser parser(mvPyDataType::String);
-        mvAppItem::AddCommonArgs(parser);
+        mvPythonParser parser(mvPyDataType::UUID, "Adds slider for a single float value. CTRL+Click to directly modify the value.", { "Widgets" });
+        mvAppItem::AddCommonArgs(parser, (CommonParserArgs)(
+            MV_PARSER_ARG_ID |
+            MV_PARSER_ARG_WIDTH |
+            MV_PARSER_ARG_HEIGHT |
+            MV_PARSER_ARG_INDENT |
+            MV_PARSER_ARG_PARENT |
+            MV_PARSER_ARG_BEFORE |
+            MV_PARSER_ARG_SOURCE |
+            MV_PARSER_ARG_CALLBACK |
+            MV_PARSER_ARG_USER_DATA |
+            MV_PARSER_ARG_SHOW |
+            MV_PARSER_ARG_ENABLED |
+            MV_PARSER_ARG_FILTER |
+            MV_PARSER_ARG_DROP_CALLBACK |
+            MV_PARSER_ARG_DRAG_CALLBACK |
+            MV_PARSER_ARG_PAYLOAD_TYPE |
+            MV_PARSER_ARG_TRACKED |
+            MV_PARSER_ARG_POS)
+        );
 
         parser.addArg<mvPyDataType::Float>("default_value", mvArgType::KEYWORD_ARG, "0.0");
 
-        parser.addArg<mvPyDataType::Integer>("size", mvArgType::KEYWORD_ARG, "4", "number of components");
-
-        parser.addArg<mvPyDataType::Bool>("vertical", mvArgType::KEYWORD_ARG, "False", "sets orientation to vertical");
-        parser.addArg<mvPyDataType::Bool>("no_input", mvArgType::KEYWORD_ARG, "False", "Disable CTRL+Click or Enter key allowing to input text directly into the widget");
+        parser.addArg<mvPyDataType::Bool>("vertical", mvArgType::KEYWORD_ARG, "False", "Sets orientation to vertical.");
+        parser.addArg<mvPyDataType::Bool>("no_input", mvArgType::KEYWORD_ARG, "False", "Disable CTRL+Click or Enter key allowing to input text directly into the widget.");
         parser.addArg<mvPyDataType::Bool>("clamped", mvArgType::KEYWORD_ARG, "False", "Clamp value to min/max bounds when input manually with CTRL+Click. By default CTRL+Click allows going out of bounds.");
 
-        parser.addArg<mvPyDataType::Float>("min_value", mvArgType::KEYWORD_ARG, "0.0");
-        parser.addArg<mvPyDataType::Float>("max_value", mvArgType::KEYWORD_ARG, "100.0");
+        parser.addArg<mvPyDataType::Float>("min_value", mvArgType::KEYWORD_ARG, "0.0", "Limits the Drag input but CTRL+Click can still be below value.");
+        parser.addArg<mvPyDataType::Float>("max_value", mvArgType::KEYWORD_ARG, "100.0", "Limits the Drag input but CTRL+Click can still be above value.");
 
         parser.addArg<mvPyDataType::String>("format", mvArgType::KEYWORD_ARG, "'%.3f'");
 
@@ -37,19 +51,35 @@ namespace Marvel {
 
     void mvSliderInt::InsertParser(std::map<std::string, mvPythonParser>* parsers)
     {
-        mvPythonParser parser(mvPyDataType::String);
-        mvAppItem::AddCommonArgs(parser);
+        mvPythonParser parser(mvPyDataType::UUID, "Adds slider for a single int value. CTRL+Click to directly modify the value.", { "Widgets" });
+        mvAppItem::AddCommonArgs(parser, (CommonParserArgs)(
+            MV_PARSER_ARG_ID |
+            MV_PARSER_ARG_WIDTH |
+            MV_PARSER_ARG_HEIGHT |
+            MV_PARSER_ARG_INDENT |
+            MV_PARSER_ARG_PARENT |
+            MV_PARSER_ARG_BEFORE |
+            MV_PARSER_ARG_SOURCE |
+            MV_PARSER_ARG_CALLBACK |
+            MV_PARSER_ARG_USER_DATA |
+            MV_PARSER_ARG_SHOW |
+            MV_PARSER_ARG_ENABLED |
+            MV_PARSER_ARG_FILTER |
+            MV_PARSER_ARG_DROP_CALLBACK |
+            MV_PARSER_ARG_DRAG_CALLBACK |
+            MV_PARSER_ARG_PAYLOAD_TYPE |
+            MV_PARSER_ARG_TRACKED |
+            MV_PARSER_ARG_POS)
+        );
 
         parser.addArg<mvPyDataType::Integer>("default_value", mvArgType::KEYWORD_ARG, "0");
 
-        parser.addArg<mvPyDataType::Integer>("size", mvArgType::KEYWORD_ARG, "4", "number of components");
-
-        parser.addArg<mvPyDataType::Bool>("vertical", mvArgType::KEYWORD_ARG, "False", "sets orientation to vertical");
-        parser.addArg<mvPyDataType::Bool>("no_input", mvArgType::KEYWORD_ARG, "False", "Disable CTRL+Click or Enter key allowing to input text directly into the widget");
+        parser.addArg<mvPyDataType::Bool>("vertical", mvArgType::KEYWORD_ARG, "False", "Sets orientation to vertical.");
+        parser.addArg<mvPyDataType::Bool>("no_input", mvArgType::KEYWORD_ARG, "False", "Disable CTRL+Click or Enter key allowing to input text directly into the widget.");
         parser.addArg<mvPyDataType::Bool>("clamped", mvArgType::KEYWORD_ARG, "False", "Clamp value to min/max bounds when input manually with CTRL+Click. By default CTRL+Click allows going out of bounds.");
 
-        parser.addArg<mvPyDataType::Integer>("min_value", mvArgType::KEYWORD_ARG, "0");
-        parser.addArg<mvPyDataType::Integer>("max_value", mvArgType::KEYWORD_ARG, "100");
+        parser.addArg<mvPyDataType::Integer>("min_value", mvArgType::KEYWORD_ARG, "0", "Limits the Drag input but CTRL+Click can still be below value.");
+        parser.addArg<mvPyDataType::Integer>("max_value", mvArgType::KEYWORD_ARG, "100", "Limits the Drag input but CTRL+Click can still be above value.");
 
         parser.addArg<mvPyDataType::String>("format", mvArgType::KEYWORD_ARG, "'%d'");
 
@@ -58,8 +88,8 @@ namespace Marvel {
         parsers->insert({ s_command, parser });
     }
 
-    mvSliderFloat::mvSliderFloat(const std::string& name)
-        : mvFloatPtrBase(name)
+    mvSliderFloat::mvSliderFloat(mvUUID uuid)
+        : mvFloatPtrBase(uuid)
     {
     }
 
@@ -82,9 +112,9 @@ namespace Marvel {
 
     void mvSliderFloat::draw(ImDrawList* drawlist, float x, float y)
     {
-        ScopedID id;
-        mvImGuiThemeScope scope(this);
-        mvFontScope fscope(this);
+        ScopedID id(m_uuid);
+        ////mvImGuiThemeScope scope(this);
+        //mvFontScope fscope(this);
 
         if (!m_enabled) m_disabled_value = *m_value;
 
@@ -96,19 +126,19 @@ namespace Marvel {
                 m_width = 20;
 
             if (ImGui::VSliderFloat(m_label.c_str(), ImVec2((float)m_width, (float)m_height), m_enabled ? m_value.get() : &m_disabled_value, m_min, m_max, m_format.c_str()))
-                mvApp::GetApp()->getCallbackRegistry().addCallback(getCallback(false), m_name, m_callback_data);
+                mvApp::GetApp()->getCallbackRegistry().addCallback(getCallback(false), m_uuid, nullptr, m_user_data);
 
         }
         else
         {
             if (ImGui::SliderFloat(m_label.c_str(), m_enabled ? m_value.get() : &m_disabled_value, m_min, m_max, m_format.c_str(), m_flags))
-                mvApp::GetApp()->getCallbackRegistry().addCallback(getCallback(false), m_name, m_callback_data);
+                mvApp::GetApp()->getCallbackRegistry().addCallback(getCallback(false), m_uuid, nullptr, m_user_data);
 
         }
     }
 
-    mvSliderInt::mvSliderInt(const std::string& name)
-        : mvIntPtrBase(name)
+    mvSliderInt::mvSliderInt(mvUUID uuid)
+        : mvIntPtrBase(uuid)
     {
     }
 
@@ -131,9 +161,9 @@ namespace Marvel {
 
     void mvSliderInt::draw(ImDrawList* drawlist, float x, float y)
     {
-        ScopedID id;
-        mvImGuiThemeScope scope(this);
-        mvFontScope fscope(this);
+        ScopedID id(m_uuid);
+        ////mvImGuiThemeScope scope(this);
+        //mvFontScope fscope(this);
 
         if (!m_enabled) m_disabled_value = *m_value;
 
@@ -145,12 +175,12 @@ namespace Marvel {
                 m_width = 20;
 
             if (ImGui::VSliderInt(m_label.c_str(), ImVec2((float)m_width, (float)m_height), m_enabled ? m_value.get() : &m_disabled_value, m_min, m_max, m_format.c_str()))
-                mvApp::GetApp()->getCallbackRegistry().addCallback(getCallback(false), m_name, m_callback_data);
+                mvApp::GetApp()->getCallbackRegistry().addCallback(getCallback(false), m_uuid, nullptr, m_user_data);
         }
         else
         {
             if (ImGui::SliderInt(m_label.c_str(), m_enabled ? m_value.get() : &m_disabled_value, m_min, m_max, m_format.c_str(), m_flags))
-                mvApp::GetApp()->getCallbackRegistry().addCallback(getCallback(false), m_name, m_callback_data);
+                mvApp::GetApp()->getCallbackRegistry().addCallback(getCallback(false), m_uuid, nullptr, m_user_data);
 
         }
     }

@@ -3,8 +3,6 @@
 #include "mvApp.h"
 #include "mvLog.h"
 #include "mvItemRegistry.h"
-#include "mvImNodesThemeScope.h"
-#include "mvFontScope.h"
 #include "mvPythonExceptions.h"
 
 namespace Marvel {
@@ -38,26 +36,32 @@ namespace Marvel {
 	void mvNode::InsertParser(std::map<std::string, mvPythonParser>* parsers)
 	{
 
-		mvPythonParser parser(mvPyDataType::String);
-		mvAppItem::AddCommonArgs(parser);
-		parser.removeArg("source");
-		parser.removeArg("width");
-		parser.removeArg("height");
-		parser.removeArg("callback");
-		parser.removeArg("callback_data");
-		parser.removeArg("enabled");
+		mvPythonParser parser(mvPyDataType::UUID, "Adds a node to a node editor.", { "Node Editor", "Widgets", "Containers"}, true);
+		mvAppItem::AddCommonArgs(parser, (CommonParserArgs)(
+			MV_PARSER_ARG_ID |
+			MV_PARSER_ARG_PARENT |
+			MV_PARSER_ARG_BEFORE |
+			MV_PARSER_ARG_FILTER |
+			MV_PARSER_ARG_POS |
+			MV_PARSER_ARG_DROP_CALLBACK |
+			MV_PARSER_ARG_DRAG_CALLBACK |
+			MV_PARSER_ARG_PAYLOAD_TYPE |
+			MV_PARSER_ARG_SEARCH_DELAY |
+			MV_PARSER_ARG_TRACKED |
+			MV_PARSER_ARG_SHOW)
+		);
 
-		parser.addArg<mvPyDataType::Bool>("draggable", mvArgType::KEYWORD_ARG, "True");
+		parser.addArg<mvPyDataType::Bool>("draggable", mvArgType::KEYWORD_ARG, "True", "Allow node to be draggable.");
 
 		parser.finalize();
 
 		parsers->insert({ s_command, parser });
 	}
 
-	mvNode::mvNode(const std::string& name)
-		: mvAppItem(name)
+	mvNode::mvNode(mvUUID uuid)
+		: mvAppItem(uuid)
 	{
-		m_label = FindRenderedTextEnd(m_name.c_str());
+		m_label = FindRenderedTextEnd(m_label.c_str());
 		m_specificedlabel = m_label;
         int64_t address = (int64_t)this;
         int64_t reduced_address = address % 2147483648;
@@ -66,10 +70,11 @@ namespace Marvel {
 
 	bool mvNode::isParentCompatible(mvAppItemType type)
 	{
-		if (type == mvAppItemType::mvNodeEditor)
-			return true;
+		if (type == mvAppItemType::mvStagingContainer) return true;
+		if (type == mvAppItemType::mvNodeEditor) return true;
 
-		mvThrowPythonError(1000, "Node parent must be node editor.");
+		mvThrowPythonError(mvErrorCode::mvIncompatibleParent, s_command,
+			"Incompatible parent. Acceptable parents include: node editor, staging container", this);
 		MV_ITEM_REGISTRY_ERROR("Node parent must be node editor.");
 		assert(false);
 		return false;
@@ -77,10 +82,11 @@ namespace Marvel {
 
 	bool mvNode::canChildBeAdded(mvAppItemType type)
 	{
-		if(type == mvAppItemType::mvNodeAttribute)
-			return true;
+		if(type == mvAppItemType::mvNodeAttribute) return true;
 
-		mvThrowPythonError(1000, "Node children must be node attributes only.");
+		mvThrowPythonError(mvErrorCode::mvIncompatibleChild, s_command,
+			"Incompatible child. Acceptable children include: mvNodeAttribute", this);
+
 		MV_ITEM_REGISTRY_ERROR("Node children must be node attributes only.");
 		assert(false);
 
@@ -89,9 +95,9 @@ namespace Marvel {
 
 	void mvNode::draw(ImDrawList* drawlist, float x, float y)
 	{
-		ScopedID id;
-		mvImNodesThemeScope scope(this);
-		mvFontScope fscope(this);
+		ScopedID id(m_uuid);
+		//mvImNodesThemeScope scope(this);
+		//mvFontScope fscope(this);
 
 		if (m_dirtyPos)
 		{
@@ -108,9 +114,9 @@ namespace Marvel {
 		imnodes::EndNodeTitleBar();
 
 		//we do this so that the children dont get the theme
-		scope.cleanup();
+		//scope.cleanup();
 
-		for (auto item : m_children[1])
+		for (auto& item : m_children[1])
 		{
 			// skip item if it's not shown
 			if (!item->m_show)

@@ -8,15 +8,13 @@ namespace Marvel {
 	void mvDrawArrow::InsertParser(std::map<std::string, mvPythonParser>* parsers)
 	{
 
-		mvPythonParser parser(mvPyDataType::String);
-		mvAppItem::AddCommonArgs(parser);
-		parser.removeArg("source");
-		parser.removeArg("width");
-		parser.removeArg("height");
-		parser.removeArg("label");
-		parser.removeArg("callback");
-		parser.removeArg("callback_data");
-		parser.removeArg("enabled");
+		mvPythonParser parser(mvPyDataType::UUID, "Draws an arrow on a drawing.", { "Drawlist", "Widgets" });
+		mvAppItem::AddCommonArgs(parser, (CommonParserArgs)(
+			MV_PARSER_ARG_ID |
+			MV_PARSER_ARG_PARENT |
+			MV_PARSER_ARG_BEFORE |
+			MV_PARSER_ARG_SHOW)
+		);
 
 		parser.addArg<mvPyDataType::FloatList>("p1");
 		parser.addArg<mvPyDataType::FloatList>("p2");
@@ -31,9 +29,9 @@ namespace Marvel {
 		parsers->insert({ s_command, parser });
 	}
 
-	mvDrawArrow::mvDrawArrow(const std::string& name)
+	mvDrawArrow::mvDrawArrow(mvUUID uuid)
 		:
-		mvAppItem(name)
+		mvAppItem(uuid)
 	{
 		updatePoints();
 	}
@@ -77,11 +75,15 @@ namespace Marvel {
 
 	bool mvDrawArrow::isParentCompatible(mvAppItemType type)
 	{
-		if (type == mvAppItemType::mvDrawing) return true;
+		if (type == mvAppItemType::mvStagingContainer) return true;
+		if (type == mvAppItemType::mvDrawlist) return true;
+		if (type == mvAppItemType::mvDrawLayer) return true;
 		if (type == mvAppItemType::mvWindowAppItem) return true;
 		if (type == mvAppItemType::mvPlot) return true;
+		if (type == mvAppItemType::mvViewportDrawlist) return true;
 
-		mvThrowPythonError(1000, "Drawing item parent must be a drawing.");
+		mvThrowPythonError(mvErrorCode::mvIncompatibleParent, s_command,
+			"Incompatible parent. Acceptable parents include: staging container, drawlist, layer, window, plot, viewport drawlist.", this);
 		MV_ITEM_REGISTRY_ERROR("Drawing item parent must be a drawing.");
 		assert(false);
 		return false;

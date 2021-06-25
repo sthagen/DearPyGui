@@ -1,6 +1,5 @@
 #include "mvLinuxViewport.h"
 #include "mvApp.h"
-#include "mvAppLog.h"
 #include "mvFontManager.h"
 #include <GL/gl3w.h>
 #include <GLFW/glfw3.h>
@@ -12,12 +11,13 @@
 #include "imgui_impl_opengl3.h"
 #include <stdio.h>
 #include <stb_image.h>
+#include "mvToolManager.h"
 
 namespace Marvel {
 
-    mvViewport* mvViewport::CreateViewport(unsigned int width, unsigned int height, bool error)
+    mvViewport* mvViewport::CreateViewport(unsigned int width, unsigned int height)
     {
-        return new mvLinuxViewport(width, height, error);
+        return new mvLinuxViewport(width, height);
     }
 
     static void glfw_error_callback(int error, const char* description)
@@ -32,16 +32,15 @@ namespace Marvel {
 
     static void window_size_callback(GLFWwindow* window, int width, int height)
     {
-        mvEventBus::Publish(mvEVT_CATEGORY_VIEWPORT, mvEVT_VIEWPORT_RESIZE, {
-            CreateEventArgument("actual_width", width),
-            CreateEventArgument("actual_height", height),
-            CreateEventArgument("client_width", width),
-            CreateEventArgument("client_height", height)
-                    });
+        mvApp::GetApp()->getViewport()->setActualHeight(height);
+        mvApp::GetApp()->getViewport()->setClientHeight(height);
+        mvApp::GetApp()->getViewport()->setActualWidth(width);
+        mvApp::GetApp()->getViewport()->setClientWidth(width);
+        mvApp::GetApp()->getViewport()->onResizeEvent();
     }
 
-    mvLinuxViewport::mvLinuxViewport(unsigned width, unsigned height, bool error)
-		: mvViewport(width, height, error)
+    mvLinuxViewport::mvLinuxViewport(unsigned width, unsigned height)
+		: mvViewport(width, height)
 	{
 	}
 
@@ -111,7 +110,7 @@ namespace Marvel {
         IMGUI_CHECKVERSION();
         ImGui::CreateContext();
         ImPlot::CreateContext();
-        imnodes::Initialize();
+        imnodes::CreateContext();
         ImGuiIO& io = ImGui::GetIO(); (void)io;
         io.ConfigWindowsMoveFromTitleBarOnly = true;
         io.IniFilename = nullptr;
@@ -119,11 +118,9 @@ namespace Marvel {
         if (mvApp::GetApp()->m_docking)
             io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
 
-        if (mvApp::GetApp()->m_dockingShiftOnly)
-            io.ConfigDockingWithShift = true;
-
         // Setup style
         ImGui::StyleColorsDark();
+        mvApp::SetDefaultTheme();
 
         // Setup Platform/Renderer bindings
         ImGui_ImplGlfw_InitForOpenGL(m_window, true);
@@ -139,7 +136,7 @@ namespace Marvel {
         // Cleanup
         ImGui_ImplOpenGL3_Shutdown();
         ImGui_ImplGlfw_Shutdown();
-        imnodes::Shutdown();
+        imnodes::DestroyContext();
         ImGui::DestroyContext();
 
         glfwDestroyWindow(m_window);
@@ -170,14 +167,7 @@ namespace Marvel {
         if(GImGui->CurrentWindow == nullptr)
             return;
 
-        if (m_error)
-        {
-            mvAppLog::setSize(m_width, m_height);
-            mvAppLog::render();
-        }
-
-        else
-            m_app->render();
+        m_app->render();
 
         postrender();
     }
@@ -230,11 +220,11 @@ namespace Marvel {
         // Generally you may always pass all inputs to dear imgui, and hide them from your application based on those two flags.
         glfwPollEvents();
 
-        if (mvApp::GetApp()->getFontManager().isInvalid())
+        if (mvToolManager::GetFontManager().isInvalid())
         {
-            mvApp::GetApp()->getFontManager().rebuildAtlas();
+            mvToolManager::GetFontManager().rebuildAtlas();
             ImGui_ImplOpenGL3_DestroyDeviceObjects();
-            mvApp::GetApp()->getFontManager().updateDefaultFont();
+            mvToolManager::GetFontManager().updateAtlas();
         }
 
         // Start the Dear ImGui frame
@@ -246,6 +236,8 @@ namespace Marvel {
 
     void mvLinuxViewport::postrender()
     {
+        glfwGetWindowPos(m_window, &m_xpos, &m_ypos);
+
         glfwSwapInterval(m_vsync ? 1 : 0); // Enable vsync
 
         // Rendering

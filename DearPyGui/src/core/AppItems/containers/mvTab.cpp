@@ -2,35 +2,40 @@
 #include "mvTabBar.h"
 #include "mvApp.h"
 #include "mvItemRegistry.h"
-#include "mvImGuiThemeScope.h"
-#include "mvFontScope.h"
+#include "mvPythonExceptions.h"
 
 namespace Marvel {
+
 	void mvTab::InsertParser(std::map<std::string, mvPythonParser>* parsers)
 	{
 
-		mvPythonParser parser(mvPyDataType::String);
-		mvAppItem::AddCommonArgs(parser);
-		parser.removeArg("source");
-		parser.removeArg("width");
-		parser.removeArg("height");
-		parser.removeArg("callback");
-		parser.removeArg("callback_data");
-		parser.removeArg("enabled");
+		mvPythonParser parser(mvPyDataType::UUID, "Adds a tab to a tab bar. Must be closed with thes end command.", { "Containers", "Widgets" }, true);
+		mvAppItem::AddCommonArgs(parser, (CommonParserArgs)(
+			MV_PARSER_ARG_ID |
+			MV_PARSER_ARG_INDENT |
+			MV_PARSER_ARG_PARENT |
+			MV_PARSER_ARG_BEFORE |
+			MV_PARSER_ARG_FILTER |
+			MV_PARSER_ARG_DROP_CALLBACK |
+			MV_PARSER_ARG_DRAG_CALLBACK |
+			MV_PARSER_ARG_PAYLOAD_TYPE |
+			MV_PARSER_ARG_SEARCH_DELAY |
+			MV_PARSER_ARG_TRACKED |
+			MV_PARSER_ARG_SHOW)
+		);
 
-		parser.addArg<mvPyDataType::Bool>("closable", mvArgType::KEYWORD_ARG, "False", "creates a button on the tab that can hide the tab");
-		parser.addArg<mvPyDataType::Bool>("no_reorder", mvArgType::KEYWORD_ARG, "False", "Disable reordering this tab or having another tab cross over this tab");
-		parser.addArg<mvPyDataType::Bool>("leading", mvArgType::KEYWORD_ARG, "False", "Enforce the tab position to the left of the tab bar (after the tab list popup button)");
-		parser.addArg<mvPyDataType::Bool>("trailing", mvArgType::KEYWORD_ARG, "False", "Enforce the tab position to the right of the tab bar (before the scrolling buttons)");
-		parser.addArg<mvPyDataType::Bool>("no_tooltip", mvArgType::KEYWORD_ARG, "False", "Disable tooltip for the given tab");
+		parser.addArg<mvPyDataType::Bool>("closable", mvArgType::KEYWORD_ARG, "False", "Creates a button on the tab that can hide the tab.");
+		parser.addArg<mvPyDataType::Bool>("no_tooltip", mvArgType::KEYWORD_ARG, "False", "Disable tooltip for the given tab.");
+		
+		parser.addArg<mvPyDataType::Bool>("order_mode", mvArgType::KEYWORD_ARG, "0");
 
 		parser.finalize();
 
 		parsers->insert({ s_command, parser });
 	}
-	mvTab::mvTab(const std::string& name)
+	mvTab::mvTab(mvUUID uuid)
 		: 
-		mvBoolPtrBase(name)
+		mvBoolPtrBase(uuid)
 	{
 	}
 
@@ -44,20 +49,30 @@ namespace Marvel {
 		m_flags &= ~flag;
 	}
 
+	bool mvTab::isParentCompatible(mvAppItemType type)
+	{
+		if (type == mvAppItemType::mvTabBar) return true;
+		if (type == mvAppItemType::mvStagingContainer) return true;
+
+		mvThrowPythonError(mvErrorCode::mvIncompatibleParent, s_command,
+			"Incompatible parent. Acceptable parents include: tab bar, staging container.", this);
+
+		assert(false);
+		return false;
+	}
+
 	void mvTab::draw(ImDrawList* drawlist, float x, float y)
 	{
-		ScopedID id;
-		mvImGuiThemeScope scope(this);
-		mvFontScope fscope(this);
+		ScopedID id(m_uuid);
 
 		// cast parent to mvTabBar
 		auto parent = (mvTabBar*)m_parentPtr;
 
 		// check if this is first tab
-		if (parent->getSpecificValue().empty())
+		if (parent->getSpecificValue() == 0)
 		{
 			// set mvTabBar value to the first tab name
-			parent->setValue(m_name);
+			parent->setValue(m_uuid);
 			*m_value = true;
 		}
 
@@ -66,7 +81,7 @@ namespace Marvel {
 		{
 
 			// set other tab's value false
-			for (auto child : parent->m_children[1])
+			for (auto& child : parent->m_children[1])
 			{
 				if (child->getType() == mvAppItemType::mvTab)
 					*((mvTab*)child.get())->m_value = false;
@@ -76,42 +91,19 @@ namespace Marvel {
 			*m_value = true;
 
 			// run call back if it exists
-			if (parent->getSpecificValue() != m_name)
-				mvApp::GetApp()->getCallbackRegistry().addCallback(parent->getCallback(), m_name, parent->getCallbackData());
+			if (parent->getSpecificValue() != m_uuid)
+				mvApp::GetApp()->getCallbackRegistry().addCallback(parent->getCallback(), m_uuid, nullptr, parent->getCallbackData());
 
-			parent->setValue(m_name);
-
-			//we do this so that the children dont get the theme
-			scope.cleanup();
+			parent->setValue(m_uuid);
 
 			for (auto& item : m_children[1])
 			{
-				// skip item if it's not shown
-				if (!item->m_show)
+				if (!item->preDraw())
 					continue;
-
-				// set item width
-				if (item->m_width != 0)
-					ImGui::SetNextItemWidth((float)item->m_width);
-
-				if (item->m_focusNextFrame)
-				{
-					ImGui::SetKeyboardFocusHere();
-					item->m_focusNextFrame = false;
-				}
-
-				auto oldCursorPos = ImGui::GetCursorPos();
-				if (item->m_dirtyPos)
-					ImGui::SetCursorPos(item->getState().getItemPos());
-
-				item->getState().setPos({ ImGui::GetCursorPosX(), ImGui::GetCursorPosY() });
 
 				item->draw(drawlist, ImGui::GetCursorPosX(), ImGui::GetCursorPosY());
 
-				if (item->m_dirtyPos)
-					ImGui::SetCursorPos(oldCursorPos);
-
-				item->getState().update();
+				item->postDraw();
 			}
 
 			ImGui::EndTabItem();
@@ -126,20 +118,29 @@ namespace Marvel {
 		 
 		if (PyObject* item = PyDict_GetItemString(dict, "closable")) m_closable = ToBool(item);
 
-		// helper for bit flipping
-		auto flagop = [dict](const char* keyword, int flag, int& flags)
+
+		if (PyObject* item = PyDict_GetItemString(dict, "order_mode"))
 		{
-			if (PyObject* item = PyDict_GetItemString(dict, keyword)) ToBool(item) ? flags |= flag : flags &= ~flag;
-		};
+			long order_mode = ToUUID(item);
 
-		// window flags
-		flagop("no_reorder", ImGuiTabItemFlags_NoReorder, m_flags);
-		flagop("leading", ImGuiTabItemFlags_Leading, m_flags);
-		flagop("trailing", ImGuiTabItemFlags_Trailing, m_flags);
-		flagop("no_tooltip", ImGuiTabItemFlags_NoTooltip, m_flags);
+			if (order_mode == (long)mvTab::TabOrdering::mvTabOrder_Fixed)
+				m_flags = ImGuiTabItemFlags_NoReorder;
+			else if (order_mode == (long)mvTab::TabOrdering::mvTabOrder_Leading)
+				m_flags = ImGuiTabItemFlags_Leading;
+			else if (order_mode == (long)mvTab::TabOrdering::mvTabOrder_Trailing)
+				m_flags = ImGuiTabItemFlags_Trailing;
+			else
+				m_flags = ImGuiTabItemFlags_None;
+		}
 
-		if (m_flags & ImGuiTabItemFlags_Leading && m_flags & ImGuiTabItemFlags_Trailing)
-			m_flags &= ~ImGuiTabItemFlags_Leading;
+		if (PyObject* item = PyDict_GetItemString(dict, "no_tooltip"))
+		{
+			bool value = ToBool(item);
+			if (value)
+				m_flags |= ImGuiTabItemFlags_NoTooltip;
+			else
+				m_flags &= ~ImGuiTabItemFlags_NoTooltip;
+		}
 
 	}
 
@@ -156,11 +157,16 @@ namespace Marvel {
 			PyDict_SetItemString(dict, keyword, ToPyBool(flags & flag));
 		};
 
-		// window flags
-		checkbitset("no_reorder", ImGuiTabBarFlags_Reorderable, m_flags);
-		checkbitset("leading", ImGuiTabItemFlags_Leading, m_flags);
-		checkbitset("trailing", ImGuiTabItemFlags_Trailing, m_flags);
 		checkbitset("no_tooltip", ImGuiTabItemFlags_NoTooltip, m_flags);
+
+		if(m_flags & ImGuiTabItemFlags_Leading)
+			PyDict_SetItemString(dict, "order_mode", ToPyUUID((long)mvTab::TabOrdering::mvTabOrder_Leading));
+		else if (m_flags & ImGuiTabItemFlags_Trailing)
+			PyDict_SetItemString(dict, "order_mode", ToPyUUID((long)mvTab::TabOrdering::mvTabOrder_Trailing));
+		else if (m_flags & ImGuiTabBarFlags_Reorderable)
+			PyDict_SetItemString(dict, "order_mode", ToPyUUID((long)mvTab::TabOrdering::mvTabOrder_Reorderable));
+		else
+			PyDict_SetItemString(dict, "order_mode", ToPyUUID((long)mvTab::TabOrdering::mvTabOrder_Fixed));
 
 	}
 

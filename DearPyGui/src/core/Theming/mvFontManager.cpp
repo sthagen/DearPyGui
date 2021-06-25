@@ -1,4 +1,5 @@
 #include "mvFontManager.h"
+#include "mvToolManager.h"
 #include <imgui.h>
 #include <assert.h>
 #include <array>
@@ -10,6 +11,8 @@
 #include "mvPythonExceptions.h"
 #include <frameobject.h>
 #include "textures/mvStaticTexture.h"
+#include <CustomFont.cpp>
+#include <CustomFont.h>
 
 #define IM_MIN(A, B)            (((A) < (B)) ? (A) : (B))
 #define IM_MAX(A, B)            (((A) >= (B)) ? (A) : (B))
@@ -141,206 +144,72 @@ static void ShowCustomFontSelector(const char* label)
 
 namespace Marvel {
 
-	void mvFontManager::InValidateFontTheme()
-	{
-		auto& frontWindows = mvApp::GetApp()->getItemRegistry().getFrontWindows();
-		auto& backWindows = mvApp::GetApp()->getItemRegistry().getBackWindows();
-
-		for (auto& window : frontWindows)
-			window->inValidateThemeFontCache();
-
-		for (auto& window : backWindows)
-			window->inValidateThemeFontCache();
-	}
-
-	mvFontManager::mvFontManager()
-	{
-		mvEventBus::Subscribe(this, SID("set_font"), mvEVT_CATEGORY_THEMES);
-	}
-
 	bool mvFontManager::isInvalid() const
 	{
 		return m_dirty;
 	}
 
-	void mvFontManager::addFont(const std::string& font, const std::string& file, int size, const std::string& rangeHint,
-		const std::vector<ImWchar>& chars, const std::vector<std::array<ImWchar, 3>>& fontGlyphRangeCustom,
-		const std::vector<std::pair<int, int>>& charRemaps)
-	{
-
-		Font newFont = {};
-		newFont.key = font + std::to_string(size);
-		newFont.name = font;
-		newFont.file = file;
-		newFont.rangeHint = rangeHint;
-		newFont.size = size;
-		newFont.chars = chars;
-		newFont.fontGlyphRangeCustom = fontGlyphRangeCustom;
-		newFont.charRemaps = charRemaps;
-		newFont.fontPtr = nullptr;
-
-		m_fonts.push_back(newFont);
-
-		m_dirty = true;
-		auto item = mvApp::GetApp()->getItemRegistry().getItem("INTERNAL_DPG_FONT_ATLAS");
-		static_cast<mvStaticTexture*>(item.get())->markDirty();
-	}
-
-	ImFont* mvFontManager::getFont(const std::string& font, int size)
-	{
-
-		if (font.empty())
-			return m_font;
-
-		std::string key = font + std::to_string(size);
-
-		for (auto& Font : m_fonts)
-		{
-			if (Font.key == key)
-				return Font.fontPtr;
-		}
-
-		assert(false);
-		return nullptr;
-	}
-
 	void mvFontManager::rebuildAtlas()
 	{
-		ImGuiIO& io = ImGui::GetIO();
-		io.Fonts->Clear();
-		io.FontDefault = io.Fonts->AddFontDefault();
+		auto& roots = mvApp::GetApp()->getItemRegistry().getRoots();
 
-		// Add character ranges and merge into the previous font
-		// The ranges array is not copied by the AddFont* functions and is used lazily
-		// so ensure it is available at the time of building or calling GetTexDataAsRGBA32().
-		const ImWchar icons_ranges[] = { 0x0370, 0x03ff, 0 }; // Will not be copied by AddFont* so keep in scope.
-
-		for (auto& font : m_fonts)
+		for (auto& root : roots)
 		{
-			ImVector<ImWchar> ranges;
-			ImFontGlyphRangesBuilder builder;
-
-			if (font.rangeHint.empty())                                          builder.AddRanges(io.Fonts->GetGlyphRangesDefault());
-			else if (font.rangeHint == std::string("korean"))                    builder.AddRanges(io.Fonts->GetGlyphRangesKorean());
-			else if (font.rangeHint == std::string("japanese"))	                 builder.AddRanges(io.Fonts->GetGlyphRangesJapanese());
-			else if (font.rangeHint == std::string("chinese_full"))              builder.AddRanges(io.Fonts->GetGlyphRangesChineseFull());
-			else if (font.rangeHint == std::string("chinese_simplified_common")) builder.AddRanges(io.Fonts->GetGlyphRangesChineseSimplifiedCommon());
-			else if (font.rangeHint == std::string("cyrillic"))                  builder.AddRanges(io.Fonts->GetGlyphRangesCyrillic());
-			else if (font.rangeHint == std::string("thai"))                      builder.AddRanges(io.Fonts->GetGlyphRangesThai());
-			else if (font.rangeHint == std::string("vietnamese"))                builder.AddRanges(io.Fonts->GetGlyphRangesVietnamese());
-			else io.Fonts->AddFontDefault();
-
-			builder.AddRanges(icons_ranges); // Add one of the default ranges
-
-			for (const auto& range : font.fontGlyphRangeCustom)
-				builder.AddRanges(range.data());
-			for (const auto& charitem : font.chars)
-				builder.AddChar(charitem);
-
-			builder.BuildRanges(&ranges);   // Build the final result (ordered ranges with all the unique characters submitted)
-
-			font.fontPtr = io.Fonts->AddFontFromFileTTF(font.file.c_str(), (float)font.size, nullptr, ranges.Data);
-
-			if (font.fontPtr == nullptr)
+			if (root->getType() == mvAppItemType::mvFontRegistry)
 			{
-				mvThrowPythonError(1000, "Font file could not be found");
-				io.Fonts->Build();
+				root->customAction();
+				break;
 			}
-
-			for (auto& item : font.charRemaps)
-				font.fontPtr->AddRemapChar(item.first, item.second);
-
-			io.Fonts->Build();
 		}
 
-		InValidateFontTheme();
-	}
-
-	void mvFontManager::updateDefaultFont()
-	{
-		m_font = getFont(m_fontName, m_size);
 		m_dirty = false;
-		ImGuiIO& io = ImGui::GetIO();
-		io.FontDefault = m_font;
+
 	}
 
-	bool mvFontManager::onEvent(mvEvent& event)
+	void mvFontManager::updateAtlas()
 	{
-		mvEventDispatcher dispatcher(event);
-		dispatcher.dispatch(BIND_EVENT_METH(mvFontManager::onSetFont), SID("set_font"));
-		return event.handled;
-	};
-
-	bool mvFontManager::onSetFont(mvEvent& event)
-	{
-		const std::string& widget = GetEString(event, "WIDGET");
-		const std::string& font = GetEString(event, "FONT");
-		int size = (int)GetEFloat(event, "SIZE");
-
-		if (widget.empty())
-		{
-			InValidateFontTheme();
-			m_font = getFont(font, size);
-			m_size = size;
-			m_fontName = font;
-			return true;
-		}
-
-		mvRef<mvAppItem> item = mvApp::GetApp()->getItemRegistry().getItem(widget);
+		auto item = mvApp::GetApp()->getItemRegistry().getItem(MV_ATLAS_UUID);
 		if (item)
-		{
-			item->inValidateThemeFontCache();
-			item->setFont(getFont(font, size));
-		}
-		else
-		{
-			mvApp::GetApp()->getCallbackRegistry().submitCallback([=]()
-				{
-					mvThrowPythonError(1000, "Item can not be found");
-				});
-		}
-		return true;
+			static_cast<mvStaticTexture*>(item)->markDirty();
 	}
 
-	void mvFontManager::show_debugger()
+	void mvFontManager::drawWidgets()
 	{
-		if (ImGui::Begin("Font Manager"))
+
+		ShowCustomFontSelector("Fonts##Selector");
+
+		ImGuiIO& io = ImGui::GetIO();
+		ImFontAtlas* atlas = io.Fonts;
+		HelpMarker("Read FAQ and docs/FONTS.md for details on font loading.");
+		ImGui::PushItemWidth(120);
+		for (int i = 0; i < atlas->Fonts.Size; i++)
 		{
-			ShowCustomFontSelector("Fonts##Selector");
-
-			ImGuiIO& io = ImGui::GetIO();
-			ImFontAtlas* atlas = io.Fonts;
-			HelpMarker("Read FAQ and docs/FONTS.md for details on font loading.");
-			ImGui::PushItemWidth(120);
-			for (int i = 0; i < atlas->Fonts.Size; i++)
-			{
-				ImFont* font = atlas->Fonts[i];
-				ImGui::PushID(font);
-				NodeFont(font);
-				ImGui::PopID();
-			}
-			if (ImGui::TreeNode("Atlas texture", "Atlas texture (%dx%d pixels)", atlas->TexWidth, atlas->TexHeight))
-			{
-				ImVec4 tint_col = ImVec4(1.0f, 1.0f, 1.0f, 1.0f);
-				ImVec4 border_col = ImVec4(1.0f, 1.0f, 1.0f, 0.5f);
-				ImGui::Image(atlas->TexID, ImVec2((float)atlas->TexWidth, (float)atlas->TexHeight), ImVec2(0, 0), ImVec2(1, 1), tint_col, border_col);
-				ImGui::TreePop();
-			}
-
-			// Post-baking font scaling. Note that this is NOT the nice way of scaling fonts, read below.
-			// (we enforce hard clamping manually as by default DragFloat/SliderFloat allows CTRL+Click text to get out of bounds).
-			const float MIN_SCALE = 0.3f;
-			const float MAX_SCALE = 2.0f;
-			HelpMarker(
-				"Those are old settings provided for convenience.\n"
-				"However, the _correct_ way of scaling your UI is currently to reload your font at the designed size, "
-				"rebuild the font atlas, and call style.ScaleAllSizes() on a reference ImGuiStyle structure.\n"
-				"Using those settings here will give you poor quality results.");
-			if (ImGui::DragFloat("global scale", &getGlobalFontScale(), 0.005f, MIN_SCALE, MAX_SCALE, "%.2f")) // Scale everything
-				getGlobalFontScale() = IM_MAX(getGlobalFontScale(), MIN_SCALE);
-			ImGui::PopItemWidth();
+			ImFont* font = atlas->Fonts[i];
+			ImGui::PushID(font);
+			NodeFont(font);
+			ImGui::PopID();
 		}
-		ImGui::End();
+		if (ImGui::TreeNode("Atlas texture", "Atlas texture (%dx%d pixels)", atlas->TexWidth, atlas->TexHeight))
+		{
+			ImVec4 tint_col = ImVec4(1.0f, 1.0f, 1.0f, 1.0f);
+			ImVec4 border_col = ImVec4(1.0f, 1.0f, 1.0f, 0.5f);
+			ImGui::Image(atlas->TexID, ImVec2((float)atlas->TexWidth, (float)atlas->TexHeight), ImVec2(0, 0), ImVec2(1, 1), tint_col, border_col);
+			ImGui::TreePop();
+		}
+
+		// Post-baking font scaling. Note that this is NOT the nice way of scaling fonts, read below.
+		// (we enforce hard clamping manually as by default DragFloat/SliderFloat allows CTRL+Click text to get out of bounds).
+		const float MIN_SCALE = 0.3f;
+		const float MAX_SCALE = 2.0f;
+		HelpMarker(
+			"Those are old settings provided for convenience.\n"
+			"However, the _correct_ way of scaling your UI is currently to reload your font at the designed size, "
+			"rebuild the font atlas, and call style.ScaleAllSizes() on a reference ImGuiStyle structure.\n"
+			"Using those settings here will give you poor quality results.");
+		if (ImGui::DragFloat("global scale", &getGlobalFontScale(), 0.005f, MIN_SCALE, MAX_SCALE, "%.2f")) // Scale everything
+			getGlobalFontScale() = IM_MAX(getGlobalFontScale(), MIN_SCALE);
+		ImGui::PopItemWidth();
+
 	}
 
 	void mvFontManager::setGlobalFontScale(float scale)
@@ -350,27 +219,6 @@ namespace Marvel {
 
 	void mvFontManager::InsertParser(std::map<std::string, mvPythonParser>* parsers)
 	{
-		{
-			mvPythonParser parser(mvPyDataType::None);
-			parser.addArg<mvPyDataType::String>("font");
-			parser.addArg<mvPyDataType::String>("file");
-			parser.addArg<mvPyDataType::Float>("size");
-			parser.addArg<mvPyDataType::String>("glyph_ranges", mvArgType::POSITIONAL_ARG, "''");
-			parser.addArg<mvPyDataType::IntList>("custom_glyph_chars", mvArgType::KEYWORD_ARG, "[]");
-			parser.addArg<mvPyDataType::Object>("custom_glyph_ranges", mvArgType::KEYWORD_ARG, "[[]]");
-			parser.addArg<mvPyDataType::Object>("char_remaps", mvArgType::KEYWORD_ARG, "[[]]");
-			parser.finalize();
-			parsers->insert({ "add_font", parser });
-		}
-
-		{
-			mvPythonParser parser(mvPyDataType::None);
-			parser.addArg<mvPyDataType::String>("font");
-			parser.addArg<mvPyDataType::Float>("size");
-			parser.addArg<mvPyDataType::String>("item", mvArgType::KEYWORD_ARG, "''");
-			parser.finalize();
-			parsers->insert({ "set_font", parser });
-		}
 
 		{
 			mvPythonParser parser(mvPyDataType::None);
@@ -387,64 +235,6 @@ namespace Marvel {
 
 	}
 
-	PyObject* mvFontManager::add_font(PyObject* self, PyObject* args, PyObject* kwargs)
-	{
-		const char* font;
-		const char* file;
-		float size = 13.0f;
-		const char* glyph_ranges = "";
-		PyObject* custom_glyph_ranges = nullptr;
-		PyObject* custom_glyph_chars = nullptr;
-		PyObject* char_remaps = nullptr;
-
-		if (!(mvApp::GetApp()->getParsers())["add_font"].parse(args, kwargs, __FUNCTION__,
-			&font, &file, &size, &glyph_ranges, &custom_glyph_chars, &custom_glyph_ranges,
-			&char_remaps))
-			return GetPyNone();
-
-		std::vector<int> custom_chars = ToIntVect(custom_glyph_chars);
-		std::vector<std::pair<int, int>> custom_ranges = ToVectInt2(custom_glyph_ranges);
-		std::vector<std::pair<int, int>> custom_remaps = ToVectInt2(char_remaps);
-
-		std::vector<std::array<ImWchar, 3>> imgui_custom_ranges;
-		std::vector<ImWchar> imgui_custom_chars;
-
-		for (auto& item : custom_ranges)
-			imgui_custom_ranges.push_back({ (ImWchar)item.first, (ImWchar)item.second, 0 });
-		for (auto& item : custom_chars)
-			imgui_custom_chars.push_back((ImWchar)item);
-
-		mvApp::GetApp()->getFontManager().addFont(font, file, (int)size, glyph_ranges, imgui_custom_chars, 
-			imgui_custom_ranges, custom_remaps);
-
-		return GetPyNone();
-	}
-
-	PyObject* mvFontManager::set_font(PyObject* self, PyObject* args, PyObject* kwargs)
-	{
-		const char* font = "";
-		float size = 0;
-		const char* item = "";
-
-		if (!(mvApp::GetApp()->getParsers())["set_font"].parse(args, kwargs, __FUNCTION__, &font, &size, &item))
-			return GetPyNone();
-
-		std::lock_guard<std::mutex> lk(mvApp::GetApp()->getMutex());
-
-		mvEventBus::Publish
-		(
-			mvEVT_CATEGORY_THEMES,
-			SID("set_font"),
-			{
-				CreateEventArgument("WIDGET", std::string(item)),
-				CreateEventArgument("FONT", std::string(font)),
-				CreateEventArgument("SIZE", size)
-			}
-		);
-
-		return GetPyNone();
-	}
-
 	PyObject* mvFontManager::set_global_font_scale(PyObject* self, PyObject* args, PyObject* kwargs)
 	{
 		float scale;
@@ -452,14 +242,14 @@ namespace Marvel {
 		if (!(mvApp::GetApp()->getParsers())["set_global_font_scale"].parse(args, kwargs, __FUNCTION__, &scale))
 			return GetPyNone();
 
-		std::lock_guard<std::mutex> lk(mvApp::GetApp()->getMutex());
-		mvApp::GetApp()->getFontManager().setGlobalFontScale(scale);
+		if (!mvApp::s_manualMutexControl) std::lock_guard<std::mutex> lk(mvApp::s_mutex);
+		mvToolManager::GetFontManager().setGlobalFontScale(scale);
 
 		return GetPyNone();
 	}
 
 	PyObject* mvFontManager::get_global_font_scale(PyObject* self, PyObject* args, PyObject* kwargs)
 	{
-		return ToPyFloat(mvApp::GetApp()->getFontManager().getGlobalFontScale());
+		return ToPyFloat(mvToolManager::GetFontManager().getGlobalFontScale());
 	}
 }

@@ -4,21 +4,28 @@
 #include <implot_internal.h>
 #include <misc/cpp/imgui_stdlib.h>
 #include "mvItemRegistry.h"
-#include "mvImGuiThemeScope.h"
-#include "mvFontScope.h"
 
 namespace Marvel {
 
 	void mvDatePicker::InsertParser(std::map<std::string, mvPythonParser>* parsers)
 	{
 
-		mvPythonParser parser(mvPyDataType::String);
-		mvAppItem::AddCommonArgs(parser);
-		parser.removeArg("source");
-		parser.removeArg("width");
-		parser.removeArg("height");
-		parser.removeArg("label");
-		parser.removeArg("enabled");
+		mvPythonParser parser(mvPyDataType::UUID, "Undocumented", { "Widgets" });
+		mvAppItem::AddCommonArgs(parser, (CommonParserArgs)(
+			MV_PARSER_ARG_ID |
+			MV_PARSER_ARG_INDENT |
+			MV_PARSER_ARG_PARENT |
+			MV_PARSER_ARG_BEFORE |
+			MV_PARSER_ARG_CALLBACK |
+			MV_PARSER_ARG_USER_DATA |
+			MV_PARSER_ARG_SHOW |
+			MV_PARSER_ARG_FILTER |
+			MV_PARSER_ARG_DROP_CALLBACK |
+			MV_PARSER_ARG_DRAG_CALLBACK |
+			MV_PARSER_ARG_PAYLOAD_TYPE |
+			MV_PARSER_ARG_TRACKED |
+			MV_PARSER_ARG_POS)
+		);
 
 		parser.addArg<mvPyDataType::Dict>("default_value", mvArgType::KEYWORD_ARG, "{'month_day': 14, 'year':20, 'month':5}");
 		parser.addArg<mvPyDataType::Integer>("level", mvArgType::KEYWORD_ARG, "0", "0-day, 1-month, 2-year");
@@ -29,21 +36,19 @@ namespace Marvel {
 		parsers->insert({ s_command, parser });
 	}
 
-	mvDatePicker::mvDatePicker(const std::string& name)
-		: mvTimePtrBase(name)
+	mvDatePicker::mvDatePicker(mvUUID uuid)
+		: mvTimePtrBase(uuid)
 	{
 	}
 
 	void mvDatePicker::draw(ImDrawList* drawlist, float x, float y)
 	{
-		ScopedID id;
-		mvImGuiThemeScope scope(this);
-		mvFontScope fscope(this);
+		ScopedID id(m_uuid);
 
-		if (ImPlot::ShowDatePicker(m_name.c_str(), &m_level, m_imvalue.get(), m_imvalue.get()))
+		if (ImPlot::ShowDatePicker(m_label.c_str(), &m_level, m_imvalue.get(), m_imvalue.get()))
 		{
 			ImPlot::GetGmtTime(*m_imvalue, m_value.get());
-			mvApp::GetApp()->getCallbackRegistry().addCallback(m_callback, m_name, m_callback_data);
+			mvApp::GetApp()->getCallbackRegistry().addCallback(m_callback, m_uuid, nullptr, m_user_data);
 		}
 
 	}

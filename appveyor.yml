@@ -9,6 +9,9 @@ build:
 # Do not build on tags
 skip_tags: true
 
+only_commits:
+  message: /(appveyor)/
+
 environment:
 
   pypi_password:
@@ -60,7 +63,7 @@ environment:
       PYVER: 37
       PYLOC: "python"
       PYSTACK: "3.7"
-      PYFULLVERSION: "3.7.9"
+      PYFULLVERSION: "3.7.10"
     
     - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
       GENERATOR: "Visual Studio 16 2019"
@@ -86,7 +89,7 @@ environment:
       PYVER: 38
       PYLOC: "python"
       PYSTACK: "3.8"
-      PYFULLVERSION: "3.8.6"
+      PYFULLVERSION: "3.8.10"
 
     - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
       GENERATOR: "Visual Studio 16 2019"
@@ -112,7 +115,7 @@ environment:
       PYVER: 39
       PYLOC: "python"
       PYSTACK: "3.9"
-      PYFULLVERSION: "3.9.1"
+      PYFULLVERSION: "3.9.5"
 
     - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
       GENERATOR: "Visual Studio 16 2019"
@@ -159,12 +162,7 @@ build_script:
   - sh: git submodule update --init --recursive ./Dependencies/glfw
   - sh: mkdir cmake-build-release
   - sh: cd cmake-build-release
-  - sh: |
-      if [ "$MACOS" = "" ]; then
-          cmake .. -DMVDIST_ONLY=True -DMVPY_VERSION=${PYVER} -DMVDPG_VERSION=${APPVEYOR_BUILD_VERSION} -DBUILD_SHARED_LIBS:BOOL=true
-      else
-          cmake .. -DMVDIST_ONLY=True -DMVPY_VERSION=${PYVER} -DMVDPG_VERSION=${APPVEYOR_BUILD_VERSION}
-      fi
+  - sh: cmake .. -DMVDIST_ONLY=True -DMVPY_VERSION=${PYVER} -DMVDPG_VERSION=${APPVEYOR_BUILD_VERSION}
   - sh: cd ..
   - sh: cmake --build cmake-build-release --config "${CONFIG}"
 
@@ -178,13 +176,34 @@ on_success:
   - cmd: call %PYLOC% -m pip install twine
   - cmd: call %PYLOC% -m pip install wheel
   - cmd: call %PYLOC% -m setup bdist_wheel --plat-name win_amd64 --dist-dir C:/projects/dearpygui/dist
-  - cmd: if "%APPVEYOR_REPO_COMMIT_MESSAGE:(test)=%" neq "%APPVEYOR_REPO_COMMIT_MESSAGE%" call %PYLOC% -m twine upload --repository testpypi C:/projects/dearpygui/dist/* -u RaylockLLC -p %pypi_password% --skip-existing
-  - cmd: if "%APPVEYOR_REPO_COMMIT_MESSAGE:(release)=%" neq "%APPVEYOR_REPO_COMMIT_MESSAGE%" call %PYLOC% -m twine upload --repository testpypi C:/projects/dearpygui/dist/* -u RaylockLLC -p %pypi_password% --skip-existing
-  - cmd: if "%APPVEYOR_REPO_COMMIT_MESSAGE:(release)=%" neq "%APPVEYOR_REPO_COMMIT_MESSAGE%" call %PYLOC% -m twine upload C:/projects/dearpygui/dist/* -u RaylockLLC -p %pypi_password% --skip-existing
-  
+  - cmd: if "%APPVEYOR_REPO_COMMIT_MESSAGE:(test pypi)=%" neq "%APPVEYOR_REPO_COMMIT_MESSAGE%" call %PYLOC% -m twine upload --repository testpypi C:/projects/dearpygui/dist/* -u RaylockLLC -p %pypi_password% --skip-existing
+  - cmd: if "%APPVEYOR_REPO_COMMIT_MESSAGE:(pypi)=%" neq "%APPVEYOR_REPO_COMMIT_MESSAGE%" call %PYLOC% -m twine upload C:/projects/dearpygui/dist/* -u RaylockLLC -p %pypi_password% --skip-existing
+      
+  #  # deploy test docs
+  - ps: |
+      if ( $env:APPVEYOR_REPO_COMMIT_MESSAGE -like "*(test pypi)*" )
+      {
+        if ( $env:PYDOCRUN -like "*true*" )
+        {
+          git config --global credential.helper store
+          Add-Content -Path "$HOME\.git-credentials" -Value "https://$($env:git_token):x-oauth-basic@github.com`n" -NoNewline
+          git config --global user.email "jonathanhoffstadt@yahoo.com"
+          git config --global user.name "Jonathan Hoffstadt"
+          cd C:\projects
+          git clone -b gh-pages --single-branch "https://github.com/hoffstadt/dpg-test-py-docs"
+          cd dpg-test-py-docs
+          C:\Python39-x64\python.exe -m pip install -i https://test.pypi.org/simple/ dearpygui
+          C:\Python39-x64\python.exe -m pip install pdoc3
+          C:\Python39-x64\python.exe -m pdoc --html dearpygui -f
+          C:\Python39-x64\python.exe html_script.py
+          git commit -a -m "Update Docs for $env:APPVEYOR_BUILD_VERSION"
+          git push origin gh-pages -q
+        }
+      }
+
   # deploy docs
   - ps: |
-      if ( $env:APPVEYOR_REPO_COMMIT_MESSAGE -like "*(release)*" )
+      if ( $env:APPVEYOR_REPO_COMMIT_MESSAGE -like "*(pypi)*" )
       {
         if ( $env:PYDOCRUN -like "*true*" )
         {
@@ -211,10 +230,10 @@ on_success:
         ${PYLOC} -m pip install twine --upgrade
         ${PYLOC} -m pip install wheel
         ${PYLOC} -m setup bdist_wheel --plat-name manylinux1_x86_64 --dist-dir /home/appveyor/projects/dearpygui/dist
-        if [[ "${APPVEYOR_REPO_COMMIT_MESSAGE}" == *"(test)"* ]]; then
+        if [[ "${APPVEYOR_REPO_COMMIT_MESSAGE}" == *"(test pypi)"* ]]; then
             ${PYLOC} -m twine upload --repository testpypi /home/appveyor/projects/dearpygui/dist/* -u RaylockLLC -p ${pypi_password} --skip-existing
         fi
-        if [[ "${APPVEYOR_REPO_COMMIT_MESSAGE}" == *"(release)"* ]]; then
+        if [[ "${APPVEYOR_REPO_COMMIT_MESSAGE}" == *"(pypi)"* ]]; then
             ${PYLOC} -m twine upload --repository testpypi /home/appveyor/projects/dearpygui/dist/* -u RaylockLLC -p ${pypi_password} --skip-existing
             ${PYLOC} -m twine upload /home/appveyor/projects/dearpygui/dist/* -u RaylockLLC -p ${pypi_password} --skip-existing
         fi
@@ -223,10 +242,10 @@ on_success:
         ${PYLOC} -m pip install twine --upgrade
         ${PYLOC} -m pip install wheel
         ${PYLOC} -m setup bdist_wheel --plat-name macosx-10.6-x86_64 --dist-dir /Users/appveyor/projects/dearpygui/dist
-        if [[ "${APPVEYOR_REPO_COMMIT_MESSAGE}" == *"(test)"* ]]; then
+        if [[ "${APPVEYOR_REPO_COMMIT_MESSAGE}" == *"(test pypi)"* ]]; then
             ${PYLOC} -m twine upload --repository testpypi /Users/appveyor/projects/dearpygui/dist/* -u RaylockLLC -p ${pypi_password} --skip-existing
         fi
-        if [[ "${APPVEYOR_REPO_COMMIT_MESSAGE}" == *"(release)"* ]]; then
+        if [[ "${APPVEYOR_REPO_COMMIT_MESSAGE}" == *"(pypi)"* ]]; then
             ${PYLOC} -m twine upload --repository testpypi /Users/appveyor/projects/dearpygui/dist/* -u RaylockLLC -p ${pypi_password} --skip-existing
             ${PYLOC} -m twine upload /Users/appveyor/projects/dearpygui/dist/* -u RaylockLLC -p ${pypi_password} --skip-existing
         fi
