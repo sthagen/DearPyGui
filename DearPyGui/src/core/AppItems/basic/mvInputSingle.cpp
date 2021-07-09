@@ -11,7 +11,7 @@ namespace Marvel {
     void mvInputInt::InsertParser(std::map<std::string, mvPythonParser>* parsers)
     {
 
-        mvPythonParser parser(mvPyDataType::UUID, "Adds input for float. Step buttons can be turned on or off.", { "Widgets" });
+        mvPythonParser parser(mvPyDataType::UUID, "Adds input for an int. Step buttons can be turned on or off.", { "Widgets" });
         mvAppItem::AddCommonArgs(parser, (CommonParserArgs)(
             MV_PARSER_ARG_ID |
             MV_PARSER_ARG_WIDTH |
@@ -20,7 +20,6 @@ namespace Marvel {
             MV_PARSER_ARG_BEFORE |
             MV_PARSER_ARG_SOURCE |
             MV_PARSER_ARG_CALLBACK |
-            MV_PARSER_ARG_USER_DATA |
             MV_PARSER_ARG_SHOW |
             MV_PARSER_ARG_ENABLED |
             MV_PARSER_ARG_FILTER |
@@ -31,7 +30,7 @@ namespace Marvel {
             MV_PARSER_ARG_POS)
         );
 
-        parser.addArg<mvPyDataType::IntList>("default_value", mvArgType::KEYWORD_ARG, "0");
+        parser.addArg<mvPyDataType::Integer>("default_value", mvArgType::KEYWORD_ARG, "0");
 
         parser.addArg<mvPyDataType::Integer>("min_value", mvArgType::KEYWORD_ARG, "0", "Value for lower limit of input. By default this limits the step buttons. Use clamped to limit manual input.");
         parser.addArg<mvPyDataType::Integer>("max_value", mvArgType::KEYWORD_ARG, "100", "Value for upper limit of input. By default this limits the step buttons. Use clamped to limit manual input.");
@@ -52,7 +51,7 @@ namespace Marvel {
 
     void mvInputFloat::InsertParser(std::map<std::string, mvPythonParser>* parsers)
     {
-        mvPythonParser parser(mvPyDataType::UUID, "Adds input for integers. Step buttons can be turned on or off.", { "Widgets" });
+        mvPythonParser parser(mvPyDataType::UUID, "Adds input for floats. Step buttons can be turned on or off.", { "Widgets" });
         mvAppItem::AddCommonArgs(parser, (CommonParserArgs)(
             MV_PARSER_ARG_ID |
             MV_PARSER_ARG_WIDTH |
@@ -61,7 +60,6 @@ namespace Marvel {
             MV_PARSER_ARG_BEFORE |
             MV_PARSER_ARG_SOURCE |
             MV_PARSER_ARG_CALLBACK |
-            MV_PARSER_ARG_USER_DATA |
             MV_PARSER_ARG_SHOW |
             MV_PARSER_ARG_ENABLED |
             MV_PARSER_ARG_FILTER |
@@ -143,7 +141,10 @@ namespace Marvel {
             if (m_last_value != *m_value)
             {
                 m_last_value = *m_value;
-                mvApp::GetApp()->getCallbackRegistry().addCallback(m_callback, m_uuid, nullptr, m_user_data);
+                auto value = *m_value;
+                mvApp::GetApp()->getCallbackRegistry().submitCallback([=]() {
+                    mvApp::GetApp()->getCallbackRegistry().addCallback(getCallback(false), m_uuid, ToPyInt(value), m_user_data);
+                    });
             }
         }
 
@@ -202,7 +203,10 @@ namespace Marvel {
             if (m_last_value != *m_value)
             {
                 m_last_value = *m_value;
-                mvApp::GetApp()->getCallbackRegistry().addCallback(m_callback, m_uuid, nullptr, m_user_data);
+                auto value = *m_value;
+                mvApp::GetApp()->getCallbackRegistry().submitCallback([=]() {
+                    mvApp::GetApp()->getCallbackRegistry().addCallback(getCallback(false), m_uuid, ToPyFloat(value), m_user_data);
+                    });
             }
         }
     }
@@ -218,10 +222,27 @@ namespace Marvel {
         if (PyObject* item = PyDict_GetItemString(dict, "readonly")) ToBool(item) ? m_stor_flags |= ImGuiInputTextFlags_ReadOnly : m_stor_flags &= ~ImGuiInputTextFlags_ReadOnly;
         if (PyObject* item = PyDict_GetItemString(dict, "step")) m_step = ToInt(item);
         if (PyObject* item = PyDict_GetItemString(dict, "step_fast")) m_step_fast = ToInt(item);
-        if (PyObject* item = PyDict_GetItemString(dict, "min_value")) { m_min = ToInt(item); m_min_clamped = true; }
-        if (PyObject* item = PyDict_GetItemString(dict, "max_value")) { m_max = ToInt(item); m_max_clamped = true; }
-        if (PyObject* item = PyDict_GetItemString(dict, "min_clamped")) m_min_clamped = ToBool(item);
-        if (PyObject* item = PyDict_GetItemString(dict, "max_clamped")) m_max_clamped = ToBool(item);
+
+        bool minmax_set = false;
+        if (PyObject* item = PyDict_GetItemString(dict, "min_value")) 
+        {
+            m_min = ToInt(item); 
+            m_min_clamped = true; 
+            minmax_set = true;
+        }
+
+        if (PyObject* item = PyDict_GetItemString(dict, "max_value")) 
+        { 
+            m_max = ToInt(item); 
+            m_max_clamped = true; 
+            minmax_set = true;
+        }
+
+        if (!minmax_set)
+        {
+            if (PyObject* item = PyDict_GetItemString(dict, "min_clamped")) m_min_clamped = ToBool(item);
+            if (PyObject* item = PyDict_GetItemString(dict, "max_clamped")) m_max_clamped = ToBool(item);
+        }
     }
 
     void mvInputInt::getSpecificConfiguration(PyObject* dict)
@@ -248,10 +269,28 @@ namespace Marvel {
         if (PyObject* item = PyDict_GetItemString(dict, "format")) m_format = ToString(item);
         if (PyObject* item = PyDict_GetItemString(dict, "step")) m_step = ToFloat(item);
         if (PyObject* item = PyDict_GetItemString(dict, "step_fast")) m_step_fast = ToFloat(item);
-        if (PyObject* item = PyDict_GetItemString(dict, "min_value")) { m_min = ToFloat(item); m_min_clamped = true; }
-        if (PyObject* item = PyDict_GetItemString(dict, "max_value")) { m_max = ToFloat(item); m_max_clamped = true; }
-        if (PyObject* item = PyDict_GetItemString(dict, "min_clamped")) m_min_clamped = ToBool(item);
-        if (PyObject* item = PyDict_GetItemString(dict, "max_clamped")) m_max_clamped = ToBool(item);
+
+
+        bool minmax_set = false;
+        if (PyObject* item = PyDict_GetItemString(dict, "min_value"))
+        {
+            m_min = ToFloat(item);
+            m_min_clamped = true;
+            minmax_set = true;
+        }
+
+        if (PyObject* item = PyDict_GetItemString(dict, "max_value"))
+        {
+            m_max = ToFloat(item);
+            m_max_clamped = true;
+            minmax_set = true;
+        }
+
+        if (!minmax_set)
+        {
+            if (PyObject* item = PyDict_GetItemString(dict, "min_clamped")) m_min_clamped = ToBool(item);
+            if (PyObject* item = PyDict_GetItemString(dict, "max_clamped")) m_max_clamped = ToBool(item);
+        }
 
         // helper for bit flipping
         auto flagop = [dict](const char* keyword, int flag, int& flags)

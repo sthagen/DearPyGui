@@ -10,14 +10,13 @@ namespace Marvel {
 	void mvDatePicker::InsertParser(std::map<std::string, mvPythonParser>* parsers)
 	{
 
-		mvPythonParser parser(mvPyDataType::UUID, "Undocumented", { "Widgets" });
+		mvPythonParser parser(mvPyDataType::UUID, "Creates a date picker.", { "Widgets" });
 		mvAppItem::AddCommonArgs(parser, (CommonParserArgs)(
 			MV_PARSER_ARG_ID |
 			MV_PARSER_ARG_INDENT |
 			MV_PARSER_ARG_PARENT |
 			MV_PARSER_ARG_BEFORE |
 			MV_PARSER_ARG_CALLBACK |
-			MV_PARSER_ARG_USER_DATA |
 			MV_PARSER_ARG_SHOW |
 			MV_PARSER_ARG_FILTER |
 			MV_PARSER_ARG_DROP_CALLBACK |
@@ -28,7 +27,7 @@ namespace Marvel {
 		);
 
 		parser.addArg<mvPyDataType::Dict>("default_value", mvArgType::KEYWORD_ARG, "{'month_day': 14, 'year':20, 'month':5}");
-		parser.addArg<mvPyDataType::Integer>("level", mvArgType::KEYWORD_ARG, "0", "0-day, 1-month, 2-year");
+		parser.addArg<mvPyDataType::Integer>("level", mvArgType::KEYWORD_ARG, "0", "Use avaliable constants. mvDatePickerLevel_Day, mvDatePickerLevel_Month, mvDatePickerLevel_Year");
 
 
 		parser.finalize();
@@ -49,6 +48,13 @@ namespace Marvel {
 		{
 			ImPlot::GetGmtTime(*m_imvalue, m_value.get());
 			mvApp::GetApp()->getCallbackRegistry().addCallback(m_callback, m_uuid, nullptr, m_user_data);
+
+			{
+				auto value = *m_value;
+				mvApp::GetApp()->getCallbackRegistry().submitCallback([=]() {
+					mvApp::GetApp()->getCallbackRegistry().addCallback(getCallback(false), m_uuid, ToPyTime(value), m_user_data);
+					});
+			}
 		}
 
 	}
@@ -58,7 +64,10 @@ namespace Marvel {
 		if (dict == nullptr)
 			return;
 		 
-		if (PyObject* item = PyDict_GetItemString(dict, "level")) m_level = ToInt(item);
+		if (PyObject* item = PyDict_GetItemString(dict, "level")) {
+			m_level = ToUUID(item);
+			if (m_level > 2) m_level = 0;
+		}
 	}
 
 	void mvDatePicker::getSpecificConfiguration(PyObject* dict)
@@ -66,7 +75,7 @@ namespace Marvel {
 		if (dict == nullptr)
 			return;
 		 
-		PyDict_SetItemString(dict, "level", ToPyInt(m_level));
+		PyDict_SetItemString(dict, "level", ToPyUUID((long)m_level));
 	}
 
 }

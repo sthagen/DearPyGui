@@ -18,11 +18,11 @@ namespace Marvel {
 		);
 
 		parser.addArg<mvPyDataType::UUID>("texture_id");
-		parser.addArg<mvPyDataType::FloatList>("pmin");
-		parser.addArg<mvPyDataType::FloatList>("pmax");
+		parser.addArg<mvPyDataType::FloatList>("pmin", mvArgType::REQUIRED_ARG, "...", "Point of to start drawing texture.");
+		parser.addArg<mvPyDataType::FloatList>("pmax", mvArgType::REQUIRED_ARG, "...", "Point to complete drawing texture.");
 
-		parser.addArg<mvPyDataType::FloatList>("uv_min", mvArgType::KEYWORD_ARG, "(0.0, 0.0)", "normalized texture coordinates");
-		parser.addArg<mvPyDataType::FloatList>("uv_max", mvArgType::KEYWORD_ARG, "(1.0, 1.0)", "normalized texture coordinates");
+		parser.addArg<mvPyDataType::FloatList>("uv_min", mvArgType::KEYWORD_ARG, "(0.0, 0.0)", "Normalized coordinates on texture that will be drawn.");
+		parser.addArg<mvPyDataType::FloatList>("uv_max", mvArgType::KEYWORD_ARG, "(1.0, 1.0)", "Normalized coordinates on texture that will be drawn.");
 
 		parser.addArg<mvPyDataType::IntList>("color", mvArgType::KEYWORD_ARG, "(255, 255, 255, 255)");
 
@@ -72,9 +72,15 @@ namespace Marvel {
 
 			if (m_texture->getType() == mvAppItemType::mvStaticTexture)
 				texture = static_cast<mvStaticTexture*>(m_texture.get())->getRawTexture();
+			else if (m_texture->getType() == mvAppItemType::mvRawTexture)
+				texture = static_cast<mvRawTexture*>(m_texture.get())->getRawTexture();
 			else
 				texture = static_cast<mvDynamicTexture*>(m_texture.get())->getRawTexture();
-			drawlist->AddImage(texture, m_pmin + start, m_pmax + start, m_uv_min, m_uv_max, m_color);
+
+			if (ImPlot::GetCurrentContext()->CurrentPlot)
+				drawlist->AddImage(texture, ImPlot::PlotToPixels(m_pmin), ImPlot::PlotToPixels(m_pmax), m_uv_min, m_uv_max, m_color);
+			else
+				drawlist->AddImage(texture, m_pmin + start, m_pmax + start, m_uv_min, m_uv_max, m_color);
 		}
 	}
 

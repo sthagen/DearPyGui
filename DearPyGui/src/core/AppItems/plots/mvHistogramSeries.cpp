@@ -4,6 +4,9 @@
 #include "mvApp.h"
 #include "mvItemRegistry.h"
 #include "mvPythonExceptions.h"
+#include "AppItems/fonts/mvFont.h"
+#include "AppItems/themes/mvTheme.h"
+#include "AppItems/containers/mvDragPayload.h"
 
 namespace Marvel {
 
@@ -40,7 +43,6 @@ namespace Marvel {
 	mvHistogramSeries::mvHistogramSeries(mvUUID uuid)
 		: mvSeriesBase(uuid)
 	{
-		m_contributeToBounds = true;
 	}
 
 	bool mvHistogramSeries::isParentCompatible(mvAppItemType type)
@@ -56,30 +58,86 @@ namespace Marvel {
 
 	void mvHistogramSeries::draw(ImDrawList* drawlist, float x, float y)
 	{
-		ScopedID id(m_uuid);
 
-		static const std::vector<double>* xptr;
+		//-----------------------------------------------------------------------------
+		// pre draw
+		//-----------------------------------------------------------------------------
+		if (!m_show)
+			return;
 
-		xptr = &(*m_value.get())[0];
-
-		ImPlot::PlotHistogram(m_label.c_str(), xptr->data(), (int)xptr->size(), m_bins,
-			m_cumlative, m_density, ImPlotRange(m_min, m_max), m_outliers, (double)m_barScale);
-
-		// Begin a popup for a legend entry.
-		if (ImPlot::BeginLegendPopup(m_label.c_str(), 1))
+		// push font if a font object is attached
+		if (m_font)
 		{
-			for (auto& childset : m_children)
+			ImFont* fontptr = static_cast<mvFont*>(m_font.get())->getFontPtr();
+			ImGui::PushFont(fontptr);
+		}
+
+		// handle enabled theming
+		if (m_enabled)
+		{
+			// push class theme (if it exists)
+			if (auto classTheme = getClassTheme())
+				static_cast<mvTheme*>(classTheme.get())->draw(nullptr, 0.0f, 0.0f);
+
+			// push item theme (if it exists)
+			if (m_theme)
+				static_cast<mvTheme*>(m_theme.get())->draw(nullptr, 0.0f, 0.0f);
+		}
+
+		//-----------------------------------------------------------------------------
+		// draw
+		//-----------------------------------------------------------------------------
+		{
+			ScopedID id(m_uuid);
+
+			static const std::vector<double>* xptr;
+
+			xptr = &(*m_value.get())[0];
+
+			ImPlot::PlotHistogram(m_label.c_str(), xptr->data(), (int)xptr->size(), m_bins,
+				m_cumlative, m_density, ImPlotRange(m_min, m_max), m_outliers, (double)m_barScale);
+
+			// Begin a popup for a legend entry.
+			if (ImPlot::BeginLegendPopup(m_label.c_str(), 1))
 			{
-				for (auto& item : childset)
+				for (auto& childset : m_children)
 				{
-					// skip item if it's not shown
-					if (!item->m_show)
-						continue;
-					item->draw(drawlist, ImPlot::GetPlotPos().x, ImPlot::GetPlotPos().y);
-					item->getState().update();
+					for (auto& item : childset)
+					{
+						// skip item if it's not shown
+						if (!item->m_show)
+							continue;
+						item->draw(drawlist, ImPlot::GetPlotPos().x, ImPlot::GetPlotPos().y);
+						item->getState().update();
+					}
 				}
+				ImPlot::EndLegendPopup();
 			}
-			ImPlot::EndLegendPopup();
+		}
+
+
+		//-----------------------------------------------------------------------------
+		// update state
+		//   * only update if applicable
+		//-----------------------------------------------------------------------------
+
+
+		//-----------------------------------------------------------------------------
+		// post draw
+		//-----------------------------------------------------------------------------
+
+		// pop font off stack
+		if (m_font)
+			ImGui::PopFont();
+
+		// handle popping styles
+		if (m_enabled)
+		{
+			if (auto classTheme = getClassTheme())
+				static_cast<mvTheme*>(classTheme.get())->customAction();
+
+			if (m_theme)
+				static_cast<mvTheme*>(m_theme.get())->customAction();
 		}
 
 	}
@@ -102,9 +160,6 @@ namespace Marvel {
 				break;
 			}
 		}
-
-		resetMaxMins();
-		calculateMaxMins();
 	}
 
 	void mvHistogramSeries::handleSpecificKeywordArgs(PyObject* dict)
@@ -112,23 +167,14 @@ namespace Marvel {
 		if (dict == nullptr)
 			return;
 
-		if (PyObject* item = PyDict_GetItemString(dict, "contribute_to_bounds")) m_contributeToBounds = ToBool(item);
-
-		bool valueChanged = false;
-		if (PyObject* item = PyDict_GetItemString(dict, "x")) { valueChanged = true; (*m_value)[0] = ToDoubleVect(item); }
-		if (PyObject* item = PyDict_GetItemString(dict, "bins")) { valueChanged = true; m_bins = ToInt(item); }
-		if (PyObject* item = PyDict_GetItemString(dict, "bar_scale")) { valueChanged = true; m_barScale = ToFloat(item); }
-		if (PyObject* item = PyDict_GetItemString(dict, "min_range")) { valueChanged = true; m_min = ToDouble(item); }
-		if (PyObject* item = PyDict_GetItemString(dict, "max_range")) { valueChanged = true; m_max = ToDouble(item); }
-		if (PyObject* item = PyDict_GetItemString(dict, "cumlative")) { valueChanged = true; m_cumlative = ToBool(item); }
-		if (PyObject* item = PyDict_GetItemString(dict, "density")) { valueChanged = true; m_density = ToBool(item); }
-		if (PyObject* item = PyDict_GetItemString(dict, "outliers")) { valueChanged = true; m_outliers = ToBool(item); }
-
-		if (valueChanged)
-		{
-			resetMaxMins();
-			calculateMaxMins();
-		}
+		if (PyObject* item = PyDict_GetItemString(dict, "x")) { (*m_value)[0] = ToDoubleVect(item); }
+		if (PyObject* item = PyDict_GetItemString(dict, "bins")) { m_bins = ToInt(item); }
+		if (PyObject* item = PyDict_GetItemString(dict, "bar_scale")) { m_barScale = ToFloat(item); }
+		if (PyObject* item = PyDict_GetItemString(dict, "min_range")) { m_min = ToDouble(item); }
+		if (PyObject* item = PyDict_GetItemString(dict, "max_range")) { m_max = ToDouble(item); }
+		if (PyObject* item = PyDict_GetItemString(dict, "cumlative")) { m_cumlative = ToBool(item); }
+		if (PyObject* item = PyDict_GetItemString(dict, "density")) { m_density = ToBool(item); }
+		if (PyObject* item = PyDict_GetItemString(dict, "outliers")) { m_outliers = ToBool(item); }
 
 	}
 
@@ -136,8 +182,6 @@ namespace Marvel {
 	{
 		if (dict == nullptr)
 			return;
-
-		PyDict_SetItemString(dict, "contribute_to_bounds", ToPyBool(m_contributeToBounds));
 	}
 
 }

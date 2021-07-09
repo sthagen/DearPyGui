@@ -16,8 +16,8 @@ namespace Marvel {
 			MV_PARSER_ARG_SHOW)
 		);
 
-		parser.addArg<mvPyDataType::FloatList>("p1");
-		parser.addArg<mvPyDataType::FloatList>("p2");
+		parser.addArg<mvPyDataType::FloatList>("p1", mvArgType::REQUIRED_ARG, "...", "Start of line.");
+		parser.addArg<mvPyDataType::FloatList>("p2", mvArgType::REQUIRED_ARG, "...", "End of line.");
 
 		parser.addArg<mvPyDataType::IntList>("color", mvArgType::KEYWORD_ARG, "(255, 255, 255, 255)");
 		parser.addArg<mvPyDataType::Float>("thickness", mvArgType::KEYWORD_ARG, "1.0");
@@ -53,8 +53,14 @@ namespace Marvel {
 	void mvDrawLine::draw(ImDrawList* drawlist, float x, float y)
 	{
 
-		mvVec2 start = { x, y };
-		drawlist->AddLine(m_p1 + start, m_p2 + start, m_color, m_thickness);
+		
+		if(ImPlot::GetCurrentContext()->CurrentPlot)
+			drawlist->AddLine(ImPlot::PlotToPixels(m_p1), ImPlot::PlotToPixels(m_p2), m_color, m_thickness);
+		else
+		{
+			ImVec2 start = { x, y };
+			drawlist->AddLine(m_p1 + start, m_p2 + start, m_color, m_thickness);
+		}
 
 	}
 

@@ -3,6 +3,7 @@
 #include "mvItemRegistry.h"
 #include "mvPythonExceptions.h"
 #include "mvUtilities.h"
+#include <fstream>
 
 namespace Marvel {
 
@@ -18,7 +19,6 @@ namespace Marvel {
 		parser.addArg<mvPyDataType::Integer>("height");
 		parser.addArg<mvPyDataType::FloatList>("default_value");
 
-		parser.addArg<mvPyDataType::String>("file", mvArgType::KEYWORD_ARG, "''");
 		parser.addArg<mvPyDataType::UUID>("parent", mvArgType::KEYWORD_ARG, "internal_dpg.mvReservedUUID_2", "Parent to add this item to. (runtime adding)");
 		parser.finalize();
 
@@ -59,22 +59,23 @@ namespace Marvel {
 		if (!m_dirty)
 			return;
 
+		if (!m_state.isOk())
+			return;
+
 		if (m_uuid == MV_ATLAS_UUID)
 		{
 			m_texture = ImGui::GetIO().Fonts->TexID;
 			m_width = ImGui::GetIO().Fonts->TexWidth;
 			m_height = ImGui::GetIO().Fonts->TexHeight;
 		}
-		else if (!m_file.empty())
-			m_texture = LoadTextureFromFile(m_file.c_str(), m_width, m_height);
 		else
 			m_texture = LoadTextureFromArray(m_width, m_height, m_value->data());
 
 		if (m_texture == nullptr)
 		{
 			m_state.setOk(false);
-			mvThrowPythonError(mvErrorCode::mvItemNotFound, "get_selected_nodes",
-				"Texture item (using file) can not be found: " + m_file, this);
+			mvThrowPythonError(mvErrorCode::mvItemNotFound, "add_static_texture",
+				"Texture data can not be found.", this);
 		}
 
 
@@ -107,20 +108,6 @@ namespace Marvel {
 				break;
 			}
 		}
-	}
-
-	void mvStaticTexture::handleSpecificKeywordArgs(PyObject* dict)
-	{
-		if (dict == nullptr)
-			return;
-
-		if (PyObject* item = PyDict_GetItemString(dict, "file")) m_file = ToString(item);
-	}
-
-	void mvStaticTexture::getSpecificConfiguration(PyObject* dict)
-	{
-		if (dict == nullptr)
-			return;
 	}
 
 }

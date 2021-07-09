@@ -18,7 +18,6 @@ namespace Marvel {
 			MV_PARSER_ARG_BEFORE |
 			MV_PARSER_ARG_SOURCE |
 			MV_PARSER_ARG_CALLBACK |
-			MV_PARSER_ARG_USER_DATA |
 			MV_PARSER_ARG_SHOW |
 			MV_PARSER_ARG_ENABLED |
 			MV_PARSER_ARG_FILTER |
@@ -71,6 +70,8 @@ namespace Marvel {
 
 			if (m_texture->getType() == mvAppItemType::mvStaticTexture)
 				texture = static_cast<mvStaticTexture*>(m_texture.get())->getRawTexture();
+			else if (m_texture->getType() == mvAppItemType::mvRawTexture)
+				texture = static_cast<mvRawTexture*>(m_texture.get())->getRawTexture();
 			else
 				texture = static_cast<mvDynamicTexture*>(m_texture.get())->getRawTexture();
 

@@ -163,7 +163,6 @@ namespace Marvel{
 		if(args & MV_PARSER_ARG_CALLBACK)      parser.addArg<mvPyDataType::Callable>("callback", mvArgType::KEYWORD_ARG, "None", "Registers a callback.");
 		if(args & MV_PARSER_ARG_DRAG_CALLBACK) parser.addArg<mvPyDataType::Callable>("drag_callback", mvArgType::KEYWORD_ARG, "None", "Registers a drag callback for drag and drop.");
 		if(args & MV_PARSER_ARG_DROP_CALLBACK) parser.addArg<mvPyDataType::Callable>("drop_callback", mvArgType::KEYWORD_ARG, "None", "Registers a drop callback for drag and drop.");
-		if(args & MV_PARSER_ARG_USER_DATA)     parser.addArg<mvPyDataType::Object>("user_data", mvArgType::KEYWORD_ARG, "None", "User data for callbacks.");
 		if(args & MV_PARSER_ARG_SHOW)          parser.addArg<mvPyDataType::Bool>("show", mvArgType::KEYWORD_ARG, "True", "Attempt to render widget.");
 		if(args & MV_PARSER_ARG_ENABLED)       parser.addArg<mvPyDataType::Bool>("enabled", mvArgType::KEYWORD_ARG, "True", "Turns off functionality of widget and applies the disabled theme.");
 		if(args & MV_PARSER_ARG_POS)		   parser.addArg<mvPyDataType::IntList>("pos", mvArgType::KEYWORD_ARG, "[]", "Places the item relative to window coordinates, [0,0] is top left.");
@@ -175,6 +174,8 @@ namespace Marvel{
 			parser.addArg<mvPyDataType::Bool>("tracked", mvArgType::KEYWORD_ARG, "False", "Scroll tracking");
 			parser.addArg<mvPyDataType::Float>("track_offset", mvArgType::KEYWORD_ARG, "0.5", "0.0f:top, 0.5f:center, 1.0f:bottom");
 		}
+
+		parser.addArg<mvPyDataType::Object>("user_data", mvArgType::KEYWORD_ARG, "None", "User data for callbacks.");
 
 	}
 
@@ -272,8 +273,8 @@ namespace Marvel{
 			{
 				if (index < children.size() - 1)
 				{
-					auto& upperitem = children[index];
-					auto& loweritem = children[index + 1];
+					auto upperitem = children[index];
+					auto loweritem = children[index + 1];
 
 					children[index] = loweritem;
 					children[index + 1] = upperitem;
@@ -695,12 +696,9 @@ namespace Marvel{
 			{
 				for (auto& child : childslot)
 				{
-					if (DoesItemHaveFlag(child.get(), MV_ITEM_DESC_CONTAINER))
-					{
-						// parent found
-						if (child->addChildAfter(prev, item))
-							return true;
-					}
+					// parent found
+					if (child->addChildAfter(prev, item))
+						return true;
 				}
 			}
 
@@ -727,12 +725,9 @@ namespace Marvel{
 					break;
 				}
 
-				if (DoesItemHaveFlag(item.get(), MV_ITEM_DESC_CONTAINER))
-				{
-					itemDeleted = item->deleteChild(uuid);
-					if (itemDeleted)
-						break;
-				}
+				itemDeleted = item->deleteChild(uuid);
+				if (itemDeleted)
+					break;
 			}
 
 			if (childfound)
@@ -782,12 +777,20 @@ namespace Marvel{
 		}
 	}
 
-	void mvAppItem::deleteChildren()
+	void mvAppItem::deleteChildren(int slot)
 	{
-		for (auto& childset : m_children)
+		if (slot < 0)
 		{
-			childset.clear();
-			childset.shrink_to_fit();
+			for (auto& childset : m_children)
+			{
+				childset.clear();
+				childset.shrink_to_fit();
+			}
+		}
+		else if (slot < 5)
+		{
+			m_children[slot].clear();
+			m_children[slot].shrink_to_fit();
 		}
 		onChildrenRemoved();
 	}
@@ -1119,6 +1122,7 @@ namespace Marvel{
 		}
 
 		PyDict_SetItemString(dict, "type", ToPyString(parserCommand));
+		PyDict_SetItemString(dict, "target", ToPyInt(getTarget()));
 
 		if (m_parentPtr)
 			PyDict_SetItemString(dict, "parent", ToPyUUID(m_parentPtr->getUUID()));
@@ -1231,17 +1235,7 @@ namespace Marvel{
 
 
 		if (!mvApp::s_manualMutexControl) std::lock_guard<std::mutex> lk(mvApp::s_mutex);
-		auto appitem = mvApp::GetApp()->getItemRegistry().getItem(item);
-
-		if (appitem)
-		{
-			appitem->m_focusNextFrame = true;
-			if (auto parent = appitem->getRoot())
-				parent->m_focusNextFrame = true;
-		}
-		else
-			mvThrowPythonError(mvErrorCode::mvItemNotFound, "focus_item",
-				"Item not found: " + std::to_string(item), nullptr);
+		auto appitem = mvApp::GetApp()->getItemRegistry().focusItem(item);
 
 		return GetPyNone();
 	}

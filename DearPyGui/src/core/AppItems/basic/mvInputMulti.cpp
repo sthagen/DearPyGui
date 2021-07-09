@@ -19,7 +19,6 @@ namespace Marvel {
             MV_PARSER_ARG_BEFORE |
             MV_PARSER_ARG_SOURCE |
             MV_PARSER_ARG_CALLBACK |
-            MV_PARSER_ARG_USER_DATA |
             MV_PARSER_ARG_SHOW |
             MV_PARSER_ARG_ENABLED |
             MV_PARSER_ARG_FILTER |
@@ -58,7 +57,6 @@ namespace Marvel {
             MV_PARSER_ARG_BEFORE |
             MV_PARSER_ARG_SOURCE |
             MV_PARSER_ARG_CALLBACK |
-            MV_PARSER_ARG_USER_DATA |
             MV_PARSER_ARG_SHOW |
             MV_PARSER_ARG_ENABLED |
             MV_PARSER_ARG_FILTER |
@@ -167,7 +165,11 @@ namespace Marvel {
             if (m_last_value != *m_value)
             {
                 m_last_value = *m_value;
-                mvApp::GetApp()->getCallbackRegistry().addCallback(m_callback, m_uuid, nullptr, m_user_data);
+
+                auto value = *m_value;
+                mvApp::GetApp()->getCallbackRegistry().submitCallback([=]() {
+                    mvApp::GetApp()->getCallbackRegistry().addCallback(getCallback(false), m_uuid, ToPyIntList(value.data(), value.size()), m_user_data);
+                    });
             }
         }
     }
@@ -253,7 +255,10 @@ namespace Marvel {
             if (m_last_value != *m_value)
             {
                 m_last_value = *m_value;
-                mvApp::GetApp()->getCallbackRegistry().addCallback(m_callback, m_uuid, nullptr, m_user_data);
+                auto value = *m_value;
+                mvApp::GetApp()->getCallbackRegistry().submitCallback([=]() {
+                    mvApp::GetApp()->getCallbackRegistry().addCallback(getCallback(false), m_uuid, ToPyFloatList(value.data(), value.size()), m_user_data);
+                    });
             }
         }
     }
@@ -267,11 +272,28 @@ namespace Marvel {
         if (PyObject* item = PyDict_GetItemString(dict, "on_enter")) ToBool(item) ? m_stor_flags |= ImGuiInputTextFlags_EnterReturnsTrue : m_stor_flags &= ~ImGuiInputTextFlags_EnterReturnsTrue;
         if (PyObject* item = PyDict_GetItemString(dict, "readonly")) ToBool(item) ? m_flags |= ImGuiInputTextFlags_ReadOnly : m_flags &= ~ImGuiInputTextFlags_ReadOnly;
         if (PyObject* item = PyDict_GetItemString(dict, "readonly")) ToBool(item) ? m_stor_flags |= ImGuiInputTextFlags_ReadOnly : m_stor_flags &= ~ImGuiInputTextFlags_ReadOnly;
-        if (PyObject* item = PyDict_GetItemString(dict, "min_value")) { m_min = ToInt(item); m_min_clamped = true; }
-        if (PyObject* item = PyDict_GetItemString(dict, "max_value")) { m_max = ToInt(item); m_max_clamped = true; }
-        if (PyObject* item = PyDict_GetItemString(dict, "min_clamped")) m_min_clamped = ToBool(item);
-        if (PyObject* item = PyDict_GetItemString(dict, "max_clamped")) m_max_clamped = ToBool(item);
         if (PyObject* item = PyDict_GetItemString(dict, "size")) m_size = ToInt(item);
+
+        bool minmax_set = false;
+        if (PyObject* item = PyDict_GetItemString(dict, "min_value"))
+        {
+            m_min = ToInt(item);
+            m_min_clamped = true;
+            minmax_set = true;
+        }
+
+        if (PyObject* item = PyDict_GetItemString(dict, "max_value"))
+        {
+            m_max = ToInt(item);
+            m_max_clamped = true;
+            minmax_set = true;
+        }
+
+        if (!minmax_set)
+        {
+            if (PyObject* item = PyDict_GetItemString(dict, "min_clamped")) m_min_clamped = ToBool(item);
+            if (PyObject* item = PyDict_GetItemString(dict, "max_clamped")) m_max_clamped = ToBool(item);
+        }
     }
 
     void mvInputIntMulti::getSpecificConfiguration(PyObject* dict)
@@ -294,11 +316,28 @@ namespace Marvel {
             return;
          
         if (PyObject* item = PyDict_GetItemString(dict, "format")) m_format = ToString(item);
-        if (PyObject* item = PyDict_GetItemString(dict, "min_value")) { m_min = ToFloat(item); m_min_clamped = true; }
-        if (PyObject* item = PyDict_GetItemString(dict, "max_value")) { m_max = ToFloat(item); m_max_clamped = true; }
-        if (PyObject* item = PyDict_GetItemString(dict, "min_clamped")) m_min_clamped = ToBool(item);
-        if (PyObject* item = PyDict_GetItemString(dict, "max_clamped")) m_max_clamped = ToBool(item);
         if (PyObject* item = PyDict_GetItemString(dict, "size")) m_size = ToInt(item);
+
+        bool minmax_set = false;
+        if (PyObject* item = PyDict_GetItemString(dict, "min_value"))
+        {
+            m_min = ToFloat(item);
+            m_min_clamped = true;
+            minmax_set = true;
+        }
+
+        if (PyObject* item = PyDict_GetItemString(dict, "max_value"))
+        {
+            m_max = ToFloat(item);
+            m_max_clamped = true;
+            minmax_set = true;
+        }
+
+        if (!minmax_set)
+        {
+            if (PyObject* item = PyDict_GetItemString(dict, "min_clamped")) m_min_clamped = ToBool(item);
+            if (PyObject* item = PyDict_GetItemString(dict, "max_clamped")) m_max_clamped = ToBool(item);
+        }
 
         // helper for bit flipping
         auto flagop = [dict](const char* keyword, int flag, int& flags)

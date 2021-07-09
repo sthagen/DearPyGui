@@ -21,6 +21,7 @@ set(MARVEL_SOURCES
 	"$<$<PLATFORM_ID:Linux>:src/platform/Linux/mvUtilities.cpp>"
 	"$<$<PLATFORM_ID:Linux>:src/platform/Linux/mvLinuxViewport.cpp>"
 
+	"src/core/mvBuffer.cpp"
 	"src/core/mvEvents.cpp"
 	"src/core/mvApp.cpp"
 	"src/core/mvInput.cpp"
@@ -48,6 +49,7 @@ set(MARVEL_SOURCES
 	"src/core/AppItems/mvTypeBases.cpp"
 	"src/core/AppItems/mvItemRegistry.cpp"
 
+	"src/core/AppItems/textures/mvRawTexture.cpp"
 	"src/core/AppItems/textures/mvStaticTexture.cpp"
 	"src/core/AppItems/textures/mvDynamicTexture.cpp"
 	"src/core/AppItems/textures/mvTextureRegistry.cpp"
@@ -98,6 +100,7 @@ set(MARVEL_SOURCES
 	"src/core/AppItems/containers/mvDragPayload.cpp"
 	"src/core/AppItems/containers/mvFilterSet.cpp"
 	"src/core/AppItems/containers/mvClipper.cpp"
+	"src/core/AppItems/containers/mvViewportMenuBar.cpp"
 
 	"src/core/AppItems/tables/mvTable.cpp"
 	"src/core/AppItems/tables/mvTableColumn.cpp"

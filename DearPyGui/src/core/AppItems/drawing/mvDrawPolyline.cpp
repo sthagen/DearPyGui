@@ -8,7 +8,7 @@ namespace Marvel {
 	void mvDrawPolyline::InsertParser(std::map<std::string, mvPythonParser>* parsers)
 	{
 
-		mvPythonParser parser(mvPyDataType::UUID, "Draws lines on a drawing.", { "Drawlist", "Widgets" });
+		mvPythonParser parser(mvPyDataType::UUID, "Draws connected lines on a drawing from points.", { "Drawlist", "Widgets" });
 		mvAppItem::AddCommonArgs(parser, (CommonParserArgs)(
 			MV_PARSER_ARG_ID |
 			MV_PARSER_ARG_PARENT |
@@ -18,7 +18,7 @@ namespace Marvel {
 
 		parser.addArg<mvPyDataType::ListFloatList>("points");
 
-		parser.addArg<mvPyDataType::Bool>("closed", mvArgType::KEYWORD_ARG, "False");
+		parser.addArg<mvPyDataType::Bool>("closed", mvArgType::KEYWORD_ARG, "False", "Will close the polyline by returning to the first point.");
 
 		parser.addArg<mvPyDataType::IntList>("color", mvArgType::KEYWORD_ARG, "(255, 255, 255, 255)");
 
@@ -55,12 +55,25 @@ namespace Marvel {
 
 	void mvDrawPolyline::draw(ImDrawList* drawlist, float x, float y)
 	{
+
 		mvVec2 start = { x, y };
 
 		std::vector<mvVec2> points = m_points;
 
-		for (auto& point : points)
-			point = point + start;
+		if (ImPlot::GetCurrentContext()->CurrentPlot)
+		{
+			for (auto& point : points)
+			{
+				ImVec2 impoint = ImPlot::PlotToPixels(point);
+				point.x = impoint.x;
+				point.y = impoint.y;
+			}
+		}
+		else
+		{
+			for (auto& point : points)
+				point = point + start;
+		}
 
 		drawlist->AddPolyline((const ImVec2*)const_cast<const mvVec2*>(points.data()), (int)m_points.size(), m_color, m_closed, m_thickness);
 	}

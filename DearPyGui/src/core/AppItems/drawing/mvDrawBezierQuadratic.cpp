@@ -16,16 +16,15 @@ namespace Marvel {
 			MV_PARSER_ARG_SHOW)
 		);
 
-		parser.addArg<mvPyDataType::FloatList>("p1");
-		parser.addArg<mvPyDataType::FloatList>("p2");
-		parser.addArg<mvPyDataType::FloatList>("p3");
+		parser.addArg<mvPyDataType::FloatList>("p1", mvArgType::REQUIRED_ARG, "...", "First point in curve.");
+		parser.addArg<mvPyDataType::FloatList>("p2", mvArgType::REQUIRED_ARG, "...", "Second point in curve.");
+		parser.addArg<mvPyDataType::FloatList>("p3", mvArgType::REQUIRED_ARG, "...", "Third point in curve.");
 
 		parser.addArg<mvPyDataType::IntList>("color", mvArgType::KEYWORD_ARG, "(255, 255, 255, 255)");
 
 		parser.addArg<mvPyDataType::Float>("thickness", mvArgType::KEYWORD_ARG, "1.0");
 
-		parser.addArg<mvPyDataType::Integer>("size", mvArgType::KEYWORD_ARG, "4");
-		parser.addArg<mvPyDataType::Integer>("segments", mvArgType::KEYWORD_ARG, "0");
+		parser.addArg<mvPyDataType::Integer>("segments", mvArgType::KEYWORD_ARG, "0", "Number of segments to approximate bezier curve.");
 
 		parser.finalize();
 
@@ -57,8 +56,13 @@ namespace Marvel {
 
 	void mvDrawBezierQuadratic::draw(ImDrawList* drawlist, float x, float y)
 	{
-		mvVec2 start = { x, y };
-		drawlist->AddBezierQuadratic(m_p1 + start, m_p2 + start, m_p3 + start, m_color, m_thickness, m_segments);
+		if (ImPlot::GetCurrentContext()->CurrentPlot)
+			drawlist->AddBezierQuadratic(ImPlot::PlotToPixels(m_p1), ImPlot::PlotToPixels(m_p2), ImPlot::PlotToPixels(m_p3), m_color, m_thickness, m_segments);
+		else
+		{
+			mvVec2 start = { x, y };
+			drawlist->AddBezierQuadratic(m_p1 + start, m_p2 + start, m_p3 + start, m_color, m_thickness, m_segments);
+		}
 	}
 
 	void mvDrawBezierQuadratic::handleSpecificRequiredArgs(PyObject* dict)

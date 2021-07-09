@@ -15,6 +15,7 @@
 
 #include "textures/mvStaticTexture.h"
 #include "textures/mvDynamicTexture.h"
+#include "textures/mvRawTexture.h"
 #include "textures/mvTextureRegistry.h"
 
 #include "handlers/mvHandlerRegistry.h"
@@ -83,6 +84,7 @@
 #include "containers/mvTooltip.h"
 #include "containers/mvWindowAppItem.h"
 #include "containers/mvDragPayload.h"
+#include "containers/mvViewportMenuBar.h"
 
 #include "tables/mvTable.h"
 #include "tables/mvTableColumn.h"

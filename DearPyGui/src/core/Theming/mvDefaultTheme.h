@@ -22,7 +22,7 @@
 #define mvImGuiCol_FrameBgHovered MV_BASE_COL_panelHoverColor
 #define mvImGuiCol_FrameBgActive MV_BASE_COL_panelActiveColor
 #define mvImGuiCol_TitleBg MV_BASE_COL_bgColor
-#define mvImGuiCol_TitleBgActive MV_BASE_COL_bgColor
+#define mvImGuiCol_TitleBgActive mvColor(15, 86, 135, 255)
 #define mvImGuiCol_TitleBgCollapsed MV_BASE_COL_bgColor
 #define mvImGuiCol_MenuBarBg MV_BASE_COL_panelColor
 #define mvImGuiCol_ScrollbarBg MV_BASE_COL_panelColor

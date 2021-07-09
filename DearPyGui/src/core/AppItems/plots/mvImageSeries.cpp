@@ -4,6 +4,9 @@
 #include "mvApp.h"
 #include "mvItemRegistry.h"
 #include "mvPythonExceptions.h"
+#include "AppItems/fonts/mvFont.h"
+#include "AppItems/themes/mvTheme.h"
+#include "AppItems/containers/mvDragPayload.h"
 
 namespace Marvel {
 
@@ -29,8 +32,6 @@ namespace Marvel {
 
 		parser.addArg<mvPyDataType::IntList>("tint_color", mvArgType::KEYWORD_ARG, "(255, 255, 255, 255)");
 
-		parser.addArg<mvPyDataType::Bool>("contribute_to_bounds", mvArgType::KEYWORD_ARG, "True");
-
 		parser.finalize();
 
 		parsers->insert({ s_command, parser });
@@ -54,40 +55,99 @@ namespace Marvel {
 
 	void mvImageSeries::draw(ImDrawList* drawlist, float x, float y)
 	{
-		ScopedID id(m_uuid);
 
-		if (m_texture)
+		//-----------------------------------------------------------------------------
+		// pre draw
+		//-----------------------------------------------------------------------------
+		if (!m_show)
+			return;
+
+		// push font if a font object is attached
+		if (m_font)
 		{
-			if (m_internalTexture)
-				m_texture->draw(drawlist, x, y);
+			ImFont* fontptr = static_cast<mvFont*>(m_font.get())->getFontPtr();
+			ImGui::PushFont(fontptr);
+		}
 
-			if (!m_texture->getState().isOk())
-				return;
+		// handle enabled theming
+		if (m_enabled)
+		{
+			// push class theme (if it exists)
+			if (auto classTheme = getClassTheme())
+				static_cast<mvTheme*>(classTheme.get())->draw(nullptr, 0.0f, 0.0f);
 
-			void* texture = nullptr;
+			// push item theme (if it exists)
+			if (m_theme)
+				static_cast<mvTheme*>(m_theme.get())->draw(nullptr, 0.0f, 0.0f);
+		}
 
-			if (m_texture->getType() == mvAppItemType::mvStaticTexture)
-				texture = static_cast<mvStaticTexture*>(m_texture.get())->getRawTexture();
-			else
-				texture = static_cast<mvDynamicTexture*>(m_texture.get())->getRawTexture();
-			ImPlot::PlotImage(m_label.c_str(), texture, m_bounds_min, m_bounds_max, m_uv_min, m_uv_max, m_tintColor);
+		//-----------------------------------------------------------------------------
+		// draw
+		//-----------------------------------------------------------------------------
+		{
 
-			// Begin a popup for a legend entry.
-			if (ImPlot::BeginLegendPopup(m_label.c_str(), 1))
+			ScopedID id(m_uuid);
+
+			if (m_texture)
 			{
-				for (auto& childset : m_children)
+				if (m_internalTexture)
+					m_texture->draw(drawlist, x, y);
+
+				if (!m_texture->getState().isOk())
+					return;
+
+				void* texture = nullptr;
+
+				if (m_texture->getType() == mvAppItemType::mvStaticTexture)
+					texture = static_cast<mvStaticTexture*>(m_texture.get())->getRawTexture();
+				else if (m_texture->getType() == mvAppItemType::mvRawTexture)
+					texture = static_cast<mvRawTexture*>(m_texture.get())->getRawTexture();
+				else
+					texture = static_cast<mvDynamicTexture*>(m_texture.get())->getRawTexture();
+
+				ImPlot::PlotImage(m_label.c_str(), texture, m_bounds_min, m_bounds_max, m_uv_min, m_uv_max, m_tintColor);
+
+				// Begin a popup for a legend entry.
+				if (ImPlot::BeginLegendPopup(m_label.c_str(), 1))
 				{
-					for (auto& item : childset)
+					for (auto& childset : m_children)
 					{
-						// skip item if it's not shown
-						if (!item->m_show)
-							continue;
-						item->draw(drawlist, ImPlot::GetPlotPos().x, ImPlot::GetPlotPos().y);
-						item->getState().update();
+						for (auto& item : childset)
+						{
+							// skip item if it's not shown
+							if (!item->m_show)
+								continue;
+							item->draw(drawlist, ImPlot::GetPlotPos().x, ImPlot::GetPlotPos().y);
+							item->getState().update();
+						}
 					}
+					ImPlot::EndLegendPopup();
 				}
-				ImPlot::EndLegendPopup();
 			}
+		}
+
+		//-----------------------------------------------------------------------------
+		// update state
+		//   * only update if applicable
+		//-----------------------------------------------------------------------------
+
+
+		//-----------------------------------------------------------------------------
+		// post draw
+		//-----------------------------------------------------------------------------
+
+		// pop font off stack
+		if (m_font)
+			ImGui::PopFont();
+
+		// handle popping styles
+		if (m_enabled)
+		{
+			if (auto classTheme = getClassTheme())
+				static_cast<mvTheme*>(classTheme.get())->customAction();
+
+			if (m_theme)
+				static_cast<mvTheme*>(m_theme.get())->customAction();
 		}
 
 	}
@@ -141,9 +201,6 @@ namespace Marvel {
 				break;
 			}
 		}
-
-		resetMaxMins();
-		calculateMaxMins();
 	}
 
 	void mvImageSeries::handleSpecificKeywordArgs(PyObject* dict)
@@ -154,7 +211,6 @@ namespace Marvel {
 		if (PyObject* item = PyDict_GetItemString(dict, "uv_min")) m_uv_min = ToVec2(item);
 		if (PyObject* item = PyDict_GetItemString(dict, "uv_max")) m_uv_max = ToVec2(item);
 		if (PyObject* item = PyDict_GetItemString(dict, "tint_color")) m_tintColor = ToColor(item);
-		if (PyObject* item = PyDict_GetItemString(dict, "contribute_to_bounds")) m_contributeToBounds = ToBool(item);
 		if (PyObject* item = PyDict_GetItemString(dict, "bounds_min"))
 		{
 			auto result = ToPoint(item);
@@ -179,7 +235,6 @@ namespace Marvel {
 		PyDict_SetItemString(dict, "uv_min", ToPyPair(m_uv_min.x, m_uv_min.y));
 		PyDict_SetItemString(dict, "uv_max", ToPyPair(m_uv_max.x, m_uv_max.y));
 		PyDict_SetItemString(dict, "tint_color", ToPyColor(m_tintColor));
-		PyDict_SetItemString(dict, "contribute_to_bounds", ToPyBool(m_contributeToBounds));
 		PyDict_SetItemString(dict, "bounds_min", ToPyPair(m_bounds_min.x, m_bounds_min.y));
 		PyDict_SetItemString(dict, "bounds_max", ToPyPair(m_bounds_max.x, m_bounds_max.y));
 	}

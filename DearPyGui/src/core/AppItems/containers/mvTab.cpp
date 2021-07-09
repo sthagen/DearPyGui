@@ -27,7 +27,7 @@ namespace Marvel {
 		parser.addArg<mvPyDataType::Bool>("closable", mvArgType::KEYWORD_ARG, "False", "Creates a button on the tab that can hide the tab.");
 		parser.addArg<mvPyDataType::Bool>("no_tooltip", mvArgType::KEYWORD_ARG, "False", "Disable tooltip for the given tab.");
 		
-		parser.addArg<mvPyDataType::Bool>("order_mode", mvArgType::KEYWORD_ARG, "0");
+		parser.addArg<mvPyDataType::Bool>("order_mode", mvArgType::KEYWORD_ARG, "0", "set using a constant: mvTabOrder_Reorderable: allows reordering, mvTabOrder_Fixed: fixed ordering, mvTabOrder_Leading: adds tab to front, mvTabOrder_Trailing: adds tab to back");
 
 		parser.finalize();
 
@@ -92,7 +92,12 @@ namespace Marvel {
 
 			// run call back if it exists
 			if (parent->getSpecificValue() != m_uuid)
-				mvApp::GetApp()->getCallbackRegistry().addCallback(parent->getCallback(), m_uuid, nullptr, parent->getCallbackData());
+			{
+				auto value = *m_value;
+				mvApp::GetApp()->getCallbackRegistry().submitCallback([=]() {
+					mvApp::GetApp()->getCallbackRegistry().addCallback(parent->getCallback(), parent->getUUID(), ToPyUUID(m_uuid), parent->getCallbackData());
+					});
+			}
 
 			parent->setValue(m_uuid);
 

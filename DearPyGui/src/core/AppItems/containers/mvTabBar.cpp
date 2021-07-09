@@ -16,7 +16,6 @@ namespace Marvel {
 			MV_PARSER_ARG_PARENT |
 			MV_PARSER_ARG_BEFORE |
 			MV_PARSER_ARG_CALLBACK |
-			MV_PARSER_ARG_USER_DATA |
 			MV_PARSER_ARG_SHOW |
 			MV_PARSER_ARG_FILTER |
 			MV_PARSER_ARG_DROP_CALLBACK |
@@ -27,7 +26,7 @@ namespace Marvel {
 			MV_PARSER_ARG_POS)
 		);
 
-		parser.addArg<mvPyDataType::Bool>("reorderable", mvArgType::KEYWORD_ARG, "False", "Allows for moveable tabs.");
+		parser.addArg<mvPyDataType::Bool>("reorderable", mvArgType::KEYWORD_ARG, "False", "Allows for the user to change the order of the tabs.");
 
 		parser.finalize();
 
@@ -45,6 +44,17 @@ namespace Marvel {
 	{
 		if (type == mvAppItemType::mvTab)return true;
 		if (type == mvAppItemType::mvTabButton)return true;
+		if (type == mvAppItemType::mvActivatedHandler) return true;
+		if (type == mvAppItemType::mvActiveHandler) return true;
+		if (type == mvAppItemType::mvClickedHandler) return true;
+		if (type == mvAppItemType::mvDeactivatedAfterEditHandler) return true;
+		if (type == mvAppItemType::mvDeactivatedHandler) return true;
+		if (type == mvAppItemType::mvEditedHandler) return true;
+		if (type == mvAppItemType::mvFocusHandler) return true;
+		if (type == mvAppItemType::mvHoverHandler) return true;
+		if (type == mvAppItemType::mvResizeHandler) return true;
+		if (type == mvAppItemType::mvToggledOpenHandler) return true;
+		if (type == mvAppItemType::mvVisibleHandler) return true;
 
 		mvThrowPythonError(mvErrorCode::mvIncompatibleChild, s_command,
 			"Incompatible child. Acceptable children include: tab, tab button", this);

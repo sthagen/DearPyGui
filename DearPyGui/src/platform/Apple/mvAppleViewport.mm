@@ -67,6 +67,7 @@ namespace Marvel {
 
         // Setup window
         glfwSetErrorCallback(glfw_error_callback);
+        glfwInitHint(GLFW_COCOA_CHDIR_RESOURCES, GLFW_FALSE);
         glfwInit();
 
         if (!m_resizable)

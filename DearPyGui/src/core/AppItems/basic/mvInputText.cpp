@@ -18,7 +18,6 @@ namespace Marvel {
 			MV_PARSER_ARG_BEFORE |
 			MV_PARSER_ARG_SOURCE |
 			MV_PARSER_ARG_CALLBACK |
-			MV_PARSER_ARG_USER_DATA |
 			MV_PARSER_ARG_SHOW |
 			MV_PARSER_ARG_ENABLED |
 			MV_PARSER_ARG_FILTER |
@@ -81,19 +80,34 @@ namespace Marvel {
 			if (m_multiline)
 			{
 				if (ImGui::InputTextMultiline(m_label.c_str(), m_value.get(), ImVec2((float)m_width, (float)m_height), m_flags))
-					mvApp::GetApp()->getCallbackRegistry().addCallback(m_callback, m_uuid, nullptr, m_user_data);
+				{
+					auto value = *m_value;
+					mvApp::GetApp()->getCallbackRegistry().submitCallback([=]() {
+						mvApp::GetApp()->getCallbackRegistry().addCallback(getCallback(false), m_uuid, ToPyString(value), m_user_data);
+						});
+				}
 			}
 			else
 			{
 				if (ImGui::InputText(m_label.c_str(), m_value.get(), m_flags))
-					mvApp::GetApp()->getCallbackRegistry().addCallback(m_callback, m_uuid, nullptr, m_user_data);
+				{
+					auto value = *m_value;
+					mvApp::GetApp()->getCallbackRegistry().submitCallback([=]() {
+						mvApp::GetApp()->getCallbackRegistry().addCallback(getCallback(false), m_uuid, ToPyString(value), m_user_data);
+						});
+				}
 			}
 		}
 
 		else
 		{
 			if (ImGui::InputTextWithHint(m_label.c_str(), m_hint.c_str(), m_value.get(), m_flags))
-				mvApp::GetApp()->getCallbackRegistry().addCallback(m_callback, m_uuid, nullptr, m_user_data);
+			{
+				auto value = *m_value;
+				mvApp::GetApp()->getCallbackRegistry().submitCallback([=]() {
+					mvApp::GetApp()->getCallbackRegistry().addCallback(getCallback(false), m_uuid, ToPyString(value), m_user_data);
+					});
+			}
 		}
 
 	}

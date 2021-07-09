@@ -4,6 +4,9 @@
 #include "mvApp.h"
 #include "mvItemRegistry.h"
 #include "mvPythonExceptions.h"
+#include "AppItems/fonts/mvFont.h"
+#include "AppItems/themes/mvTheme.h"
+#include "AppItems/containers/mvDragPayload.h"
 
 namespace Marvel {
 
@@ -22,8 +25,6 @@ namespace Marvel {
 		parser.addArg<mvPyDataType::DoubleList>("x");
 		parser.addArg<mvPyDataType::DoubleList>("y");
 
-		parser.addArg<mvPyDataType::Bool>("contribute_to_bounds", mvArgType::KEYWORD_ARG, "True");
-
 		parser.finalize();
 
 		parsers->insert({ s_command, parser });
@@ -32,7 +33,6 @@ namespace Marvel {
 	mvScatterSeries::mvScatterSeries(mvUUID uuid)
 		: mvSeriesBase(uuid)
 	{
-		m_contributeToBounds = true;
 	}
 
 	bool mvScatterSeries::isParentCompatible(mvAppItemType type)
@@ -48,31 +48,86 @@ namespace Marvel {
 
 	void mvScatterSeries::draw(ImDrawList* drawlist, float x, float y)
 	{
-		ScopedID id(m_uuid);
 
-		static const std::vector<double>* xptr;
-		static const std::vector<double>* yptr;
+		//-----------------------------------------------------------------------------
+		// pre draw
+		//-----------------------------------------------------------------------------
+		if (!m_show)
+			return;
 
-		xptr = &(*m_value.get())[0];
-		yptr = &(*m_value.get())[1];
-
-		ImPlot::PlotScatter(m_label.c_str(), xptr->data(), yptr->data(), (int)xptr->size());
-
-		// Begin a popup for a legend entry.
-		if (ImPlot::BeginLegendPopup(m_label.c_str(), 1))
+		// push font if a font object is attached
+		if (m_font)
 		{
-			for (auto& childset : m_children)
+			ImFont* fontptr = static_cast<mvFont*>(m_font.get())->getFontPtr();
+			ImGui::PushFont(fontptr);
+		}
+
+		// handle enabled theming
+		if (m_enabled)
+		{
+			// push class theme (if it exists)
+			if (auto classTheme = getClassTheme())
+				static_cast<mvTheme*>(classTheme.get())->draw(nullptr, 0.0f, 0.0f);
+
+			// push item theme (if it exists)
+			if (m_theme)
+				static_cast<mvTheme*>(m_theme.get())->draw(nullptr, 0.0f, 0.0f);
+		}
+
+		//-----------------------------------------------------------------------------
+		// draw
+		//-----------------------------------------------------------------------------
+		{
+			ScopedID id(m_uuid);
+
+			static const std::vector<double>* xptr;
+			static const std::vector<double>* yptr;
+
+			xptr = &(*m_value.get())[0];
+			yptr = &(*m_value.get())[1];
+
+			ImPlot::PlotScatter(m_label.c_str(), xptr->data(), yptr->data(), (int)xptr->size());
+
+			// Begin a popup for a legend entry.
+			if (ImPlot::BeginLegendPopup(m_label.c_str(), 1))
 			{
-				for (auto& item : childset)
+				for (auto& childset : m_children)
 				{
-					// skip item if it's not shown
-					if (!item->m_show)
-						continue;
-					item->draw(drawlist, ImPlot::GetPlotPos().x, ImPlot::GetPlotPos().y);
-					item->getState().update();
+					for (auto& item : childset)
+					{
+						// skip item if it's not shown
+						if (!item->m_show)
+							continue;
+						item->draw(drawlist, ImPlot::GetPlotPos().x, ImPlot::GetPlotPos().y);
+						item->getState().update();
+					}
 				}
+				ImPlot::EndLegendPopup();
 			}
-			ImPlot::EndLegendPopup();
+		}
+
+		//-----------------------------------------------------------------------------
+		// update state
+		//   * only update if applicable
+		//-----------------------------------------------------------------------------
+
+
+		//-----------------------------------------------------------------------------
+		// post draw
+		//-----------------------------------------------------------------------------
+		// 
+		// pop font off stack
+		if (m_font)
+			ImGui::PopFont();
+
+		// handle popping styles
+		if (m_enabled)
+		{
+			if (auto classTheme = getClassTheme())
+				static_cast<mvTheme*>(classTheme.get())->customAction();
+
+			if (m_theme)
+				static_cast<mvTheme*>(m_theme.get())->customAction();
 		}
 
 	}
@@ -99,9 +154,6 @@ namespace Marvel {
 				break;
 			}
 		}
-
-		resetMaxMins();
-		calculateMaxMins();
 	}
 
 	void mvScatterSeries::handleSpecificKeywordArgs(PyObject* dict)
@@ -109,25 +161,14 @@ namespace Marvel {
 		if (dict == nullptr)
 			return;
 
-		if (PyObject* item = PyDict_GetItemString(dict, "contribute_to_bounds")) m_contributeToBounds = ToBool(item);
-
-		bool valueChanged = false;
-		if (PyObject* item = PyDict_GetItemString(dict, "x")) { valueChanged = true; (*m_value)[0] = ToDoubleVect(item); }
-		if (PyObject* item = PyDict_GetItemString(dict, "y")) { valueChanged = true; (*m_value)[1] = ToDoubleVect(item); }
-
-		if (valueChanged)
-		{
-			resetMaxMins();
-			calculateMaxMins();
-		}
+		if (PyObject* item = PyDict_GetItemString(dict, "x")) { (*m_value)[0] = ToDoubleVect(item); }
+		if (PyObject* item = PyDict_GetItemString(dict, "y")) { (*m_value)[1] = ToDoubleVect(item); }
 	}
 
 	void mvScatterSeries::getSpecificConfiguration(PyObject* dict)
 	{
 		if (dict == nullptr)
 			return;
-
-		PyDict_SetItemString(dict, "contribute_to_bounds", ToPyBool(m_contributeToBounds));
 	}
 
 }

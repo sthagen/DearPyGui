@@ -43,7 +43,10 @@ namespace Marvel {
 
 		mvWindowAppItem(mvUUID uuid, bool mainWindow = false);
 
-		void addMenuBar           () { m_hasMenuBar = true; }
+		// overriding until we can remove these
+		bool preDraw() override { return true; }
+		void postDraw() override {}
+
 		void addFlag              (ImGuiWindowFlags flag) { m_windowflags |= flag; }
 		void removeFlag           (ImGuiWindowFlags flag) { m_windowflags &= ~flag; }
 		void setWindowAsMainStatus(bool value);
@@ -51,8 +54,6 @@ namespace Marvel {
 		void setWidth             (int width) override;
 		void setHeight            (int height) override;
 		void draw                 (ImDrawList* drawlist, float x, float y) override;
-		bool preDraw                 () override;
-		void postDraw                 () override;
 		bool getWindowAsMainStatus() const { return m_mainWindow; }
 
 		void show() override;
@@ -74,7 +75,6 @@ namespace Marvel {
 		int                   m_oldHeight = 200;
 		bool                  m_mainWindow = false;
 		bool                  m_dirty_size = true;
-		bool                  m_hasMenuBar = false;
 		bool                  m_closing = true;
 		bool                  m_collapsedDirty = true;
 		bool                  m_resized = false;
@@ -96,7 +96,7 @@ namespace Marvel {
 		bool       m_no_background = false;
 		bool       m_collapsed = false;
 		PyObject*  m_on_close = nullptr;
-		mvVec2     m_min_size = { 32.0f, 32.0f };
+		mvVec2     m_min_size = { 100.0f, 100.0f };
 		mvVec2     m_max_size = { 30000.0f, 30000.0f };
 
 		// scroll info

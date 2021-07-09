@@ -122,6 +122,7 @@ namespace Marvel {
 			mvPythonParser parser(mvPyDataType::None, "Undocumented", { "Item Registry" });
 			parser.addArg<mvPyDataType::UUID>("item");
 			parser.addArg<mvPyDataType::Bool>("children_only", mvArgType::KEYWORD_ARG, "False");
+			parser.addArg<mvPyDataType::Integer>("slot", mvArgType::KEYWORD_ARG, "-1");
 			parser.finalize();
 			parsers->insert({ "delete_item", parser });
 		}
@@ -189,7 +190,39 @@ namespace Marvel {
 		return nullptr;
 	}
 
-	bool mvItemRegistry::deleteItem(mvUUID uuid, bool childrenOnly)
+	bool mvItemRegistry::focusItem(mvUUID uuid)
+	{
+
+		if (!mvApp::IsAppStarted())
+		{
+			for (int i = 0; i < m_roots.size(); i++)
+			{
+				if (m_roots[i]->getUUID() == uuid)
+				{
+					mvRef<mvAppItem> oldItem = m_roots.back();
+					m_roots[m_roots.size() - 1] = m_roots[i];
+					m_roots[i] = oldItem;
+					return true;
+				}
+			}
+		}
+
+		auto appitem = getItem(uuid);
+
+		if (appitem)
+		{
+			appitem->focus();
+			if (auto parent = appitem->getRoot())
+				parent->focus();
+			return true;
+		}
+		else
+			mvThrowPythonError(mvErrorCode::mvItemNotFound, "focus_item",
+				"Item not found: " + std::to_string(uuid), nullptr);
+		return false;
+	}
+
+	bool mvItemRegistry::deleteItem(mvUUID uuid, bool childrenOnly, int slot)
 	{
 
 		MV_ITEM_REGISTRY_TRACE("Attempting to delete: " + std::to_string(uuid));
@@ -198,7 +231,7 @@ namespace Marvel {
 		if (m_stagingArea.count(uuid) != 0)
 		{
 			if (childrenOnly)
-				m_stagingArea[uuid]->deleteChildren();
+				m_stagingArea[uuid]->deleteChildren(slot);
 			else
 				m_stagingArea.erase(uuid);
 			MV_ITEM_REGISTRY_INFO(std::to_string(uuid) + " found and deleted.");
@@ -211,7 +244,7 @@ namespace Marvel {
 			auto item = getItem(uuid);
 			if (item)
 			{
-				item->deleteChildren();
+				item->deleteChildren(slot);
 				MV_ITEM_REGISTRY_INFO("Item found and it's children deleted.");
 				return true;
 			}
@@ -387,7 +420,7 @@ namespace Marvel {
 			if (!root->preDraw())
 				continue;
 
-			if(root->m_show || mvAppItem::DoesItemHaveFlag(root.get(), MV_ITEM_DESC_ALWAYS_DRAW))
+			if(root->m_show || mvAppItem::DoesItemHaveFlag(root.get(), MV_ITEM_DESC_ALWAYS_DRAW) || root->getType() == mvAppItemType::mvWindowAppItem)
 				root->draw(nullptr, 0.0f, 0.0f);
 
 			root->postDraw();
@@ -1134,12 +1167,13 @@ namespace Marvel {
 
 		mvUUID item;
 		int childrenOnly = false;
+		int slot = -1;
 
-		if (!(mvApp::GetApp()->getParsers())["delete_item"].parse(args, kwargs, __FUNCTION__, &item, &childrenOnly))
+		if (!(mvApp::GetApp()->getParsers())["delete_item"].parse(args, kwargs, __FUNCTION__, &item, &childrenOnly, &slot))
 			return GetPyNone();
 
 		if (!mvApp::s_manualMutexControl) std::lock_guard<std::mutex> lk(mvApp::s_mutex);
-		mvApp::GetApp()->getItemRegistry().deleteItem(item, childrenOnly);
+		mvApp::GetApp()->getItemRegistry().deleteItem(item, childrenOnly, slot);
 
 		return GetPyNone();
 

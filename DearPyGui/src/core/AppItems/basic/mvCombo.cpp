@@ -17,7 +17,6 @@ namespace Marvel {
 			MV_PARSER_ARG_BEFORE |
 			MV_PARSER_ARG_SOURCE |
 			MV_PARSER_ARG_CALLBACK |
-			MV_PARSER_ARG_USER_DATA |
 			MV_PARSER_ARG_SHOW |
 			MV_PARSER_ARG_ENABLED |
 			MV_PARSER_ARG_FILTER |
@@ -65,7 +64,12 @@ namespace Marvel {
 				if (ImGui::Selectable((name).c_str(), is_selected))
 				{
 					if (m_enabled) { *m_value = name; }
-					mvApp::GetApp()->getCallbackRegistry().addCallback(m_callback, m_uuid, nullptr, m_user_data);
+	
+					auto value = *m_value;
+					mvApp::GetApp()->getCallbackRegistry().submitCallback([=]() {
+						mvApp::GetApp()->getCallbackRegistry().addCallback(getCallback(false), m_uuid, ToPyString(value), m_user_data);
+						});
+
 
 				}
 

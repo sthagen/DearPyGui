@@ -80,6 +80,7 @@ namespace Marvel {
 
         static ImPlotAxisFlags rt_axis = ImPlotAxisFlags_NoTickLabels | ImPlotAxisFlags_NoGridLines | ImPlotAxisFlags_NoTickMarks;
         ImPlot::SetNextPlotLimitsX(t - history, t, ImGuiCond_Always);
+        ImPlot::FitNextPlotAxes(false);
         if (ImPlot::BeginPlot("##Scrolling1", nullptr, nullptr, ImVec2(-1, 200), 0, rt_axis, ImPlotAxisFlags_NoGridLines | ImPlotAxisFlags_LockMin))
         {
             static float fps_h[2] = { 0.0f, 0.0f };
@@ -101,15 +102,18 @@ namespace Marvel {
             ImPlot::PlotShaded("Low FPS", fps_x, fps_30, 2, INFINITY);
             ImPlot::PopStyleColor();
 
-            ImPlot::PlotLine("Frame", &buffers["Frame"].Data[0].x, &buffers["Frame"].Data[0].y, buffers["Frame"].Data.size(), buffers["Frame"].Offset, 2 * sizeof(float));
-            ImPlot::PlotLine("Presentation", &buffers["Presentation"].Data[0].x, &buffers["Presentation"].Data[0].y, buffers["Presentation"].Data.size(), buffers["Presentation"].Offset, 2 * sizeof(float));
-
+            if (!buffers["Frame"].Data.empty())
+            {
+                ImPlot::PlotLine("Frame", &buffers["Frame"].Data[0].x, &buffers["Frame"].Data[0].y, buffers["Frame"].Data.size(), buffers["Frame"].Offset, 2 * sizeof(float));
+                ImPlot::PlotLine("Presentation", &buffers["Presentation"].Data[0].x, &buffers["Presentation"].Data[0].y, buffers["Presentation"].Data.size(), buffers["Presentation"].Offset, 2 * sizeof(float));
+            }
             ImPlot::EndPlot();
         }
         ImPlot::PopStyleColor(3);
 
         ImPlot::PushStyleColor(ImPlotCol_PlotBorder, ImVec4(0.0f, 0.0f, 0.0f, 0.0f));
         ImPlot::SetNextPlotLimitsX(t - history, t, ImGuiCond_Always);
+        ImPlot::FitNextPlotAxes(false);
         if (ImPlot::BeginPlot("##Scrolling2", nullptr, nullptr, ImVec2(-1, -1), 0, rt_axis, 0 | ImPlotAxisFlags_LockMin))
         {
 

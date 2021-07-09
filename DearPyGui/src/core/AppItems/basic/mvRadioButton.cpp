@@ -15,7 +15,6 @@ namespace Marvel {
 			MV_PARSER_ARG_BEFORE |
 			MV_PARSER_ARG_SOURCE |
 			MV_PARSER_ARG_CALLBACK |
-			MV_PARSER_ARG_USER_DATA |
 			MV_PARSER_ARG_SHOW |
 			MV_PARSER_ARG_ENABLED |
 			MV_PARSER_ARG_FILTER |
@@ -26,7 +25,7 @@ namespace Marvel {
 			MV_PARSER_ARG_POS)
 		);
 
-		parser.addArg<mvPyDataType::Integer>("items", mvArgType::POSITIONAL_ARG, "()", "A tuple of items to be shown as radio options. Can consist of any combination of types.");
+		parser.addArg<mvPyDataType::StringList>("items", mvArgType::POSITIONAL_ARG, "()", "A tuple of items to be shown as radio options. Can consist of any combination of types.");
 
 		parser.addArg<mvPyDataType::String>("default_value", mvArgType::KEYWORD_ARG, "''");
 
@@ -88,7 +87,10 @@ namespace Marvel {
 			{
 				*m_value = m_itemnames[m_index];
 				m_disabled_value = m_itemnames[m_index];
-				mvApp::GetApp()->getCallbackRegistry().addCallback(getCallback(false), m_uuid, nullptr, m_user_data);
+				auto value = *m_value;
+				mvApp::GetApp()->getCallbackRegistry().submitCallback([=]() {
+					mvApp::GetApp()->getCallbackRegistry().addCallback(getCallback(false), m_uuid, ToPyString(value), m_user_data);
+					});
 			}
 
 		}

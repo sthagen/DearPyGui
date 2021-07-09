@@ -16,7 +16,7 @@ namespace Marvel {
 			MV_PARSER_ARG_POS)
 		);
 
-		parser.addArg<mvPyDataType::Integer>("count", mvArgType::KEYWORD_ARG, "1", "Number of spacings to add");
+		parser.addArg<mvPyDataType::Integer>("count", mvArgType::KEYWORD_ARG, "1", "Number of spacings to add the size is dependant on the curret style.");
 
 		parser.finalize();
 
@@ -33,6 +33,27 @@ namespace Marvel {
 	{
 		for (int i = 0; i < *m_value; i++)
 			ImGui::Spacing();
+	}
+
+	void mvSpacing::handleSpecificKeywordArgs(PyObject* dict)
+	{
+		if (dict == nullptr)
+			return;
+
+		if (PyObject* item = PyDict_GetItemString(dict, "count"))
+		{
+			*m_value = ToInt(item);
+		}
+
+
+	}
+
+	void mvSpacing::getSpecificConfiguration(PyObject* dict)
+	{
+		if (dict == nullptr)
+			return;
+
+		PyDict_SetItemString(dict, "count", ToPyBool(*m_value));
 	}
 
 }

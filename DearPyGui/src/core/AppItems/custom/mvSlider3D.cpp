@@ -5,7 +5,7 @@ namespace Marvel {
     void mvSlider3D::InsertParser(std::map<std::string, mvPythonParser>* parsers)
     {
 
-        mvPythonParser parser(mvPyDataType::UUID, "Undocumented", { "Widgets" });
+        mvPythonParser parser(mvPyDataType::UUID, "Adds a 3D box slider that allows a 3d point to be show in 2d represented cube space.", { "Widgets" });
 		mvAppItem::AddCommonArgs(parser, (CommonParserArgs)(
 			MV_PARSER_ARG_ID |
 			MV_PARSER_ARG_WIDTH |
@@ -15,7 +15,6 @@ namespace Marvel {
 			MV_PARSER_ARG_BEFORE |
 			MV_PARSER_ARG_SOURCE |
 			MV_PARSER_ARG_CALLBACK |
-			MV_PARSER_ARG_USER_DATA |
 			MV_PARSER_ARG_SHOW |
 			MV_PARSER_ARG_FILTER |
 			MV_PARSER_ARG_DROP_CALLBACK |
@@ -27,13 +26,13 @@ namespace Marvel {
 
         parser.addArg<mvPyDataType::FloatList>("default_value", mvArgType::KEYWORD_ARG, "(0.0, 0.0, 0.0, 0.0)");
 
-        parser.addArg<mvPyDataType::Float>("max_x", mvArgType::KEYWORD_ARG, "100.0");
-        parser.addArg<mvPyDataType::Float>("max_y", mvArgType::KEYWORD_ARG, "100.0");
-        parser.addArg<mvPyDataType::Float>("max_z", mvArgType::KEYWORD_ARG, "100.0");
-        parser.addArg<mvPyDataType::Float>("min_x", mvArgType::KEYWORD_ARG, "0.0");
-        parser.addArg<mvPyDataType::Float>("min_y", mvArgType::KEYWORD_ARG, "0.0");
-        parser.addArg<mvPyDataType::Float>("min_z", mvArgType::KEYWORD_ARG, "0.0");
-        parser.addArg<mvPyDataType::Float>("scale", mvArgType::KEYWORD_ARG, "1.0");
+        parser.addArg<mvPyDataType::Float>("max_x", mvArgType::KEYWORD_ARG, "100.0", "Applies upper limit to slider.");
+        parser.addArg<mvPyDataType::Float>("max_y", mvArgType::KEYWORD_ARG, "100.0", "Applies upper limit to slider.");
+        parser.addArg<mvPyDataType::Float>("max_z", mvArgType::KEYWORD_ARG, "100.0", "Applies upper limit to slider.");
+        parser.addArg<mvPyDataType::Float>("min_x", mvArgType::KEYWORD_ARG, "0.0", "Applies lower limit to slider.");
+        parser.addArg<mvPyDataType::Float>("min_y", mvArgType::KEYWORD_ARG, "0.0", "Applies lower limit to slider.");
+        parser.addArg<mvPyDataType::Float>("min_z", mvArgType::KEYWORD_ARG, "0.0", "Applies lower limit to slider.");
+        parser.addArg<mvPyDataType::Float>("scale", mvArgType::KEYWORD_ARG, "1.0", "Size of the widget.");
 
         parser.finalize();
 
@@ -388,7 +387,12 @@ namespace Marvel {
         ScopedID id(m_uuid);
 
         if(SliderScalar3D(m_specificedlabel.c_str(), &(*m_value)[0], &(*m_value)[1], &(*m_value)[2], m_minX, m_maxX, m_minY, m_maxY, m_minZ, m_maxZ, m_scale))
-            mvApp::GetApp()->getCallbackRegistry().addCallback(getCallback(false), m_uuid, nullptr, m_user_data);
+		{
+			auto value = *m_value;
+			mvApp::GetApp()->getCallbackRegistry().submitCallback([=]() {
+				mvApp::GetApp()->getCallbackRegistry().addCallback(getCallback(false), m_uuid, ToPyFloatList(value.data(), value.size()), m_user_data);
+				});
+		}
     }
 
     void mvSlider3D::handleSpecificKeywordArgs(PyObject* dict)

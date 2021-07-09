@@ -2,7 +2,6 @@ import dearpygui.dearpygui as dpg
 from dearpygui.logger import mvLogger
 from math import sin, cos
 import random
-import uuid
 
 demo_texture_container = dpg.add_texture_registry(label="Demo Texture Container")
 demo_static_texture_1 = dpg.generate_uuid()
@@ -15,13 +14,12 @@ def _help(message):
     """ Simple Helper """
     pass
 
-def _config(sender, app_data, user_data):
+def _config(sender, keyword, user_data):
 
     widget_type = dpg.get_item_type(sender)
     items = user_data
 
     if widget_type == "mvAppItemType::mvRadioButton":
-        keyword = dpg.get_value(sender)
         value = True
 
     else:
@@ -151,11 +149,11 @@ def _create_dynamic_textures():
 
 def _update_dynamic_textures(sender, app_data, user_data):
 
-    new_color = dpg.get_value(sender)
-    new_color[0] = new_color[0]/255
-    new_color[1] = new_color[1]/255
-    new_color[2] = new_color[2]/255
-    new_color[3] = new_color[3]/255
+    new_color = app_data
+    new_color[0] = new_color[0]
+    new_color[1] = new_color[1]
+    new_color[2] = new_color[2]
+    new_color[3] = new_color[3]
 
     if user_data == 1:
         texture_data = []
@@ -184,12 +182,12 @@ def show_demo():
     ## create a logger
     logger = mvLogger()
     logger.log_level = 0
-    logger.log("trace message boi")
-    logger.log_debug("debug message boi")
-    logger.log_info("info message boi")
-    logger.log_warning("warning message boi")
-    logger.log_error("error message boi")
-    logger.log_critical("critical message boi")
+    logger.log("trace message")
+    logger.log_debug("debug message")
+    logger.log_info("info message")
+    logger.log_warning("warning message")
+    logger.log_error("error message")
+    logger.log_critical("critical message")
 
     def _log(sender, app_data, user_data):
         pass
@@ -197,7 +195,7 @@ def show_demo():
     _create_static_textures()
     _create_dynamic_textures()
 
-    with dpg.window(label="Dear PyGui Demo", width=800, height=800, on_close=_on_demo_close) as demo_id:
+    with dpg.window(label="Dear PyGui Demo", width=800, height=800, on_close=_on_demo_close, pos=(100, 100)) as demo_id:
     
         with dpg.menu_bar():
 
@@ -347,9 +345,7 @@ def show_demo():
                 _color_picker_id = dpg.generate_uuid()
                 _color_edit_id = dpg.generate_uuid()
 
-                def _color_picker_configs(sender, app_data, user_data):
-
-                    value = dpg.get_value(sender)
+                def _color_picker_configs(sender, value, user_data):
 
                     _old_config = dpg.get_item_configuration(user_data)
 
@@ -528,7 +524,7 @@ def show_demo():
 
                     dpg.add_text(paragraph1, wrap=0)
                     widget_id = dpg.add_slider_int(label="wrap width", default_value=500, max_value=1000, 
-                                       callback=lambda s, a, u: dpg.configure_item(u, wrap=dpg.get_value(s)))
+                                       callback=lambda s, a, u: dpg.configure_item(u, wrap=a))
                     dpg.add_text(paragraph2, wrap=500)
                     dpg.configure_item(widget_id, user_data=dpg.last_item())
 
@@ -650,11 +646,11 @@ def show_demo():
                     dpg.add_table_column()
                     dpg.add_table_column()
 
-                    dpg.add_date_picker(level=0, default_value={'month_day': 8, 'year':93, 'month':5})
+                    dpg.add_date_picker(level=dpg.mvDatePickerLevel_Day, default_value={'month_day': 8, 'year':93, 'month':5})
                     dpg.add_table_next_column()
-                    dpg.add_date_picker(level=1, default_value={'month_day': 8, 'year':93, 'month':5})
+                    dpg.add_date_picker(level=dpg.mvDatePickerLevel_Month, default_value={'month_day': 8, 'year':93, 'month':5})
                     dpg.add_table_next_column()
-                    dpg.add_date_picker(level=2, default_value={'month_day': 8, 'year':93, 'month':5})
+                    dpg.add_date_picker(level=dpg.mvDatePickerLevel_Year, default_value={'month_day': 8, 'year':93, 'month':5})
 
             with dpg.tree_node(label="Loading Indicators"):
 
@@ -750,7 +746,7 @@ def show_demo():
                 dpg.add_button(label="Button 3")
 
             with dpg.tree_node(label="Absolute Position Placement"):
-                dpg.add_button(label="Set Button 2 Pos", callback=lambda: dpg.set_item_pos(B2, x=50, y=125))
+                dpg.add_button(label="Set Button 2 Pos", callback=lambda: dpg.set_item_pos(B2, (50, 125)))
                 dpg.add_button(label="Reset Button 2 Pos", callback=lambda: dpg.reset_pos(B2))
                 dpg.add_button(label="Button 1", pos=[50,50], width=75, height=75)
                 B2 = dpg.add_button(label="Button 2", width=75, height=75)
@@ -1503,7 +1499,7 @@ def show_demo():
                                     dpg.add_input_int(label=" ", step=0)
                                     dpg.add_button(label=f"Cell {i}, 1")
                                     dpg.add_text(f"Cell {i}, 2")
-                dpg.add_checkbox(label="resizable", before=table_id, default_value=True, user_data=table_id, callback=lambda sender, app_data, user_data:dpg.configure_item(user_data, resizable=dpg.get_value(sender)))
+                dpg.add_checkbox(label="resizable", before=table_id, default_value=True, user_data=table_id, callback=lambda sender, app_data, user_data:dpg.configure_item(user_data, resizable=app_data))
 
                 # Freezing rows/columns
                 dpg.add_text("Freezing rows/columns")
@@ -1551,7 +1547,7 @@ def show_demo():
                                     dpg.add_input_int(label=" ", step=0)
                                     dpg.add_button(label=f"Cell {i}, 1")
                                     dpg.add_text(f"Cell {i}, 2")
-                dpg.add_checkbox(label="resizable", before=table_id, default_value=True, user_data=table_id, callback=lambda sender, app_data, user_data:dpg.configure_item(user_data, resizable=dpg.get_value(sender)))
+                dpg.add_checkbox(label="resizable", before=table_id, default_value=True, user_data=table_id, callback=lambda sender, app_data, user_data:dpg.configure_item(user_data, resizable=app_data))
 
             with dpg.tree_node(label="Sorting"):
 
@@ -1625,26 +1621,23 @@ def show_demo():
                             if i != 25:
                                 dpg.add_table_next_column()
 
-                dpg.add_checkbox(label="sort_multi", before=table_id, user_data=table_id, callback=lambda sender, app_data, user_data:dpg.configure_item(user_data, sort_multi=dpg.get_value(sender)))
-                dpg.add_checkbox(label="sort_tristate", before=table_id, user_data=table_id, callback=lambda sender, app_data, user_data:dpg.configure_item(user_data, sort_tristate=dpg.get_value(sender)))
+                dpg.add_checkbox(label="sort_multi", before=table_id, user_data=table_id, callback=lambda sender, app_data, user_data:dpg.configure_item(user_data, sort_multi=app_data))
+                dpg.add_checkbox(label="sort_tristate", before=table_id, user_data=table_id, callback=lambda sender, app_data, user_data:dpg.configure_item(user_data, sort_tristate=app_data))
 
             with dpg.tree_node(label="Sizing Policy"):
 
-                def callback(sender, app_data, user_data):
+                def callback(sender, value, user_data):
 
                     if user_data[8] == "resizable":
-                        value = dpg.get_value(sender)
                         for i in range(0, 8):
                             dpg.configure_item(user_data[i], resizable=value)
 
                     elif user_data[8] == "no_host_extendX":
-                        value = dpg.get_value(sender)
                         for i in range(0, 8):
                             dpg.configure_item(user_data[i], no_host_extendX=value)
 
                     elif user_data[8] == "policy":
 
-                        value = dpg.get_value(sender)
                         if value == "mvTable_SizingFixedFit":
                             dpg.configure_item(user_data[user_data[9]], policy=dpg.mvTable_SizingFixedFit)
                             dpg.configure_item(user_data[user_data[9]+1], policy=dpg.mvTable_SizingFixedFit)
@@ -1716,9 +1709,11 @@ def show_demo():
 
             sindatax = []
             sindatay = []
+            cosdatay = []
             for i in range(0, 100):
                 sindatax.append(i/100)
                 sindatay.append(0.5 + 0.5*sin(50*i/100))
+                cosdatay.append(0.5 + 0.75*cos(50*i/100))
         
             with dpg.tree_node(label="Help"):
 
@@ -1780,17 +1775,42 @@ def show_demo():
                     stock_data4.append(500 + 75*abs(random.random()))
                     stock_data5.append(600 + 75*abs(random.random()))
 
+                with dpg.theme() as stock_theme1:
+                    dpg.add_theme_color(dpg.mvPlotCol_Line, (0, 0, 255), category=dpg.mvThemeCat_Plots)
+                    dpg.add_theme_color(dpg.mvPlotCol_Fill, (0, 0, 255, 64), category=dpg.mvThemeCat_Plots)
+
+                with dpg.theme() as stock_theme2:
+                    dpg.add_theme_color(dpg.mvPlotCol_Line, (255, 0, 0), category=dpg.mvThemeCat_Plots)
+                    dpg.add_theme_color(dpg.mvPlotCol_Fill, (255, 0, 0, 64), category=dpg.mvThemeCat_Plots)
+
+                with dpg.theme() as stock_theme3:
+                    dpg.add_theme_color(dpg.mvPlotCol_Line, (0, 255, 0), category=dpg.mvThemeCat_Plots)
+                    dpg.add_theme_color(dpg.mvPlotCol_Fill, (0, 255, 0, 64), category=dpg.mvThemeCat_Plots)
+
+                with dpg.theme() as stock_theme4:
+                    dpg.add_theme_color(dpg.mvPlotCol_Fill, (255, 255, 100, 64), category=dpg.mvThemeCat_Plots)
+
                 with dpg.plot(label="Stock Prices", height=400, width=-1):
                     dpg.add_plot_legend()
-                    dpg.add_plot_axis(dpg.mvXAxis, label="Days")
-                    dpg.add_plot_axis(dpg.mvYAxis, label="Price")
-                #dpg.add_line_series(stock_datax, stock_data1, label="Stock 1", color=[0, 0, 255, 255], parent=axis_id)
-                #dpg.add_line_series(stock_datax, stock_data2, label="Stock 2", color=[255, 0, 0, 255], parent=axis_id)
-                #dpg.add_line_series(stock_datax, stock_data3, label="Stock 3", color=[0, 255, 0, 255], parent=axis_id)
-                #dpg.add_shade_series(stock_datax, stock_data1, label="Stock 1", fill=[0, 0, 255, 64], parent=axis_id)
-                #dpg.add_shade_series(stock_datax, stock_data2, label="Stock 2", fill=[255, 0, 0, 64], parent=axis_id)
-                #dpg.add_shade_series(stock_datax, stock_data3, label="Stock 3", y2=stock_datay2, fill=[0, 255, 0, 64], parent=axis_id)
-                #dpg.add_shade_series(stock_datax, stock_data5, y2=stock_data4, label="Shade between lines", fill=[255, 255, 100, 64], parent=axis_id)
+                    xaxis = dpg.add_plot_axis(dpg.mvXAxis, label="Days")
+                    yaxis = dpg.add_plot_axis(dpg.mvYAxis, label="Price")
+                    dpg.add_line_series(stock_datax, stock_data1, label="Stock 1", parent=yaxis)
+                    dpg.set_item_theme(dpg.last_item(), stock_theme1)
+                    dpg.add_line_series(stock_datax, stock_data2, label="Stock 2", parent=yaxis)
+                    dpg.set_item_theme(dpg.last_item(), stock_theme2)
+                    dpg.add_line_series(stock_datax, stock_data3, label="Stock 3", parent=yaxis)
+                    dpg.set_item_theme(dpg.last_item(), stock_theme3)
+                    dpg.add_shade_series(stock_datax, stock_data1, label="Stock 1", parent=yaxis)
+                    dpg.set_item_theme(dpg.last_item(), stock_theme1)
+                    dpg.add_shade_series(stock_datax, stock_data2, label="Stock 2", parent=yaxis)
+                    dpg.set_item_theme(dpg.last_item(), stock_theme2)
+                    dpg.add_shade_series(stock_datax, stock_data3, label="Stock 3", y2=stock_datay2, parent=yaxis)
+                    dpg.set_item_theme(dpg.last_item(), stock_theme3)
+                    dpg.add_shade_series(stock_datax, stock_data5, y2=stock_data4, label="Shade between lines", parent=yaxis)
+                    dpg.set_item_theme(dpg.last_item(), stock_theme4)
+
+                    dpg.fit_axis_data(xaxis)
+                    dpg.fit_axis_data(yaxis)
 
             with dpg.tree_node(label="Scatter Series"):
 
@@ -1802,11 +1822,17 @@ def show_demo():
 
             with dpg.tree_node(label="Stem Series"):
 
+                with dpg.theme() as stem_theme1:
+                    dpg.add_theme_color(dpg.mvPlotCol_Line, (0, 255, 0), category=dpg.mvThemeCat_Plots)
+                    dpg.add_theme_style(dpg.mvPlotStyleVar_Marker, dpg.mvPlotMarker_Diamond, category=dpg.mvThemeCat_Plots)
+
                 with dpg.plot(label="Stem Series", height=400, width=-1):
                     dpg.add_plot_legend()
                     dpg.add_plot_axis(dpg.mvXAxis, label="x")
-                    dpg.add_plot_axis(dpg.mvYAxis, label="y")
-                    dpg.add_stem_series(sindatax, sindatay, label="0.5 + 0.5 * sin(x)", parent=dpg.last_item())
+                    yaxis = dpg.add_plot_axis(dpg.mvYAxis, label="y")
+                    dpg.add_stem_series(sindatax, sindatay, label="0.5 + 0.5 * sin(x)", parent=yaxis)
+                    dpg.add_stem_series(sindatax, cosdatay, label="0.5 + 0.75 * cos(x)", parent=yaxis)
+                    dpg.set_item_theme(dpg.last_item(), stem_theme1)
 
             with dpg.tree_node(label="Bar Series"):
 
@@ -1816,7 +1842,7 @@ def show_demo():
                     # create x axis
                     dpg.add_plot_axis(dpg.mvXAxis, label="Student", no_gridlines=True)
                     dpg.set_axis_limits(dpg.last_item(), 9, 33)
-                    dpg.set_axis_ticks(dpg.last_item(), [["S1", 11], ["S2", 21], ["S3", 31]])
+                    dpg.set_axis_ticks(dpg.last_item(), (("S1", 11), ("S2", 21), ("S3", 31)))
                 
                     # create y axis
                     yaxis_id = dpg.add_plot_axis(dpg.mvYAxis, label="Score")      
@@ -1830,9 +1856,12 @@ def show_demo():
             with dpg.tree_node(label="Area Series"):
 
                 with dpg.plot(label="Area Series", height=400, width=-1):
-                    dpg.add_plot_axis(dpg.mvXAxis, label="x")
-                    dpg.add_plot_axis(dpg.mvYAxis, label="y")
+                    xaxis = dpg.add_plot_axis(dpg.mvXAxis, label="x")
+                    yaxis = dpg.add_plot_axis(dpg.mvYAxis, label="y")
                     dpg.add_area_series([1,5,3],[0,0,3], fill=[255,50,100,190], parent=dpg.last_item())
+
+                    dpg.fit_axis_data(xaxis)
+                    dpg.fit_axis_data(yaxis)
 
             with dpg.tree_node(label="Infinite Lines"):
 
@@ -1841,20 +1870,25 @@ def show_demo():
 
                 with dpg.plot(label="Infinite Lines", height=400, width=-1):
                     dpg.add_plot_legend()
-                    dpg.add_plot_axis(dpg.mvXAxis, label="x")
+                    xaxis = dpg.add_plot_axis(dpg.mvXAxis, label="x")
                     axis_id = dpg.add_plot_axis(dpg.mvYAxis, label="y")
                     dpg.add_vline_series(infinite_x_data, label="vertical", parent=axis_id)
                     dpg.add_hline_series(infinite_y_data, label="horizontal", parent=axis_id)
+
+                    dpg.fit_axis_data(xaxis)
+                    dpg.fit_axis_data(axis_id)
 
             with dpg.tree_node(label="Image Series"):
 
                 with dpg.plot(label="Image Plot", height=400, width=-1):
                     dpg.add_plot_legend()
-                    dpg.add_plot_axis(dpg.mvXAxis, label="x")
+                    xaxis = dpg.add_plot_axis(dpg.mvXAxis, label="x")
                     yaxis_id = dpg.add_plot_axis(dpg.mvYAxis, label="y axis")
                     dpg.add_image_series(2, [300, 300], [400, 400], label="font atlas", parent=yaxis_id)
                     dpg.add_image_series(demo_static_texture_2, [150, 150], [200, 200], label="static 2", parent=yaxis_id)
                     dpg.add_image_series(demo_dynamic_texture_1, [-200, 100], [-100, 200], label="dynamic 1", parent=yaxis_id)
+                    dpg.fit_axis_data(xaxis)
+                    dpg.fit_axis_data(yaxis_id)
 
             with dpg.tree_node(label="Multi Axes Plot"):
 
@@ -1943,9 +1977,12 @@ def show_demo():
                 dpg.add_text("UNIX timestamps are seconds since 00:00:00 UTC on 1 January 1970", bullet=True)
                 
                 with dpg.plot(label="Time Plot", height=400, width=-1):
-                    dpg.add_plot_axis(dpg.mvXAxis, label="Date", time=True)
-                    dpg.add_plot_axis(dpg.mvYAxis, label="Days since 1970")
+                    xaxis = dpg.add_plot_axis(dpg.mvXAxis, label="Date", time=True)
+                    yaxis = dpg.add_plot_axis(dpg.mvYAxis, label="Days since 1970")
                     dpg.add_line_series(timedatax, timedatay, label="Days", parent=dpg.last_item())
+
+                    dpg.fit_axis_data(xaxis)
+                    dpg.fit_axis_data(yaxis)
 
             with dpg.tree_node(label="Candle Stick Series"):
 
@@ -1957,9 +1994,12 @@ def show_demo():
 
                 with dpg.plot(label="Candle Series", height=400, width=-1):
                     dpg.add_plot_legend()
-                    dpg.add_plot_axis(dpg.mvXAxis, label="Day", time=True)
-                    dpg.add_plot_axis(dpg.mvYAxis, label="USD")
+                    xaxis = dpg.add_plot_axis(dpg.mvXAxis, label="Day", time=True)
+                    yaxis = dpg.add_plot_axis(dpg.mvYAxis, label="USD")
                     dpg.add_candle_series(dates, opens, closes, lows, highs, label="GOOGL", parent=dpg.last_item())
+
+                    dpg.fit_axis_data(xaxis)
+                    dpg.fit_axis_data(yaxis)
 
             with dpg.tree_node(label="Heatmaps"):
 
@@ -2031,7 +2071,7 @@ def show_demo():
                
                 with dpg.plot(label="Error Series", height=400, width=-1):
                     dpg.add_plot_legend()
-                    dpg.add_plot_axis(dpg.mvXAxis, label="x")
+                    xaxis = dpg.add_plot_axis(dpg.mvXAxis, label="x")
                     axis_id = dpg.add_plot_axis(dpg.mvYAxis, label="y")
 
                     dpg.add_bar_series(error1_x, error1_y, label="Bar", weight=0.25, parent=axis_id)
@@ -2039,6 +2079,9 @@ def show_demo():
                     dpg.add_line_series(error2_x, error2_y, label="Line", parent=axis_id)
                     #dpg.add_error_series(error2_x, error2_y, error2_neg, error2_pos, label="Line", color=[0, 255, 0], parent=axis_id)
                     dpg.add_error_series(error2_x, error2_y, error2_neg, error2_pos, label="Line", parent=axis_id)
+
+                    dpg.fit_axis_data(xaxis)
+                    dpg.fit_axis_data(axis_id)
 
             with dpg.tree_node(label="Custom Context Menus"):
 
@@ -2151,16 +2194,16 @@ def show_demo():
                 dpg.add_text("abc.h", filter_key="abc.h", bullet=True)
                 dpg.add_text("hello, world", filter_key="hello, world", bullet=True)
 
-            dpg.add_input_text(label="Filter (inc, -exc)", before=dpg.last_container(), user_data=dpg.last_container(), callback=lambda s, a, u: dpg.set_value(u, dpg.get_value(s)))
+            dpg.add_input_text(label="Filter (inc, -exc)", before=dpg.last_container(), user_data=dpg.last_container(), callback=lambda s, a, u: dpg.set_value(u, a))
 
         with dpg.collapsing_header(label="Drawing API"):
             draw_groups={}
             layers={}
 
-            def _switch_group(sender):
+            def _switch_group(sender, value):
                 for v in draw_groups.values():
                     dpg.configure_item(v, show=False)
-                dpg.configure_item(draw_groups[dpg.get_value(sender)], show=True)
+                dpg.configure_item(draw_groups[value], show=True)
 
             def _draw(sender, app_data, user_data):
                 args = []
@@ -2355,7 +2398,7 @@ def show_demo():
 
             def _set_activator(sender, app_data, user_data):
                 keyword = dpg.get_item_label(sender)
-                constant = user_data[0][dpg.get_value(sender)]
+                constant = user_data[0][app_data]
                 for item in user_data[1]:
                     dpg.configure_item(item, **{keyword: constant})
 

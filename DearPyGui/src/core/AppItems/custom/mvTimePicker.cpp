@@ -10,14 +10,13 @@ namespace Marvel {
 	void mvTimePicker::InsertParser(std::map<std::string, mvPythonParser>* parsers)
 	{
 
-		mvPythonParser parser(mvPyDataType::UUID, "Undocumented", { "Widgets" });
+		mvPythonParser parser(mvPyDataType::UUID, "Adds a time picker.", { "Widgets" });
 		mvAppItem::AddCommonArgs(parser, (CommonParserArgs)(
 			MV_PARSER_ARG_ID |
 			MV_PARSER_ARG_INDENT |
 			MV_PARSER_ARG_PARENT |
 			MV_PARSER_ARG_BEFORE |
 			MV_PARSER_ARG_CALLBACK |
-			MV_PARSER_ARG_USER_DATA |
 			MV_PARSER_ARG_SHOW |
 			MV_PARSER_ARG_FILTER |
 			MV_PARSER_ARG_DROP_CALLBACK |
@@ -28,7 +27,7 @@ namespace Marvel {
 		);
 
 		parser.addArg<mvPyDataType::Dict>("default_value", mvArgType::KEYWORD_ARG, "{'hour': 14, 'min': 32, 'sec': 23}");
-		parser.addArg<mvPyDataType::Bool>("hour24", mvArgType::KEYWORD_ARG, "False", "show 24 hour clock");
+		parser.addArg<mvPyDataType::Bool>("hour24", mvArgType::KEYWORD_ARG, "False", "Show 24 hour clock instead of 12 hour.");
 
 		parser.finalize();
 
@@ -50,7 +49,12 @@ namespace Marvel {
 		if (ImPlot::ShowTimePicker(m_label.c_str(), m_imvalue.get()))
 		{
 			ImPlot::GetGmtTime(*m_imvalue, m_value.get());
-			mvApp::GetApp()->getCallbackRegistry().addCallback(m_callback, m_uuid, nullptr, m_user_data);
+			{
+				auto value = *m_value;
+				mvApp::GetApp()->getCallbackRegistry().submitCallback([=]() {
+					mvApp::GetApp()->getCallbackRegistry().addCallback(getCallback(false), m_uuid, ToPyTime(value), m_user_data);
+					});
+			}
 		}
 
 	}

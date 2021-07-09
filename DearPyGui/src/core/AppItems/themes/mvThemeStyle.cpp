@@ -4,7 +4,6 @@
 #include <implot.h>
 #include <imnodes.h>
 #include "mvItemRegistry.h"
-//#include "mvImGuiThemeScope.h"
 #include "mvLog.h"
 #include "mvPythonExceptions.h"
 
@@ -22,7 +21,7 @@ namespace Marvel {
 		parser.addArg<mvPyDataType::Long>("target", mvArgType::POSITIONAL_ARG, "0");
 		parser.addArg<mvPyDataType::Float>("x", mvArgType::POSITIONAL_ARG, "1.0");
 		parser.addArg<mvPyDataType::Float>("y", mvArgType::POSITIONAL_ARG, "-1.0");
-		parser.addArg<mvPyDataType::Integer>("category", mvArgType::KEYWORD_ARG, "0");
+		parser.addArg<mvPyDataType::Integer>("category", mvArgType::KEYWORD_ARG, "0", "Options include mvThemeCat_Core, mvThemeCat_Plots, mvThemeCat_Nodes.");
 
 		parser.finalize();
 
@@ -60,7 +59,12 @@ namespace Marvel {
 		else if (m_libType == mvLibType::MV_IMPLOT)
 		{
 			if (!m_twoComponent)
-				ImPlot::PushStyleVar(m_targetStyle, m_x);
+			{
+				if(m_targetStyle == ImPlotStyleVar_Marker)
+					ImPlot::PushStyleVar(m_targetStyle, (int)m_x);
+				else
+					ImPlot::PushStyleVar(m_targetStyle, m_x);
+			}
 			else
 				ImPlot::PushStyleVar(m_targetStyle, { m_x, m_y });
 		}
@@ -110,7 +114,7 @@ namespace Marvel {
 					if (m_targetStyle >= ImGuiStyleVar_COUNT || m_targetStyle < 0)
 					{
 						m_state.setOk(false);
-						mvThrowPythonError(mvErrorCode::mvNone, "");
+						mvThrowPythonError(mvErrorCode::mvNone, "Style target out of range.");
 						MV_ITEM_REGISTRY_ERROR("Item's parent must be plot.");
 					}
 				}
@@ -135,13 +139,15 @@ namespace Marvel {
 					case(ImPlotStyleVar_FitPadding): m_twoComponent = true; break;
 					case(ImPlotStyleVar_PlotDefaultSize): m_twoComponent = true; break;
 					case(ImPlotStyleVar_PlotMinSize): m_twoComponent = true; break;
-					default: break;
+					default: 
+						m_twoComponent = false;
+						break;
 					}
 
 					if (m_targetStyle >= ImPlotStyleVar_COUNT || m_targetStyle < 0)
 					{
 						m_state.setOk(false);
-						mvThrowPythonError(mvErrorCode::mvNone, "");
+						mvThrowPythonError(mvErrorCode::mvNone, "Style target out of range.");
 						MV_ITEM_REGISTRY_ERROR("Item's parent must be plot.");
 					}
 				}
@@ -151,7 +157,7 @@ namespace Marvel {
 					if (m_targetStyle >= 14 || m_targetStyle < 0)
 					{
 						m_state.setOk(false);
-						mvThrowPythonError(mvErrorCode::mvNone, "");
+						mvThrowPythonError(mvErrorCode::mvNone, "Style target out of range.");
 						MV_ITEM_REGISTRY_ERROR("Item's parent must be plot.");
 					}
 				}
@@ -223,7 +229,9 @@ namespace Marvel {
 			case(ImPlotStyleVar_FitPadding): m_twoComponent = true; break;
 			case(ImPlotStyleVar_PlotDefaultSize): m_twoComponent = true; break;
 			case(ImPlotStyleVar_PlotMinSize): m_twoComponent = true; break;
-			default: break;
+			default:
+				m_twoComponent = false;
+				break;
 			}
 
 			if (m_targetStyle >= ImPlotStyleVar_COUNT || m_targetStyle < 0)

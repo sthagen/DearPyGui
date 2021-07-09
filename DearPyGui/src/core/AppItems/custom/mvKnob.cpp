@@ -6,7 +6,7 @@ namespace Marvel {
     void mvKnobFloat::InsertParser(std::map<std::string, mvPythonParser>* parsers)
     {
 
-        mvPythonParser parser(mvPyDataType::UUID, "Undocumented", { "Widgets" });
+        mvPythonParser parser(mvPyDataType::UUID, "Adds a knob that rotates based of change in x mouse position.", { "Widgets" });
         mvAppItem::AddCommonArgs(parser, (CommonParserArgs)(
             MV_PARSER_ARG_ID |
             MV_PARSER_ARG_WIDTH |
@@ -16,7 +16,6 @@ namespace Marvel {
             MV_PARSER_ARG_BEFORE |
             MV_PARSER_ARG_SOURCE |
             MV_PARSER_ARG_CALLBACK |
-            MV_PARSER_ARG_USER_DATA |
             MV_PARSER_ARG_SHOW |
             MV_PARSER_ARG_FILTER |
             MV_PARSER_ARG_DROP_CALLBACK |
@@ -28,8 +27,8 @@ namespace Marvel {
 
         parser.addArg<mvPyDataType::Float>("default_value", mvArgType::KEYWORD_ARG, "0.0");
 
-        parser.addArg<mvPyDataType::Float>("min_value", mvArgType::KEYWORD_ARG, "0.0");
-        parser.addArg<mvPyDataType::Float>("max_value", mvArgType::KEYWORD_ARG, "100.0");
+        parser.addArg<mvPyDataType::Float>("min_value", mvArgType::KEYWORD_ARG, "0.0", "Applies lower limit to value.");
+        parser.addArg<mvPyDataType::Float>("max_value", mvArgType::KEYWORD_ARG, "100.0", "Applies upper limit to value.");
 
         parser.finalize();
 
@@ -46,7 +45,12 @@ namespace Marvel {
         ScopedID id(m_uuid);
 
         if (KnobFloat(m_specificedlabel.c_str(), m_value.get(), m_min, m_max, m_step))
-            mvApp::GetApp()->getCallbackRegistry().addCallback(getCallback(false), m_uuid, nullptr, m_user_data);
+        {
+            auto value = *m_value;
+            mvApp::GetApp()->getCallbackRegistry().submitCallback([=]() {
+                mvApp::GetApp()->getCallbackRegistry().addCallback(getCallback(false), m_uuid, ToPyFloat(value), m_user_data);
+                });
+        }
     }
 
     void mvKnobFloat::handleSpecificKeywordArgs(PyObject* dict)

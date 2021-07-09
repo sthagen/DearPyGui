@@ -16,13 +16,13 @@ namespace Marvel {
 			MV_PARSER_ARG_SHOW)
 		);
 
-		parser.addArg<mvPyDataType::FloatList>("pmin");
-		parser.addArg<mvPyDataType::FloatList>("pmax");
+		parser.addArg<mvPyDataType::FloatList>("pmin", mvArgType::REQUIRED_ARG, "...", "Min point of bounding rectangle.");
+		parser.addArg<mvPyDataType::FloatList>("pmax", mvArgType::REQUIRED_ARG, "...", "Max point of bounding rectangle.");
 
 		parser.addArg<mvPyDataType::IntList>("color", mvArgType::KEYWORD_ARG, "(255, 255, 255, 255)");
 		parser.addArg<mvPyDataType::IntList>("fill", mvArgType::KEYWORD_ARG, "(0, 0, 0, -255)");
 
-		parser.addArg<mvPyDataType::Float>("rounding", mvArgType::KEYWORD_ARG, "0.0");
+		parser.addArg<mvPyDataType::Float>("rounding", mvArgType::KEYWORD_ARG, "0.0", "Number of pixels of the radius that will round the corners of the rectangle.");
 		parser.addArg<mvPyDataType::Float>("thickness", mvArgType::KEYWORD_ARG, "1.0");
 
 		parser.finalize();
@@ -55,10 +55,21 @@ namespace Marvel {
 
 	void mvDrawRect::draw(ImDrawList* drawlist, float x, float y)
 	{
-		mvVec2 start = { x, y };
-		if (m_fill.r > 0.0f)
+		if (ImPlot::GetCurrentContext()->CurrentPlot)
+		{
+			drawlist->AddRect(ImPlot::PlotToPixels(m_pmin), ImPlot::PlotToPixels(m_pmax), m_color, m_rounding, ImDrawCornerFlags_All, m_thickness);
+			if (m_fill.r < 0.0f)
+				return;
+			drawlist->AddRectFilled(ImPlot::PlotToPixels(m_pmin), ImPlot::PlotToPixels(m_pmax), m_fill, m_rounding, ImDrawCornerFlags_All);
+		}
+		else
+		{
+			mvVec2 start = { x, y };
+			drawlist->AddRect(m_pmin + start, m_pmax + start, m_color, m_rounding, ImDrawCornerFlags_All, m_thickness);
+			if (m_fill.r < 0.0f)
+				return;
 			drawlist->AddRectFilled(m_pmin + start, m_pmax + start, m_fill, m_rounding, ImDrawCornerFlags_All);
-		drawlist->AddRect(m_pmin + start, m_pmax + start, m_color, m_rounding, ImDrawCornerFlags_All, m_thickness);
+		}
 	}
 
 	void mvDrawRect::handleSpecificRequiredArgs(PyObject* dict)

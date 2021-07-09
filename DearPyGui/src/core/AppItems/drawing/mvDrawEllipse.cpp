@@ -18,15 +18,15 @@ namespace Marvel {
 			MV_PARSER_ARG_SHOW)
 		);
 
-		parser.addArg<mvPyDataType::FloatList>("pmin");
-		parser.addArg<mvPyDataType::FloatList>("pmax");
+		parser.addArg<mvPyDataType::FloatList>("pmin", mvArgType::REQUIRED_ARG, "...", "Min point of bounding rectangle.");
+		parser.addArg<mvPyDataType::FloatList>("pmax", mvArgType::REQUIRED_ARG, "...", "Max point of bounding rectangle.");
 
 		parser.addArg<mvPyDataType::IntList>("color", mvArgType::KEYWORD_ARG, "(255, 255, 255, 255)");
 		parser.addArg<mvPyDataType::IntList>("fill", mvArgType::KEYWORD_ARG, "(0, 0, 0, -255)");
 
 		parser.addArg<mvPyDataType::Float>("thickness", mvArgType::KEYWORD_ARG, "1.0");
 
-		parser.addArg<mvPyDataType::Integer>("segments", mvArgType::KEYWORD_ARG, "32");
+		parser.addArg<mvPyDataType::Integer>("segments", mvArgType::KEYWORD_ARG, "32", "Number of segments to approximate bezier curve.");
 
 		parser.finalize();
 
@@ -76,15 +76,28 @@ namespace Marvel {
 		}
 
 		std::vector<mvVec2> points = m_points;
-		for (auto& point : points) {
-			point.x += x;
-			point.y += y;
+		if (ImPlot::GetCurrentContext()->CurrentPlot)
+		{
+			for (auto& point : points)
+			{
+				ImVec2 impoint = ImPlot::PlotToPixels(point);
+				point.x = impoint.x;
+				point.y = impoint.y;
+			}
+		}
+		else
+		{
+			for (auto& point : points) 
+			{
+				point.x += x;
+				point.y += y;
+			}
 		}
 
-		if(m_fill.r > 0.0f)
-			drawlist->AddConvexPolyFilled((const ImVec2*)const_cast<const mvVec2*>(points.data()), (int)points.size(), m_fill);
-
 		drawlist->AddPolyline((const ImVec2*)const_cast<const mvVec2*>(points.data()), (int)points.size(), m_color, false, m_thickness);
+		if (m_fill.r < 0.0f)
+			return;
+		drawlist->AddConvexPolyFilled((const ImVec2*)const_cast<const mvVec2*>(points.data()), (int)points.size(), m_fill);
 	}
 
 	void mvDrawEllipse::handleSpecificRequiredArgs(PyObject* dict)

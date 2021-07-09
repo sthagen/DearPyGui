@@ -25,11 +25,14 @@ namespace Marvel {
 				MV_PARSER_ARG_DRAG_CALLBACK |
 				MV_PARSER_ARG_PAYLOAD_TYPE |
 				MV_PARSER_ARG_SEARCH_DELAY |
+				MV_PARSER_ARG_WIDTH |
+				MV_PARSER_ARG_HEIGHT |
 				MV_PARSER_ARG_TRACKED |
 				MV_PARSER_ARG_SHOW)
 			);
 
 			parser.addArg<mvPyDataType::Callable>("delink_callback", mvArgType::KEYWORD_ARG, "None", "Callback ran when a link is detached.");
+			parser.addArg<mvPyDataType::Bool>("menubar", mvArgType::KEYWORD_ARG, "False", "Shows or hides the menubar.");
 
 			parser.finalize();
 
@@ -51,13 +54,6 @@ namespace Marvel {
 		}
 
 		{
-			mvPythonParser parser(mvPyDataType::ListStrList, "Undocumented", { "Node Editor" });
-			parser.addArg<mvPyDataType::UUID>("node_editor");
-			parser.finalize();
-			parsers->insert({ "get_links", parser });
-		}
-
-		{
 			mvPythonParser parser(mvPyDataType::None, "Undocumented", { "Node Editor" });
 			parser.addArg<mvPyDataType::UUID>("node_editor");
 			parser.finalize();
@@ -76,6 +72,7 @@ namespace Marvel {
 	mvNodeEditor::mvNodeEditor(mvUUID uuid)
 		: mvAppItem(uuid)
 	{
+		m_label = "NodeEditor###" + std::to_string(m_uuid);
 	}
 
 	void mvNodeEditor::handleSpecificKeywordArgs(PyObject* dict)
@@ -93,12 +90,55 @@ namespace Marvel {
 				Py_XINCREF(item);
 			m_delinkCallback = item;
 		}
+
+		// helper for bit flipping
+		auto flagop = [dict](const char* keyword, int flag, int& flags)
+		{
+			if (PyObject* item = PyDict_GetItemString(dict, keyword)) ToBool(item) ? flags |= flag : flags &= ~flag;
+		};
+
+		// window flags
+		flagop("menubar", ImGuiWindowFlags_MenuBar, m_windowflags);
+	}
+
+	void mvNodeEditor::getSpecificConfiguration(PyObject* dict)
+	{
+		if (dict == nullptr)
+			return;
+
+		if (m_delinkCallback)
+		{
+			Py_XINCREF(m_delinkCallback);
+			PyDict_SetItemString(dict, "delink_callback", m_delinkCallback);
+		}
+
+
+		// helper to check and set bit
+		auto checkbitset = [dict](const char* keyword, int flag, const int& flags)
+		{
+			PyDict_SetItemString(dict, keyword, ToPyBool(flags & flag));
+		};
+
+		// window flags
+		checkbitset("menubar", ImGuiWindowFlags_MenuBar, m_windowflags);
 	}
 
 	bool mvNodeEditor::canChildBeAdded(mvAppItemType type)
 	{
+		if(type ==mvAppItemType::mvMenuBar) return true;
 		if(type ==mvAppItemType::mvNode) return true;
 		if(type ==mvAppItemType::mvNodeLink) return true;
+		if (type == mvAppItemType::mvActivatedHandler) return true;
+		if (type == mvAppItemType::mvActiveHandler) return true;
+		if (type == mvAppItemType::mvClickedHandler) return true;
+		if (type == mvAppItemType::mvDeactivatedAfterEditHandler) return true;
+		if (type == mvAppItemType::mvDeactivatedHandler) return true;
+		if (type == mvAppItemType::mvEditedHandler) return true;
+		if (type == mvAppItemType::mvFocusHandler) return true;
+		if (type == mvAppItemType::mvHoverHandler) return true;
+		if (type == mvAppItemType::mvResizeHandler) return true;
+		if (type == mvAppItemType::mvToggledOpenHandler) return true;
+		if (type == mvAppItemType::mvVisibleHandler) return true;
 
 		mvThrowPythonError(mvErrorCode::mvIncompatibleChild, s_command,
 			"Incompatible child. Acceptable children include: mvNode, mvNodeLink", this);
@@ -130,6 +170,28 @@ namespace Marvel {
 	{
 		ScopedID id(m_uuid);
 
+		ImGui::BeginChild(m_label.c_str(), ImVec2((float)m_width, (float)m_height), false, m_windowflags);
+
+		for (auto& item : m_children[1])
+		{
+			// skip nodes
+			if (item->getType() != mvAppItemType::mvMenuBar)
+				continue;
+
+			// skip item if it's not shown
+			if (!item->preDraw())
+				continue;
+
+			// set item width
+			if (item->m_width != 0)
+				ImGui::SetNextItemWidth((float)item->m_width);
+
+			item->draw(drawlist, x, y);
+
+			item->postDraw();
+		}
+
+
 		imnodes::PushAttributeFlag(imnodes::AttributeFlags_EnableLinkDetachWithDragClick);
 
 		imnodes::IO& io = imnodes::GetIO();
@@ -151,20 +213,17 @@ namespace Marvel {
 
 		// build links
 		for (auto& item : m_children[0])
-		{
-			// skip item if it's not shown
-			if (!item->m_show)
-				continue;
-
 			item->draw(drawlist, x, y);
 
-			item->getState().update();
-		}
-
+		// draw nodes
 		for (auto& item : m_children[1])
 		{
+			// skip menu bars
+			if (item->getType() != mvAppItemType::mvNode)
+				continue;
+
 			// skip item if it's not shown
-			if (!item->m_show)
+			if (!item->preDraw())
 				continue;
 
 			// set item width
@@ -173,11 +232,15 @@ namespace Marvel {
 
 			item->draw(drawlist, x, y);
 
-			item->getState().update();
+			item->postDraw();
 		}
 
 		imnodes::EndNodeEditor();
 		imnodes::PopAttributeFlag();
+
+		// post draw for links
+		for (auto& item : m_children[0])
+			item->customAction();
 
 		static int hovered_node_id;
 		for (auto& child : m_children[1])
@@ -188,15 +251,6 @@ namespace Marvel {
 			child->getState().setRectSize({ size.x, size.y });
 			child->getState().setRectMin({ size.x, size.y });
 			child->getState().setRectMax({ size.x, size.y });
-		}
-
-		if (imnodes::IsNodeHovered(&hovered_node_id))
-		{
-			for (auto& child : m_children[1])
-			{
-				if (static_cast<mvNode*>(child.get())->getId() == hovered_node_id)
-					child->getState().setHovered(true);
-			}
 		}
 		
 		m_selectedNodes.clear();
@@ -227,9 +281,14 @@ namespace Marvel {
 			mvUUID node1, node2;
 			for (const auto& child : m_children[1])
 			{
+
+				// skip menu bars
+				if (child->getType() != mvAppItemType::mvNode)
+					continue;
+
 				for (const auto& grandchild : child->m_children[1])
 				{
-					if (static_cast<mvNodeAttribute*>(grandchild.get())->getId()== start_attr)
+					if (static_cast<mvNodeAttribute*>(grandchild.get())->getId() == start_attr)
 						node1 = grandchild->m_uuid;
 
 					if (static_cast<mvNodeAttribute*>(grandchild.get())->getId() == end_attr)
@@ -242,7 +301,7 @@ namespace Marvel {
 				PyObject* link = PyTuple_New(2);
 				PyTuple_SetItem(link, 0, ToPyUUID(node1));
 				PyTuple_SetItem(link, 1, ToPyUUID(node2));
-				mvApp::GetApp()->getCallbackRegistry().addCallback(m_callback, m_uuid, link, nullptr);
+				mvApp::GetApp()->getCallbackRegistry().addCallback(m_callback, m_uuid, link, m_user_data);
 					});
 		}
 
@@ -264,11 +323,13 @@ namespace Marvel {
 			if (m_delinkCallback)
 				mvApp::GetApp()->getCallbackRegistry().submitCallback([=]() {
 				PyObject* link = ToPyUUID(name);
-				mvApp::GetApp()->getCallbackRegistry().addCallback(m_delinkCallback, m_uuid, link, nullptr);
+				mvApp::GetApp()->getCallbackRegistry().addCallback(m_delinkCallback, m_uuid, link, m_user_data);
 					});
 		}
 
 		m_state.setHovered(imnodes::IsEditorHovered());	
+
+		ImGui::EndChild();
 	}
 
 	PyObject* mvNodeEditor::get_selected_nodes(PyObject* self, PyObject* args, PyObject* kwargs)

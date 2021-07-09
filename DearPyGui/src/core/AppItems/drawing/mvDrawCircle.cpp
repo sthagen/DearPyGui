@@ -25,7 +25,7 @@ namespace Marvel {
 
 		parser.addArg<mvPyDataType::Float>("thickness", mvArgType::KEYWORD_ARG, "1.0");
 
-		parser.addArg<mvPyDataType::Integer>("segments", mvArgType::KEYWORD_ARG, "0");
+		parser.addArg<mvPyDataType::Integer>("segments", mvArgType::KEYWORD_ARG, "0", "Number of segments to approximate circle.");
 
 		parser.finalize();
 
@@ -57,13 +57,21 @@ namespace Marvel {
 
 	void mvDrawCircle::draw(ImDrawList* drawlist, float x, float y)
 	{
-
+		if (ImPlot::GetCurrentContext()->CurrentPlot)
+		{
+			drawlist->AddCircle(ImPlot::PlotToPixels(m_center), m_radius, m_color, m_segments, m_thickness);
+			if (m_fill.r < 0.0f)
+				return;
+			drawlist->AddCircleFilled(ImPlot::PlotToPixels(m_center), m_radius, m_fill, m_segments);
+		}
+		else
+		{
 		mvVec2 start = { x, y };
-		if (m_fill.r > 0.0f)
-			drawlist->AddCircleFilled(m_center + start, m_radius, m_fill, m_segments);
-
 		drawlist->AddCircle(m_center + start, m_radius, m_color, m_segments, m_thickness);
-
+		if (m_fill.r < 0.0f)
+			return;
+		drawlist->AddCircleFilled(m_center + start, m_radius, m_fill, m_segments);
+		}
 	}
 
 	void mvDrawCircle::handleSpecificRequiredArgs(PyObject* dict)

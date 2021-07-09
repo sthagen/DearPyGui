@@ -16,9 +16,7 @@
 #include "mvPythonTranslator.h"
 #include "cpp.hint"
 #include "mvDefaultTheme.h"
-
-// forward declarations
-struct ImPlotTime;
+#include <implot_internal.h>
 
 namespace Marvel {
 
@@ -31,7 +29,7 @@ namespace Marvel {
     enum class mvAppItemType
     {
         None = 0, mvSpacing, mvSameLine, mvInputText, mvButton,
-        mvRadioButton, mvTabBar, mvTab, mvImage, mvMenuBar,
+        mvRadioButton, mvTabBar, mvTab, mvImage, mvMenuBar, mvViewportMenuBar,
         mvMenu, mvMenuItem, mvGroup, mvChild,
         mvSliderFloat, mvSliderInt, mvFilterSet,
         mvDragFloat, mvDragInt, mvInputFloat,
@@ -70,7 +68,7 @@ namespace Marvel {
         mvFontRangeHint, mvFontRange, mvFontChars, mvCharRemap,
         mvValueRegistry, mvIntValue, mvFloatValue, mvFloat4Value,
         mvInt4Value, mvBoolValue, mvStringValue, mvDoubleValue, mvDouble4Value,
-        mvColorValue, mvFloatVectValue, mvSeriesValue,
+        mvColorValue, mvFloatVectValue, mvSeriesValue, mvRawTexture,
         ItemTypeCount
     };
 
@@ -103,22 +101,21 @@ namespace Marvel {
         MV_PARSER_ARG_BEFORE        = 1 << 6,
         MV_PARSER_ARG_SOURCE        = 1 << 7,
         MV_PARSER_ARG_CALLBACK      = 1 << 8,
-        MV_PARSER_ARG_USER_DATA     = 1 << 9,
-        MV_PARSER_ARG_SHOW          = 1 << 10,
-        MV_PARSER_ARG_ENABLED       = 1 << 11,
-        MV_PARSER_ARG_POS           = 1 << 12,
-        MV_PARSER_ARG_DROP_CALLBACK = 1 << 13,
-        MV_PARSER_ARG_DRAG_CALLBACK = 1 << 14,
-        MV_PARSER_ARG_PAYLOAD_TYPE  = 1 << 15,
-        MV_PARSER_ARG_TRACKED       = 1 << 16,
-        MV_PARSER_ARG_FILTER        = 1 << 17,
-        MV_PARSER_ARG_SEARCH_DELAY  = 1 << 18,
+        MV_PARSER_ARG_SHOW          = 1 << 9,
+        MV_PARSER_ARG_ENABLED       = 1 << 10,
+        MV_PARSER_ARG_POS           = 1 << 11,
+        MV_PARSER_ARG_DROP_CALLBACK = 1 << 12,
+        MV_PARSER_ARG_DRAG_CALLBACK = 1 << 13,
+        MV_PARSER_ARG_PAYLOAD_TYPE  = 1 << 14,
+        MV_PARSER_ARG_TRACKED       = 1 << 15,
+        MV_PARSER_ARG_FILTER        = 1 << 16,
+        MV_PARSER_ARG_SEARCH_DELAY  = 1 << 17,
     };
 
     enum class mvLibType {
         MV_IMGUI = 0,
-        MV_IMPLOT,
-        MV_IMNODES
+        MV_IMPLOT = 1,
+        MV_IMNODES = 2
     };
 
     // todo: remove this nonsense (relic of CPP interface idea)
@@ -167,6 +164,7 @@ namespace Marvel {
         friend class mvTabBar;
         friend class mvTab;
         friend class mvMenuBar;
+        friend class mvViewportMenuBar;
         friend class mvMenu;
         friend class mvWindow;
         friend class mvTooltip;
@@ -348,6 +346,7 @@ namespace Marvel {
         [[nodiscard]] PyObject* getDragCallback() { return m_dragCallback; }
         [[nodiscard]] PyObject* getDropCallback() { return m_dropCallback; }
 
+        virtual void                        focus          () { m_focusNextFrame = true; }
         virtual void                        hide           () { m_show = false; }
         virtual void                        show           () { m_show = true; }
         void                                setCallbackData(PyObject* data);
@@ -390,7 +389,7 @@ namespace Marvel {
         bool             addRuntimeChild(mvUUID parent, mvUUID before, mvRef<mvAppItem> item);
         bool             addChildAfter(mvUUID prev, mvRef<mvAppItem> item);
         bool             deleteChild(mvUUID uuid);
-        void             deleteChildren();
+        void             deleteChildren(int slot = -1);
         bool             moveChildUp(mvUUID uuid);
         bool             moveChildDown(mvUUID uuid);
         void             resetState();

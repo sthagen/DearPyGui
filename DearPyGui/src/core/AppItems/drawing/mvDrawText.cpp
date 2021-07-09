@@ -16,8 +16,8 @@ namespace Marvel {
 			MV_PARSER_ARG_SHOW)
 		);
 
-		parser.addArg<mvPyDataType::FloatList>("pos");
-		parser.addArg<mvPyDataType::String>("text");
+		parser.addArg<mvPyDataType::FloatList>("pos", mvArgType::REQUIRED_ARG, "...", "Top left point of bounding text rectangle.");
+		parser.addArg<mvPyDataType::String>("text", mvArgType::REQUIRED_ARG, "...", "Text to draw.");
 
 		parser.addArg<mvPyDataType::IntList>("color", mvArgType::KEYWORD_ARG, "(255, 255, 255, 255)");
 
@@ -53,8 +53,13 @@ namespace Marvel {
 
 	void mvDrawText::draw(ImDrawList* drawlist, float x, float y)
 	{
-		mvVec2 start = { x, y };
-		drawlist->AddText(ImGui::GetFont(), (float)m_size, m_pos + start, m_color, m_text.c_str());
+		if (ImPlot::GetCurrentContext()->CurrentPlot)
+			drawlist->AddText(ImGui::GetFont(), (float)m_size, ImPlot::PlotToPixels(m_pos), m_color, m_text.c_str());
+		else
+		{
+			mvVec2 start = { x, y };
+			drawlist->AddText(ImGui::GetFont(), (float)m_size, m_pos + start, m_color, m_text.c_str());
+		}
 	}
 
 	void mvDrawText::handleSpecificRequiredArgs(PyObject* dict)

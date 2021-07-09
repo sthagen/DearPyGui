@@ -38,7 +38,6 @@ namespace Marvel {
 				MV_PARSER_ARG_BEFORE |
 				MV_PARSER_ARG_SHOW |
 				MV_PARSER_ARG_CALLBACK |
-				MV_PARSER_ARG_USER_DATA |
 				MV_PARSER_ARG_DROP_CALLBACK |
 				MV_PARSER_ARG_DRAG_CALLBACK |
 				MV_PARSER_ARG_PAYLOAD_TYPE |
@@ -65,14 +64,14 @@ namespace Marvel {
 		}
 
 		{
-			mvPythonParser parser(mvPyDataType::Bool, "Undocumented function", { "Plotting", "Widgets" });
+			mvPythonParser parser(mvPyDataType::Bool, "Returns true if the plot is currently being queried. (Requires plot 'query' kwarg to be enabled)", { "Plotting", "Widgets" });
 			parser.addArg<mvPyDataType::UUID>("plot");
 			parser.finalize();
 			parsers->insert({ "is_plot_queried", parser });
 		}
 
 		{
-			mvPythonParser parser(mvPyDataType::FloatList, "Undocumented function", { "Plotting", "Widgets" });
+			mvPythonParser parser(mvPyDataType::FloatList, "Returns the last/current query area of the plot. (Requires plot 'query' kwarg to be enabled)", { "Plotting", "Widgets" });
 			parser.addArg<mvPyDataType::UUID>("plot");
 			parser.finalize();
 			parsers->insert({ "get_plot_query_area", parser });
@@ -83,6 +82,7 @@ namespace Marvel {
 	mvPlot::mvPlot(mvUUID uuid)
 		: mvAppItem(uuid)
 	{
+		m_label = "Plot###" + std::to_string(m_uuid);
 		m_width = -1;
 		m_height = -1;
 	}
@@ -206,6 +206,19 @@ namespace Marvel {
 		if (type == mvAppItemType::mvDrawPolygon) return true;
 		if (type == mvAppItemType::mvDrawPolyline) return true;
 		if (type == mvAppItemType::mvDrawImage) return true;
+		if (type == mvAppItemType::mvDrawLayer) return true;
+
+		if (type == mvAppItemType::mvActivatedHandler) return true;
+		if (type == mvAppItemType::mvActiveHandler) return true;
+		if (type == mvAppItemType::mvClickedHandler) return true;
+		if (type == mvAppItemType::mvDeactivatedAfterEditHandler) return true;
+		if (type == mvAppItemType::mvDeactivatedHandler) return true;
+		if (type == mvAppItemType::mvEditedHandler) return true;
+		if (type == mvAppItemType::mvFocusHandler) return true;
+		if (type == mvAppItemType::mvHoverHandler) return true;
+		if (type == mvAppItemType::mvResizeHandler) return true;
+		if (type == mvAppItemType::mvToggledOpenHandler) return true;
+		if (type == mvAppItemType::mvVisibleHandler) return true;
 
 		mvThrowPythonError(mvErrorCode::mvIncompatibleChild, s_command,
 			"Incompatible child. Acceptable children include: mvDraw*, mvDragPoint, mvDragLine, mvAnnotation, mvPlotLegend, mvPlotAxis", this);
@@ -239,11 +252,25 @@ namespace Marvel {
 			item->customAction();
 		}
 
-		if (ImPlot::BeginPlot(m_label.c_str(), m_xaxisName.empty() ? nullptr : m_xaxisName.c_str(), m_y1axisName.empty() ? nullptr : m_y1axisName.c_str(),
-			ImVec2((float)m_width, (float)m_height), m_flags,
-			m_xflags, m_yflags, m_y1flags, m_y2flags, m_y2axisName.empty() ? nullptr : m_y2axisName.c_str(), m_y3axisName.empty() ? nullptr : m_y3axisName.c_str()))
+		if (m_fitDirty)
 		{
-			//ImPlot::PushPlotClipRect();
+			ImPlot::FitNextPlotAxes(m_axisfitDirty[0], m_axisfitDirty[1], m_axisfitDirty[2], m_axisfitDirty[3]);
+			m_fitDirty = false;
+			m_axisfitDirty[0] = false;
+			m_axisfitDirty[1] = false;
+			m_axisfitDirty[2] = false;
+			m_axisfitDirty[3] = false;
+		}
+
+		if (ImPlot::BeginPlot(m_label.c_str(), 
+			m_xaxisName.empty() ? nullptr : m_xaxisName.c_str(), 
+			m_y1axisName.empty() ? nullptr : m_y1axisName.c_str(),
+			ImVec2((float)m_width, (float)m_height), 
+			m_flags, m_xflags, m_yflags, m_y1flags, m_y2flags, 
+			m_y2axisName.empty() ? nullptr : m_y2axisName.c_str(), 
+			m_y3axisName.empty() ? nullptr : m_y3axisName.c_str()))
+		{
+			ImPlot::PushPlotClipRect();
 			ImPlot::PushColormap(m_colormap);
 
 			// legend, drag point and lines
@@ -257,7 +284,7 @@ namespace Marvel {
 				item->postDraw();
 			}
 
-			// series
+			// axes
 			for (auto& item : m_children[1])
 			{
 				// skip item if it's not shown
@@ -275,7 +302,8 @@ namespace Marvel {
 				if (!item->m_show)
 					continue;
 				
-				item->draw(ImPlot::GetPlotDrawList(), ImPlot::GetPlotPos().x, ImPlot::GetPlotPos().y);
+				//item->draw(ImPlot::GetPlotDrawList(), ImPlot::GetPlotPos().x, ImPlot::GetPlotPos().y);
+				item->draw(ImPlot::GetPlotDrawList(), 0.0f, 0.0f);
 				
 				item->getState().update();
 			}
@@ -310,7 +338,7 @@ namespace Marvel {
 				mvInput::setPlotMousePosition((float)ImPlot::GetPlotMousePos().x, (float)ImPlot::GetPlotMousePos().y);
 
 			// todo: resolve clipping
-			//ImPlot::PopPlotClipRect();
+			ImPlot::PopPlotClipRect();
 
 			if (m_dropCallback)
 			{
