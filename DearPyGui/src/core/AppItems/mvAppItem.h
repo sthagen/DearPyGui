@@ -68,7 +68,7 @@ namespace Marvel {
         mvFontRangeHint, mvFontRange, mvFontChars, mvCharRemap,
         mvValueRegistry, mvIntValue, mvFloatValue, mvFloat4Value,
         mvInt4Value, mvBoolValue, mvStringValue, mvDoubleValue, mvDouble4Value,
-        mvColorValue, mvFloatVectValue, mvSeriesValue, mvRawTexture,
+        mvColorValue, mvFloatVectValue, mvSeriesValue, mvRawTexture, mvSubPlots,
         ItemTypeCount
     };
 
@@ -157,6 +157,7 @@ namespace Marvel {
 
         // todo: remove this, I was lazy
         // items that need access to other items
+        friend class mvSubPlots;
         friend class mvMenuItem;
         friend class mvCollapsingHeader;
         friend class mvChild;
@@ -292,6 +293,7 @@ namespace Marvel {
         // other than drawing.
         //-----------------------------------------------------------------------------
         virtual void customAction() {};
+        virtual void alternativeCustomAction() {};
 
         //-----------------------------------------------------------------------------
         // These methods handle setting the widget's value using PyObject*'s or
@@ -368,6 +370,7 @@ namespace Marvel {
         const std::string&                  getSpecifiedLabel() const { return m_specificedlabel; }
         mvAppItem*                          getRoot() const;
         int                                 getLocation() const { return m_location; }
+        bool                                isAltCustomActionRequested() const { return m_triggerAlternativeAction; }
 
     protected:
 
@@ -406,6 +409,7 @@ namespace Marvel {
         ImVec2         m_previousCursorPos = { 0.0f, 0.0f };
         int            m_location = -1;
         std::string    m_label; // internal label
+        bool           m_triggerAlternativeAction = false;
 
         mvAppItem*                    m_parentPtr = nullptr;
 

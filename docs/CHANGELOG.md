@@ -22,6 +22,25 @@ We generally fold multiple commits pertaining to the same topic as a single entr
 
 ## VERSION 0.8.x
 
+### New
+* updated implot to v0.11
+* added `themes` module with imgui dark and light themes #1045
+
+### Fixes
+* theme editor correctly reflects current default theme
+* fixed plot legend context menus (broken in 0.8.23)
+
+## VERSION 0.8.23
+
+### New
+* added `gamma` and `gamma_scale_factor` keywords to `load_image(...)`
+* added subplots widget
+* updated implot to v0.10
+* reorganized plot demo
+
+### Fixes
+* fixed incorrect gamma correction for image loading #1043
+
 ## VERSION 0.8.21
 
 ### Breaking Changes
