@@ -16,8 +16,8 @@
 
 from typing import List, Any, Callable, Union
 from contextlib import contextmanager
-import dearpygui.core as internal_dpg
-from dearpygui.core import mvBuffer
+import dearpygui._dearpygui as internal_dpg
+from dearpygui._dearpygui import mvBuffer
 
 ########################################################################################################################
 # User API Index
@@ -313,8 +313,8 @@ def set_item_pos(item: int, pos: List[float]):
     """Sets the item's position.
 
     Args:
-        item: Item the Width will be applied to.
-        width: Width to be applied.
+        item: Item the absolute position will be applied to.
+        pos: X and Y positions relative to parent of the item.
 
     Returns:
         None
@@ -6230,6 +6230,16 @@ def reset_axis_ticks(axis : int) -> None:
 	"""
 
 	return internal_dpg.reset_axis_ticks(axis)
+
+def reset_default_theme() -> None:
+	"""
+	Resets to default theme.
+	Args:
+	Returns:
+		None
+	"""
+
+	return internal_dpg.reset_default_theme()
 
 def reset_pos(item : int) -> None:
 	"""

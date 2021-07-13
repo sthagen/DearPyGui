@@ -20,7 +20,19 @@ We generally fold multiple commits pertaining to the same topic as a single entr
 - Read the `Breaking Changes` section (here in the changelog).
 - Please report any issue!
 
-## VERSION 0.8.x
+## VERSION 0.8.31
+
+### Breaking Changes
+* renamed `dearpygui.core` to `dearpygui._dearpygui`
+
+### New
+* added `reset_default_theme(...)`
+
+### Fixes
+* fixed `set_viewport_min_height(...)` issue #1059
+* fixed data picker return value issue #1058
+
+## VERSION 0.8.26
 
 ### New
 * updated implot to v0.11

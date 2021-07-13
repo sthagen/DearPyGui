@@ -1,5 +1,5 @@
 from typing import List, Any, Callable
-from dearpygui.core import *
+from dearpygui._dearpygui import *
 
 ##########################################################
 # This file is generated automatically by mvPythonParser #
@@ -876,6 +876,10 @@ def reorder_items(container : int, slot : int, new_order : List[int]) -> None:
 
 def reset_axis_ticks(axis : int) -> None:
 	"""Removes the and manually set axis ticks and applys the default auto axis ticks."""
+	...
+
+def reset_default_theme() -> None:
+	"""Resets to default theme."""
 	...
 
 def reset_pos(item : int) -> None:

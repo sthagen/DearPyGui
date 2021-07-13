@@ -1,7 +1,7 @@
 from typing import List, Any, Callable, Union
 from contextlib import contextmanager
-import dearpygui.core as internal_dpg
-from dearpygui.core import mvBuffer
+import dearpygui._dearpygui as internal_dpg
+from dearpygui._dearpygui import mvBuffer
 
 ########################################################################################################################
 # User API Index
@@ -297,8 +297,8 @@ def set_item_pos(item: int, pos: List[float]):
     """Sets the item's position.
 
     Args:
-        item: Item the Width will be applied to.
-        width: Width to be applied.
+        item: Item the absolute position will be applied to.
+        pos: X and Y positions relative to parent of the item.
 
     Returns:
         None
@@ -847,7 +847,7 @@ def set_viewport_min_height(height: int):
     Returns:
         None
     """
-    internal_dpg.configure_viewport(0, min_height=width)
+    internal_dpg.configure_viewport(0, min_height=height)
 
 
 def set_viewport_max_height(height: int):
